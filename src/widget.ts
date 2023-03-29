@@ -8,9 +8,12 @@ import {
 } from '@jupyter-widgets/base';
 
 
-import {DCFCell} from 'paddy-react-edit-list';
+import {DCFCell  } from 'paddy-react-edit-list';
+
+
 import { createRoot } from "react-dom/client";
-import React from "react";
+//import ReactDOM from 'react-dom/client';
+//import * as rd from "react-dom/client";
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
 
@@ -51,9 +54,13 @@ export class ExampleView extends DOMWidgetView {
     this.value_changed();
     console.log("this", this)
     try {
+      // console.log("RDCreateroot", ReactDOM.createRoot);
+      // const createRoot = ReactDOM.createRoot
+      console.log("DCFCell2", DCFCell)
+      console.log("112", createRoot)
       const root = createRoot(this.el as HTMLElement)
       console.log("root2", root)
-      root.render(React.createElement(DCFCell, {}, null));
+      //root.render(React.createElement(DCFCell, {}, null));
     } catch (e:any) {
       console.log("error", e)
     }
@@ -76,3 +83,6 @@ export class ExampleView extends DOMWidgetView {
     this.el.textContent = this.model.get('value') + "from_js";
   }
 }
+// console.log("local createRoot module", createRoot)
+// const root = createRoot(document.body as HTMLElement)
+// console.log("Rroot", root)
