@@ -9,7 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Unicode
+from traitlets import Unicode, List, Dict
 from ._frontend import module_name, module_version
 
 
@@ -24,3 +24,5 @@ class ExampleWidget(DOMWidget):
     _view_module_version = Unicode(module_version).tag(sync=True)
 
     value = Unicode('Hello World').tag(sync=True)
+    value2 = Dict({}).tag(sync=True)
+    commands = List().tag(sync=True)

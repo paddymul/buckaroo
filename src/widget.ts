@@ -8,7 +8,10 @@ import {
 } from '@jupyter-widgets/base';
 
 
-import {DCFCell  } from 'paddy-react-edit-list';
+import _ from 'lodash';
+
+import {WidgetDCFCell  } from 'paddy-react-edit-list';
+
 
 
 import { createRoot } from "react-dom/client";
@@ -16,9 +19,13 @@ import { createRoot } from "react-dom/client";
 import React from "react";
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
+import { tableDf } from './static';
 
 // Import the CSS
 import '../css/widget.css';
+
+
+
 
 export class ExampleModel extends DOMWidgetModel {
   defaults() {
@@ -30,7 +37,9 @@ export class ExampleModel extends DOMWidgetModel {
       _view_name: ExampleModel.view_name,
       _view_module: ExampleModel.view_module,
       _view_module_version: ExampleModel.view_module_version,
-      value: 'Hello World',
+      value2: {commands:[]},
+      commands: []
+
     };
   }
 
@@ -50,31 +59,25 @@ export class ExampleModel extends DOMWidgetModel {
 export class ExampleView extends DOMWidgetView {
   render() {
     this.el.classList.add('custom-widget');
-    console.log("this.el", this.el)
-    this.value_changed();
-    console.log("this", this)
-    try {
-      // console.log("RDCreateroot", ReactDOM.createRoot);
-      // const createRoot = ReactDOM.createRoot
-      console.log("DCFCell2", DCFCell)
-      console.log("112", createRoot)
-      const root = createRoot(this.el as HTMLElement)
-      console.log("root2", root)
-      root.render(React.createElement(DCFCell, {}, null));
-    } catch (e:any) {
-      console.log("error", e)
-    }
+    //this.value_changed();
+    const root = createRoot(this.el as HTMLElement)
 
+    const widgetModel = this.model
+    const widgetGetTransformRequester = (setDf:any) => {
+      const baseRequestTransform = (passedInstructions:any) => {
+	console.log("passedInstructions", passedInstructions)
+	const valueCopy = _.clone(widgetModel.get('value2'))
+	valueCopy['commands'] = passedInstructions
+	widgetModel.set('commands', passedInstructions)
+        widgetModel.set('value2', valueCopy)
+	widgetModel.save_changes()
 
-    this.model.on('change:value', this.value_changed, this);
+      };
+      return baseRequestTransform;
+    };
 
-
-    //console.log("this.model", this.model)
-    
-
-
-    // const root = createRoot(document.getElementById("app") as HTMLElement)
-    // root.render(React.createElement(Main, { app: this }, null));
+    root.render(React.createElement(WidgetDCFCell, {origDf:tableDf, getTransformRequester:widgetGetTransformRequester}, null));
+    //this.model.on('change:value', this.value_changed, this);
 
 
   }
