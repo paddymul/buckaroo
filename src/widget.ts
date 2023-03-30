@@ -19,7 +19,7 @@ import { createRoot } from "react-dom/client";
 import React from "react";
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
-import { tableDf } from './static';
+//import { tableDf } from './static';
 
 // Import the CSS
 import '../css/widget.css';
@@ -61,7 +61,7 @@ export class ExampleView extends DOMWidgetView {
     this.el.classList.add('custom-widget');
     //this.value_changed();
     const root = createRoot(this.el as HTMLElement)
-
+    
     const widgetModel = this.model
     const widgetGetTransformRequester = (setDf:any) => {
       const baseRequestTransform = (passedInstructions:any) => {
@@ -76,7 +76,8 @@ export class ExampleView extends DOMWidgetView {
       return baseRequestTransform;
     };
 
-    root.render(React.createElement(WidgetDCFCell, {origDf:tableDf, getTransformRequester:widgetGetTransformRequester}, null));
+    root.render(React.createElement(WidgetDCFCell, {
+      origDf:widgetModel.get('js_df'), getTransformRequester:widgetGetTransformRequester}, null));
     //this.model.on('change:value', this.value_changed, this);
 
 

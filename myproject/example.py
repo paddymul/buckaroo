@@ -11,6 +11,7 @@ TODO: Add module docstring
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict
 from ._frontend import module_name, module_version
+import json
 
 
 class ExampleWidget(DOMWidget):
@@ -26,3 +27,12 @@ class ExampleWidget(DOMWidget):
     value = Unicode('Hello World').tag(sync=True)
     value2 = Dict({}).tag(sync=True)
     commands = List().tag(sync=True)
+
+    js_df = Dict({}).tag(sync=True)
+    
+    def __init__(self, df):
+        super().__init__()
+        self.js_df = json.loads(df.to_json(orient='table', indent=2))
+
+        
+        
