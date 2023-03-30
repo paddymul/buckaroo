@@ -12,8 +12,8 @@ import {DCFCell  } from 'paddy-react-edit-list';
 
 
 import { createRoot } from "react-dom/client";
-//import ReactDOM from 'react-dom/client';
-//import * as rd from "react-dom/client";
+//import React, { Component, useState } from "react";
+import React from "react";
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
 
@@ -60,7 +60,7 @@ export class ExampleView extends DOMWidgetView {
       console.log("112", createRoot)
       const root = createRoot(this.el as HTMLElement)
       console.log("root2", root)
-      //root.render(React.createElement(DCFCell, {}, null));
+      root.render(React.createElement(DCFCell, {}, null));
     } catch (e:any) {
       console.log("error", e)
     }
