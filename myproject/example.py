@@ -9,8 +9,9 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
-from traitlets import Unicode, List, Dict
+from traitlets import Unicode, List, Dict, observe
 from ._frontend import module_name, module_version
+from .dcf.all_transforms import dcf_transform
 import json
 
 
@@ -29,10 +30,21 @@ class ExampleWidget(DOMWidget):
     commands = List().tag(sync=True)
 
     js_df = Dict({}).tag(sync=True)
+    transformed_df = Dict({}).tag(sync=True)
     
     def __init__(self, df):
         super().__init__()
+        self.df = df
         self.js_df = json.loads(df.to_json(orient='table', indent=2))
+
+    @observe('commands')
+    def interpret_commands(self, change):
+        commands = change['new']
+        transformed_df = dcf_transform(commands, self.df)
+        self.transformed_df = json.loads(transformed_df.to_json(orient='table', indent=2))
+
+        
+        
 
         
         

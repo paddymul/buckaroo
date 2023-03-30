@@ -64,6 +64,9 @@ export class ExampleView extends DOMWidgetView {
     
     const widgetModel = this.model
     const widgetGetTransformRequester = (setDf:any) => {
+      widgetModel.on('change:transformed_df', () => {
+	setDf(widgetModel.get('transformed_df'))
+      }, this)
       const baseRequestTransform = (passedInstructions:any) => {
 	console.log("passedInstructions", passedInstructions)
 	const valueCopy = _.clone(widgetModel.get('value2'))
@@ -77,10 +80,15 @@ export class ExampleView extends DOMWidgetView {
     };
 
     root.render(React.createElement(WidgetDCFCell, {
-      origDf:widgetModel.get('js_df'), getTransformRequester:widgetGetTransformRequester}, null));
+      origDf:widgetModel.get('js_df'),
+      getTransformRequester:widgetGetTransformRequester}, null));
     //this.model.on('change:value', this.value_changed, this);
 
 
+  }
+
+  update_transformed_df() {
+    
   }
 
   value_changed() {
