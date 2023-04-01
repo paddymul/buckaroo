@@ -11,10 +11,11 @@ TODO: Add module docstring
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
 from ._frontend import module_name, module_version
-from .dcf.all_transforms import dcf_transform
+from .dcf.all_transforms import dcf_transform, command_patterns, command_defaults
 import json
 
 
+print("example.py", command_patterns)
 class ExampleWidget(DOMWidget):
     """TODO: Add docstring here
     """
@@ -26,7 +27,9 @@ class ExampleWidget(DOMWidget):
     _view_module_version = Unicode(module_version).tag(sync=True)
 
     value = Unicode('Hello World').tag(sync=True)
-    value2 = Dict({}).tag(sync=True)
+    command_config = Dict(
+        dict(commandPatterns=command_patterns, commandDefaults=command_defaults)
+        ).tag(sync=True)
     commands = List().tag(sync=True)
 
     js_df = Dict({}).tag(sync=True)
@@ -37,7 +40,9 @@ class ExampleWidget(DOMWidget):
         super().__init__()
         self.df = df
         self.js_df = json.loads(df.to_json(orient='table', indent=2))
-
+        self.command_config = dict(
+            commandPatterns=command_patterns, commandDefaults=command_defaults)
+    
     @observe('commands')
     def interpret_commands(self, change):
         try:

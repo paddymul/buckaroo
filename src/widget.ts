@@ -37,7 +37,8 @@ export class ExampleModel extends DOMWidgetModel {
       _view_name: ExampleModel.view_name,
       _view_module: ExampleModel.view_module,
       _view_module_version: ExampleModel.view_module_version,
-      value2: {commands:[]},
+      //add typing from CommandUtils
+      command_config: {},
       commands: []
 
     };
@@ -69,19 +70,25 @@ export class ExampleView extends DOMWidgetView {
       }, this)
       const baseRequestTransform = (passedInstructions:any) => {
 	console.log("passedInstructions", passedInstructions)
-	const valueCopy = _.clone(widgetModel.get('value2'))
-	valueCopy['commands'] = passedInstructions
 	widgetModel.set('commands', passedInstructions)
-        widgetModel.set('value2', valueCopy)
 	widgetModel.save_changes()
 
       };
       return baseRequestTransform;
     };
 
-    root.render(React.createElement(WidgetDCFCell, {
+    const commandConfig = widgetModel.get('command_config')
+    console.log("widget, commandConfig", commandConfig)
+    const reactEl = React.createElement(WidgetDCFCell, {
       origDf:widgetModel.get('js_df'),
-      getTransformRequester:widgetGetTransformRequester}, null));
+      getTransformRequester:widgetGetTransformRequester,
+      commandConfig
+    }, null)
+    
+    const renderedReact = root.render(reactEl);
+
+    console.log("reactEl", reactEl)
+    console.log("renderedReact", renderedReact)
     //this.model.on('change:value', this.value_changed, this);
 
 
