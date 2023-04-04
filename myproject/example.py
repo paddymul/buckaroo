@@ -33,8 +33,12 @@ class ExampleWidget(DOMWidget):
     command_classes = DefaultCommandKlsList
 
     js_df = Dict({}).tag(sync=True)
+
     transformed_df = Dict({}).tag(sync=True)
     transform_error = Unicode('').tag(sync=True)
+
+    generated_py_code = Unicode('').tag(sync=True)
+    generated_py_error = Unicode('').tag(sync=True)
     
     def __init__(self, df):
         super().__init__()
@@ -53,8 +57,13 @@ class ExampleWidget(DOMWidget):
             transformed_df = self.dcf_transform(commands, self.df)
             self.transformed_df = json.loads(transformed_df.to_json(orient='table', indent=2))
             self.transform_error = ''
+
+            print("interpret_to_py_code", commands)
+            self.generated_py_code = self.dcf_to_py_core(commands[1:])
         except Exception as e:
             self.transform_error = str(e)
+
+            self.generated_py_error = str(e)
 
     def setup_from_command_kls_list(self):
         command_defaults, command_patterns, self.dcf_transform, self.dcf_to_py_core = configure_dcf(

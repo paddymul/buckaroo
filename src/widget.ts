@@ -74,17 +74,43 @@ export class ExampleView extends DOMWidgetView {
 	    widgetModel.on('change:transformed_df', () => {
 		setDf(widgetModel.get('transformed_df') as DFWhole)
 	    }, this)
+	    
 	    const baseRequestTransform = (passedInstructions:any) => {
-		console.log("passedInstructions", passedInstructions)
+		console.log("transform passedInstructions", passedInstructions)
 		widgetModel.set('commands', passedInstructions)
 		widgetModel.save_changes()
-
 	    };
 	    return baseRequestTransform;
 	};
 
+	const widgetGetPyRequester = (setPyCode:any) => {
+	    //_.delay(() => setPyCode("padddy"), 200)
+	    widgetModel.on('change:generated_py_code', () => {
+		const genCode = widgetModel.get('generated_py_code')
+		console.log("gen code", genCode)
+		setPyCode(genCode)
+		//setPyCode("padddy")
+	    }, this)
+	    
+	    const unusedFunc = (passedInstructions:any) => {
+		console.log("pyRequester passed instructions", passedInstructions)
+	    }
+	    return unusedFunc
+	};
+
+	//this onChange gets called, the one inside of widgetGetPyRequester doesn't get called
+	widgetModel.on('change:generated_py_code', () => {
+	    const genCode = widgetModel.get('generated_py_code')
+	    console.log("gen code2", genCode)
+	    //setPyCode(genCode)
+	    //setPyCode("padddy")
+	}, this)
+	// widgetModel.on('change:generated_py_error', () => {
+	//     console.log("generated_py_error", widgetModel.get('generated_py_error' as string))
+	// }, this)
+
 	const commandConfig = widgetModel.get('command_config')
-	console.log("widget, commandConfig", commandConfig)
+	console.log("widget, commandConfig", commandConfig, widgetModel)
 	const plumbCommandConfig:CommandConfigSetterT = (setter) => {
 	    widget.setCommandConfig = setter
 	}
@@ -92,31 +118,15 @@ export class ExampleView extends DOMWidgetView {
 	    origDf:widgetModel.get('js_df'),
 	    getTransformRequester:widgetGetTransformRequester,
 	    commandConfig,
-	    exposeCommandConfigSetter:plumbCommandConfig
+	    exposeCommandConfigSetter:plumbCommandConfig,
+	    getPyRequester:widgetGetPyRequester
+	    //getPyRequester:(foo:any) => {console.log("getPyRequester called with", foo)}
 	}, null)
 	
-	const renderedReact = root.render(reactEl);
-
-	console.log("reactEl", reactEl)
-	console.log("renderedReact", renderedReact)
-	//this.model.on('change:value', this.value_changed, this);
-	// this.setCommandConfig = (conf:CommandConfig) => {
-	//     console.log("default setCommandConfig")
-	// }
-
+	root.render(reactEl);
     }
 
     setCommandConfig = (conf:CommandConfigT) => {
 	console.log("default setCommandConfig")
     }
-    update_transformed_df() {
-	
-    }
-
-    value_changed() {
-	this.el.textContent = this.model.get('value') + "from_js";
-    }
 }
-// console.log("local createRoot module", createRoot)
-// const root = createRoot(document.body as HTMLElement)
-// console.log("Rroot", root)

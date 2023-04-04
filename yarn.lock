@@ -5142,10 +5142,10 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
 
-paddy-react-edit-list@>=1.1.11:
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/paddy-react-edit-list/-/paddy-react-edit-list-1.1.11.tgz#7f89fb008a07ca15ffede5adf24f0625b5f910d8"
-  integrity sha512-QuRtOKYrzGOhYxETVYHuN5LlQHU510SNmQ8lW9CBtQ0WGPabLLWzaCYCK3mYehV2GfF6+jO0j35FAaAPVEU9hQ==
+paddy-react-edit-list@>=1.1.12:
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/paddy-react-edit-list/-/paddy-react-edit-list-1.1.12.tgz#5f193a5fe14cb8b34d68e384a785c6d5aeab3ae0"
+  integrity sha512-12Jc6rkRQjFOx1TwpWNvyUcbXVGchYKFN69tRIcX0626spRB9/rxWpHVHNQv8pvbPjjJiPrN1IqvXh5mejgoZQ==
   dependencies:
     "@types/lodash" "^4.14.191"
     lodash "^4.17.21"
