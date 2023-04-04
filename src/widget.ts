@@ -10,7 +10,7 @@ import {
 
 import _ from 'lodash';
 
-import {WidgetDCFCell  } from 'paddy-react-edit-list';
+import {WidgetDCFCell, CommandConfigT, DFWhole, CommandConfigSetterT, Command  } from 'paddy-react-edit-list';
 
 
 
@@ -38,8 +38,8 @@ export class ExampleModel extends DOMWidgetModel {
       _view_module: ExampleModel.view_module,
       _view_module_version: ExampleModel.view_module_version,
       //add typing from CommandUtils
-      command_config: {},
-      commands: []
+      command_config: {} as CommandConfigT,
+      commands: [] as Command[]
 
     };
   }
@@ -58,49 +58,64 @@ export class ExampleModel extends DOMWidgetModel {
 }
 
 export class ExampleView extends DOMWidgetView {
-  render() {
-    this.el.classList.add('custom-widget');
-    //this.value_changed();
-    const root = createRoot(this.el as HTMLElement)
-    
-    const widgetModel = this.model
-    const widgetGetTransformRequester = (setDf:any) => {
-      widgetModel.on('change:transformed_df', () => {
-	setDf(widgetModel.get('transformed_df'))
-      }, this)
-      const baseRequestTransform = (passedInstructions:any) => {
-	console.log("passedInstructions", passedInstructions)
-	widgetModel.set('commands', passedInstructions)
-	widgetModel.save_changes()
+    render() {
+	this.el.classList.add('custom-widget');
+	//this.value_changed();
+	const root = createRoot(this.el as HTMLElement)
+	
+	const widgetModel = this.model
+	const widget = this
+	widgetModel.on(
+	    'change:command_config',
+	    () => { widget.setCommandConfig(widgetModel.get('command_config'))},
+	    this)
 
-      };
-      return baseRequestTransform;
-    };
+	const widgetGetTransformRequester = (setDf:any) => {
+	    widgetModel.on('change:transformed_df', () => {
+		setDf(widgetModel.get('transformed_df') as DFWhole)
+	    }, this)
+	    const baseRequestTransform = (passedInstructions:any) => {
+		console.log("passedInstructions", passedInstructions)
+		widgetModel.set('commands', passedInstructions)
+		widgetModel.save_changes()
 
-    const commandConfig = widgetModel.get('command_config')
-    console.log("widget, commandConfig", commandConfig)
-    const reactEl = React.createElement(WidgetDCFCell, {
-      origDf:widgetModel.get('js_df'),
-      getTransformRequester:widgetGetTransformRequester,
-      commandConfig
-    }, null)
-    
-    const renderedReact = root.render(reactEl);
+	    };
+	    return baseRequestTransform;
+	};
 
-    console.log("reactEl", reactEl)
-    console.log("renderedReact", renderedReact)
-    //this.model.on('change:value', this.value_changed, this);
+	const commandConfig = widgetModel.get('command_config')
+	console.log("widget, commandConfig", commandConfig)
+	const plumbCommandConfig:CommandConfigSetterT = (setter) => {
+	    widget.setCommandConfig = setter
+	}
+	const reactEl = React.createElement(WidgetDCFCell, {
+	    origDf:widgetModel.get('js_df'),
+	    getTransformRequester:widgetGetTransformRequester,
+	    commandConfig,
+	    exposeCommandConfigSetter:plumbCommandConfig
+	}, null)
+	
+	const renderedReact = root.render(reactEl);
 
+	console.log("reactEl", reactEl)
+	console.log("renderedReact", renderedReact)
+	//this.model.on('change:value', this.value_changed, this);
+	// this.setCommandConfig = (conf:CommandConfig) => {
+	//     console.log("default setCommandConfig")
+	// }
 
-  }
+    }
 
-  update_transformed_df() {
-    
-  }
+    setCommandConfig = (conf:CommandConfigT) => {
+	console.log("default setCommandConfig")
+    }
+    update_transformed_df() {
+	
+    }
 
-  value_changed() {
-    this.el.textContent = this.model.get('value') + "from_js";
-  }
+    value_changed() {
+	this.el.textContent = this.model.get('value') + "from_js";
+    }
 }
 // console.log("local createRoot module", createRoot)
 // const root = createRoot(document.body as HTMLElement)
