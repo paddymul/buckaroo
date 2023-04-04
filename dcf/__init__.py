@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+#from .views import dcf_views
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -21,7 +24,7 @@ def _jupyter_labextension_paths():
     """
     return [{
         'src': 'labextension',
-        'dest': 'myproject',
+        'dest': 'dcf',
     }]
 
 
@@ -44,6 +47,6 @@ def _jupyter_nbextension_paths():
     return [{
         'section': 'notebook',
         'src': 'nbextension',
-        'dest': 'myproject',
-        'require': 'myproject/extension'
+        'dest': 'dcf',
+        'require': 'dcf/extension'
     }]

@@ -11,7 +11,7 @@ TODO: Add module docstring
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
 from ._frontend import module_name, module_version
-from .dcf.all_transforms import configure_dcf, DefaultCommandKlsList
+from .all_transforms import configure_dcf, DefaultCommandKlsList
 import json
 
 

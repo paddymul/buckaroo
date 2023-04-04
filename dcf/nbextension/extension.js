@@ -6,7 +6,7 @@ define(function() {
     window['requirejs'].config({
         map: {
             '*': {
-                'myproject': 'nbextensions/myproject/index',
+                'dcf': 'nbextensions/dcf/index',
             },
         }
     });
