@@ -40,7 +40,7 @@ class ExampleWidget(DOMWidget):
         super().__init__()
         self.df = df
         self.js_df = json.loads(df.to_json(orient='table', indent=2))
-        self.setup_from_command_kls_list(self.command_classes)
+        self.setup_from_command_kls_list()
 
     @observe('commands')
     def interpret_commands(self, change):
@@ -56,18 +56,18 @@ class ExampleWidget(DOMWidget):
         except Exception as e:
             self.transform_error = str(e)
 
-    def setup_from_command_kls_list(self, CommandKlsList):
+    def setup_from_command_kls_list(self):
         command_defaults, command_patterns, self.dcf_transform, self.dcf_to_py_core = configure_dcf(
-            CommandKlsList)
+            self.command_classes)
         self.command_config = dict(
             commandPatterns=command_patterns, commandDefaults=command_defaults)
 
 
-    def add_command(self, CommandKls):
-        existing_commands = self.command_classes
-        existing_commands.append(CommandKls)
-        self.command_classes = existing_commands
-        self.setup_from_command_kls_list(existing_commands)
+    def add_command(self, incomingCommandKls):
+        without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
+        without_incoming.append(incomingCommandKls)
+        self.command_classes = without_incoming
+        self.setup_from_command_kls_list()
 
         
         
