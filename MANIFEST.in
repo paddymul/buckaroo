@@ -9,7 +9,7 @@ include .coverage.rc
 include tsconfig.json
 include package.json
 include webpack.config.js
-include myproject/labextension/*.tgz
+include dcf/labextension/*.tgz
 
 # Documentation
 graft docs
@@ -26,7 +26,7 @@ graft tests
 prune tests/build
 
 # Javascript files
-graft myproject/nbextension
+graft dcf/nbextension
 graft src
 graft css
 prune **/node_modules

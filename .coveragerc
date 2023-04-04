@@ -1,2 +1,2 @@
 [run]
-omit = myproject/tests/*
+omit = dcf/tests/*

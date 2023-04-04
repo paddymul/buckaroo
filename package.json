@@ -1,5 +1,5 @@
 {
-  "name": "myproject",
+  "name": "dcf-widget",
   "version": "0.1.0",
   "description": "A Custom Jupyter Widget Library",
   "keywords": [
@@ -13,9 +13,9 @@
     "dist/*.js",
     "css/*.css"
   ],
-  "homepage": "https://github.com/myorg/myproject",
+  "homepage": "https://github.com/paddymul/dcf",
   "bugs": {
-    "url": "https://github.com/myorg/myproject/issues"
+    "url": "https://github.com/paddymul/dcf/issues"
   },
   "license": "BSD-3-Clause",
   "author": {
@@ -26,7 +26,7 @@
   "types": "./lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/myorg/myproject"
+    "url": "https://github.com/paddymul/dcf"
   },
   "scripts": {
     "build": "yarn run build:lib && yarn run build:nbextension && yarn run build:labextension:dev",
@@ -37,8 +37,8 @@
     "build:nbextension": "webpack",
     "clean": "yarn run clean:lib && yarn run clean:nbextension && yarn run clean:labextension",
     "clean:lib": "rimraf lib",
-    "clean:labextension": "rimraf myproject/labextension",
-    "clean:nbextension": "rimraf myproject/nbextension/static/index.js",
+    "clean:labextension": "rimraf dcf/labextension",
+    "clean:nbextension": "rimraf dcf/nbextension/static/index.js",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "lint:check": "eslint . --ext .ts,.tsx",
     "prepack": "yarn run build:lib",
@@ -90,7 +90,7 @@
   },
   "jupyterlab": {
     "extension": "lib/plugin",
-    "outputDir": "myproject/labextension/",
+    "outputDir": "dcf/labextension/",
     "sharedPackages": {
       "@jupyter-widgets/base": {
         "bundled": false,

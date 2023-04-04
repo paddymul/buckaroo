@@ -27,7 +27,7 @@ module.exports = [
     entry: './src/extension.ts',
     output: {
       filename: 'index.js',
-      path: path.resolve(__dirname, 'myproject', 'nbextension'),
+      path: path.resolve(__dirname, 'dcf', 'nbextension'),
         libraryTarget: 'commonjs2',
       publicPath: '',
     },
@@ -40,7 +40,7 @@ module.exports = [
   },
 
   /**
-   * Embeddable myproject bundle
+   * Embeddable dcf bundle
    *
    * This bundle is almost identical to the notebook extension bundle. The only
    * difference is in the configuration of the webpack public path for the
@@ -56,7 +56,7 @@ module.exports = [
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'amd',
         library: "commonjs2",
-        publicPath: 'https://unpkg.com/myproject@' + version + '/dist/'
+        publicPath: 'https://unpkg.com/dcf@' + version + '/dist/'
     },
     devtool: 'source-map',
     module: {
@@ -77,7 +77,7 @@ module.exports = [
     output: {
       filename: 'embed-bundle.js',
       path: path.resolve(__dirname, 'docs', 'source', '_static'),
-      library: "myproject",
+      library: "dcf",
       libraryTarget: 'amd'
     },
     module: {
