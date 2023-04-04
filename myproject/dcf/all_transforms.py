@@ -124,11 +124,10 @@ class GroupBy(Transform):
 
     
 
+DefaultCommandKlsList = [FillNA, DropCol, OneHot, GroupBy]
 # command_defaults, command_patterns, dcf_transform, dcf_to_py_core = configure_dcf([
 #     FillNA, DropCol, OneHot, GroupBy, SafeInt])
-command_defaults, command_patterns, dcf_transform, dcf_to_py_core = configure_dcf([
-    FillNA, DropCol, OneHot, GroupBy])
-
+command_defaults, command_patterns, dcf_transform, dcf_to_py_core = configure_dcf(DefaultCommandKlsList)
 
 #print(dcf_to_py_core([GroupBy.test_sequence]))
 #print(GroupBy.test_output)

@@ -11,11 +11,10 @@ TODO: Add module docstring
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
 from ._frontend import module_name, module_version
-from .dcf.all_transforms import dcf_transform, command_patterns, command_defaults
+from .dcf.all_transforms import configure_dcf, DefaultCommandKlsList
 import json
 
 
-print("example.py", command_patterns)
 class ExampleWidget(DOMWidget):
     """TODO: Add docstring here
     """
@@ -27,10 +26,11 @@ class ExampleWidget(DOMWidget):
     _view_module_version = Unicode(module_version).tag(sync=True)
 
     value = Unicode('Hello World').tag(sync=True)
-    command_config = Dict(
-        dict(commandPatterns=command_patterns, commandDefaults=command_defaults)
-        ).tag(sync=True)
+    command_config = Dict({}).tag(sync=True)
+
     commands = List().tag(sync=True)
+
+    command_classes = DefaultCommandKlsList
 
     js_df = Dict({}).tag(sync=True)
     transformed_df = Dict({}).tag(sync=True)
@@ -40,9 +40,8 @@ class ExampleWidget(DOMWidget):
         super().__init__()
         self.df = df
         self.js_df = json.loads(df.to_json(orient='table', indent=2))
-        self.command_config = dict(
-            commandPatterns=command_patterns, commandDefaults=command_defaults)
-    
+        self.setup_from_command_kls_list(self.command_classes)
+
     @observe('commands')
     def interpret_commands(self, change):
         try:
@@ -51,12 +50,24 @@ class ExampleWidget(DOMWidget):
                 self.transform_error = "matched"
                 self.transformed_df = self.js_df
                 return
-            transformed_df = dcf_transform(commands, self.df)
+            transformed_df = self.dcf_transform(commands, self.df)
             self.transformed_df = json.loads(transformed_df.to_json(orient='table', indent=2))
             self.transform_error = ''
         except Exception as e:
             self.transform_error = str(e)
-        
+
+    def setup_from_command_kls_list(self, CommandKlsList):
+        command_defaults, command_patterns, self.dcf_transform, self.dcf_to_py_core = configure_dcf(
+            CommandKlsList)
+        self.command_config = dict(
+            commandPatterns=command_patterns, commandDefaults=command_defaults)
+
+
+    def add_command(self, CommandKls):
+        existing_commands = self.command_classes
+        existing_commands.append(CommandKls)
+        self.command_classes = existing_commands
+        self.setup_from_command_kls_list(existing_commands)
 
         
         
