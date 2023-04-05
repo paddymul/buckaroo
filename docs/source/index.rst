@@ -1,5 +1,5 @@
 
-myproject
+dcf
 =====================================
 
 Version: |release|
@@ -10,13 +10,13 @@ A Custom Jupyter Widget Library
 Quickstart
 ----------
 
-To get started with myproject, install with pip::
+To get started with dcf, install with pip::
 
-    pip install myproject
+    pip install dcf
 
 or with conda::
 
-    conda install myproject
+    conda install dcf
 
 
 Contents

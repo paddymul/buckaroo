@@ -1,8 +1,8 @@
 
-# myproject
+# dcf
 
-[![Build Status](https://travis-ci.org/myorg/myproject.svg?branch=master)](https://travis-ci.org/myorg/myproject)
-[![codecov](https://codecov.io/gh/myorg/myproject/branch/master/graph/badge.svg)](https://codecov.io/gh/myorg/myproject)
+[![Build Status](https://travis-ci.org/paddymul/dcf.svg?branch=master)](https://travis-ci.org/paddymul/dcf)
+[![codecov](https://codecov.io/gh/paddymul/dcf/branch/master/graph/badge.svg)](https://codecov.io/gh/paddymul/dcf)
 
 
 A Custom Jupyter Widget Library
@@ -12,21 +12,21 @@ A Custom Jupyter Widget Library
 You can install using `pip`:
 
 ```bash
-pip install myproject
+pip install dcf
 ```
 
 If you are using Jupyter Notebook 5.2 or earlier, you may also need to enable
 the nbextension:
 ```bash
-jupyter nbextension enable --py [--sys-prefix|--user|--system] myproject
+jupyter nbextension enable --py [--sys-prefix|--user|--system] dcf
 ```
 
 ## Development Installation
 
 Create a dev environment:
 ```bash
-conda create -n myproject-dev -c conda-forge nodejs yarn python jupyterlab
-conda activate myproject-dev
+conda create -n dcf-dev -c conda-forge nodejs yarn python jupyterlab
+conda activate dcf-dev
 ```
 
 Install the python. This will also build the TS package.
@@ -45,8 +45,8 @@ yarn run build
 For classic notebook, you need to run:
 
 ```
-jupyter nbextension install --sys-prefix --symlink --overwrite --py myproject
-jupyter nbextension enable --sys-prefix --py myproject
+jupyter nbextension install --sys-prefix --symlink --overwrite --py dcf
+jupyter nbextension enable --sys-prefix --py dcf
 ```
 
 Note that the `--symlink` flag doesn't work on Windows, so you will here have to run

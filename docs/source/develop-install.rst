@@ -3,11 +3,11 @@ Developer install
 =================
 
 
-To install a developer version of myproject, you will first need to clone
+To install a developer version of dcf, you will first need to clone
 the repository::
 
-    git clone https://github.com/myorg/myproject
-    cd myproject
+    git clone https://github.com/paddymul/dcf
+    cd dcf
 
 Next, install it with a develop install using pip::
 
@@ -17,9 +17,9 @@ Next, install it with a develop install using pip::
 If you are planning on working on the JS/frontend code, you should also do
 a link installation of the extension::
 
-    jupyter nbextension install [--sys-prefix / --user / --system] --symlink --py myproject
+    jupyter nbextension install [--sys-prefix / --user / --system] --symlink --py dcf
 
-    jupyter nbextension enable [--sys-prefix / --user / --system] --py myproject
+    jupyter nbextension enable [--sys-prefix / --user / --system] --py dcf
 
 with the `appropriate flag`_. Or, if you are using Jupyterlab::
 
