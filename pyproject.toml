@@ -6,8 +6,8 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "paddy-ipydatagrid"
-description = "Fast Datagrid widget for the Jupyter Notebook and JupyterLab"
+name = "dcf"
+description = "Data Cleaning Framework - UI for quickly cleaning pandas dataframes "
 readme = "README.md"
 requires-python = ">=3.7"
 authors = [
@@ -34,7 +34,7 @@ classifiers = [
 dependencies = [
     "ipywidgets>=7.6.0,<9"
 ]
-version = "1.1.38"
+version = "0.1.0"
 
 [project.license]
 file = "LICENSE.txt"
