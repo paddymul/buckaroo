@@ -13,7 +13,7 @@ You can install `dcf` using `pip` or `conda`:
 Using `pip`:
 
 ```bash
-pip install -i https://test.pypi.org/simple/ dcf==0.1.0
+pip install -i https://test.pypi.org/simple/ dcf==0.1.1
 ```
 
 ## Caveats
