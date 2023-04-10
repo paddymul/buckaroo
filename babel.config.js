@@ -1,13 +1,4 @@
 module.exports = {
-  sourceMap: 'inline',
-  presets: [
-    [
-      '@babel/preset-env',
-      {
-        targets: {
-          node: 'current',
-        },
-      },
-    ],
-  ],
+  plugins: ['transform-es2015-modules-commonjs'],
+  ignore: [/\.css$/, '.css$'],
 };

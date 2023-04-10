@@ -143,8 +143,12 @@
         "bundled": false,
         "singleton": true
       },
-	"react":false,
-	"react-dom":false
+      "react": false,
+      "react-dom": false
+    },
+    "_build": {
+      "load": "static/remoteEntry.cdd6733160fca1595f02.js",
+      "extension": "./extension"
     }
   }
 }

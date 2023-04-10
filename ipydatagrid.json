@@ -1,0 +1,5 @@
+{
+  "load_extensions": {
+    "ipydatagrid/extension": true
+  }
+}
