@@ -153,3 +153,8 @@ myproject/nbextension/index.*
 
 # Packed lab extensions
 myproject/labextension
+
+ipydatagrid/labextension/*
+ipydatagrid/nbextension/*
+dcf/nbextension/*
+dcf/labextension/*
