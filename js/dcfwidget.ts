@@ -10,7 +10,7 @@ import {
 
 import _ from 'lodash';
 
-import {WidgetDCFCell, CommandConfigT, DFWhole, CommandConfigSetterT, Command  } from 'paddy-react-edit-list';
+import {WidgetDCFCell, CommandConfigT, DFWhole, CommandConfigSetterT, Operation  } from 'paddy-react-edit-list';
 
 import { createRoot } from "react-dom/client";
 //import React, { Component, useState } from "react";
@@ -21,9 +21,11 @@ import { MODULE_NAME, MODULE_VERSION } from './version';
 
 // Import the CSS
 import '../style/widget.css';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
 
 
-console.log("dcf widget module level rename to DCFWidgetModel");
+console.log("dcf widget module level new styles ");
 
 export class DCFWidgetModel extends DOMWidgetModel {
   defaults() {
@@ -35,9 +37,9 @@ export class DCFWidgetModel extends DOMWidgetModel {
       _view_name: DCFWidgetModel.view_name,
       _view_module: DCFWidgetModel.view_module,
       _view_module_version: DCFWidgetModel.view_module_version,
-      //add typing from CommandUtils
+      //add typing from OperationUtils
       command_config: {} as CommandConfigT,
-      commands: [] as Command[]
+      commands: [] as Operation[]
 
     };
   }
@@ -66,7 +68,8 @@ export class DCFWidgetView extends DOMWidgetView {
 	const widget = this
 	widgetModel.on(
 	    'change:command_config',
-	    () => { widget.setCommandConfig(widgetModel.get('command_config'))},
+	    () => {
+		widget.setCommandConfig(widgetModel.get('command_config'))},
 	    this)
 
 	const widgetGetTransformRequester = (setDf:any) => {
@@ -113,6 +116,7 @@ export class DCFWidgetView extends DOMWidgetView {
 	const plumbCommandConfig:CommandConfigSetterT = (setter) => {
 	    widget.setCommandConfig = setter
 	}
+	
 	const reactEl = React.createElement(WidgetDCFCell, {
 	    origDf:widgetModel.get('js_df'),
 	    getTransformRequester:widgetGetTransformRequester,

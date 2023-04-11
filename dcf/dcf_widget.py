@@ -69,7 +69,7 @@ class DCFWidget(DOMWidget):
         command_defaults, command_patterns, self.dcf_transform, self.dcf_to_py_core = configure_dcf(
             self.command_classes)
         self.command_config = dict(
-            commandPatterns=command_patterns, commandDefaults=command_defaults)
+            argspecs=command_patterns, defaultArgs=command_defaults)
 
 
     def add_command(self, incomingCommandKls):
