@@ -34,12 +34,15 @@ class DCFWidget(DOMWidget):
 
     js_df = Dict({}).tag(sync=True)
 
-    transformed_df = Dict({}).tag(sync=True)
-    transform_error = Unicode('').tag(sync=True)
+    # transformed_df = Dict({}).tag(sync=True)
+    # transform_error = Unicode('').tag(sync=True)
 
-    generated_py_code = Unicode('').tag(sync=True)
-    generated_py_error = Unicode('').tag(sync=True)
+    # generated_py_code = Unicode('').tag(sync=True)
+    # generated_py_error = Unicode('').tag(sync=True)
     
+
+    operation_results = Dict({}).tag(sync=True)
+
     def __init__(self, df):
         super().__init__()
         self.df = df
@@ -47,23 +50,48 @@ class DCFWidget(DOMWidget):
         self.setup_from_command_kls_list()
 
     @observe('commands')
-    def interpret_commands(self, change):
+    def interpret_operations(self, change):
+        print("interpret_operations")
         try:
-            commands = change['new']
-            if len(commands) == 1:
-                self.transform_error = "matched"
-                self.transformed_df = self.js_df
+            operations = change['new']
+            print("interpret_operations", operations)
+            results = {}
+            if len(operations) == 1:
+
+                results['transformed_df'] = self.js_df
+                results['generated_py_code'] = 'no operations'
+                print('exiting early')
                 return
-            transformed_df = self.dcf_transform(commands, self.df)
-            self.transformed_df = json.loads(transformed_df.to_json(orient='table', indent=2))
-            self.transform_error = ''
+            
+            transformed_df = self.dcf_transform(operations, self.df)
+            results['transformed_df'] = json.loads(transformed_df.to_json(orient='table', indent=2))
 
-            print("interpret_to_py_code", commands)
-            self.generated_py_code = self.dcf_to_py_core(commands[1:])
+            results['generated_py_code'] = self.dcf_to_py_core(operations[1:])
+            self.operation_results = results
+            print("operations_results", results.keys())
         except Exception as e:
+            print("error_setting", e)
             self.transform_error = str(e)
-
-            self.generated_py_error = str(e)
+            raise
+            
+            
+    # @observe('commands')
+    # def interpret_commands(self, change):
+    #     try:
+    #         commands = change['new']
+    #         if len(commands) == 1:
+    #             self.transform_error = "matched"
+    #             self.transformed_df = self.js_df
+    #             return
+    #         transformed_df = self.dcf_transform(commands, self.df)
+    #         self.transformed_df = json.loads(transformed_df.to_json(orient='table', indent=2))
+    #         self.transform_error = ''
+    #         self.generated_py_code = self.dcf_to_py_core(commands[1:])
+    #         self.send_state()
+    #         print("interpret_to_py_code", commands)
+    #     except Exception as e:
+    #         self.transform_error = str(e)
+    #         self.generated_py_error = str(e)
 
     def setup_from_command_kls_list(self):
         command_defaults, command_patterns, self.dcf_transform, self.dcf_to_py_core = configure_dcf(

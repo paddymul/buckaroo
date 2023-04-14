@@ -10,7 +10,7 @@ import {
 
 import _ from 'lodash';
 
-import {WidgetDCFCell, CommandConfigT, DFWhole, CommandConfigSetterT, Operation  } from 'paddy-react-edit-list';
+import {WidgetDCFCell, CommandConfigT, DFWhole, CommandConfigSetterT, Operation, DependentTabs  } from 'paddy-react-edit-list';
 
 import { createRoot } from "react-dom/client";
 //import React, { Component, useState } from "react";
@@ -29,34 +29,36 @@ import 'paddy-react-edit-list/css/dcf-npm.css';
 console.log("dcf widget module level new styles ");
 
 export class DCFWidgetModel extends DOMWidgetModel {
-  defaults() {
-    return {
-      ...super.defaults(),
-      _model_name: DCFWidgetModel.model_name,
-      _model_module: DCFWidgetModel.model_module,
-      _model_module_version: DCFWidgetModel.model_module_version,
-      _view_name: DCFWidgetModel.view_name,
-      _view_module: DCFWidgetModel.view_module,
-      _view_module_version: DCFWidgetModel.view_module_version,
-      //add typing from OperationUtils
-      command_config: {} as CommandConfigT,
-      commands: [] as Operation[]
+    defaults() {
+	return {
+	    ...super.defaults(),
+	    _model_name: DCFWidgetModel.model_name,
+	    _model_module: DCFWidgetModel.model_module,
+	    _model_module_version: DCFWidgetModel.model_module_version,
+	    _view_name: DCFWidgetModel.view_name,
+	    _view_module: DCFWidgetModel.view_module,
+	    _view_module_version: DCFWidgetModel.view_module_version,
+	    //add typing from OperationUtils
+	    command_config: {} as CommandConfigT,
+	    commands: [] as Operation[],
+	    operation_results: {} // {transformed_df:DFWhole, generated_py_code:string}
+	};
+    }
 
+
+    static serializers: ISerializers = {
+	...DOMWidgetModel.serializers,
+	// Add any extra serializers here
     };
-  }
 
-  static serializers: ISerializers = {
-    ...DOMWidgetModel.serializers,
-    // Add any extra serializers here
-  };
-
-  static model_name = 'DCFWidgetModel';
-  static model_module = MODULE_NAME;
-  static model_module_version = MODULE_VERSION;
-  static view_name = 'ExampleView'; // Set to null if no view
-  static view_module = MODULE_NAME; // Set to null if no view
-  static view_module_version = MODULE_VERSION;
+    static model_name = 'DCFWidgetModel';
+    static model_module = MODULE_NAME;
+    static model_module_version = MODULE_VERSION;
+    static view_name = 'ExampleView'; // Set to null if no view
+    static view_module = MODULE_NAME; // Set to null if no view
+    static view_module_version = MODULE_VERSION;
 }
+
 
 export class DCFWidgetView extends DOMWidgetView {
     render() {
@@ -73,44 +75,21 @@ export class DCFWidgetView extends DOMWidgetView {
 		widget.setCommandConfig(widgetModel.get('command_config'))},
 	    this)
 
-	const widgetGetTransformRequester = (setDf:any) => {
-	    widgetModel.on('change:transformed_df', () => {
-		setDf(widgetModel.get('transformed_df') as DFWhole)
+	const widgetGetOrRequester:DependentTabs.getOperationResultSetterT = (setOpResult) => {
+	    widgetModel.on('change:operation_results', () => {
+	    	const opResults:DependentTabs.OperationResult = widgetModel.get('operation_results')
+			console.log("about to call setOpResult with", opResults)
+			setOpResult(opResults)	    
 	    }, this)
 	    
-	    const baseRequestTransform = (passedInstructions:any) => {
-		console.log("transform passedInstructions", passedInstructions)
-		widgetModel.set('commands', passedInstructions)
+	    const retFunc = (passedOperations:Operation[]) => {
+		console.log("orRequester passed operations", passedOperations)
+		widgetModel.set('commands', passedOperations)
 		widgetModel.save_changes()
-	    };
-	    return baseRequestTransform;
-	};
 
-	const widgetGetPyRequester = (setPyCode:any) => {
-	    //_.delay(() => setPyCode("padddy"), 200)
-	    widgetModel.on('change:generated_py_code', () => {
-		const genCode = widgetModel.get('generated_py_code')
-		console.log("gen code", genCode)
-		setPyCode(genCode)
-		//setPyCode("padddy")
-	    }, this)
-	    
-	    const unusedFunc = (passedInstructions:any) => {
-		console.log("pyRequester passed instructions", passedInstructions)
 	    }
-	    return unusedFunc
+	    return retFunc
 	};
-
-	//this onChange gets called, the one inside of widgetGetPyRequester doesn't get called
-	widgetModel.on('change:generated_py_code', () => {
-	    const genCode = widgetModel.get('generated_py_code')
-	    console.log("gen code2", genCode)
-	    //setPyCode(genCode)
-	    //setPyCode("padddy")
-	}, this)
-	// widgetModel.on('change:generated_py_error', () => {
-	//     console.log("generated_py_error", widgetModel.get('generated_py_error' as string))
-	// }, this)
 
 	const commandConfig = widgetModel.get('command_config')
 	console.log("widget, commandConfig", commandConfig, widgetModel)
@@ -120,11 +99,9 @@ export class DCFWidgetView extends DOMWidgetView {
 	
 	const reactEl = React.createElement(WidgetDCFCell, {
 	    origDf:widgetModel.get('js_df'),
-	    getTransformRequester:widgetGetTransformRequester,
+	    getOrRequester:widgetGetOrRequester,
 	    commandConfig,
 	    exposeCommandConfigSetter:plumbCommandConfig,
-	    getPyRequester:widgetGetPyRequester
-	    //getPyRequester:(foo:any) => {console.log("getPyRequester called with", foo)}
 	}, null)
 	
 	root.render(reactEl);
@@ -133,4 +110,44 @@ export class DCFWidgetView extends DOMWidgetView {
     setCommandConfig = (conf:CommandConfigT) => {
 	console.log("default setCommandConfig")
     }
+    setPyCode = (newPyCode:string) => {
+	console.log("default setPyCode")
+    }
+    setTransformedDf = (newDf:DFWhole) => {
+	console.log("default setTransformedDf")
+    }
 }
+
+/*
+console.log("144")
+
+	const widgetGetTransformRequester = (setDf:any) => {
+	    widget.setTransformedDf = (inputDf:DFWhole) => {
+		const opResults = widgetModel.get('operation_results')
+		const generated_py_code = opResults.generated_py_code
+		console.log("setDf Wrapper being called - generated_py_code", generated_py_code)
+		setDf(inputDf)
+	    };
+	    // widgetModel.on('change:transformed_df', () => {
+	    // 	setDf(widgetModel.get('transformed_df') as DFWhole)
+	    // }, this)
+	    
+	    const baseRequestTransform = (passedInstructions:any) => {
+		console.log("transform passedInstructions", passedInstructions)
+		widgetModel.set('commands', passedInstructions)
+		widgetModel.save_changes()
+	    };
+	    return baseRequestTransform;
+	};
+	//_.delay(() => {widget.setPyCode("widget level getPyRequester")}, 500)
+	//this onChange gets called, the one inside of widgetGetPyRequester doesn't get called
+
+	widgetModel.on('change:operation_results', () => {
+	    const opResults = widgetModel.get('operation_results')
+	    console.log("operation_results", opResults)
+	    widget.setPyCode(opResults.generated_py_code)
+	    widget.setTransformedDf(opResults.transformed_df)
+	    //widget.setPyCode("padddy")
+	    //widgetModel.save_changes()
+	}, this)
+*/
