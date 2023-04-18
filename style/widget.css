@@ -1,0 +1,8 @@
+.col-enum table {
+    margin-bottom:9px;
+}
+
+.ag-theme-alpine-dark  {
+    --ag-grid-size:3px;
+    --ag-list-item-height: 20px;
+ }

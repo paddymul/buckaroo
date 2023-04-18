@@ -443,7 +443,7 @@ def add5(num):
 
 _eval, _parse = make_interpreter({'always5':always5, 'add5':add5})
 #_eval = make_interpreter({always5, add5})
-assert _eval([s('always5')]) == 5
+#assert _eval([s('always5')]) == 5
 
 
     

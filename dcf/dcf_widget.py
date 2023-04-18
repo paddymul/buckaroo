@@ -47,6 +47,9 @@ class DCFWidget(DOMWidget):
         super().__init__()
         self.df = df
         self.js_df = json.loads(df.to_json(orient='table', indent=2))
+        self.operation_results = {
+            'transformed_df':self.js_df,
+            'generated_py_code':'#from py widget init'}
         self.setup_from_command_kls_list()
 
     @observe('commands')

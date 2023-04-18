@@ -20,10 +20,11 @@ import { MODULE_NAME, MODULE_VERSION } from './version';
 //import { tableDf } from './static';
 
 // Import the CSS
-import '../style/widget.css';
+
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import 'paddy-react-edit-list/css/dcf-npm.css';
+import '../style/widget.css';
 
 
 console.log("dcf widget module level new styles ");
