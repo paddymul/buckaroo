@@ -13,11 +13,9 @@ import _ from 'lodash';
 import {WidgetDCFCell, CommandConfigT, DFWhole, CommandConfigSetterT, Operation, DependentTabs  } from 'paddy-react-edit-list';
 
 import { createRoot } from "react-dom/client";
-//import React, { Component, useState } from "react";
 import React from "react";
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
-//import { tableDf } from './static';
 
 // Import the CSS
 
@@ -26,8 +24,6 @@ import 'ag-grid-community/styles/ag-theme-alpine.css';
 import 'paddy-react-edit-list/css/dcf-npm.css';
 import '../style/widget.css';
 
-
-console.log("dcf widget module level new styles ");
 
 export class DCFWidgetModel extends DOMWidgetModel {
     defaults() {
