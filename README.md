@@ -201,6 +201,7 @@ DCF can only work on a single input dataframe shape at a time.  Any newly create
 	* join
 	
 # FAQ
+
 ## Why did you use LISP?
 
 This is a problem domain that requried a DSL and intermediate language.  I could have written my own or chosen an existing language.  I chose LISP because it is simple to interpret and generate, additionally it is well understood.  Yes LISP is obscure, but it is less obscure than a custom language I would write myself.  I didn't want to expose an entire progrmaming language with all the attendant security risks, I wanted a small safe strict subset of programming features that I explicitly exposed.  LISP is easier to manipulate as an AST than any language in PL history.  I am not yet using any symbolic manipulation facilities of LISP, and will probably only use them in limited ways. 
