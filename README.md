@@ -13,7 +13,7 @@ You can install `dcf` using `pip` or `conda`:
 Using `pip`:
 
 ```bash
-pip install -i https://test.pypi.org/simple/ dcf==0.1.1
+pip install dcef
 ```
 
 ## Caveats
@@ -293,5 +293,4 @@ team at opensource@bloomberg.net, detailing the suspected issue and any methods 
 
 Please do NOT open an issue in the GitHub repository, as we'd prefer to keep vulnerability reports private until
 we've had an opportunity to review and address them.
-
 

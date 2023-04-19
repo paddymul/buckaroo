@@ -6,7 +6,7 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "dcf"
+name = "dcef"
 description = "Data Cleaning Framework - UI for quickly cleaning pandas dataframes "
 readme = "README.md"
 requires-python = ">=3.7"
