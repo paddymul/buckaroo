@@ -23,9 +23,10 @@ We all know how awkward it is to clean data in jupyter notebooks.  Multiple cell
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
-   FAQ
 
+   using
+   install
+   FAQ
 
 Indices and tables
 ==================

@@ -3,10 +3,10 @@ from .configure_utils import configure_dcef
 import pandas as pd
 import numpy as np
 
-class Transform(object):
+class Command(object):
     pass
     
-class FillNA(Transform):
+class FillNA(Command):
     #argument_names = ["df", "col", "fill_val"]
     command_default = [s('fillna'), s('df'), "col", 8]
     command_pattern = [[3, 'fillVal', 'type', 'integer']]
@@ -20,7 +20,7 @@ class FillNA(Transform):
     def transform_to_py(df, col, val):
         return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
 
-class DropCol(Transform):
+class DropCol(Command):
     #argument_names = ["df", "col"]
     command_default = [s('dropcol'), s('df'), "col"]
     command_pattern = [None]
@@ -34,7 +34,7 @@ class DropCol(Transform):
     def transform_to_py(df, col):
         return "    df.drop('%s', axis=1, inplace=True)" % col
 
-class OneHot(Transform):
+class OneHot(Command):
     command_default = [s('onehot'), s('df'), "col"]
     command_pattern = [None]
     @staticmethod 
@@ -62,7 +62,7 @@ def safe_int(x):
     except:
         return np.nan
 
-class SafeInt(Transform):
+class SafeInt(Command):
     command_default = [s('safeint'), s('df'), "col"]
     command_pattern = [None]
 
@@ -77,7 +77,7 @@ class SafeInt(Transform):
         return "    df['%s'] = df['%s'].apply(safe_int)" % (col, col)
 
 
-class GroupBy(Transform):
+class GroupBy(Command):
     command_default = [s("groupby"), s('df'), 'col', {}]
     command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count']]]
     @staticmethod 
