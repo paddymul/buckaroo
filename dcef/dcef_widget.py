@@ -11,11 +11,11 @@ TODO: Add module docstring
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
 from ._frontend import module_name, module_version
-from .all_transforms import configure_dcf, DefaultCommandKlsList
+from .all_transforms import configure_dcef, DefaultCommandKlsList
 import json
 
 
-class DCFWidget(DOMWidget):
+class DCEFWidget(DOMWidget):
     """TODO: Add docstring here
     """
     _model_name = Unicode('DCFWidgetModel').tag(sync=True)
@@ -66,38 +66,19 @@ class DCFWidget(DOMWidget):
                 print('exiting early')
                 return
             
-            transformed_df = self.dcf_transform(operations, self.df)
+            transformed_df = self.dcef_transform(operations, self.df)
             results['transformed_df'] = json.loads(transformed_df.to_json(orient='table', indent=2))
 
-            results['generated_py_code'] = self.dcf_to_py_core(operations[1:])
+            results['generated_py_code'] = self.dcef_to_py_core(operations[1:])
             self.operation_results = results
             print("operations_results", results.keys())
         except Exception as e:
             print("error_setting", e)
             self.transform_error = str(e)
             raise
-            
-            
-    # @observe('commands')
-    # def interpret_commands(self, change):
-    #     try:
-    #         commands = change['new']
-    #         if len(commands) == 1:
-    #             self.transform_error = "matched"
-    #             self.transformed_df = self.js_df
-    #             return
-    #         transformed_df = self.dcf_transform(commands, self.df)
-    #         self.transformed_df = json.loads(transformed_df.to_json(orient='table', indent=2))
-    #         self.transform_error = ''
-    #         self.generated_py_code = self.dcf_to_py_core(commands[1:])
-    #         self.send_state()
-    #         print("interpret_to_py_code", commands)
-    #     except Exception as e:
-    #         self.transform_error = str(e)
-    #         self.generated_py_error = str(e)
 
     def setup_from_command_kls_list(self):
-        command_defaults, command_patterns, self.dcf_transform, self.dcf_to_py_core = configure_dcf(
+        command_defaults, command_patterns, self.dcef_transform, self.dcef_to_py_core = configure_dcef(
             self.command_classes)
         self.command_config = dict(
             argspecs=command_patterns, defaultArgs=command_defaults)

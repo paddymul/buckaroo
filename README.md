@@ -1,14 +1,14 @@
-# Data Cleaning Framework
-We all know how awkward it is to clean data in jupyter notebooks.  Multiple cells of exploratory work, trying different transforms, looking up different transforms, adhoc functions that work in one notebook and have to be either copied/pasta-ed to the next notebook, or rewritten from scratch.  Data Cleaning Framework  (DCF) makes all of that better by providing a visual UI for common cleaning operations AND emitting python code that performs the transformation. Specifically, the DCF is a tool built to interactively explore, clean, and transform pandas dataframes.
+# DCEF - Data Cleaning Exploration Framework
+We all know how awkward it is to clean data in jupyter notebooks.  Multiple cells of exploratory work, trying different transforms, looking up different transforms, adhoc functions that work in one notebook and have to be either copied/pasta-ed to the next notebook, or rewritten from scratch.  Data Cleaning Explorationg Framework  (DCEF) makes all of that better by providing a visual UI for common cleaning operations AND emitting python code that performs the transformation. Specifically, the DCEF is a tool built to interactively explore, clean, and transform pandas dataframes.
 
-![Data Cleaning Framework Screenshot](static/images/dcf-jupyter.png)
+![Data Cleaning Exploration Framework Screenshot](static/images/dcf-jupyter.png)
 
 
 ## Installation
 
-If using JupyterLab, `dcf` requires JupyterLab version 3 or higher.
+If using JupyterLab, `dcef` requires JupyterLab version 3 or higher.
 
-You can install `dcf` using `pip` or `conda`:
+You can install `dcef` using `pip`
 
 Using `pip`:
 
@@ -17,26 +17,26 @@ pip install dcef
 ```
 
 ## Caveats
-DCF is in beta form.  At this point, it is based on from Bloomberg's [ipydatagrid](https://github.com/bloomberg/ipydatagrid) for the basis of the widget build.
+DCEF is in beta form.  At this point, it is based on from Bloomberg's [ipydatagrid](https://github.com/bloomberg/ipydatagrid) for the basis of the widget build.
 
-If you install ipydatagrid with dcf at this point, expect errors.
+If you install ipydatagrid with dcef at this point, expect errors.
 
 
 
-# Using DCF
+# Using DCEF
 
 in a jupylter notebook just add the following to a cell
 
 ```python
-from dcf.dcf_widget import DCFWidget
-DCFWidget(df=df)  #df being the dataframe you want to explore
+from dcef.dcef_widget import DCEFWidget
+DCEFWidget(df=df)  #df being the dataframe you want to explore
 ``` 
-and you will see the UI for DCF
+and you will see the UI for DCEF
 
 
 ## Using commands
 
-At the core DCF commands operate on columns.  You must first click on a cell (not a header) in the top pane to select a column.
+At the core DCEF commands operate on columns.  You must first click on a cell (not a header) in the top pane to select a column.
 
 Next you must click on a command like `dropcol`, `fillna`, or `groupby` to create a new command
 
@@ -46,7 +46,7 @@ At this point you can either delete the command by clicking the `X` button or ch
 
 ## Writing your own commands
 
-Builtin commands are found in [all_transforms.py](dcf/all_transforms.py)
+Builtin commands are found in [all_transforms.py](dcef/all_transforms.py)
 
 ### Simple example
 Here is a simple example command
@@ -142,7 +142,7 @@ These transforms emit multiple DataFrames
   * concat (concatenate multiple dataframes, with UI affordances to assure a similar shape)
   * join (join two dataframes on a key, with UI affordances)
 
-DCF can only work on a single input dataframe shape at a time.  Any newly created columns are visible on output, but not available for manipulation in the same DCF Cell.
+DCEF can only work on a single input dataframe shape at a time.  Any newly created columns are visible on output, but not available for manipulation in the same DCEF Cell.
 
 
 # Components
@@ -159,15 +159,15 @@ DCF can only work on a single input dataframe shape at a time.  Any newly create
 	* Simple UI for column level functions
 	* Shows generated python code
 	* Shows transformed data frame
-  * DCF server
+  * DCEF server
     * Serves up dataframes for use by frontend
-	* responds to dcf commands
+	* responds to dcef commands
 	* shows generated python code
   * Developer User experience
-	* define DCF commands in python onloy
-  * DCF Intepreter
+	* define DCEF commands in python onloy
+  * DCEF Intepreter
     * Based on Peter Norvig's lispy.py, a simple syntax that is easy for the frontend to generate (no parens, just JSON arrays)
-  * DCF core (actual transforms supported)
+  * DCEF core (actual transforms supported)
     * dropcol
 	* fillna
 	* one hot
@@ -187,7 +187,7 @@ DCF can only work on a single input dataframe shape at a time.  Any newly create
 	* Summary statistics tab for incoming dataframe
 	* Multi index columns
 	* DateTimeIndex support
-  * DCF core
+  * DCEF core
 	* MakeCategorical
 	* Quantize
 	* Resample
@@ -200,46 +200,6 @@ DCF can only work on a single input dataframe shape at a time.  Any newly create
 	* concat
 	* join
 	
-# FAQ
-
-## Why did you use LISP?
-
-This is a problem domain that requried a DSL and intermediate language.  I could have written my own or chosen an existing language.  I chose LISP because it is simple to interpret and generate, additionally it is well understood.  Yes LISP is obscure, but it is less obscure than a custom language I would write myself.  I didn't want to expose an entire progrmaming language with all the attendant security risks, I wanted a small safe strict subset of programming features that I explicitly exposed.  LISP is easier to manipulate as an AST than any language in PL history.  I am not yet using any symbolic manipulation facilities of LISP, and will probably only use them in limited ways. 
-
-## Do I need to know LISP to use DCF?
-
-No.  Users of DCF will never need to know that LISP is at the core of the system.
-
-## Do I need to know LISP to contribute to DCF?
-
-Not really.  Transfrom functions and their python equivalent are added to the dcf interpreter.  Transform functions are very simple and straight forward.  Here are the two functions that make `fillna` work.
-```
-def fillna(df, col, val):
-    df.fillna({col:val}, inplace=True)
-    return df
-
-def fillna_py(df, col, val):
-    return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
-```
-
-If you want to work on code transformations, then a knowledge of lisp and particularly lisp macros are helpful.
-
-## What is an example of a code transformation?
-
-Imagine you have a `dropcol` command which takes a single column to drop, also imagine that there is a function `dropcols` which takes a list of columns to drop.
-
-It is easier to build the UI to emit individual `dropcol` commands, you will end up with more readable code when you have a single command that drops all columns.
-
-You could write a transform which reads all `dropcol` forms and rewrites it to a single `dropcols` command.
-
-Alternatively, you could write a command that instead of subtractively reducing a dataframe, builds up a new dataframe from an explicit list of columns.  That is also a type of transform that could be written.
-
-## Is DCF meant to repalce knowledge of python/pandas 
-
-No, DCF helps experienced pandas devs quickly build and try the transformations they already know.  Transformation names stay very close to the underlying pandas names.  DCF makes different transforms more discoverable than reading obscure blogposts and half working stackoverflow submissions.  Different transformations can be quickly tried without a lot of reading and tinkering to see if it is the transform you want.  Finally, all transformations are emitted as python code.  That python code can be a starting point.
-
-
-
 
 
 
@@ -248,8 +208,8 @@ No, DCF helps experienced pandas devs quickly build and try the transformations 
 For a development installation:
 
 ```bash
-git clone https://github.com/paddymul/dcf.git
-cd dcf
+git clone https://github.com/paddymul/dcef.git
+cd dcef
 conda install ipywidgets=8 jupyterlab
 pip install -ve .
 ```
