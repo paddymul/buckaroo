@@ -1,2 +1,2 @@
 [run]
-omit = dcf/tests/*
+omit = dcef/tests/*
