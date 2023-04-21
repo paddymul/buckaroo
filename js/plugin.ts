@@ -13,7 +13,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { MODULE_NAME, MODULE_VERSION } from './version';
 import * as dcefwidget from './dcefwidget';
 
-const EXTENSION_ID = 'ipydatagrid:plugin';
+const EXTENSION_ID = 'dcef:plugin';
 
 /**
  * The datagrid plugin.
@@ -37,7 +37,7 @@ function activateWidgetExtension(
   registry: IJupyterWidgetRegistry,
   themeManager: IThemeManager | null,
 ): void {
-    console.log("dcef_widget plugin.ts")
+    console.log("dcef_widget plugin.ts after change EXTENSION_ID")
   // Exporting a patched DataGridView widget which handles dynamic theme changes
   registry.registerWidget({
     name: MODULE_NAME,
