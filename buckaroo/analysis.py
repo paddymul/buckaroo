@@ -50,20 +50,38 @@ def get_mode(ser):
         return mode_raw.values[0]
 
 
-def summarize_string(ser):
-    l = len(ser)
-    val_counts = ser.value_counts()
-    distinct_count= len(val_counts)
-    nan_count = l - len(ser.dropna())
-    unique_count = len(val_counts[val_counts==1])
-    empty_count = val_counts.get('', 0)
+
+class TypingStats(ColAnalysis):
+    provides_summary = [
+        'dtype', 'is_numeric', 'is_integer', 'is_datetime',]
+
+    @staticmethod
+    def summary(sampled_ser, summary_ser, ser):
+        return {
+            dtype=ser.dtype,
+            is_numeric=pd.api.types.is_numeric_dtype(ser),
+            is_integer=pd.api.types.is_integer_dtype(ser),
+            is_datetime=probable_datetime(ser),
+            memory_usage=ser.memory_usage()
+            }
+
+class DefaultSummaryStats(ColAnalysis):
+    provides_summary = [
+        'length', 'min', 'max', 'mean', 'nan_count', 'distinct_count',
+        'distinct_per', 'empty_count', 'empty_per', 'unique_per', 'nan_per',
+        'mode']
+    
+    @staticmethod
+    def summary(sampled_ser, summary_ser, ser):
+        l = len(ser)
+        val_counts = ser.value_counts()
+        distinct_count= len(val_counts)
+        nan_count = l - len(ser.dropna())
+        unique_count = len(val_counts[val_counts==1])
+        empty_count = val_counts.get('', 0)
 
     return dict(
-        dtype=ser.dtype,
         length=l,
-        min='',
-        max='',
-        mean='',
         nan_count = nan_count,
         distinct_count= distinct_count,
         distinct_per = distinct_count/l,
@@ -71,9 +89,7 @@ def summarize_string(ser):
         empty_per = empty_count/l,
         unique_per = unique_count/l,
         nan_per = nan_count/l,
-        is_numeric=pd.api.types.is_numeric_dtype(ser),
-        is_integer=pd.api.types.is_integer_dtype(ser),
-        is_datetime=probable_datetime(ser),
+
         mode=get_mode(ser))
 
 def summarize_numeric(ser):
