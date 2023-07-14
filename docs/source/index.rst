@@ -15,19 +15,16 @@ We all know how awkward it is to clean data in jupyter notebooks.  Multiple cell
 	 <iframe width="560" height="315" src="https://www.youtube.com/embed/3XdU5hpOUYY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
-
-.. note::
-
-   This project is under active development.
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Sitemap:
 
    using
+   feature_reference
    install
    contributing
    FAQ
+   articles/index
 
 Indices and tables
 ==================
@@ -35,4 +32,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 * `Buckaroo on github <https://github.com/paddymul/buckaroo>`_
