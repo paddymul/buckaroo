@@ -89,7 +89,6 @@ class DefaultSummaryStats(ColAnalysis):
         empty_per = empty_count/l,
         unique_per = unique_count/l,
         nan_per = nan_count/l,
-
         mode=get_mode(ser))
 
 def summarize_numeric(ser):
