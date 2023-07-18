@@ -32,11 +32,20 @@ class ColAnalysis(object):
     def table_hints(sampled_ser, summary_ser):
         pass
 
+    @classmethod
+    def cname(kls):
+        #print(dir(kls))
+        return kls.__qualname__
+    
+
 
 class NotProvidedException(Exception):
     pass
 
-def check_solvable(a_objs):  
+def check_solvable(a_objs):
+    """
+    checks taht all of the required  inputs are provided by another analysis object.
+    """
     provided = []
     required = []
     for ao in a_objs:
@@ -93,6 +102,11 @@ class DistinctPer(ColAnalysis):
         return {'distinct_per': summary_ser.loc['distinct_count'] / summary_ser.loc['len']}
 
 def order_analysis(a_objs):
+    """order a set of col analysis objects such that the dag of their
+    provided_summary and requires_summary is ordered for computation
+    """
+
+
     graph = {}
     key_class_objs = {}
     for ao in a_objs:
@@ -116,6 +130,10 @@ def order_analysis(a_objs):
     return clean_list(full_class_list)
 
 def produce_summary_df(df, ordered_objs, df_name='test_df'):
+    """
+    takes a dataframe and a list of analyses that have been ordered by a graph sort,
+    then it produces a summary dataframe
+    """
     errs = {}
     summary_col_dict = {}
     for ser_name in df.columns:
@@ -142,6 +160,40 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
             print("%s.summary(test_ser.%s)" % (kls.__name__, ser_name))
     return pd.DataFrame(summary_col_dict)
 
+
+class AnalsysisPipeline(object):
+
+    def __init__(self, analysis_objects, unit_test_objs=True):
+        self.unit_test_objs = unit_test_objs
+        self.verify_analysis_objects(analysis_objects)
+
+    def verify_analysis_objects(self, analysis_objects):
+        self.ordered_a_objs = order_analysis(analysis_objects)
+        check_solvable(self.ordered_a_objs)
+
+        if unit_test_objs:
+            self.unit_test()
+
+    def produce_summary_dataframe(self, input_df):
+        output_df = produce_summary_dataframe(input_df, self.ordered_a_objs)
+        return output_df
+
+    def add_analysis(self, new_aobj):
+        new_cname = new_aobj.cname()
+        new_aobj_set = []
+        for aobj in self.ordered_a_objs:
+            if aobj.cname() == new_cname:
+                continue
+            new_aobj_set.append(aobj)
+        new_aobj_set.append(new_aobj)
+        self.verify_analysis_objects(new_aobj_set)
+
+        
+        
+        
+# feature to add
+## if two Analysis Classes provide the same fact, flag a warning
+# run the analysis that provides less facts last.  Odds are the user is tweaking a single fact
 
 
 ## test only code
@@ -222,3 +274,5 @@ produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
 
 #how to find the variable name for the dataframe
 #[k for k,v in globals().items() if v is test_df]
+
+
