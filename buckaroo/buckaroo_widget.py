@@ -185,8 +185,10 @@ def enable():
         raise ImportError('This feature requires IPython 1.0+')
 
     ip = get_ipython()
+    if ip is None:
+        print("must be running inside ipython to enable default display via enable()")
+        return
     ip_formatter = ip.display_formatter.ipython_display_formatter
-
     ip_formatter.for_type(pd.DataFrame, _display_as_buckaroo)
     
 
@@ -201,5 +203,6 @@ def disable():
         raise ImportError('This feature requires IPython 1.0+')
 
     ip = get_ipython()
+    
     ip_formatter = ip.display_formatter.ipython_display_formatter
     ip_formatter.type_printers.pop(pd.DataFrame, None)    
