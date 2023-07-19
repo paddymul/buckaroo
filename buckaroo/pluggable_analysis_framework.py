@@ -171,11 +171,14 @@ class AnalsysisPipeline(object):
         self.ordered_a_objs = order_analysis(analysis_objects)
         check_solvable(self.ordered_a_objs)
 
-        if unit_test_objs:
+        if self.unit_test_objs:
             self.unit_test()
 
+    def unit_test(self):
+        pass
+
     def produce_summary_dataframe(self, input_df):
-        output_df = produce_summary_dataframe(input_df, self.ordered_a_objs)
+        output_df = produce_summary_df(input_df, self.ordered_a_objs)
         return output_df
 
     def add_analysis(self, new_aobj):
@@ -196,81 +199,7 @@ class AnalsysisPipeline(object):
 # run the analysis that provides less facts last.  Odds are the user is tweaking a single fact
 
 
-## test only code
-
-
-class NoRoute(ColAnalysis):    
-    provided_summary = ['not_used']
-    requires_summary = ["does_not_exist"]
-    
-class CycleA(ColAnalysis):
-    provided_summary = ['cycle_a']
-    requires_summary = ["cycle_b"]
-
-class CycleB(ColAnalysis):
-    provided_summary = ['cycle_b']
-    requires_summary = ["cycle_a"]
-
-
-class CA_AB(ColAnalysis):
-    provided_summary = ["a", "b"]
-
-class CA_CD(ColAnalysis):
-    provided_summary = ["c", "d"]
-
-class CA_EF(ColAnalysis):
-    provided_summary = ["e", "f"]
-    requires_summary = ["a", "b", "c", "d"]
-
-class CA_G(ColAnalysis):
-    provided_summary = ["g"]
-    requires_summary = ["e"]
-
-class TestOrderAnalysis(unittest.TestCase):
-
-    def test_default_order(self):
-        self.assertEqual(
-            order_analysis([DistinctCount, Len, DistinctPer]),
-            [DistinctCount, Len, DistinctPer])
-        self.assertEqual(
-            order_analysis([DistinctPer, DistinctCount, Len]),
-            [DistinctCount, Len, DistinctPer])
-    
-    def test_multiple_provides(self):
-        self.assertEqual(
-            order_analysis([DCLen, DistinctPer]),
-            [DCLen, DistinctPer])
-        self.assertEqual(
-            order_analysis([DistinctPer, DCLen]),
-            [DCLen, DistinctPer])
-        self.assertEqual(
-            order_analysis([CA_G, CA_CD, CA_AB, CA_EF]),
-            [CA_CD, CA_AB, CA_EF, CA_G])
-            #note the order between CA_CD and CA_AB doesn't matter - 
-            # as long as they occur before other classes
-
-        
-    def test_cycle(self):
-        with self.assertRaises(graphlib.CycleError):
-            order_analysis([CycleA, CycleB])
-            
-    def test_no_route(self):
-        check_solvable([Len])
-        with self.assertRaises(NotProvidedException):
-            check_solvable([NoRoute])
-loader = unittest.TestLoader()
-suite  = unittest.TestSuite()
-tests = loader.loadTestsFromTestCase(TestOrderAnalysis)
-suite.addTests(tests)
-ab = unittest.TextTestRunner(verbosity=3).run(suite)
-
-
-test_df = pd.DataFrame({
-        'normal_int_series' : pd.Series([1,2,3,4]),
-        'empty_na_ser' : pd.Series([], dtype="Int64"),
-        'float_nan_ser' : pd.Series([3.5, np.nan, 4.8])
-    })
-produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
+#produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
 
 #how to find the variable name for the dataframe
 #[k for k,v in globals().items() if v is test_df]
