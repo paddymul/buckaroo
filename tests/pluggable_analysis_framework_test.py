@@ -1,8 +1,11 @@
 import unittest
 import pytest
 import pandas as pd
+import numpy as np
+import graphlib
 from buckaroo.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException,
+    DistinctCount, Len, DistinctPer, DCLen,
     produce_summary_df)
 
 
@@ -74,6 +77,16 @@ class TestOrderAnalysis(unittest.TestCase):
 
     def test_produce_summary_df(self):
         produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
+
+
+import pandas as pd
+from buckaroo.buckaroo_widget import BuckarooWidget
+
+
+def test_basic_instantiation():
+    df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
+    w = BuckarooWidget(df)
+    assert w.dfConfig['totalRows'] == 499
 
 
 """
