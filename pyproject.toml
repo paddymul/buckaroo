@@ -90,8 +90,8 @@ ensured-targets = [
     "buckaroo/nbextension/index.js",
     "buckaroo/labextension/package.json",
 ]
-#"hatch-jupyter-builder>=0.8.1",
-dependencies = ["hatch-jupyter-builder@file:///Users/paddy/code/hatch-jupyter-builder"]
+dependencies = ["hatch-jupyter-builder>=0.8.1"]
+#dependencies = ["hatch-jupyter-builder@file:///Users/paddy/code/hatch-jupyter-builder"]
 
 build-function = "hatch_jupyter_builder.npm_builder"
 
