@@ -34,7 +34,8 @@ classifiers = [
 ]
 dependencies = [
     "ipywidgets>=7.6.0,<9",
-    "jupyterlab>=3.6.0"
+    "jupyterlab>=3.6.0",
+    "graphlib_backport>=1.0.0"
 ]
 version = "0.3.10"
 

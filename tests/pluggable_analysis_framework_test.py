@@ -5,7 +5,7 @@ import numpy as np
 import graphlib
 from buckaroo.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException,
-    produce_summary_df)
+    AnalsysisPipeline, produce_summary_df)
 
 from buckaroo.analysis import (TypingStats, DefaultSummaryStats)
 
@@ -122,7 +122,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
     def test_add_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
-        class Foo(paf.ColAnalysis):
+        class Foo(ColAnalysis):
             provided_summary = [
                 'foo',]
             requires_summary = ['length']
@@ -136,7 +136,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
     def test_replace_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
-        class Foo(paf.ColAnalysis):
+        class Foo(ColAnalysis):
             provided_summary = [
                 'foo',]
             requires_summary = ['length']
@@ -150,7 +150,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         #15 facts returned about tripduration
         self.assertEqual(len(sdf['tripduration']), 15)
         #Create an updated Foo that returns 9
-        class Foo(paf.ColAnalysis):
+        class Foo(ColAnalysis):
             provided_summary = [
                 'foo',]
             requires_summary = ['length']
