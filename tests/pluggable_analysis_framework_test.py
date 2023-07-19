@@ -5,9 +5,9 @@ import numpy as np
 import graphlib
 from buckaroo.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException,
-    DistinctCount, Len, DistinctPer, DCLen,
     produce_summary_df)
 
+from buckaroo.analysis import (TypingStats, DefaultSummaryStats)
 
 class NoRoute(ColAnalysis):    
     provided_summary = ['not_used']
@@ -42,6 +42,40 @@ test_df = pd.DataFrame({
         'float_nan_ser' : pd.Series([3.5, np.nan, 4.8])
     })
 
+class DistinctCount(ColAnalysis):
+    requires_raw = True
+    provided_summary = ["distinct_count"]
+    @staticmethod
+    def summary(sampled_ser, summary_ser, raw_ser):
+        val_counts = raw_ser.value_counts()
+        distinct_count= len(val_counts)
+        return {'distinct_count': distinct_count}
+
+class Len(ColAnalysis):
+    provided_summary = ["len"]
+    requires_raw = True
+    @staticmethod
+    def summary(sampled_ser, summary_ser, raw_ser):
+        return {'len': len(raw_ser)}
+
+class DCLen(ColAnalysis):
+    provided_summary = ["len", "distinct_count"]
+    requires_raw = True
+    @staticmethod
+    def summary(sampled_ser, summary_ser, raw_ser):
+        val_counts = raw_ser.value_counts()
+        distinct_count= len(val_counts)
+        return {'len':len(raw_ser), 'distinct_count':distinct_count}
+
+class DistinctPer(ColAnalysis):
+    provided_summary = ["distinct_per"]
+    requires_summary = ["len", "distinct_count"]
+    
+    @staticmethod
+    def summary(sampled_ser, summary_ser, raw_ser):
+        return {'distinct_per': summary_ser.loc['distinct_count'] / summary_ser.loc['len']}
+
+
 
 class TestOrderAnalysis(unittest.TestCase):
 
@@ -75,10 +109,63 @@ class TestOrderAnalysis(unittest.TestCase):
         with self.assertRaises(NotProvidedException):
             check_solvable([NoRoute])
 
+df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
+class TestAnalysisPipeline(unittest.TestCase):
     def test_produce_summary_df(self):
         produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
 
 
+    def test_pipeline_base(self):
+        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        #just verify that there are no errors
+        ap.produce_summary_dataframe(df)
+
+    def test_add_aobj(self):
+        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        class Foo(paf.ColAnalysis):
+            provided_summary = [
+                'foo',]
+            requires_summary = ['length']
+
+            @staticmethod
+            def summary(sampled_ser, summary_ser, ser):
+                return dict(foo=8)
+        ap.add_analysis(Foo)
+        sdf = ap.produce_summary_dataframe(df)
+        self.assertEqual(sdf.loc['foo']['tripduration'], 8)
+
+    def test_replace_aobj(self):
+        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        class Foo(paf.ColAnalysis):
+            provided_summary = [
+                'foo',]
+            requires_summary = ['length']
+
+            @staticmethod
+            def summary(sampled_ser, summary_ser, ser):
+                return dict(foo=8)
+        ap.add_analysis(Foo)
+        sdf = ap.produce_summary_dataframe(df)
+        self.assertEqual(sdf.loc['foo']['tripduration'], 8)
+        #15 facts returned about tripduration
+        self.assertEqual(len(sdf['tripduration']), 15)
+        #Create an updated Foo that returns 9
+        class Foo(paf.ColAnalysis):
+            provided_summary = [
+                'foo',]
+            requires_summary = ['length']
+
+            @staticmethod
+            def summary(sampled_ser, summary_ser, ser):
+                return dict(foo=9)
+        ap.add_analysis(Foo)
+        sdf2 = ap.produce_summary_dataframe(df)
+        self.assertEqual(sdf2.loc['foo']['tripduration'], 9)
+        #still 15 facts returned about tripduration
+        self.assertEqual(len(sdf2['tripduration']), 15)
+        #Create an updated Foo that returns 9
+        
+        
 import pandas as pd
 from buckaroo.buckaroo_widget import BuckarooWidget
 

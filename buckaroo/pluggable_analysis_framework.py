@@ -68,39 +68,6 @@ def clean_list(full_class_list):
     return remove_duplicates(only_kls_lst)
 
 
-class DistinctCount(ColAnalysis):
-    requires_raw = True
-    provided_summary = ["distinct_count"]
-    @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
-        val_counts = raw_ser.value_counts()
-        distinct_count= len(val_counts)
-        return {'distinct_count': distinct_count}
-
-class Len(ColAnalysis):
-    provided_summary = ["len"]
-    requires_raw = True
-    @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
-        return {'len': len(raw_ser)}
-
-class DCLen(ColAnalysis):
-    provided_summary = ["len", "distinct_count"]
-    requires_raw = True
-    @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
-        val_counts = raw_ser.value_counts()
-        distinct_count= len(val_counts)
-        return {'len':len(raw_ser), 'distinct_count':distinct_count}
-
-class DistinctPer(ColAnalysis):
-    provided_summary = ["distinct_per"]
-    requires_summary = ["len", "distinct_count"]
-    
-    @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
-        return {'distinct_per': summary_ser.loc['distinct_count'] / summary_ser.loc['len']}
-
 def order_analysis(a_objs):
     """order a set of col analysis objects such that the dag of their
     provided_summary and requires_summary is ordered for computation
@@ -203,5 +170,4 @@ class AnalsysisPipeline(object):
 
 #how to find the variable name for the dataframe
 #[k for k,v in globals().items() if v is test_df]
-
 
