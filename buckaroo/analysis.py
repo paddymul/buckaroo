@@ -94,15 +94,6 @@ class DefaultSummaryStats(ColAnalysis):
             mode=get_mode(ser))
 
 
-class DefaultSummaryStats(ColAnalysis):
-    provided_summary = [
-        'length', 'min', 'max', 'mean', 'nan_count', 'distinct_count',
-        'distinct_per', 'empty_count', 'empty_per', 'unique_per', 'nan_per',
-        'mode']
-    
-    @staticmethod
-    def summary(sampled_ser, summary_ser, ser):
-
 
 def int_digits(n):
     if n == 0:
@@ -112,40 +103,31 @@ def int_digits(n):
     return int(np.floor(np.log10(n)+1))
 
 
-def histogram(ser):
-    raw_counts, bins = np.histogram(ser, 10)
-    scaled_counts = np.round(raw_counts/raw_counts.sum(),2)
-    return [scaled_counts, bins]
+class ColDisplayHints(ColAnalysis):
+    requires_summary = ['min', 'max'] # What summary stats does this analysis provide
+    provided_summary = []
+    
+    provides_hints = [
+        'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram']
 
-def table_sumarize_num_ser(ser):
-    if len(ser) == 0:
-        return dict(is_numeric=False)
-    return dict(
-        is_numeric=True,
-        is_integer=pd.api.types.is_integer_dtype(ser),
-        min_digits=int_digits(ser.min()),
-        max_digits=int_digits(ser.max()),
-        histogram=histogram(ser))
+    @staticmethod
+    def col_hints(sampled_ser, summary_ser, ser):
+        is_numeric = pd.api.types.is_numeric_dtype(ser.dtype)
+        if not is_numeric:
+            return dict(is_numeric=False)
+        if len(ser) == 0:
+            return dict(is_numeric=False)
+        return dict(
+            is_numeric=True,
+            is_integer=pd.api.types.is_integer_dtype(ser),
+            min_digits=int_digits(summary_ser.loc['min']),
+            max_digits=int_digits(summary_ser.loc['max']),
+            histogram=histogram(ser))
 
-
-def summarize_numeric(ser):
-
-    num_stats = summarize_string(ser)
-    num_stats.update(dict(
-        min=ser.min(),
-        max=ser.max(),
-        mean=ser.mean()))
-
-    return num_stats
-
-def summarize_column(ser):
-    if pd.api.types.is_numeric_dtype(ser.dtype):
-        return summarize_numeric(ser)
-    else:
-        return summarize_string(ser)
+        
 
 
-
+'''
 class DfStats(object):
     def __init__(self,
             df,
@@ -172,6 +154,6 @@ class DfStats(object):
         except Exception as e:
             print(e)
             self.col_order = self.df.columns
-
+'''
         
 
