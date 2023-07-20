@@ -37,7 +37,7 @@ dependencies = [
     "jupyterlab>=3.6.0",
     "graphlib_backport>=1.0.0"
 ]
-version = "0.3.10"
+version = "0.3.12"
 
 [project.license]
 file = "LICENSE.txt"
