@@ -128,35 +128,6 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
     return pd.DataFrame(summary_col_dict)
 
 
-class AnalsysisPipeline(object):
-
-    def __init__(self, analysis_objects, unit_test_objs=True):
-        self.unit_test_objs = unit_test_objs
-        self.verify_analysis_objects(analysis_objects)
-
-    def verify_analysis_objects(self, analysis_objects):
-        self.ordered_a_objs = order_analysis(analysis_objects)
-        check_solvable(self.ordered_a_objs)
-
-        if self.unit_test_objs:
-            self.unit_test()
-
-    def unit_test(self):
-        pass
-
-    def produce_summary_dataframe(self, input_df):
-        output_df = produce_summary_df(input_df, self.ordered_a_objs)
-        return output_df
-
-    def add_analysis(self, new_aobj):
-        new_cname = new_aobj.cname()
-        new_aobj_set = []
-        for aobj in self.ordered_a_objs:
-            if aobj.cname() == new_cname:
-                continue
-            new_aobj_set.append(aobj)
-        new_aobj_set.append(new_aobj)
-        self.verify_analysis_objects(new_aobj_set)
 
         
         

@@ -3,34 +3,6 @@ import pandas as pd
 from pandas.io.json import dumps as pdumps
 import numpy as np
 from buckaroo.pluggable_analysis_framework import ColAnalysis
-'''
-class DfStats(object):
-    def __init__(self,
-            df,
-            annotate_funcs=[add_col_rankings],
-            # summary_func=summary_stats.summarize_df,
-            # order_col_func=summary_stats.order_columns):
-            summary_func=summarize_df,
-            order_col_func=order_columns):
-
-        rows = len(df)
-        cols = len(df.columns)
-        item_count = rows * cols
-
-
-        if item_count > FAST_SUMMARY_WHEN_GREATER:
-            df = df.sample(np.min([50_000, len(df)]))
-        self.df = df
-        self.sdf = summary_func(df)
-        for func in annotate_funcs:
-            func(df, self.sdf)
-        try:
-            self.cpd = get_cor_pair_dict(self.df, self.sdf)
-            self.col_order = order_col_func(self.sdf, self.cpd)
-        except Exception as e:
-            print(e)
-            self.col_order = self.df.columns
-'''
 
 def probable_datetime(ser):
     s_ser = ser.sample(np.min([len(ser), 500]))
@@ -51,7 +23,16 @@ def get_mode(ser):
     else:
         return mode_raw.values[0]
 
+"""
+to best take advantage of the DAG and pluggable_analysis_framework, structure your code as follows
+a single ColAnalysis can return multiple facts, but those facts shouldn't be interdepedent
+That way individual facts can be overridden via the DAG machinery, and other facts that depend on them will
+get the proper value
 
+Overtime codebases will probably trend towards many classes with single facts, but it doesn't have to be that way.  Code what comes naturally to you
+
+
+"""
 
 class TypingStats(ColAnalysis):
     provided_summary = [
@@ -82,7 +63,9 @@ class DefaultSummaryStats(ColAnalysis):
         unique_count = len(val_counts[val_counts==1])
         empty_count = val_counts.get('', 0)
 
-        return dict(
+        is_numeric = pd.api.types.is_numeric_dtype(ser)
+
+        base_d = dict(
             length=l,
             nan_count=nan_count,
             distinct_count=distinct_count,
@@ -91,7 +74,13 @@ class DefaultSummaryStats(ColAnalysis):
             empty_per=empty_count/l,
             unique_per=unique_count/l,
             nan_per=nan_count/l,
-            mode=get_mode(ser))
+            mode=get_mode(ser),
+            min=ser.min(),
+            max=ser.max(),
+            mean=np.nan)
+        if is_numeric:
+            base_d['mean'] = ser.mean()
+        return base_d
 
 
 

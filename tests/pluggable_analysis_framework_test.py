@@ -5,7 +5,9 @@ import numpy as np
 import graphlib
 from buckaroo.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException,
-    AnalsysisPipeline, produce_summary_df)
+    produce_summary_df)
+from buckaroo.analysis_management import (
+    AnalsysisPipeline)
 
 from buckaroo.analysis import (TypingStats, DefaultSummaryStats)
 
@@ -118,7 +120,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_pipeline_base(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         #just verify that there are no errors
-        ap.produce_summary_dataframe(df)
+        ap.produce_summary_df(df)
 
     def test_add_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
@@ -131,7 +133,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             def summary(sampled_ser, summary_ser, ser):
                 return dict(foo=8)
         ap.add_analysis(Foo)
-        sdf = ap.produce_summary_dataframe(df)
+        sdf = ap.produce_summary_df(df)
         self.assertEqual(sdf.loc['foo']['tripduration'], 8)
 
     def test_replace_aobj(self):
@@ -145,10 +147,10 @@ class TestAnalysisPipeline(unittest.TestCase):
             def summary(sampled_ser, summary_ser, ser):
                 return dict(foo=8)
         ap.add_analysis(Foo)
-        sdf = ap.produce_summary_dataframe(df)
+        sdf = ap.produce_summary_df(df)
         self.assertEqual(sdf.loc['foo']['tripduration'], 8)
-        #15 facts returned about tripduration
-        self.assertEqual(len(sdf['tripduration']), 15)
+        #18 facts returned about tripduration
+        self.assertEqual(len(sdf['tripduration']), 18)
         #Create an updated Foo that returns 9
         class Foo(ColAnalysis):
             provided_summary = [
@@ -159,21 +161,12 @@ class TestAnalysisPipeline(unittest.TestCase):
             def summary(sampled_ser, summary_ser, ser):
                 return dict(foo=9)
         ap.add_analysis(Foo)
-        sdf2 = ap.produce_summary_dataframe(df)
+        sdf2 = ap.produce_summary_df(df)
         self.assertEqual(sdf2.loc['foo']['tripduration'], 9)
-        #still 15 facts returned about tripduration
-        self.assertEqual(len(sdf2['tripduration']), 15)
+        #still 18 facts returned about tripduration
+        self.assertEqual(len(sdf2['tripduration']), 18)
         #Create an updated Foo that returns 9
         
-        
-import pandas as pd
-from buckaroo.buckaroo_widget import BuckarooWidget
-
-
-def test_basic_instantiation():
-    df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
-    w = BuckarooWidget(df)
-    assert w.dfConfig['totalRows'] == 499
 
 
 """
