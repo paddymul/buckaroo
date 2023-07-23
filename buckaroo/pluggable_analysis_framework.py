@@ -29,8 +29,8 @@ class ColAnalysis(object):
         pass
     
     @staticmethod
-    def table_hints(sampled_ser, summary_ser):
-        pass
+    def table_hints(sampled_ser, summary_ser, existing_table_hints):
+        return {}
 
     @classmethod
     def cname(kls):
@@ -96,36 +96,6 @@ def order_analysis(a_objs):
     full_class_list = [key_class_objs.get(k, None) for k in seq]
     return clean_list(full_class_list)
 
-def produce_summary_df(df, ordered_objs, df_name='test_df'):
-    """
-    takes a dataframe and a list of analyses that have been ordered by a graph sort,
-    then it produces a summary dataframe
-    """
-    errs = {}
-    summary_col_dict = {}
-    for ser_name in df.columns:
-        ser = df[ser_name]
-        summary_ser = pd.Series({}, dtype='object')
-        for a_kls in ordered_objs:
-            try:
-                res = a_kls.summary(ser, summary_ser, ser)
-                for k,v in res.items():
-                    summary_ser.loc[k] = v
-            except Exception as e:
-                print("summary_ser", summary_ser)
-                errs[ser_name] = e, a_kls
-                continue
-        summary_col_dict[ser_name] = summary_ser
-    if errs:
-        for ser_name, err_kls in errs.items():
-            err, kls = err_kls
-            print("%r failed on %s with %r" % (kls, ser_name, err))
-        print("Reproduce")
-        print("from pluggable_analysis import test_ser")
-        for ser_name, err_kls in errs.items():
-            err, kls = err_kls
-            print("%s.summary(test_ser.%s)" % (kls.__name__, ser_name))
-    return pd.DataFrame(summary_col_dict)
 
 
 

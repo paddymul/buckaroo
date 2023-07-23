@@ -16,7 +16,6 @@ from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
 from .summary_stats import table_sumarize, sample
 
-
 from .analysis import (TypingStats, DefaultSummaryStats)
 from .analysis_management import DfStats
 
@@ -132,9 +131,9 @@ class BuckarooWidget(DOMWidget):
             #ideally this won't require a reserialization.  All
             #possible col_orders shoudl be serialized once, and the
             #frontend should just toggle from them
-            self.origDf = df_to_obj(tdf, self.stats.col_order)
+            self.origDf = df_to_obj(tdf, self.stats.col_order, table_hints=self.stats.table_hints)
         else:
-            self.origDf = df_to_obj(tdf)
+            self.origDf = df_to_obj(tdf, table_hints=self.stats.table_hints)
 
     def df_from_dfConfig(self):
         if self.dfConfig['sampled']:
@@ -158,7 +157,8 @@ class BuckarooWidget(DOMWidget):
                 #print('exiting early')
                 return
             #generating python code seems slightly less error prone than the transform
-            results['generated_py_code'] = self.buckaroo_to_py_core(operations[1:])            
+            results['generated_py_code'] = self.buckaroo_to_py_core(operations[1:])
+            #note doesn't use df_to_obj
             transformed_df = self.buckaroo_transform(operations, self.df)
             results['transformed_df'] = json.loads(transformed_df.to_json(orient='table', indent=2))
             results['transform_error'] = False
