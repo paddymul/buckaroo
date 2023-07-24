@@ -16,7 +16,7 @@ class ColAnalysis(object):
 
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
-        pass
+        return {}
 
     @staticmethod
     def column_order(sampled_ser, summary_ser):
