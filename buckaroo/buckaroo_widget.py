@@ -16,7 +16,7 @@ from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
 from .summary_stats import table_sumarize, sample
 
-from .analysis import (TypingStats, DefaultSummaryStats)
+from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
 from .analysis_management import DfStats
 
 from pandas.io.json import dumps as pdumps
@@ -79,7 +79,8 @@ class BuckarooWidget(DOMWidget):
         
 
     summary_df_cols = [
-        'dtype', 'length', 'nan_count', 'distinct_count', 'empty_count',
+        'dtype',
+        'length', 'nan_count', 'distinct_count', 'empty_count',
         'empty_per', 'unique_per', 'nan_per', 'is_numeric', 'is_integer',
         'is_datetime', 'mode', 'min', 'max','mean',
         ]
@@ -105,7 +106,8 @@ class BuckarooWidget(DOMWidget):
         if fast_mode:
             self.dfConfig['sampled'] = True
 
-        self.stats = DfStats(df, [TypingStats, DefaultSummaryStats])
+        self.stats = DfStats(df, [TypingStats, DefaultSummaryStats, ColDisplayHints])
+        #self.stats = DfStats(df, [TypingStats])
         self.summaryDf = df_to_obj(self.stats.sdf.loc[self.summary_df_cols], self.stats.col_order)
 
         tempDfc = self.dfConfig.copy()
@@ -131,9 +133,10 @@ class BuckarooWidget(DOMWidget):
             #ideally this won't require a reserialization.  All
             #possible col_orders shoudl be serialized once, and the
             #frontend should just toggle from them
-            self.origDf = df_to_obj(tdf, self.stats.col_order, table_hints=self.stats.table_hints)
+            #self.origDf = df_to_obj(tdf, self.stats.col_order, table_hints=self.stats.table_hints)
+            self.origDf = df_to_obj(tdf, self.stats.col_order) #, table_hints=self.stats.table_hints)
         else:
-            self.origDf = df_to_obj(tdf, table_hints=self.stats.table_hints)
+            self.origDf = df_to_obj(tdf) #, table_hints=self.stats.table_hints)
 
     def df_from_dfConfig(self):
         if self.dfConfig['sampled']:

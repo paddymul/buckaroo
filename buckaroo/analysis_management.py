@@ -19,6 +19,8 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
         ser = df[ser_name]
+        #fixme
+        sampled_ser = ser
         summary_ser = pd.Series({}, dtype='object')
         table_hint_dict = {}
         for a_kls in ordered_objs:

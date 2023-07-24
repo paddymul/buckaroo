@@ -77,6 +77,8 @@ class DistinctPer(ColAnalysis):
     def summary(sampled_ser, summary_ser, raw_ser):
         return {'distinct_per': summary_ser.loc['distinct_count'] / summary_ser.loc['len']}
 
+class DependsNoProvides(ColAnalysis):
+    requires_summary = ["len"]
 
 
 class TestOrderAnalysis(unittest.TestCase):
@@ -101,6 +103,12 @@ class TestOrderAnalysis(unittest.TestCase):
             [CA_CD, CA_AB, CA_EF, CA_G])
             #note the order between CA_CD and CA_AB doesn't matter - 
             # as long as they occur before other classes
+
+    def test_no_provides(self):
+        # order_analysis should work properly with ColAnalysis objects taht don't provide any summary_stats
+        self.assertEqual(
+            order_analysis([DCLen, DistinctPer, DependsNoProvides]),
+            [DCLen, DependsNoProvides, DistinctPer])
         
     def test_cycle(self):
         with self.assertRaises(graphlib.CycleError):
@@ -112,6 +120,7 @@ class TestOrderAnalysis(unittest.TestCase):
             check_solvable([NoRoute])
 
 df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
+
 class TestAnalysisPipeline(unittest.TestCase):
     def test_produce_summary_df(self):
         produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')

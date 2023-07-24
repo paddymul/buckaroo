@@ -10,12 +10,12 @@ class ColAnalysis(object):
     """
     requires_raw = False
     requires_summary = [] # What summary stats does this analysis provide
-    provides_summary = [] # mean/max/histogram
-    provides_cleaning = None # or the name of the set of transforms this provides for column reordering
+    provided_summary = [] # mean/max/histogram
+    provided_cleaning = None # or the name of the set of transforms this provides for column reordering
     provides_table_hints = None # display hints provided ex 'red_negative'
 
     @staticmethod
-    def summary(sampled_ser, summary_ser):
+    def summary(sampled_ser, summary_ser, ser):
         pass
 
     @staticmethod
@@ -77,7 +77,10 @@ def order_analysis(a_objs):
     graph = {}
     key_class_objs = {}
     for ao in a_objs:
-        temp_provided = ao.provided_summary[0]
+        if len(ao.provided_summary) == 0:
+            temp_provided = "__no_provided_keys__"
+        else:
+            temp_provided = ao.provided_summary[0]
         first_mid_key = mid_key = ao.__name__ + "###" + temp_provided
         for k in ao.provided_summary[1:]:
             #print("k", k)
