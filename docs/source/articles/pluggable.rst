@@ -83,6 +83,7 @@ column_ordering
         
             @staticmethod
             def column_ordering(summary_df):
+	        # I know that this could be done in pure pandas on the summary_df
                 col_dicts = []
                 for i, col in enumerate(df.columns):
         	    col_facts = {
@@ -141,4 +142,25 @@ summary_stats_set
 
 multiple column_orderings and summary_stats_facts can be added.  Then the UI allows the user to toggle through the different column orderings to see the view of the table they want.
 
+Order of Operations
+===================
+
+
+The pluggable analysis framework runs different functions on analysis functions in a specific order.  First the DAG for all of the analysis objects and verifies that all of the needed facts can be computed. once all of the analysis objects are ordered the computations start.
+
+1. Compute the order of analysis objects.  This builds a DAG and makes sure all of the facts can be computed.
+2. Run all of the ``summary`` methods and build the ``summary_df``
+3. Run all of the ``cleaning_instructions`` methods and get the list of interpreter instructions
+4. Run the interpreter and produce a new "cleaned" dataframe
+5. Run all of the ``summary`` methods and build the ``summary_df`` for the cleaned dataframe.
+6. Run all of the ``table_hints`` methods and build the table_hints dictionary
+7. Run all of the ``col_ordering`` methods and produce the different col_orderings.
+
+Porting to polars
+=================
+
+I would really like to be able to run these computations in lazy polars, there should be very significant speed increases.  I think this stackoverflow answer might be the key... but I'm not sure  https://stackoverflow.com/a/76560342
+
+
+For now I'm just focussing on writing the framework and making sure it works... I can make it fast later... I think.
 
