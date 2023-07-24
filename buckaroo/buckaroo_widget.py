@@ -84,14 +84,12 @@ class BuckarooWidget(DOMWidget):
         'showTransformed': True,
         'showCommands': True,
     }).tag(sync=True)
-        
 
     summary_df_cols = [
         'dtype',
         'length', 'nan_count', 'distinct_count', 'empty_count',
         'empty_per', 'unique_per', 'nan_per', 'is_numeric', 'is_integer',
-        'is_datetime', 'mode', 'min', 'max','mean',
-        ]
+        'is_datetime', 'mode', 'min', 'max','mean']
     
     def __init__(self, df,
                  sampled=True,
@@ -133,6 +131,12 @@ class BuckarooWidget(DOMWidget):
             'transformed_df':self.origDf,
             'generated_py_code':'#from py widget init'}
         self.setup_from_command_kls_list()
+
+    def add_analysis(self, analysis_obj):
+        self.stats.add_analysis(analysis_obj)
+        self.summaryDf = df_to_obj(self.stats.sdf.loc[self.summary_df_cols], self.stats.col_order)
+        #just trigger redisplay
+        self.update_based_on_df_config(3)
 
     @observe('dfConfig')
     def update_based_on_df_config(self, change):
@@ -192,4 +196,6 @@ class BuckarooWidget(DOMWidget):
         without_incoming.append(incomingCommandKls)
         self.command_classes = without_incoming
         self.setup_from_command_kls_list()
+
+        
 

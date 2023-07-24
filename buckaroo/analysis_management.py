@@ -100,8 +100,6 @@ class DfStats(object):
         self.ap = AnalsysisPipeline(col_analysis_objs)
         self.sdf, self.table_hints = self.ap.process_df(self.df)
 
-
-
     def get_operating_df(self, df, force_full_eval):
         rows = len(df)
         cols = len(df.columns)
@@ -111,5 +109,9 @@ class DfStats(object):
             return df.sample(np.min([50_000, len(df)]))
         else:
             return df
+
+    def add_analysis(self, a_obj):
+        self.ap.add_analysis(a_obj)
+        self.sdf, self.table_hints = self.ap.process_df(self.df)
 
     
