@@ -14,7 +14,7 @@ from traitlets import Unicode, List, Dict, observe
 
 from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
-from .summary_stats import table_sumarize, sample
+from .summary_stats import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
 from .analysis_management import DfStats
@@ -29,12 +29,20 @@ EMPTY_DF_OBJ = {'schema': {'fields': [{'name': 'index', 'type': 'string'}],
   'pandas_version': '1.4.0'},
  'data': []}
 
+
+def dumb_table_sumarize(df):
+    """used when table_hints aren't provided.  Trests every column as a string"""
+    table_hints = {col:{'is_numeric':False}  for col in df}
+    table_hints['index'] = {'is_numeric': False} 
+    return table_hints
+
+
 def df_to_obj(df, order = None, table_hints=None):
     if order is None:
         order = df.columns
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
     if table_hints is None:
-        obj['table_hints'] = json.loads(pdumps(table_sumarize(df)))
+        obj['table_hints'] = json.loads(pdumps(dumb_table_sumarize(df)))
     else:
         obj['table_hints'] = json.loads(pdumps(table_hints))
     fields=[{'name':'index'}]
