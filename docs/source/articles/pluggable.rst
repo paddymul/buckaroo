@@ -164,3 +164,4 @@ I would really like to be able to run these computations in lazy polars, there s
 
 For now I'm just focussing on writing the framework and making sure it works... I can make it fast later... I think.
 
+After further thought, I think I can make all of the base series calcs lazy with pl.struct.  Then do all the other calcs in pure python (they should be fast).
