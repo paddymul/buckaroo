@@ -85,11 +85,6 @@ class BuckarooWidget(DOMWidget):
         'showCommands': True,
     }).tag(sync=True)
 
-    summary_df_cols = [
-        'dtype',
-        'length', 'nan_count', 'distinct_count', 'empty_count',
-        'empty_per', 'unique_per', 'nan_per', 'is_numeric', 'is_integer',
-        'is_datetime', 'mode', 'min', 'max','mean']
     
     def __init__(self, df,
                  sampled=True,
@@ -113,8 +108,7 @@ class BuckarooWidget(DOMWidget):
             self.dfConfig['sampled'] = True
 
         self.stats = DfStats(df, [TypingStats, DefaultSummaryStats, ColDisplayHints])
-        #self.stats = DfStats(df, [TypingStats])
-        self.summaryDf = df_to_obj(self.stats.sdf.loc[self.summary_df_cols], self.stats.col_order)
+        self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
 
         tempDfc = self.dfConfig.copy()
         tempDfc.update(dict(
@@ -134,7 +128,7 @@ class BuckarooWidget(DOMWidget):
 
     def add_analysis(self, analysis_obj):
         self.stats.add_analysis(analysis_obj)
-        self.summaryDf = df_to_obj(self.stats.sdf.loc[self.summary_df_cols], self.stats.col_order)
+        self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         #just trigger redisplay
         self.update_based_on_df_config(3)
 

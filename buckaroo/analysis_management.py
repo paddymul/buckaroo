@@ -55,12 +55,26 @@ class AnalsysisPipeline(object):
     allow col_anlysis objects to be added
     """
     def __init__(self, analysis_objects, unit_test_objs=True):
+        self.summary_stats_display = "all"
         self.unit_test_objs = unit_test_objs
         self.verify_analysis_objects(analysis_objects)
 
     def verify_analysis_objects(self, analysis_objects):
         self.ordered_a_objs = order_analysis(analysis_objects)
         check_solvable(self.ordered_a_objs)
+        all_provided = []
+        for a_obj in self.ordered_a_objs:
+            all_provided.extend(a_obj.provided_summary)
+            if a_obj.summary_stats_set:
+                self.summary_stats_display = a_obj.summary_stats_display
+
+        self.provided_summary_facts_set = set(all_provided)
+
+
+        #all is a special value that will dipslay every row
+        if self.summary_stats_display and not self.summary_stats_display == "all":
+            #verify that we have a way of computing all of the facts we are displaying
+            assert self.provided_summary_facts_set.issuperset(set(self.summary_stats_display))
 
         if self.unit_test_objs:
             self.unit_test()
@@ -99,6 +113,7 @@ class DfStats(object):
         self.col_order = self.df.columns
         self.ap = AnalsysisPipeline(col_analysis_objs)
         self.sdf, self.table_hints = self.ap.process_df(self.df)
+        
 
     def get_operating_df(self, df, force_full_eval):
         rows = len(df)
@@ -110,8 +125,13 @@ class DfStats(object):
         else:
             return df
 
+    @property
+    def presentation_sdf(self):
+        if self.ap.summary_stats_display == "all":
+            return self.sdf
+        return self.sdf.loc[self.ap.summary_stats_display]
+
     def add_analysis(self, a_obj):
         self.ap.add_analysis(a_obj)
         self.sdf, self.table_hints = self.ap.process_df(self.df)
 
-    

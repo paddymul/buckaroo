@@ -53,6 +53,12 @@ class DefaultSummaryStats(ColAnalysis):
         'length', 'min', 'max', 'mean', 'nan_count', 'distinct_count',
         'distinct_per', 'empty_count', 'empty_per', 'unique_per', 'nan_per',
         'mode']
+
+    summary_stats_display_set = [
+        'dtype',
+        'length', 'nan_count', 'distinct_count', 'empty_count',
+        'empty_per', 'unique_per', 'nan_per', 'is_numeric', 'is_integer',
+        'is_datetime', 'mode', 'min', 'max','mean']
     
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):

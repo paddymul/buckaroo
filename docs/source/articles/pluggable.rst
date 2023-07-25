@@ -137,7 +137,7 @@ default_cleaning_instructions
     I'm still figuring out how to toggle through different cleanings. I'm worried about modifying the default columns.  I guess I can make the returned cleaning instructions do a column rename by convention. so for the above cleaning instruction first copy the original column name to "_orig"
     
 summary_stats_set
-    a list of which rows from summary stats to display
+    a list of which rows from summary stats to display.  Currently only the last added summary_stats_set is used
 
 
 multiple column_orderings and summary_stats_facts can be added.  Then the UI allows the user to toggle through the different column orderings to see the view of the table they want.

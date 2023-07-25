@@ -13,6 +13,7 @@ class ColAnalysis(object):
     provided_summary = [] # mean/max/histogram
     provided_cleaning = None # or the name of the set of transforms this provides for column reordering
     provides_table_hints = None # display hints provided ex 'red_negative'
+    summary_stats_set = None
 
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
