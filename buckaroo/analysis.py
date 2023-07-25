@@ -54,7 +54,7 @@ class DefaultSummaryStats(ColAnalysis):
         'distinct_per', 'empty_count', 'empty_per', 'unique_per', 'nan_per',
         'mode']
 
-    summary_stats_display_set = [
+    summary_stats_display = [
         'dtype',
         'length', 'nan_count', 'distinct_count', 'empty_count',
         'empty_per', 'unique_per', 'nan_per', 'is_numeric', 'is_integer',

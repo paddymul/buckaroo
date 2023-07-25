@@ -47,6 +47,8 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
             print("%s.summary(test_ser.%s)" % (kls.__name__, ser_name))
     return pd.DataFrame(summary_col_dict), table_hint_col_dict
 
+class NonExistentSummaryRowException(Exception):
+    pass
 
 class AnalsysisPipeline(object):
     """
@@ -65,7 +67,7 @@ class AnalsysisPipeline(object):
         all_provided = []
         for a_obj in self.ordered_a_objs:
             all_provided.extend(a_obj.provided_summary)
-            if a_obj.summary_stats_set:
+            if a_obj.summary_stats_display:
                 self.summary_stats_display = a_obj.summary_stats_display
 
         self.provided_summary_facts_set = set(all_provided)
@@ -74,7 +76,9 @@ class AnalsysisPipeline(object):
         #all is a special value that will dipslay every row
         if self.summary_stats_display and not self.summary_stats_display == "all":
             #verify that we have a way of computing all of the facts we are displaying
-            assert self.provided_summary_facts_set.issuperset(set(self.summary_stats_display))
+            if not self.provided_summary_facts_set.issuperset(set(self.summary_stats_display)):
+                raise NonExistentSummaryRowException()
+            
 
         if self.unit_test_objs:
             self.unit_test()

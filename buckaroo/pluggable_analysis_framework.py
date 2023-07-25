@@ -13,7 +13,7 @@ class ColAnalysis(object):
     provided_summary = [] # mean/max/histogram
     provided_cleaning = None # or the name of the set of transforms this provides for column reordering
     provides_table_hints = None # display hints provided ex 'red_negative'
-    summary_stats_set = None
+    summary_stats_display = None
 
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
@@ -74,7 +74,6 @@ def order_analysis(a_objs):
     provided_summary and requires_summary is ordered for computation
     """
 
-
     graph = {}
     key_class_objs = {}
     for ao in a_objs:
@@ -99,20 +98,3 @@ def order_analysis(a_objs):
     #print("seq", seq)
     full_class_list = [key_class_objs.get(k, None) for k in seq]
     return clean_list(full_class_list)
-
-
-
-
-        
-        
-        
-# feature to add
-## if two Analysis Classes provide the same fact, flag a warning
-# run the analysis that provides less facts last.  Odds are the user is tweaking a single fact
-
-
-#produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
-
-#how to find the variable name for the dataframe
-#[k for k,v in globals().items() if v is test_df]
-
