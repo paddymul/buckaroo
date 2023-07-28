@@ -61,9 +61,7 @@ class AnalsysisPipeline(object):
         self.unit_test_objs = unit_test_objs
         self.verify_analysis_objects(analysis_objects)
 
-    def verify_analysis_objects(self, analysis_objects):
-        self.ordered_a_objs = order_analysis(analysis_objects)
-        check_solvable(self.ordered_a_objs)
+    def process_summary_facts_set(self):
         all_provided = []
         for a_obj in self.ordered_a_objs:
             all_provided.extend(a_obj.provided_summary)
@@ -78,8 +76,11 @@ class AnalsysisPipeline(object):
             #verify that we have a way of computing all of the facts we are displaying
             if not self.provided_summary_facts_set.issuperset(set(self.summary_stats_display)):
                 raise NonExistentSummaryRowException()
-            
 
+    def verify_analysis_objects(self, analysis_objects):
+        self.ordered_a_objs = order_analysis(analysis_objects)
+        check_solvable(self.ordered_a_objs)
+        self.process_summary_facts_set()
         if self.unit_test_objs:
             self.unit_test()
 
