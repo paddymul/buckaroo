@@ -12,12 +12,13 @@ all_nan_ser = pd.Series([np.nan, np.nan])
 int_ser = pd.Series([10, 30, -10, 33])
 fp_ser = pd.Series([33.2, 83.2, -1.0, 0])
 
-all_sers = [
-    text_ser, datelike_ser, all_nan_ser,
-    int_ser, fp_ser]
-
 nan_text_ser = pd.Series([np.nan, np.nan, 'y', 'y'])
 nan_mixed_type_ser = pd.Series([np.nan, np.nan, 'y', 'y', 8.0])
+
+
+all_sers = [
+    text_ser, datelike_ser, all_nan_ser,
+    int_ser, fp_ser, nan_text_ser, nan_mixed_type_ser]
 
 def test_text_ser():
     DefaultSummaryStats.summary(nan_text_ser, nan_text_ser, nan_text_ser)
