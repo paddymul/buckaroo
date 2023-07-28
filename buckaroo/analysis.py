@@ -70,6 +70,7 @@ class DefaultSummaryStats(ColAnalysis):
         empty_count = val_counts.get('', 0)
 
         is_numeric = pd.api.types.is_numeric_dtype(ser)
+        is_object = pd.api.types.is_object_dtype
 
         base_d = dict(
             length=l,
@@ -81,9 +82,9 @@ class DefaultSummaryStats(ColAnalysis):
             unique_per=unique_count/l,
             nan_per=nan_count/l,
             mode=get_mode(ser),
-            min=ser.min(),
-            max=ser.max(),
-            mean=np.nan)
+            min=(is_numeric and ser.dropna().min() or np.nan),
+            max=(is_numeric and ser.dropna().max() or np.nan),
+            mean=(is_numeric and ser.dropna().mean() or np.nan))
         if is_numeric:
             base_d['mean'] = ser.mean()
         return base_d
