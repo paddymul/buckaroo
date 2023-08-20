@@ -35,6 +35,9 @@
     --color-example: #fff;
 }
 
+.fluid-container {
+    min-width:950px
+}
 
 html,body
 {
@@ -65,3 +68,6 @@ html,body
     outline:4px solid pink;
 }
 
+.histogram {
+    color:black;
+}
