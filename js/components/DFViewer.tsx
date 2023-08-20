@@ -158,7 +158,9 @@ export function DFViewer(
         <AgGridReact
           ref={gridRef}
           gridOptions={gridOptions}
-          rowData={agData}
+    rowData={agData}
+              headerHeight={40}
+
           components={components}
           columnDefs={styledColumns}
         ></AgGridReact>

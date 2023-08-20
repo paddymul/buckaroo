@@ -71,3 +71,10 @@ html,body
 .histogram {
     color:black;
 }
+
+.customHeaderRenderer {
+    height:100%;
+}
+.customHeaderLabel {
+    padding:0;
+}
