@@ -1,9 +1,12 @@
 import React, {
   useRef,
   CSSProperties,
+//  useMemo,
 } from 'react';
 import _ from 'lodash';
 import { DFWhole, EmptyDf } from './staticData';
+import CustomHeader from './CustomHeader';
+
 import { updateAtMatch, dfToAgrid } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import {
@@ -11,6 +14,20 @@ import {
 } from 'ag-grid-community';
 
 export type setColumFunc = (newCol: string) => void;
+
+  // const components = useMemo<{
+  //   [p: string]: any;
+  // }>(() => {
+  //   return {
+  //     agColumnHeader: CustomHeader,
+  //   };
+  // }, []);
+
+
+const components =  {
+      agColumnHeader: CustomHeader,
+    };
+
 
 export function DFViewer(
   {
@@ -142,6 +159,7 @@ export function DFViewer(
           ref={gridRef}
           gridOptions={gridOptions}
           rowData={agData}
+          components={components}
           columnDefs={styledColumns}
         ></AgGridReact>
       </div>
