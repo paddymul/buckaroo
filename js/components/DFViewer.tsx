@@ -5,13 +5,16 @@ import React, {
 } from 'react';
 import _ from 'lodash';
 import { DFWhole, EmptyDf } from './staticData';
-import CustomHeader from './CustomHeader';
+
 
 import { updateAtMatch, dfToAgrid } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import {
   GridOptions,
 } from 'ag-grid-community';
+
+//import CustomHeader from './CustomHeader';
+import { HeaderComp } from './BaseHeader';
 
 export type setColumFunc = (newCol: string) => void;
 
@@ -25,7 +28,8 @@ export type setColumFunc = (newCol: string) => void;
 
 
 const components =  {
-      agColumnHeader: CustomHeader,
+      //agColumnHeader: CustomHeader,
+      agColumnHeader: HeaderComp
     };
 
 

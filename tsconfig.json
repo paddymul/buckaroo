@@ -14,6 +14,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
+      "experimentalDecorators": true,
     // This allows us to initialize members in the "initialize" method
     "strictPropertyInitialization": false,
       "target": "es2015",

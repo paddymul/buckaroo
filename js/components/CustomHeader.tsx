@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { IHeaderParams } from 'ag-grid-community';
+//import { IHeaderParams } from 'ag-grid-community';
+import { IHeaderParams } from './BaseHeader';
 
 import { BarChart, Bar, Tooltip,
 	 //Legend,
