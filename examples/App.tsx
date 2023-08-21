@@ -16,8 +16,8 @@ const examples = {
     ColumnsEditorEx: {title: 'ColumnsEditor', file: 'ColumnsEditorEx'},
     CommandViewerEx: {title: 'CommandViewer', file: 'CommandViewerEx'},
     DFViewerEx: {title: 'DFViewer', file: 'DFViewerEx'},
-  StatusBarEx: {title: 'StatusBar', file: 'StatusBarEx'},
-    ChartEx: {title: 'Chart', file: 'ChartEx'}
+    StatusBarEx: {title: 'StatusBar', file: 'StatusBarEx'},
+    HistogramEx: {title: 'Histogram', file: 'HistogramEx'}
 };
 
 // The examples use a code-loading technique that I have described in

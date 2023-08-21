@@ -38,6 +38,7 @@ export type DFData = DFDataRow[];
 
 export interface ColumnObjHint {
   is_numeric:false;
+  histogram?: number[][];
 }
 
 export interface ColumnNumHint {
@@ -178,9 +179,7 @@ export const tableDf: DFWhole = {
 	    'tripduration': 471,
 	    'start station name': 'Catherine St & Monroe St',
 	    'floatCol': '1.111',
-	   }
-
-	   ,
+	   },
 	   {'index': 1,
 	    'end station name': 'South St & Whitehall St',
 	    'tripduration': 1494,
@@ -207,7 +206,7 @@ export const tableDf: DFWhole = {
 	   }],
   'table_hints':
   {
-    'end station name': {'is_numeric': false},
+    'end station name': {'is_numeric': false, 'histogram':[] },
     'tripduration': {'is_numeric': true,
 		     'is_integer': true,
 		     'min_digits': 3,
@@ -215,7 +214,7 @@ export const tableDf: DFWhole = {
 		     'histogram': [[0.6, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
 				   [373.0, 485.1, 597.2, 709.3, 821.4, 933.5, 1045.6,
 				    1157.7, 1269.8, 1381.9, 1494.0]]},
-    'start station name': {'is_numeric': false},
+    'start station name': {'is_numeric': false, 'histogram':[] },
     'floatCol': {'is_numeric': true,
 		 'is_integer': false,
 		     'min_digits': 1,

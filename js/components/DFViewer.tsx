@@ -14,26 +14,8 @@ import {
 } from 'ag-grid-community';
 
 import { HistogramCell } from './CustomHeader';
-//import  HistogramCell from './CustomHeader';
-//import { HeaderComp } from './BaseHeader';
 
 export type setColumFunc = (newCol: string) => void;
-
-  // const components = useMemo<{
-  //   [p: string]: any;
-  // }>(() => {
-  //   return {
-  //     agColumnHeader: CustomHeader,
-  //   };
-  // }, []);
-
-
-
-// const components =  {
-//       //agColumnHeader: CustomHeader,
-//       agColumnHeader: HeaderComp
-//     };
-
 
 
 export function DFViewer(
@@ -169,12 +151,18 @@ export function DFViewer(
   };
 
   makeCondtionalAutosize(50, 350);
-  const pinnedTopRowData =  [{'index': 'foo',
-			  'end station name': 'bar',
-	    'tripduration': 471,
-	    'start station name': 'Catherine St & Monroe St',
-	    'floatCol': '1.111',
-			 }];
+  //const histograms = _.fromPairs(  _.map({'a':10, 'b':20}, function(val,key) {return [y, x] })) 
+  // const histograms = _.fromPairs(  _.map(df.table_hints,
+  // 					 function(val,key) {
+  // 					   return [key, val.histogram || []] })) 
+  const pinnedTopRowData = [df.table_hints];
+  //const pinnedTopRowData = [histograms];
+  // const pinnedTopRowData =  [{'index': 'foo',
+  // 			  'end station name': 'bar',
+  // 	    'tripduration': 471,
+  // 	    'start station name': 'Catherine St & Monroe St',
+  // 	    'floatCol': '1.111',
+  // 			 }];
   
   return (
     <div className="df-viewer">
