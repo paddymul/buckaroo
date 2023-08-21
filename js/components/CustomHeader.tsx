@@ -1,7 +1,4 @@
-//import React, { useEffect, useRef, useState, Component } from 'react';
-import React, {  Component } from 'react';
-
-//import { IHeaderParams } from 'ag-grid-community';
+import React from 'react';
 import { IHeaderParams } from './BaseHeader';
 
 import { BarChart, Bar, Tooltip,
@@ -10,7 +7,7 @@ import { BarChart, Bar, Tooltip,
 	   } from 'recharts';
 
 
-import { ICellRendererParams } from 'ag-grid-community';
+//import { ICellRendererParams } from 'ag-grid-community';
 
 export interface ICustomHeaderParams extends IHeaderParams {
   menuIcon: string;
@@ -40,6 +37,7 @@ export const bakedData = [
     population: 1890,
   },
 ];
+
 const makeData = (histogram: number[]) => {
   const accum = [];
   for (let i = 0; i < histogram.length; i++) {
@@ -54,23 +52,16 @@ const makeData = (histogram: number[]) => {
 }
 
 
-interface CellStyle {
-  [cssProperty: string]: string | number;
-}
-export class CustomPinnedRowRenderer extends Component<
-  ICellRendererParams & { style: CellStyle }
-> {
-  render() {
-    return <span style={this.props.style}>{this.props.value}</span>;
-  }
-}
+// interface CellStyle {
+//   [cssProperty: string]: string | number;
+// }
 
 
 export const HistogramCell  = ({histogram}: {histogram:any}) => {
   const fData = histogram ? makeData(histogram) : bakedData;
   console.log("fData", fData);
   return (<div> 
-        <BarChart  width={50} height={20} data={bakedData}>
+        <BarChart  width={50} height={20} data={histogram}>
           <Bar dataKey="population" fill="#8884d8" />
           <Tooltip/>
     </BarChart>

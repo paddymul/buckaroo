@@ -24,7 +24,7 @@ export default function Simple() {
   },
   {
     name: 'Page E',
-    population: 1890,
+    population: 189000,
   },
 ];
 
