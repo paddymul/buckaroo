@@ -13,8 +13,9 @@ import {
   GridOptions,
 } from 'ag-grid-community';
 
-//import CustomHeader from './CustomHeader';
-import { HeaderComp } from './BaseHeader';
+import { HistogramCell } from './CustomHeader';
+//import  HistogramCell from './CustomHeader';
+//import { HeaderComp } from './BaseHeader';
 
 export type setColumFunc = (newCol: string) => void;
 
@@ -27,10 +28,12 @@ export type setColumFunc = (newCol: string) => void;
   // }, []);
 
 
-const components =  {
-      //agColumnHeader: CustomHeader,
-      agColumnHeader: HeaderComp
-    };
+
+// const components =  {
+//       //agColumnHeader: CustomHeader,
+//       agColumnHeader: HeaderComp
+//     };
+
 
 
 export function DFViewer(
@@ -65,7 +68,20 @@ export function DFViewer(
     rowSelection: 'single',
     onRowClicked: (event) => console.log('A row was clicked'),
     defaultColDef: {
-      sortable:true, type: 'rightAligned'
+      sortable:true, type: 'rightAligned',
+      cellRendererSelector: (params) => {
+        if (params.node.rowPinned) {
+          return {
+            component: HistogramCell,
+            params: {
+              style: { fontStyle: 'italic' },
+            },
+          };
+        } else {
+          // rows that are not pinned don't use any cell renderer
+          return undefined;
+        }
+      },
     },
 
     onCellClicked: (event) => {
@@ -153,6 +169,13 @@ export function DFViewer(
   };
 
   makeCondtionalAutosize(50, 350);
+  const pinnedTopRowData =  [{'index': 'foo',
+			  'end station name': 'bar',
+	    'tripduration': 471,
+	    'start station name': 'Catherine St & Monroe St',
+	    'floatCol': '1.111',
+			 }];
+  
   return (
     <div className="df-viewer">
       <div
@@ -162,10 +185,8 @@ export function DFViewer(
         <AgGridReact
           ref={gridRef}
           gridOptions={gridOptions}
-    rowData={agData}
-              headerHeight={40}
-
-          components={components}
+          rowData={agData}
+          pinnedTopRowData={pinnedTopRowData}
           columnDefs={styledColumns}
         ></AgGridReact>
       </div>
