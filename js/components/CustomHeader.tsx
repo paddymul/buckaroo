@@ -63,7 +63,7 @@ export const HistogramCell  = ({histogram}: {histogram:any}) => {
   return (<div> 
         <BarChart  width={50} height={20} data={histogram}>
           <Bar dataKey="population" fill="#8884d8" />
-          <Tooltip/>
+    <Tooltip offset={20} allowEscapeViewBox={{ x: true, y: true }} />
     </BarChart>
     </div>
     );
