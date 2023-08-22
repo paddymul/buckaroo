@@ -1,5 +1,5 @@
 import React from 'react';
-import {HistogramCell} from '../../js/components/CustomHeader';
+import {CategoricalHistogramCell, HistogramCell} from '../../js/components/CustomHeader';
 //import {tableDf } from '../../js/components/staticData';
 
 
@@ -34,12 +34,28 @@ export default function Simple() {
     {'name': '109   183', 'population': 0.0994},
     {'name': '183   257', 'population': 0.0312},
     {'name': '257   331', 'population': 0.0034}]
+
+  const bool_histo =[
+    {'name': 'False', 'false': 0.5},
+    {'name': 'True', 'true': 0.3},
+    {'name': 'NA', 'NA': 0.2}]
+
+  const categorical_histo =[
+    {'name': 'KTM', 'cat_pop': 0.3},
+    {'name': 'Gas Gas', 'cat_pop': 0.15},
+    {'name': 'Yamaha', 'cat_pop': 0.1},
+    {'name': 'unique', 'unique': 0.25},
+    {'name': 'NA', 'NA': 0.2}
+  ]
+
+
   return <div>
     <div className={"pt1 small-bar"}></div>
 
     <div className={"pt4 small-bar"}></div>
     <div className={"pt5 small-bar"}></div>
     <div className={"pt6 small-bar"}></div>
+    <div className={"pt7 small-bar"}></div>
     <div style={{"border":"1px solid green"}}>
       <span> base</span>
       <HistogramCell histogram={hist1}/>
@@ -47,6 +63,14 @@ export default function Simple() {
     <div style={{"border":"1px solid green"}}>
       <span> num_histo </span>
       <HistogramCell histogram={num_histo}/>
+    </div>
+    <div style={{"border":"1px solid green"}}>
+      <span> bool_histo </span>
+      <CategoricalHistogramCell histogram={bool_histo}/>
+    </div>
+    <div style={{"border":"1px solid green"}}>
+      <span> categorical_histo </span>
+      <CategoricalHistogramCell histogram={categorical_histo}/>
     </div>
 
   </div>

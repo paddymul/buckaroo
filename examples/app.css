@@ -94,7 +94,9 @@ html,body
     height:100px; width:100px;
 }
 
-
+/*
+from https://www.magicpattern.design/tools/css-backgrounds
+*/
 .pt1 {
 background-color: #e5e5f7;
 opacity: 0.8;
@@ -124,6 +126,13 @@ opacity: 0.8;
 background-image: radial-gradient(#444cf7 1.2px, #e5e5f7 1.2px);
 background-size: 4px 4px;
 }
+
+.pt7 {
+background-color: #e5e5f7;
+opacity: 0.8;
+background-image: radial-gradient( ellipse farthest-corner at 4px 4px , #444cf7, #444cf7 50%, #e5e5f7 50%);
+background-size: 4px 4px;
+}
 /* 
 body {
 
@@ -141,6 +150,9 @@ true
 false
 n/a
 long tail
+completely unique
 
 
 */
+
+
