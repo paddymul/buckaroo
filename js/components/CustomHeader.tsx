@@ -52,18 +52,19 @@ const makeData = (histogram: number[]) => {
 }
 
 
-// interface CellStyle {
-//   [cssProperty: string]: string | number;
-// }
 
+const formatter = (value:any, name:any, props:any) => {
+  //console.log("formatter", value, name, props)
+  return [value, props.payload.name]
+}
 
 export const HistogramCell  = ({histogram}: {histogram:any}) => {
   const fData = histogram ? makeData(histogram) : bakedData;
   console.log("fData", fData);
   return (<div> 
-        <BarChart  width={50} height={20} data={histogram}>
+    <BarChart  width={100} height={30} data={histogram} >
           <Bar dataKey="population" fill="#8884d8" />
-    <Tooltip offset={20} allowEscapeViewBox={{ x: true, y: true }} />
+    <Tooltip offset={20} formatter={formatter}   allowEscapeViewBox={{ x: true, y: true }} />
     </BarChart>
     </div>
     );

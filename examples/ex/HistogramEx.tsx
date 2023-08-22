@@ -35,6 +35,11 @@ export default function Simple() {
     {'name': '183   257', 'population': 0.0312},
     {'name': '257   331', 'population': 0.0034}]
   return <div>
+    <div className={"pt1 small-bar"}></div>
+
+    <div className={"pt4 small-bar"}></div>
+    <div className={"pt5 small-bar"}></div>
+    <div className={"pt6 small-bar"}></div>
     <div style={{"border":"1px solid green"}}>
       <span> base</span>
       <HistogramCell histogram={hist1}/>
@@ -43,5 +48,6 @@ export default function Simple() {
       <span> num_histo </span>
       <HistogramCell histogram={num_histo}/>
     </div>
+
   </div>
 }
