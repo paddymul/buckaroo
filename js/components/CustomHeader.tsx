@@ -87,8 +87,8 @@ export const HistogramCell   = ({histogram}: {histogram:any}) => {
     <Bar dataKey="true"  stroke="#000000"  fill="#000" stackId="stack" />
     <Bar dataKey="false" stroke="#000000"  fill="#fff" stackId="stack" />
     <Bar dataKey="cat_pop" stroke="gray"  fill="url(#circles)" stackId="stack" />
-    <Bar dataKey="unique"                  fill="url(#stripe)" stackId="stack"/>
-    <Bar dataKey="NA"                      fill="url(#checkers)" stackId="stack"/>
+    <Bar dataKey="unique"                  fill="url(#checkers)" stackId="stack"/>
+    <Bar dataKey="NA"                      fill="url(#stripe)" stackId="stack"/>
     
     <Tooltip offset={20} formatter={formatter} labelStyle={{"display":"None"}}
                          contentStyle={{"color":"black"}}
