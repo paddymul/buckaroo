@@ -32,6 +32,17 @@ export default function Simple() {
     {'name': 'NA', 'NA': 0.2}
   ]
 
+  const categorical_histo_lt =[
+    {'name': 'KTM', 'cat_pop': 0.25},
+    {'name': 'Gas Gas', 'cat_pop': 0.12},
+    {'name': 'Yamaha', 'cat_pop': 0.08},
+    {'name': 'NA', 'NA': 0.2},
+    {'name': 'longtail', 'unique': 0.15, 'longtail':.20},
+
+
+  ]
+
+
   const all_unique =[
     {'name': 'unique', 'unique': 1},
   ]
@@ -85,40 +96,40 @@ export default function Simple() {
 
 
 
-  return <div>
-    <div style={{"border":"1px solid green"}}>
-      <span> num_histo </span>
+  return <div className="histogram-ex">
+    <div className="histogram-wrap">
+      <span> Numeric </span>
       <HistogramCell histogram={num_histo}/>
     </div>
-    <div style={{"border":"1px solid green"}}>
-      <span> bool_histo </span>
+    <div className="histogram-wrap">
+      <span> Boolean with NA  </span>
       <HistogramCell histogram={bool_histo}/>
     </div>
-    <div style={{"border":"1px solid green"}}>
-      <span> categorical_histo </span>
+    <div className="histogram-wrap">
+      <span> Categorical unique NA </span>
       <HistogramCell histogram={categorical_histo}/>
     </div>
+    <div className="histogram-wrap">
+      <span> Categorical_longtail </span>
+      <HistogramCell histogram={categorical_histo_lt}/>
+    </div>
 
-    <div style={{"border":"1px solid green"}}>
-      <span> all_unique </span>
+    <div className="histogram-wrap">
+      <span> Categorical All unique </span>
       <HistogramCell histogram={all_unique}/>
     </div>
 
-    <div style={{"border":"1px solid green"}}>
-      <span> unique_na </span>
+    <div className="histogram-wrap">
+      <span> Categorical Unique with NA  </span>
       <HistogramCell histogram={unique_na}/>
     </div>
 
-    <div style={{"border":"1px solid green"}}>
-      <span> unique_continuous </span>
-      <HistogramCell histogram={unique_continuous}/>
-    </div>
-    <div style={{"border":"1px solid green"}}>
-      <span> unique_continuous_scaled </span>
+    <div className="histogram-wrap">
+      <span> Numeric all Unique  </span>
       <HistogramCell histogram={unique_continuous_scaled}/>
     </div>
-    <div style={{"border":"1px solid green"}}>
-      <span> unique_continuous_scaled_50 </span>
+    <div className="histogram-wrap">
+      <span> Numeric 50% unique  </span>
     <HistogramCell histogram={unique_continuous_scaled_50}/>
     </div>
 
@@ -126,3 +137,12 @@ export default function Simple() {
 
   </div>
 }
+/*
+
+  <!--
+    <div className="histogram-wrap">
+      <span> unique_continuous </span>
+      <HistogramCell histogram={unique_continuous}/>
+    </div>
+    -->
+    */
