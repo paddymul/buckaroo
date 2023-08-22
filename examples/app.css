@@ -12,6 +12,7 @@
     width: 10em;
     min-width: 10em;
     max-width: 10em;
+    overflow:hidden
 }
 
 .codeblock {
@@ -132,6 +133,7 @@ background-color: #e5e5f7;
 opacity: 0.8;
 background-image: radial-gradient( ellipse farthest-corner at 4px 4px , #444cf7, #444cf7 50%, #e5e5f7 50%);
 background-size: 4px 4px;
+
 }
 /* 
 body {
