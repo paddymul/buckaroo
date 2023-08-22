@@ -54,7 +54,7 @@ const makeData = (histogram: number[]) => {
 
 
 const formatter = (value:any, name:any, props:any) => {
-  //console.log("formatter", value, name, props)
+  console.log("formatter", value, name, props)
   return [value, props.payload.name + " asdfa"]
 }
 
@@ -77,7 +77,7 @@ export const HistogramCell  = ({histogram}: {histogram:any}) => {
           </defs>
     <Bar dataKey="population" 
                     stroke="#000000"  fill="url(#checkers)" />
-    <Tooltip offset={20} formatter={formatter}   allowEscapeViewBox={{ x: true, y: true }} />
+    <Tooltip offset={20} formatter={formatter}   labelStyle={{"color":"green"}} allowEscapeViewBox={{ x: true, y: true }} />
     </BarChart>
     </div>
     );
@@ -114,7 +114,9 @@ export const CategoricalHistogramCell  = ({histogram}: {histogram:any}) => {
     <Bar dataKey="unique"                  fill="url(#stripe)" stackId="stack"/>
     <Bar dataKey="NA"                      fill="url(#checkers)" stackId="stack"/>
     
-    <Tooltip offset={20} formatter={formatter}   allowEscapeViewBox={{ x: true, y: true }} />
+    <Tooltip offset={20} formatter={formatter} labelStyle={{"color":"green"}}
+                         contentStyle={{"color":"red"}}
+   allowEscapeViewBox={{ x: true, y: true }} />
     </BarChart>
     </div>
     );
