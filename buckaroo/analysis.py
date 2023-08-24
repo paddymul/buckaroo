@@ -91,6 +91,8 @@ class DefaultSummaryStats(ColAnalysis):
 
 
 def int_digits(n):
+    if np.isnan(n):
+        return 1
     if n == 0:
         return 1
     if np.sign(n) == -1:
@@ -130,10 +132,12 @@ def categorical_dict(ser, top_n_positions=7):
     unique_count = sum(val_counts == 1)
     long_tail = full_long_tail - unique_count
     na_count = ser.isna().sum()
-
-    histogram['unique'] = unique_count
-    histogram['long_tail'] = long_tail
-    histogram['NA'] = na_count
+    if unique_count > 0:
+        histogram['unique'] = unique_count
+    if long_tail > 0:
+        histogram['long_tail'] = long_tail
+    if na_count > 0:
+        histogram['NA'] = na_count
     return histogram    
 
 def categorical_histogram(ser, top_n_positions=7):
@@ -148,7 +152,10 @@ def categorical_histogram(ser, top_n_positions=7):
 def histogram(ser):
     is_numeric = pd.api.types.is_numeric_dtype(ser.dtype)
     if is_numeric:
-        return numeric_histogram(ser)
+        temp_histo =  numeric_histogram(ser)
+        if len(temp_histo) > 5:
+            #if we had basically a categorical variable encoded into an integer.. don't return it
+            return temp_histo
     return categorical_histogram(ser)
 
 class ColDisplayHints(ColAnalysis):
