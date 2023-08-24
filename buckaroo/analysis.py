@@ -103,6 +103,53 @@ def histogram(ser):
     return [scaled_counts, bins]
 
 
+def histogram_labels(endpoints):
+    left = endpoints[0]
+    labels = []
+    for edge in endpoints[1:]:
+        labels.append("%d   %d" % (left, edge))
+        left = edge
+    return labels
+#histogram_labels(endpoints)
+
+def histogram_formatted_dict(arr):
+    populations, endpoints = np.histogram(arr, 10)
+    labels = histogram_labels(endpoints)
+    normalized_pop = populations / populations.sum()
+    ret_histo = []
+    for label, pop in zip(labels, normalized_pop):
+        ret_histo.append({'name': label, 'population':pop})
+    return ret_histo
+#histogram_formatted_dict(arr)
+
+def categorical_dict(ser, top_n_positions=7):
+    val_counts = ser.value_counts()
+    top_vals = val_counts[:top_n_positions]
+    rest_vals = val_counts[top_n_positions:]
+    histogram = top_vals.to_dict()
+
+
+    full_long_tail = rest_vals.sum()
+    unique_count = sum(val_counts == 1)
+    long_tail = full_long_tail - unique_count
+    na_count = ser.isna().sum()
+
+    histogram['unique'] = unique_count
+    histogram['long_tail'] = long_tail
+    histogram['NA'] = na_count
+    return histogram    
+
+def categorical_histogram(ser, top_n_positions=7):
+    print("categorical_histogram")
+    cd = categorical_dict(ser, top_n_positions)
+    l = len(ser)
+    histogram = []
+    for k,v in cd.items():
+        histogram.append({'name':k, 'cat_pop': v/l})
+    return histogram
+
+
+
 class ColDisplayHints(ColAnalysis):
     requires_summary = ['min', 'max'] # What summary stats does this analysis provide
     provided_summary = []
@@ -111,15 +158,15 @@ class ColDisplayHints(ColAnalysis):
         'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram']
 
     @staticmethod
-    def col_hints(sampled_ser, summary_ser, ser):
-        is_numeric = pd.api.types.is_numeric_dtype(ser.dtype)
-        if not is_numeric:
-            return dict(is_numeric=False)
-        if len(ser) == 0:
-            return dict(is_numeric=False)
+    def table_hints(sampled_ser, summary_ser, table_hint_col_dict):
+        is_numeric = pd.api.types.is_numeric_dtype(sampled_ser.dtype)
+        # if not is_numeric:
+        #     return dict(is_numeric=False)
+        # if len(sampled_ser) == 0:
+        #     return dict(is_numeric=False)
         return dict(
-            is_numeric=True,
-            is_integer=pd.api.types.is_integer_dtype(ser),
-            min_digits=int_digits(summary_ser.loc['min']),
-            max_digits=int_digits(summary_ser.loc['max']),
-            histogram=histogram(ser))
+            is_numeric=is_numeric,
+            is_integer=pd.api.types.is_integer_dtype(sampled_ser),
+            min_digits=(is_numeric and int_digits(summary_ser.loc['min'])) or 0,
+            max_digits=(is_numeric and int_digits(summary_ser.loc['max'])) or 0,
+            histogram=categorical_histogram(sampled_ser))

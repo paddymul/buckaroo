@@ -38,7 +38,7 @@ export type DFData = DFDataRow[];
 
 export interface ColumnObjHint {
   is_numeric:false;
-  histogram?: number[][];
+  histogram?: any[];
 }
 
 export interface ColumnNumHint {
@@ -46,7 +46,7 @@ export interface ColumnNumHint {
   is_integer:boolean;
   min_digits:number;
   max_digits:number;
-  histogram:number[][];
+  histogram:any[];
 }
 
 export type ColumnHint = ColumnObjHint | ColumnNumHint
@@ -164,6 +164,7 @@ export const foo:DFWhole = {
   ],
 };
 
+
 export const tableDf: DFWhole = {
   'schema': {'fields': [
     {'name': 'index', 'type': 'integer'},
@@ -219,7 +220,16 @@ export const tableDf: DFWhole = {
 		 'is_integer': false,
 		     'min_digits': 1,
 		     'max_digits': 3,
-		     'histogram': [[0.6, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
-				   [373.0, 485.1, 597.2, 709.3, 821.4, 933.5, 1045.6,
-				    1157.7, 1269.8, 1381.9, 1494.0]]},
-  }}
+'histogram': [{'name': 521, 'cat_pop': 0.0103},
+   {'name': 358, 'cat_pop': 0.0096},
+   {'name': 519, 'cat_pop': 0.009},
+   {'name': 497, 'cat_pop': 0.0087},
+   {'name': 293, 'cat_pop': 0.0082},
+   {'name': 285, 'cat_pop': 0.0081},
+   {'name': 435, 'cat_pop': 0.008},
+   {'name': 'unique', 'cat_pop': 0.0001},
+   {'name': 'long_tail', 'cat_pop': 0.938},
+	      {'name': 'NA', 'cat_pop': 0.0}]
+
+		}}
+}

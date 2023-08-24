@@ -38,7 +38,7 @@ export const bakedData = [
   },
 ];
 
-const makeData = (histogram: number[]) => {
+export const makeData = (histogram: number[]) => {
   const accum = [];
   for (let i = 0; i < histogram.length; i++) {
     accum.push({
@@ -58,9 +58,19 @@ const formatter = (value:any, name:any, props:any) => {
   return [value, props.payload.name]
 }
 
-export const HistogramCell   = ({histogram}: {histogram:any}) => {
-  const fData = histogram ? makeData(histogram) : bakedData;
-  console.log("fData", fData);
+//export const HistogramCell   = ({histogram}: {histogram:any}) => {
+export const HistogramCell   = (props:any) => {
+  
+  if( props == undefined || props.value == undefined) {
+    return <span></span>
+  }
+  const val = props.value;
+  console.log("props", props);
+  console.log("val", val)
+  const histogram = props.value.histogram;
+  //const fData = histogram ? makeData(histogram) : bakedData;
+  // const fData = bakedData
+  // console.log("fData", fData);
   return (<div className="histogram-component"> 
     <BarChart  width={100} height={30} barGap={1} data={histogram} >
          <defs>
@@ -94,13 +104,13 @@ export const HistogramCell   = ({histogram}: {histogram:any}) => {
     </pattern>
 
     </defs>
-    <Bar dataKey="population"  stroke="#000000"  fill="gray" stackId="stack" />
-    <Bar dataKey="true"  stroke="#000000"  fill="#000" stackId="stack" />
-    <Bar dataKey="false" stroke="#000000"  fill="#fff" stackId="stack" />
-    <Bar dataKey="cat_pop" stroke="gray"   fill="url(#circles)" stackId="stack" />
-    <Bar dataKey="unique"  stroke="#000"   fill="url(#checkers)" stackId="stack"/>
-    <Bar dataKey="longtail" stroke="#000"  fill="url(#leafs)" stackId="stack"/>
-    <Bar dataKey="NA"                      fill="url(#stripe)" stackId="stack"/>
+    <Bar dataKey="population" stroke="#000" fill="gray"           stackId="stack" />
+    <Bar dataKey="true"       stroke="#000" fill="#000"           stackId="stack" />
+    <Bar dataKey="false"      stroke="#000" fill="#fff"           stackId="stack" />
+    <Bar dataKey="cat_pop"    stroke="gray" fill="url(#circles)"  stackId="stack" />
+    <Bar dataKey="unique"     stroke="#000" fill="url(#checkers)" stackId="stack"/>
+    <Bar dataKey="longtail"   stroke="#000" fill="url(#leafs)"    stackId="stack"/>
+    <Bar dataKey="NA"                       fill="url(#stripe)"   stackId="stack"/>
     
     <Tooltip offset={20} formatter={formatter} labelStyle={{"display":"None"}}
                          contentStyle={{"color":"black"}}

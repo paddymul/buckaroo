@@ -94,7 +94,16 @@ export default function Simple() {
     {'name': 'unique', 'unique': .15},
 ]
 
-
+  const start_station_categorical =[{'name': 'Pershing Square N', 'cat_pop': 0.012097203728362184},
+ {'name': '8 Ave & W 31 St', 'cat_pop': 0.010968708388814913},
+ {'name': 'Lafayette St & E 8 St', 'cat_pop': 0.010579227696404793},
+ {'name': 'W 21 St & 6 Ave', 'cat_pop': 0.010213049267643142},
+ {'name': 'E 17 St & Broadway', 'cat_pop': 0.009201065246338215},
+ {'name': '8 Ave & W 33 St', 'cat_pop': 0.008978029294274301},
+ {'name': 'E 43 St & Vanderbilt Ave', 'cat_pop': 0.008385486018641811},
+ {'name': 'unique', 'cat_pop': 0.0},
+ {'name': 'long_tail', 'cat_pop': 0.9295772303595207},
+				    {'name': 'NA', 'cat_pop': 0.0}]
 
   return <div className="histogram-ex">
     <div className="histogram-wrap">
@@ -131,6 +140,10 @@ export default function Simple() {
     <div className="histogram-wrap">
       <span> Numeric 50% unique  </span>
     <HistogramCell histogram={unique_continuous_scaled_50}/>
+    </div>
+    <div className="histogram-wrap">
+      <span> start station categorical  </span>
+    <HistogramCell histogram={start_station_categorical}/>
     </div>
 
 
