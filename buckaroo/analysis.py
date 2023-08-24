@@ -119,8 +119,10 @@ def numeric_histogram(arr):
 
 def categorical_dict(ser, top_n_positions=7):
     val_counts = ser.value_counts()
-    top_vals = val_counts[:top_n_positions]
-    rest_vals = val_counts[top_n_positions:]
+
+    top = min(len(val_counts), top_n_positions)
+    top_vals = val_counts.iloc[:top]
+    rest_vals = val_counts.iloc[top:]
     histogram = top_vals.to_dict()
 
 
@@ -135,7 +137,6 @@ def categorical_dict(ser, top_n_positions=7):
     return histogram    
 
 def categorical_histogram(ser, top_n_positions=7):
-    print("categorical_histogram")
     cd = categorical_dict(ser, top_n_positions)
     l = len(ser)
     histogram = []

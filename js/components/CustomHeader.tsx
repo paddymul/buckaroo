@@ -113,7 +113,7 @@ export const HistogramCell   = (props:any) => {
     <Bar dataKey="NA"                       fill="url(#stripe)"   stackId="stack"/>
     
     <Tooltip offset={20} formatter={formatter} labelStyle={{"display":"None"}}
-	  wrapperStyle={{zIndex: 1000}}
+	  wrapperStyle={{"zIndex":  999991 }}
                          contentStyle={{"color":"black"}}
    allowEscapeViewBox={{ x: true, y: true }} />
     </BarChart>

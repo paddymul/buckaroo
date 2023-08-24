@@ -174,7 +174,7 @@ export function DFViewer(
           ref={gridRef}
           gridOptions={gridOptions}
     rowData={agData}
-    rowHeight={25}
+    rowHeight={100}
           pinnedTopRowData={pinnedTopRowData}
           columnDefs={styledColumns}
         ></AgGridReact>
