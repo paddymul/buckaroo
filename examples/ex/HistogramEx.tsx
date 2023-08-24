@@ -108,42 +108,42 @@ export default function Simple() {
   return <div className="histogram-ex">
     <div className="histogram-wrap">
       <span> Numeric </span>
-      <HistogramCell histogram={num_histo}/>
+    <HistogramCell value={{histogram:num_histo}}/>
     </div>
     <div className="histogram-wrap">
       <span> Boolean with NA  </span>
-      <HistogramCell histogram={bool_histo}/>
+    <HistogramCell value={{histogram:bool_histo}}/>
     </div>
     <div className="histogram-wrap">
       <span> Categorical unique NA </span>
-      <HistogramCell histogram={categorical_histo}/>
+    <HistogramCell value={{histogram:categorical_histo}} />
     </div>
     <div className="histogram-wrap">
       <span> Categorical_longtail </span>
-      <HistogramCell histogram={categorical_histo_lt}/>
+    <HistogramCell value={{histogram:categorical_histo_lt}} />
     </div>
 
     <div className="histogram-wrap">
       <span> Categorical All unique </span>
-      <HistogramCell histogram={all_unique}/>
+    <HistogramCell value={{histogram:all_unique}}/>
     </div>
 
     <div className="histogram-wrap">
       <span> Categorical Unique with NA  </span>
-      <HistogramCell histogram={unique_na}/>
+    <HistogramCell value={{histogram:unique_na}}/>
     </div>
 
     <div className="histogram-wrap">
       <span> Numeric all Unique  </span>
-      <HistogramCell histogram={unique_continuous_scaled}/>
+    <HistogramCell value={{histogram:unique_continuous_scaled}}/>
     </div>
     <div className="histogram-wrap">
       <span> Numeric 50% unique  </span>
-    <HistogramCell histogram={unique_continuous_scaled_50}/>
+    <HistogramCell value={{histogram:unique_continuous_scaled_50}}/>
     </div>
     <div className="histogram-wrap">
       <span> start station categorical  </span>
-    <HistogramCell histogram={start_station_categorical}/>
+    <HistogramCell value={{histogram:start_station_categorical}}/>
     </div>
 
 
