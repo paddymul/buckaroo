@@ -72,7 +72,7 @@ export const HistogramCell   = (props:any) => {
   // const fData = bakedData
   // console.log("fData", fData);
   return (<div className="histogram-component"> 
-    <BarChart  width={100} height={30} barGap={1} data={histogram} >
+    <BarChart  width={100} height={25} barGap={1} data={histogram} >
          <defs>
             <pattern id="star" width="10" height="10" patternUnits="userSpaceOnUse">
               <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
@@ -113,6 +113,7 @@ export const HistogramCell   = (props:any) => {
     <Bar dataKey="NA"                       fill="url(#stripe)"   stackId="stack"/>
     
     <Tooltip offset={20} formatter={formatter} labelStyle={{"display":"None"}}
+	  wrapperStyle={{zIndex: 1000}}
                          contentStyle={{"color":"black"}}
    allowEscapeViewBox={{ x: true, y: true }} />
     </BarChart>

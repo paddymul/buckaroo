@@ -97,13 +97,8 @@ def int_digits(n):
         return int(np.floor(np.log10(np.abs(n)))) + 2
     return int(np.floor(np.log10(n)+1))
 
-def histogram(ser):
-    raw_counts, bins = np.histogram(ser, 10)
-    scaled_counts = np.round(raw_counts/raw_counts.sum(),2)
-    return [scaled_counts, bins]
 
-
-def histogram_labels(endpoints):
+def numeric_histogram_labels(endpoints):
     left = endpoints[0]
     labels = []
     for edge in endpoints[1:]:
@@ -112,7 +107,7 @@ def histogram_labels(endpoints):
     return labels
 #histogram_labels(endpoints)
 
-def histogram_formatted_dict(arr):
+def numeric_histogram(arr):
     populations, endpoints = np.histogram(arr, 10)
     labels = histogram_labels(endpoints)
     normalized_pop = populations / populations.sum()
@@ -149,6 +144,11 @@ def categorical_histogram(ser, top_n_positions=7):
     return histogram
 
 
+def histogram(ser):
+    is_numeric = pd.api.types.is_numeric_dtype(ser.dtype)
+    if is_numeric:
+        return numeric_histogram(ser)
+    return categorical_histogram(ser)
 
 class ColDisplayHints(ColAnalysis):
     requires_summary = ['min', 'max'] # What summary stats does this analysis provide
