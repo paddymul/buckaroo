@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { useRef }  from'react';
 import { createPortal } from 'react-dom';
 import { IHeaderParams } from './BaseHeader';
@@ -9,6 +10,7 @@ import { BarChart, Bar,
 	   } from 'recharts';
 import {useFloating} from '@floating-ui/react';
 import { Tooltip } from './RechartTooltip';
+import { isNumOrStr, ValueType } from './RechartExtra';
 //import { ICellRendererParams } from 'ag-grid-community';
 
 export interface ICustomHeaderParams extends IHeaderParams {
@@ -16,6 +18,10 @@ export interface ICustomHeaderParams extends IHeaderParams {
   histogram?: number[]
 }
 
+
+function defaultFormatter<TValue extends ValueType>(value: TValue) {
+  return _.isArray(value) && isNumOrStr(value[0]) && isNumOrStr(value[1]) ? (value.join(' ~ ') as TValue) : value;
+}
 
 
 export const bakedData = [
@@ -84,26 +90,7 @@ export function getOffset(el:any) {
   */
 }
 console.log(useFloating);
-export function FloatingTooltip({anchor, x, y}:any) {
-  //@ts-ignore
-  const {refs, floatingStyles} = useFloating({
-    elements: {
-      reference: anchor,
-    },
-  });
-//console.log("floatingStyles", floatingStyles, refs);  
-  // if(floatingStyles.position) {
-  //   floatingStyles.position.left = x;
-  //   floatingStyles.position.top = y;
-  // };
-  /*
-  //console.log("anchor", anchor);
-
-
-
-
- ref={refs.setFloating} style={floatingStyles}>
-    */
+export function FloatingTooltip({items, x, y}:any) {
   console.log("x",x, "y", y);
   return (
     createPortal(
@@ -111,20 +98,50 @@ export function FloatingTooltip({anchor, x, y}:any) {
       style={{"position":"absolute", "top":`${y}px`, "left":x}}  
 >
 	Tooltip
-	<pre>{floatingStyles.toString()}</pre>
+	<pre>{JSON.stringify(items)}</pre>
       </div>,
       document.body)
   );
 }
 
 export const ToolTipAdapter = (args:any) => {
-  const { active, payload, label } = args;
-  //console.log("args", args);
+  const { active, formatter, payload, label } = args;
+  console.log("args", args, formatter);
   //console.log("coordinate, box", args.coordinate, args.box);
     //console.log("payload", payload)
     const anchor = useRef(null);
 
   if (active && payload && payload.length) {
+
+
+  const renderContent2 = () => {
+    //const items = (itemSorter ? _.sortBy(payload, itemSorter) : payload).map((entry, i) => {
+    const items = payload.map((entry:any, i:number) => {
+        if (entry.type === 'none') {
+          return null;
+        }
+
+        const finalFormatter = entry.formatter || formatter || defaultFormatter;
+        const { value, name } = entry;
+        let finalValue: React.ReactNode = value;
+        let finalName: React.ReactNode = name;
+        if (finalFormatter && finalValue != null && finalName != null) {
+          const formatted = finalFormatter(value, name, entry, i, payload);
+          if (Array.isArray(formatted)) {
+            [finalValue, finalName] = formatted;
+          } else {
+            finalValue = formatted;
+          }
+        }
+
+      return [finalName, finalValue];
+    })
+    return items;
+  };
+
+
+
+
     return (
       <div className="custom-tooltip">
 
@@ -132,7 +149,7 @@ export const ToolTipAdapter = (args:any) => {
         <p className="label">{`${label} : ${payload[0].value}`}</p>
         <p className="intro">{label}</p>
         <p className="desc">Anything you want can be displayed here.</p>
-	<FloatingTooltip anchor={anchor} x={args.box.x} y={args.box.y} />
+	<FloatingTooltip items={renderContent2()}  x={args.box.x} y={args.box.y} />
       	</div>
     );
   }
