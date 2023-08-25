@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useRef }  from'react';
+import React  from'react';
 import { createPortal } from 'react-dom';
 import { IHeaderParams } from './BaseHeader';
 
@@ -92,12 +92,22 @@ export function getOffset(el:any) {
 console.log(useFloating);
 export function FloatingTooltip({items, x, y}:any) {
   console.log("x",x, "y", y);
+  const renderedItems = items.map(
+	(name:string, value:number|string) => {
+	  return (<React.Fragment>
+	    <dt>{name}</dt><dd>{value}</dd>
+	    </React.Fragment>)
+	}
+      )
   return (
     createPortal(
       <div className="floating-tooltip"
-      style={{"position":"absolute", "top":`${y}px`, "left":x}}  
->
+      style={{"position":"absolute", "top":`${y}px`, "left":x}}>
 	Tooltip
+      <dl>
+      {renderedItems}
+       </dl>
+		 
 	<pre>{JSON.stringify(items)}</pre>
       </div>,
       document.body)
@@ -106,10 +116,11 @@ export function FloatingTooltip({items, x, y}:any) {
 
 export const ToolTipAdapter = (args:any) => {
   const { active, formatter, payload, label } = args;
-  console.log("args", args, formatter);
+  console.log("label", label);
+  //console.log("args", args, formatter);
   //console.log("coordinate, box", args.coordinate, args.box);
     //console.log("payload", payload)
-    const anchor = useRef(null);
+    //const anchor = useRef(null);
 
   if (active && payload && payload.length) {
 
@@ -138,17 +149,15 @@ export const ToolTipAdapter = (args:any) => {
     })
     return items;
   };
-
-
-
-
-    return (
-      <div className="custom-tooltip">
-
-	<button ref={anchor}>Button</button>
+    /*
         <p className="label">{`${label} : ${payload[0].value}`}</p>
         <p className="intro">{label}</p>
         <p className="desc">Anything you want can be displayed here.</p>
+
+
+      */
+    return (
+      <div className="custom-tooltip">
 	<FloatingTooltip items={renderContent2()}  x={args.box.x} y={args.box.y} />
       	</div>
     );
