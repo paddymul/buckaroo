@@ -56,7 +56,7 @@ export const makeData = (histogram: number[]) => {
 
 
 const formatter = (value:any, name:any, props:any) => {
-  console.log("formatter", value, name, props)
+  //console.log("formatter", value, name, props)
   return [value, props.payload.name]
 }
 
@@ -83,24 +83,33 @@ export function getOffset(el:any) {
   };
   */
 }
-
-export function FloatingTooltip({anchor}:any) {
+console.log(useFloating);
+export function FloatingTooltip({anchor, x, y}:any) {
+  //@ts-ignore
   const {refs, floatingStyles} = useFloating({
     elements: {
       reference: anchor,
     },
   });
-
-  console.log("anchor", anchor);
-  console.log("floatingStyles", floatingStyles, refs);
-  
+//console.log("floatingStyles", floatingStyles, refs);  
+  // if(floatingStyles.position) {
+  //   floatingStyles.position.left = x;
+  //   floatingStyles.position.top = y;
+  // };
   /*
+  //console.log("anchor", anchor);
+
+
+
 
  ref={refs.setFloating} style={floatingStyles}>
     */
+  console.log("x",x, "y", y);
   return (
     createPortal(
-      <div className="floating-tooltip">
+      <div className="floating-tooltip"
+      style={{"position":"absolute", "top":`${y}px`, "left":x}}  
+>
 	Tooltip
 	<pre>{floatingStyles.toString()}</pre>
       </div>,
@@ -110,7 +119,8 @@ export function FloatingTooltip({anchor}:any) {
 
 export const ToolTipAdapter = (args:any) => {
   const { active, payload, label } = args;
-  console.log("args", args);
+  //console.log("args", args);
+  //console.log("coordinate, box", args.coordinate, args.box);
     //console.log("payload", payload)
     const anchor = useRef(null);
 
@@ -122,7 +132,7 @@ export const ToolTipAdapter = (args:any) => {
         <p className="label">{`${label} : ${payload[0].value}`}</p>
         <p className="intro">{label}</p>
         <p className="desc">Anything you want can be displayed here.</p>
-	<FloatingTooltip anchor={anchor}/>
+	<FloatingTooltip anchor={anchor} x={args.box.x} y={args.box.y} />
       	</div>
     );
   }

@@ -74,6 +74,12 @@ function renderContent<TValue extends ValueType, TName extends NameType>(
   return <DefaultTooltipContent {...props} />;
 }
 
+export type OptionalCoords = {
+    x?: number;
+    y?: number;
+  };
+
+
 export type TooltipProps<TValue extends ValueType, TName extends NameType> = DefaultProps<TValue, TName> & {
   allowEscapeViewBox?: {
     x?: boolean;
@@ -94,14 +100,8 @@ export type TooltipProps<TValue extends ValueType, TName extends NameType> = Def
   offset?: number;
   wrapperStyle?: CSSProperties;
   cursor?: boolean | ReactElement | SVGProps<SVGElement>;
-  coordinate?: {
-    x?: number;
-    y?: number;
-  };
-  position?: {
-    x?: number;
-    y?: number;
-  };
+  coordinate?: OptionalCoords;
+  position?: OptionalCoords;
   trigger?: 'hover' | 'click';
   shared?: boolean;
   payloadUniqBy?: UniqueOption<TValue, TName>;
@@ -110,6 +110,7 @@ export type TooltipProps<TValue extends ValueType, TName extends NameType> = Def
   animationEasing?: AnimationTiming;
   filterNull?: boolean;
   useTranslate3d?: boolean;
+  box?: OptionalCoords;
 };
 
 const tooltipDefaultProps: TooltipProps<number, string> = {
@@ -135,6 +136,7 @@ const tooltipDefaultProps: TooltipProps<number, string> = {
   animationDuration: 400,
   filterNull: true,
   useTranslate3d: false,
+  box: {x:0, y:0}
 };
 
 export const Tooltip = <TValue extends ValueType, TName extends NameType>(
@@ -144,6 +146,7 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
   const [boxHeight, setBoxHeight] = useState(-1);
   const [dismissed, setDismissed] = useState(false);
   const [dismissedAtCoordinate, setDismissedAtCoordinate] = useState({ x: 0, y: 0 });
+  const [boxCoords, setBoxCoords] = useState({ x: 0, y: 0 });
 
   const wrapperNode = useRef<HTMLDivElement>();
   const { allowEscapeViewBox, reverseDirection, coordinate, offset, position, viewBox } = props;
@@ -163,6 +166,7 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
   );
 
   useEffect(() => {
+    console.log("useEffect 166");
     const updateBBox = () => {
       if (dismissed) {
         document.removeEventListener('keydown', handleKeyDown);
@@ -175,7 +179,9 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
 
       if (wrapperNode.current && wrapperNode.current.getBoundingClientRect) {
         const box = wrapperNode.current.getBoundingClientRect();
-
+	//console.log("effectProps", props)
+	console.log("166box", box);
+	setBoxCoords({x:box.x, y:box.y})
         if (Math.abs(box.width - boxWidth) > EPS || Math.abs(box.height - boxHeight) > EPS) {
           setBoxWidth(box.width);
           setBoxHeight(box.height);
@@ -292,6 +298,7 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
       ...outerStyle,
     };
   }
+
    // eslint-disable-next-line
   // const cls = classNames(CLS_PREFIX, {
   //   [`${CLS_PREFIX}-right`]: isNumber(translateX) && coordinate && isNumber(coordinate.x) && translateX >= coordinate.x,
@@ -309,6 +316,7 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
     <div tabIndex={-1} role="dialog" className={cls} style={outerStyle} ref={wrapperNode}>
       {renderContent(content, {
         ...props,
+	box: boxCoords,
         payload: finalPayload,
       })}
     </div>
