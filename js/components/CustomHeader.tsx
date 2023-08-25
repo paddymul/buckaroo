@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useRef }  from'react';
+import { createPortal } from 'react-dom';
 import { IHeaderParams } from './BaseHeader';
 
-import { BarChart, Bar, Tooltip,
+import { BarChart, Bar, 
+	 //Tooltip,
 	 //Legend,
 	 //Cell, XAxis, YAxis, CartesianGrid, , ResponsiveContainer,
 	   } from 'recharts';
-
-
+import {useFloating} from '@floating-ui/react';
+import { Tooltip } from './RechartTooltip';
 //import { ICellRendererParams } from 'ag-grid-community';
 
 export interface ICustomHeaderParams extends IHeaderParams {
@@ -58,19 +60,83 @@ const formatter = (value:any, name:any, props:any) => {
   return [value, props.payload.name]
 }
 
+/*
+function App() {
+  const [anchor, setAnchor] = useState(null);
+  return (
+    <>
+      <button ref={setAnchor}>Button</button>
+      <Tooltip anchor={anchor} />
+    </>
+  );
+}
+*/
+
+
+export function getOffset(el:any) {
+  console.log("el", el);
+  /*
+  const rect = el.getBoundingClientRect();
+  return {
+    left: rect.left + window.scrollX,
+    top: rect.top + window.scrollY
+  };
+  */
+}
+
+export function FloatingTooltip({anchor}:any) {
+  const {refs, floatingStyles} = useFloating({
+    elements: {
+      reference: anchor,
+    },
+  });
+
+  console.log("anchor", anchor);
+  console.log("floatingStyles", floatingStyles, refs);
+  
+  /*
+
+ ref={refs.setFloating} style={floatingStyles}>
+    */
+  return (
+    createPortal(
+      <div className="floating-tooltip">
+	Tooltip
+	<pre>{floatingStyles.toString()}</pre>
+      </div>,
+      document.body)
+  );
+}
+
+export const ToolTipAdapter = (args:any) => {
+  const { active, payload, label } = args;
+  console.log("args", args);
+    //console.log("payload", payload)
+    const anchor = useRef(null);
+
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+
+	<button ref={anchor}>Button</button>
+        <p className="label">{`${label} : ${payload[0].value}`}</p>
+        <p className="intro">{label}</p>
+        <p className="desc">Anything you want can be displayed here.</p>
+	<FloatingTooltip anchor={anchor}/>
+      	</div>
+    );
+  }
+
+  return null;
+};
+
 //export const HistogramCell   = ({histogram}: {histogram:any}) => {
 export const HistogramCell   = (props:any) => {
   
   if( props == undefined || props.value == undefined) {
     return <span></span>
   }
-  const val = props.value;
-  console.log("props", props);
-  console.log("val", val)
   const histogram = props.value.histogram;
-  //const fData = histogram ? makeData(histogram) : bakedData;
-  // const fData = bakedData
-  // console.log("fData", fData);
   return (<div className="histogram-component"> 
     <BarChart  width={100} height={25} barGap={1} data={histogram} >
          <defs>
@@ -112,10 +178,13 @@ export const HistogramCell   = (props:any) => {
     <Bar dataKey="longtail"   stroke="#000" fill="url(#leafs)"    stackId="stack"/>
     <Bar dataKey="NA"                       fill="url(#stripe)"   stackId="stack"/>
     
-    <Tooltip offset={20} formatter={formatter} labelStyle={{"display":"None"}}
+    <Tooltip  formatter={formatter} labelStyle={{"display":"None"}}
 	  wrapperStyle={{"zIndex":  999991 }}
-                         contentStyle={{"color":"black"}}
-   allowEscapeViewBox={{ x: true, y: true }} />
+          contentStyle={{"color":"black"}}
+	  content={<ToolTipAdapter/>} 
+	  offset={20}
+	  allowEscapeViewBox={{x:true}}
+/>
     </BarChart>
     </div>
     );

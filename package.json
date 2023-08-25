@@ -58,14 +58,17 @@
         "dev": "webpack-cli serve --mode=development --env development --open"
     },
     "dependencies": {
+        "@floating-ui/react": "^0.25.1",
         "@jupyter-widgets/base": "^2 || ^3 || ^4 || ^6.0.0",
         "@jupyterlab/apputils": "^3.0.2",
+        "@popperjs/core": "^2.11.8",
         "ag-grid-community": "^29.2.0",
         "ag-grid-react": "^29.2.0",
         "charts.css": "^0.9.0",
         "lodash": "^4.17.21",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
+        "react-popper": "^2.3.0",
         "recharts": "^2.7.3"
     },
     "devDependencies": {

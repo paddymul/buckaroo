@@ -168,3 +168,17 @@ completely unique
 .ag-column-hover: {
     overflow: visible
 }
+.custom-tooltip {
+    border:1px solid red;
+    color:black;
+    background:gray;
+}
+
+
+.floating-tooltip {
+    border:1px solid red;
+    color:black;
+    background:green;
+    width:50px;
+    height:150px;
+}
