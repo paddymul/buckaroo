@@ -21,6 +21,10 @@
       "jsx": "react",
       "baseUrl": "."
   },
+    "typeRoots": [
+	"./js/typings",
+	"./node_modules/@types/"
+    ],
     "include": ["js/*.ts", "js/*.tsx", "js/core/*.ts", "js/core/*.tsx", ],
     "ts-node": {
         "transpileOnly": true
