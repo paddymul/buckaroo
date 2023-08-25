@@ -169,18 +169,37 @@ completely unique
     overflow: visible
 }
 .custom-tooltip {
-    border:1px solid red;
     color:black;
     background:gray;
 }
 
 
 .floating-tooltip {
-    border:1px solid red;
+
     color:black;
-    background:green;
+    background:white;
+
 /*
+    border:1px solid red;
+    background:green;
     width:50px;
     height:150px;
 */
+}
+
+
+.floating-tooltip dl {
+    padding:1px 4px;
+    margin:0;
+}
+.floating-tooltip dl dt {
+
+    float:left;
+    margin:0;
+    padding:0;
+}
+.floating-tooltip dl dd {
+
+    float:left;
+    margin:0 0 0 10px;
 }

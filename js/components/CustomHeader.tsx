@@ -92,6 +92,7 @@ export function getOffset(el:any) {
 console.log(useFloating);
 export function FloatingTooltip({items, x, y}:any) {
   console.log("x",x, "y", y);
+  const offset = 20;
   const renderedItems = items.map(
 	(name:string, value:number|string) => {
 	  return (<React.Fragment>
@@ -102,13 +103,10 @@ export function FloatingTooltip({items, x, y}:any) {
   return (
     createPortal(
       <div className="floating-tooltip"
-      style={{"position":"absolute", "top":`${y}px`, "left":x}}>
-	Tooltip
+      style={{"position":"absolute", "top":y+offset, "left":x+offset}}>
       <dl>
       {renderedItems}
        </dl>
-		 
-	<pre>{JSON.stringify(items)}</pre>
       </div>,
       document.body)
   );
