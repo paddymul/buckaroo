@@ -92,7 +92,7 @@ export function getOffset(el:any) {
 console.log(useFloating);
 export function FloatingTooltip({items, x, y}:any) {
   console.log("x",x, "y", y);
-  const offset = 20;
+  const offset = 30;
   const renderedItems = items.map(
 	(name:string, value:number|string) => {
 	  return (<React.Fragment>

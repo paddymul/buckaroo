@@ -111,13 +111,13 @@ def numeric_histogram_labels(endpoints):
 
 def numeric_histogram(arr):
     populations, endpoints = np.histogram(arr, 10)
-    labels = histogram_labels(endpoints)
+    labels = numeric_histogram_labels(endpoints)
     normalized_pop = populations / populations.sum()
     ret_histo = []
     for label, pop in zip(labels, normalized_pop):
         ret_histo.append({'name': label, 'population':pop})
     return ret_histo
-#histogram_formatted_dict(arr)
+
 
 def categorical_dict(ser, top_n_positions=7):
     val_counts = ser.value_counts()

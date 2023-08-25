@@ -163,6 +163,41 @@ div.dependent-tabs ul.tabs li.active {
     width:800px; border:3px dashed purple;
     
 
+
+
+
 }
 
+.custom-tooltip {
+    color:black;
+    background:gray;
+}
+
+
+.floating-tooltip {
+    color:black;
+    background:white;
+}
+
+
+.floating-tooltip dl {
+    padding:1px 4px;
+    margin:0;
+}
+.floating-tooltip dl dt {
+
+    float:left;
+    margin:0;
+    padding:0;
+}
+.floating-tooltip dl dd {
+
+    float:left;
+    margin:0 0 0 10px;
+}
+
+
+
 /*# sourceMappingURL=dcf-npm.css.map */
+
+
