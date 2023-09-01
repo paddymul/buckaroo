@@ -16,10 +16,14 @@ import { translateStyle } from 'react-smooth';
 import _ from 'lodash';
 //import classNames from 'classnames';
 
-
 //import { DefaultTooltipContent, ValueType, NameType, Payload, Props as DefaultProps } from './DefaultTooltipContent';
 
-import type { ValueType, NameType, Payload, DefaultProps } from './RechartExtra'
+import type {
+  ValueType,
+  NameType,
+  Payload,
+  DefaultProps,
+} from './RechartExtra';
 //import { Global } from '../util/Global';
 //import { isNumber } from '../util/DataUtils';
 import { Global, isNumber } from './RechartExtra';
@@ -29,8 +33,6 @@ import { AnimationDuration, AnimationTiming } from './RechartExtra';
 
 import { DefaultTooltipContent } from 'recharts';
 
-
-
 const CLS_PREFIX = 'recharts-tooltip-wrapper';
 
 const EPS = 1;
@@ -39,14 +41,20 @@ export type ContentType<TValue extends ValueType, TName extends NameType> =
   | ReactElement
   | ((props: TooltipProps<TValue, TName>) => ReactNode);
 
-type UniqueFunc<TValue extends ValueType, TName extends NameType> = (entry: Payload<TValue, TName>) => unknown;
-type UniqueOption<TValue extends ValueType, TName extends NameType> = boolean | UniqueFunc<TValue, TName>;
-function defaultUniqBy<TValue extends ValueType, TName extends NameType>(entry: Payload<TValue, TName>) {
+type UniqueFunc<TValue extends ValueType, TName extends NameType> = (
+  entry: Payload<TValue, TName>
+) => unknown;
+type UniqueOption<TValue extends ValueType, TName extends NameType> =
+  | boolean
+  | UniqueFunc<TValue, TName>;
+function defaultUniqBy<TValue extends ValueType, TName extends NameType>(
+  entry: Payload<TValue, TName>
+) {
   return entry.dataKey;
 }
 function getUniqPayload<TValue extends ValueType, TName extends NameType>(
   option: UniqueOption<TValue, TName>,
-  payload: Array<Payload<TValue, TName>>,
+  payload: Array<Payload<TValue, TName>>
 ) {
   if (option === true) {
     //@ts-ignore
@@ -62,7 +70,7 @@ function getUniqPayload<TValue extends ValueType, TName extends NameType>(
 
 function renderContent<TValue extends ValueType, TName extends NameType>(
   content: ContentType<TValue, TName>,
-  props: TooltipProps<TValue, TName>,
+  props: TooltipProps<TValue, TName>
 ) {
   if (React.isValidElement(content)) {
     return React.cloneElement(content, props);
@@ -75,12 +83,14 @@ function renderContent<TValue extends ValueType, TName extends NameType>(
 }
 
 export type OptionalCoords = {
-    x?: number;
-    y?: number;
-  };
+  x?: number;
+  y?: number;
+};
 
-
-export type TooltipProps<TValue extends ValueType, TName extends NameType> = DefaultProps<TValue, TName> & {
+export type TooltipProps<
+  TValue extends ValueType,
+  TName extends NameType
+> = DefaultProps<TValue, TName> & {
   allowEscapeViewBox?: {
     x?: boolean;
     y?: boolean;
@@ -136,41 +146,54 @@ const tooltipDefaultProps: TooltipProps<number, string> = {
   animationDuration: 400,
   filterNull: true,
   useTranslate3d: false,
-  box: {x:0, y:0}
+  box: { x: 0, y: 0 },
 };
 
 export const Tooltip = <TValue extends ValueType, TName extends NameType>(
-  props: TooltipProps<TValue, TName> & { children?: React.ReactNode },
+  props: TooltipProps<TValue, TName> & { children?: React.ReactNode }
 ) => {
   const [boxWidth, setBoxWidth] = useState(-1);
   const [boxHeight, setBoxHeight] = useState(-1);
   const [dismissed, setDismissed] = useState(false);
-  const [dismissedAtCoordinate, setDismissedAtCoordinate] = useState({ x: 0, y: 0 });
+  const [dismissedAtCoordinate, setDismissedAtCoordinate] = useState({
+    x: 0,
+    y: 0,
+  });
   const [boxCoords, setBoxCoords] = useState({ x: 0, y: 0 });
 
   const wrapperNode = useRef<HTMLDivElement>();
-  const { allowEscapeViewBox, reverseDirection, coordinate, offset, position, viewBox } = props;
+  const {
+    allowEscapeViewBox,
+    reverseDirection,
+    coordinate,
+    offset,
+    position,
+    viewBox,
+  } = props;
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setDismissed(true);
-        setDismissedAtCoordinate(prev => ({
+        setDismissedAtCoordinate((prev) => ({
           ...prev,
           x: coordinate?.x,
           y: coordinate?.y,
         }));
       }
     },
-    [coordinate?.x, coordinate?.y],
+    [coordinate?.x, coordinate?.y]
   );
 
   useEffect(() => {
-    console.log("useEffect 166");
+    console.log('useEffect 166');
     const updateBBox = () => {
       if (dismissed) {
         document.removeEventListener('keydown', handleKeyDown);
-        if (coordinate?.x !== dismissedAtCoordinate.x || coordinate?.y !== dismissedAtCoordinate.y) {
+        if (
+          coordinate?.x !== dismissedAtCoordinate.x ||
+          coordinate?.y !== dismissedAtCoordinate.y
+        ) {
           setDismissed(false);
         }
       } else {
@@ -179,10 +202,13 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
 
       if (wrapperNode.current && wrapperNode.current.getBoundingClientRect) {
         const box = wrapperNode.current.getBoundingClientRect();
-	//console.log("effectProps", props)
-	console.log("166box", box);
-	setBoxCoords({x:box.x, y:box.y})
-        if (Math.abs(box.width - boxWidth) > EPS || Math.abs(box.height - boxHeight) > EPS) {
+        //console.log("effectProps", props)
+        console.log('166box', box);
+        setBoxCoords({ x: box.x, y: box.y });
+        if (
+          Math.abs(box.width - boxWidth) > EPS ||
+          Math.abs(box.height - boxHeight) > EPS
+        ) {
           setBoxWidth(box.width);
           setBoxHeight(box.height);
         }
@@ -197,7 +223,15 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [boxHeight, boxWidth, coordinate, dismissed, dismissedAtCoordinate.x, dismissedAtCoordinate.y, handleKeyDown]);
+  }, [
+    boxHeight,
+    boxWidth,
+    coordinate,
+    dismissed,
+    dismissedAtCoordinate.x,
+    dismissedAtCoordinate.y,
+    handleKeyDown,
+  ]);
 
   const getTranslate = ({
     key,
@@ -212,7 +246,7 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
       return position[key];
     }
 
-    const pCoordinate = coordinate || {x:0, y:0};
+    const pCoordinate = coordinate || { x: 0, y: 0 };
     const negative = (pCoordinate[key] || 0) - tooltipDimension - (offset || 0);
     const positive = (pCoordinate[key] || 0) + offset;
     if (allowEscapeViewBox?.[key]) {
@@ -248,7 +282,9 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
   } = props;
   const finalPayload = getUniqPayload(
     payloadUniqBy,
-    filterNull && payload && payload.length ? payload.filter(entry => !_.isNil(entry.value)) : payload,
+    filterNull && payload && payload.length
+      ? payload.filter((entry) => !_.isNil(entry.value))
+      : payload
   );
   const hasPayload = finalPayload && finalPayload.length;
   const { content } = props;
@@ -299,7 +335,7 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
     };
   }
 
-   // eslint-disable-next-line
+  // eslint-disable-next-line
   // const cls = classNames(CLS_PREFIX, {
   //   [`${CLS_PREFIX}-right`]: isNumber(translateX) && coordinate && isNumber(coordinate.x) && translateX >= coordinate.x,
   //   [`${CLS_PREFIX}-left`]: isNumber(translateX) && coordinate && isNumber(coordinate.x) && translateX < coordinate.x,
@@ -313,10 +349,16 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
     // ESLint is disabled to allow listening to the `Escape` key. Refer to
     // https://github.com/recharts/recharts/pull/2925
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-    <div tabIndex={-1} role="dialog" className={cls} style={outerStyle} ref={wrapperNode}>
+    <div
+      tabIndex={-1}
+      role="dialog"
+      className={cls}
+      style={outerStyle}
+      ref={wrapperNode}
+    >
       {renderContent(content, {
         ...props,
-	box: boxCoords,
+        box: boxCoords,
         payload: finalPayload,
       })}
     </div>

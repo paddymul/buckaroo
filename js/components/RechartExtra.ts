@@ -1,15 +1,19 @@
 import _ from 'lodash';
 import { CSSProperties, ReactNode } from 'react';
-export { Global, DefaultTooltipContent }from "recharts";
+export { Global, DefaultTooltipContent } from 'recharts';
 
 //export Global;
 
 //import { AnimationDuration, AnimationTiming } from '../util/types';
 /** The type of easing function to use for animations */
-export type AnimationTiming = 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
+export type AnimationTiming =
+  | 'ease'
+  | 'ease-in'
+  | 'ease-out'
+  | 'ease-in-out'
+  | 'linear';
 /** Specifies the duration of animation, the unit of this option is ms. */
 export type AnimationDuration = number;
-
 
 export type TooltipType = 'none';
 export type ValueType = number | string | Array<number | string>;
@@ -20,7 +24,7 @@ export type Formatter<TValue extends ValueType, TName extends NameType> = (
   name: TName,
   item: Payload<TValue, TName>,
   index: number,
-  payload: Array<Payload<TValue, TName>>,
+  payload: Array<Payload<TValue, TName>>
 ) => [React.ReactNode, TName] | React.ReactNode;
 
 export interface Payload<TValue extends ValueType, TName extends NameType> {
@@ -38,7 +42,10 @@ export interface Payload<TValue extends ValueType, TName extends NameType> {
   strokeWidth?: number | string;
 }
 
-export interface DefaultProps<TValue extends ValueType, TName extends NameType> {
+export interface DefaultProps<
+  TValue extends ValueType,
+  TName extends NameType
+> {
   separator?: string;
   wrapperClassName?: string;
   labelClassName?: string;
@@ -46,12 +53,16 @@ export interface DefaultProps<TValue extends ValueType, TName extends NameType> 
   contentStyle?: CSSProperties;
   itemStyle?: CSSProperties;
   labelStyle?: CSSProperties;
-  labelFormatter?: (label: any, payload: Array<Payload<TValue, TName>>) => ReactNode;
+  labelFormatter?: (
+    label: any,
+    payload: Array<Payload<TValue, TName>>
+  ) => ReactNode;
   label?: any;
   payload?: Array<Payload<TValue, TName>>;
   itemSorter?: (item: Payload<TValue, TName>) => number | string;
 }
 
-export const isNumber = (value: unknown): value is number => _.isNumber(value) && !_.isNaN(value);
-export const isNumOrStr = (value: unknown): value is number | string => isNumber(value as number) || _.isString(value);
-
+export const isNumber = (value: unknown): value is number =>
+  _.isNumber(value) && !_.isNaN(value);
+export const isNumOrStr = (value: unknown): value is number | string =>
+  isNumber(value as number) || _.isString(value);

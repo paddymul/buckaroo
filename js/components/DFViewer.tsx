@@ -1,22 +1,18 @@
 import React, {
   useRef,
   CSSProperties,
-//  useMemo,
+  //  useMemo,
 } from 'react';
 import _ from 'lodash';
 import { DFWhole, EmptyDf } from './staticData';
 
-
 import { updateAtMatch, dfToAgrid } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import {
-  GridOptions,
-} from 'ag-grid-community';
+import { GridOptions } from 'ag-grid-community';
 
 import { HistogramCell } from './CustomHeader';
 
 export type setColumFunc = (newCol: string) => void;
-
 
 export function DFViewer(
   {
@@ -50,7 +46,8 @@ export function DFViewer(
     rowSelection: 'single',
     onRowClicked: (event) => console.log('A row was clicked'),
     defaultColDef: {
-      sortable:true, type: 'rightAligned',
+      sortable: true,
+      type: 'rightAligned',
       cellRendererSelector: (params) => {
         if (params.node.rowPinned) {
           return {
@@ -151,10 +148,10 @@ export function DFViewer(
   };
 
   makeCondtionalAutosize(50, 350);
-  //const histograms = _.fromPairs(  _.map({'a':10, 'b':20}, function(val,key) {return [y, x] })) 
+  //const histograms = _.fromPairs(  _.map({'a':10, 'b':20}, function(val,key) {return [y, x] }))
   // const histograms = _.fromPairs(  _.map(df.table_hints,
   // 					 function(val,key) {
-  // 					   return [key, val.histogram || []] })) 
+  // 					   return [key, val.histogram || []] }))
   const pinnedTopRowData = [df.table_hints];
   //const pinnedTopRowData = [histograms];
   // const pinnedTopRowData =  [{'index': 'foo',
@@ -163,7 +160,7 @@ export function DFViewer(
   // 	    'start station name': 'Catherine St & Monroe St',
   // 	    'floatCol': '1.111',
   // 			 }];
-  
+
   return (
     <div className="df-viewer">
       <div
