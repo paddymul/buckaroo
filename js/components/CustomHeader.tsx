@@ -8,7 +8,6 @@ import { BarChart, Bar,
 	 //Legend,
 	 //Cell, XAxis, YAxis, CartesianGrid, , ResponsiveContainer,
 	   } from 'recharts';
-import {useFloating} from '@floating-ui/react';
 import { Tooltip } from './RechartTooltip';
 import { isNumOrStr, ValueType } from './RechartExtra';
 //import { ICellRendererParams } from 'ag-grid-community';
@@ -89,7 +88,7 @@ export function getOffset(el:any) {
   };
   */
 }
-console.log(useFloating);
+
 export function FloatingTooltip({items, x, y}:any) {
   console.log("x",x, "y", y);
   const offset = 30;

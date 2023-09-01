@@ -170,12 +170,12 @@ div.dependent-tabs ul.tabs li.active {
 
 .custom-tooltip {
     color:black;
-    background:gray;
+    background:green;
 }
 
 
 .floating-tooltip {
-    color:black;
+    color:red;
     background:white;
 }
 
