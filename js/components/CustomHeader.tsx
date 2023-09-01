@@ -103,7 +103,6 @@ export function FloatingTooltip({ items, x, y }: any) {
     <div
       className="floating-tooltip"
       style={{'position':'absolute', 'top':y+offset, 'left':x+offset}}>
-    >
       <dl>{renderedItems}</dl>
     </div>,
     document.body
