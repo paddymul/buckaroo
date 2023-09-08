@@ -110,6 +110,7 @@ def numeric_histogram_labels(endpoints):
 #histogram_labels(endpoints)
 
 def numeric_histogram(arr):
+    arr = arr.dropna()
     populations, endpoints = np.histogram(arr, 10)
     labels = numeric_histogram_labels(endpoints)
     normalized_pop = populations / populations.sum()
@@ -177,4 +178,4 @@ class ColDisplayHints(ColAnalysis):
             is_integer=pd.api.types.is_integer_dtype(sampled_ser),
             min_digits=(is_numeric and int_digits(summary_ser.loc['min'])) or 0,
             max_digits=(is_numeric and int_digits(summary_ser.loc['max'])) or 0,
-            histogram=categorical_histogram(sampled_ser))
+            histogram=histogram(sampled_ser))
