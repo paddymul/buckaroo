@@ -122,13 +122,16 @@ def numeric_histogram(arr, nan_per):
     ret_histo = []
     for label, pop in zip(labels, normalized_pop):
         ret_histo.append({'name': label, 'population':np.round(pop * 100, 0)})
-    ret_histo.append(nan_observation)
+    if nan_per > 0.0:
+        ret_histo.append(nan_observation)
     return ret_histo
 
 
+def histo_format(v, l):
+    scaled = v/l
+    
+
 def categorical_dict(ser, val_counts, top_n_positions=7):
-
-
     l = len(ser)
     top = min(len(val_counts), top_n_positions)
     top_vals = val_counts.iloc[:top]
@@ -148,16 +151,19 @@ def categorical_dict(ser, val_counts, top_n_positions=7):
 def categorical_histogram(ser, val_counts, nan_per, top_n_positions=7):
     nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
     cd = categorical_dict(ser, val_counts, top_n_positions)
-
+    
     l = len(ser)
     histogram = []
     longtail_obs = {'name': 'longtail'}
     for k,v in cd.items():
         if k in ["longtail", "unique"]:
             longtail_obs[k] = v
+            continue
         histogram.append({'name':k, 'cat_pop': np.round((v/l)*100,0) })
-    histogram.append(longtail_obs)
-    histogram.append(nan_observation)
+    if len(longtail_obs) > 1:
+        histogram.append(longtail_obs)
+    if nan_per > 0.0:
+        histogram.append(nan_observation)
     return histogram
 
 

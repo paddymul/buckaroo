@@ -61,20 +61,26 @@ export const makeData = (histogram: number[]) => {
 };
 
 const formatter = (value: any, name: any, props: any) => {
-  return [value, props.payload.name];
+  if (props.payload.name === 'longtail') {
+    return [value, name];
+  }
+  else {
+    return [value, props.payload.name];
+  }
 };
 
 
 export function FloatingTooltip({ items, x, y }: any) {
   const offset = 30;
-  const renderedItems = items.map((name: string, value: number | string) => {
+  const renderedItems = items.map((name: [string, number], value: number | string) => {
     
-    const [realName, realValue] = name;
+    const [realName, realValue]  = name;
     console.log("name", name);
+    const formattedVal = realValue == 0 ? "<1" : realValue;
     return (
       <React.Fragment>
         <dt>{realName}</dt>
-        <dd>{realValue}%</dd>
+        <dd>{formattedVal}%</dd>
       </React.Fragment>
     );
   });
