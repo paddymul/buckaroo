@@ -75,7 +75,6 @@ export function FloatingTooltip({ items, x, y }: any) {
   const renderedItems = items.map((name: [string, number], value: number | string) => {
     
     const [realName, realValue]  = name;
-    console.log("name", name);
     const formattedVal = realValue == 0 ? "<1" : realValue;
     return (
       <React.Fragment>
@@ -219,6 +218,7 @@ export const HistogramCell = (props: any) => {
           </pattern>
         </defs>
         <Bar dataKey="population" stroke="#000" fill="gray" stackId="stack" />
+        <Bar dataKey="tail" stroke="#000" fill="gray" stackId="stack" />
         <Bar dataKey="true" stroke="#000" fill="#000" stackId="stack" />
         <Bar dataKey="false" stroke="#000" fill="#fff" stackId="stack" />
         <Bar

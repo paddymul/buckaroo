@@ -111,17 +111,27 @@ def numeric_histogram_labels(endpoints):
 #histogram_labels(endpoints)
 
 def numeric_histogram(arr, nan_per):
+    ret_histo = []
     nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
     if nan_per == 1.0:
         return [nan_observation]
     
-    populations, endpoints = np.histogram(arr.dropna(), 10)
+    vals = arr.dropna()
+    low_tail, high_tail = np.quantile(vals, 0.01), np.quantile(vals, 0.99)
+    low_pass = arr>low_tail 
+    high_pass = arr < high_tail
+    meat = vals[low_pass & high_pass]
+    populations, endpoints =np.histogram(meat, 10)
     
     labels = numeric_histogram_labels(endpoints)
     normalized_pop = populations / populations.sum()
-    ret_histo = []
+    low_label = "%r - %r" % (vals.min(), low_tail)
+    high_label = "%r - %r" % (high_tail, vals.max())
+    ret_histo.append({'name': low_label, 'tail':1})
     for label, pop in zip(labels, normalized_pop):
         ret_histo.append({'name': label, 'population':np.round(pop * 100, 0)})
+    high_label = "%r - %r" % (high_tail, vals.max())
+    ret_histo.append({'name': high_label, 'tail':1})
     if nan_per > 0.0:
         ret_histo.append(nan_observation)
     return ret_histo
@@ -170,7 +180,7 @@ def categorical_histogram(ser, val_counts, nan_per, top_n_positions=7):
 def histogram(ser, nan_per):
     is_numeric = pd.api.types.is_numeric_dtype(ser.dtype)
     val_counts = ser.value_counts()
-    if is_numeric and len(val_counts>5):
+    if is_numeric and len(val_counts)>5:
         temp_histo =  numeric_histogram(ser, nan_per)
         if len(temp_histo) > 5:
             #if we had basically a categorical variable encoded into an integer.. don't return it
