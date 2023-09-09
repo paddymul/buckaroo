@@ -174,18 +174,28 @@ div.dependent-tabs ul.tabs li.active {
 }
 
 
+.histogram-component {
+    margin:0;
+    border-left:1px solid #68686e;
+    border-right:1px solid #68686e;
+		
+	   
+}
+
 .floating-tooltip {
-    color:red;
+    color:black;;
     background:white;
 }
 
 
 .floating-tooltip dl {
+    border:1px solid black;
     padding:1px 4px;
     margin:0;
+    display:flow-root;
 }
 .floating-tooltip dl dt {
-
+    font-weight:bold;
     float:left;
     margin:0;
     padding:0;
@@ -194,6 +204,7 @@ div.dependent-tabs ul.tabs li.active {
 
     float:left;
     margin:0 0 0 10px;
+    clear:right;
 }
 
 

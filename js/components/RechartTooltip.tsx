@@ -186,7 +186,6 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
   );
 
   useEffect(() => {
-    console.log('useEffect 166');
     const updateBBox = () => {
       if (dismissed) {
         document.removeEventListener('keydown', handleKeyDown);
@@ -202,8 +201,6 @@ export const Tooltip = <TValue extends ValueType, TName extends NameType>(
 
       if (wrapperNode.current && wrapperNode.current.getBoundingClientRect) {
         const box = wrapperNode.current.getBoundingClientRect();
-        //console.log("effectProps", props)
-        console.log('166box', box);
         setBoxCoords({ x: box.x, y: box.y });
         if (
           Math.abs(box.width - boxWidth) > EPS ||

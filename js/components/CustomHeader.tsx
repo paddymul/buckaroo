@@ -56,46 +56,25 @@ export const makeData = (histogram: number[]) => {
       population: histogram[i],
     });
   }
-  console.log('accum', accum)
+  //console.log('accum', accum)
   return accum;
 };
 
 const formatter = (value: any, name: any, props: any) => {
-  //console.log("formatter", value, name, props)
   return [value, props.payload.name];
 };
 
-/*
-function App() {
-  const [anchor, setAnchor] = useState(null);
-  return (
-    <>
-      <button ref={setAnchor}>Button</button>
-      <Tooltip anchor={anchor} />
-    </>
-  );
-}
-*/
-
-export function getOffset(el: any) {
-  console.log('el', el);
-  /*
-  const rect = el.getBoundingClientRect();
-  return {
-    left: rect.left + window.scrollX,
-    top: rect.top + window.scrollY
-  };
-  */
-}
 
 export function FloatingTooltip({ items, x, y }: any) {
-  console.log('x',x, 'y', y);
   const offset = 30;
   const renderedItems = items.map((name: string, value: number | string) => {
+    
+    const [realName, realValue] = name;
+    console.log("name", name);
     return (
       <React.Fragment>
-        <dt>{name}</dt>
-        <dd>{value}</dd>
+        <dt>{realName}</dt>
+        <dd>{realValue}%</dd>
       </React.Fragment>
     );
   });
@@ -171,7 +150,7 @@ export const HistogramCell = (props: any) => {
   const histogram = props.value.histogram;
   return (
     <div className="histogram-component">
-      <BarChart width={100} height={25} barGap={1} data={histogram}>
+      <BarChart width={100} height={24} barGap={1} data={histogram}>
         <defs>
           <pattern
             id="star"
