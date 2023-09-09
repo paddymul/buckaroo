@@ -126,10 +126,10 @@ def numeric_histogram(arr, nan_per):
     return ret_histo
 
 
-def categorical_dict(ser, top_n_positions=7):
+def categorical_dict(ser, val_counts, top_n_positions=7):
 
-    val_counts = ser.value_counts()
 
+    l = len(ser)
     top = min(len(val_counts), top_n_positions)
     top_vals = val_counts.iloc[:top]
     rest_vals = val_counts.iloc[top:]
@@ -140,31 +140,36 @@ def categorical_dict(ser, top_n_positions=7):
     unique_count = sum(val_counts == 1)
     long_tail = full_long_tail - unique_count
     if unique_count > 0:
-        histogram['unique'] = unique_count
+        histogram['unique'] = np.round( (unique_count/l)* 100, 0)
     if long_tail > 0:
-        histogram['long_tail'] = long_tail
+        histogram['longtail'] = np.round((long_tail/l) * 100,0)
     return histogram    
 
-def categorical_histogram(ser, nan_per, top_n_positions=7):
+def categorical_histogram(ser, val_counts, nan_per, top_n_positions=7):
     nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
-    cd = categorical_dict(ser, top_n_positions)
+    cd = categorical_dict(ser, val_counts, top_n_positions)
 
     l = len(ser)
     histogram = []
+    longtail_obs = {'name': 'longtail'}
     for k,v in cd.items():
-        histogram.append({'name':k, 'cat_pop': v/l})
+        if k in ["longtail", "unique"]:
+            longtail_obs[k] = v
+        histogram.append({'name':k, 'cat_pop': np.round((v/l)*100,0) })
+    histogram.append(longtail_obs)
     histogram.append(nan_observation)
     return histogram
 
 
 def histogram(ser, nan_per):
     is_numeric = pd.api.types.is_numeric_dtype(ser.dtype)
-    if is_numeric:
+    val_counts = ser.value_counts()
+    if is_numeric and len(val_counts>5):
         temp_histo =  numeric_histogram(ser, nan_per)
         if len(temp_histo) > 5:
             #if we had basically a categorical variable encoded into an integer.. don't return it
             return temp_histo
-    return categorical_histogram(ser, nan_per)
+    return categorical_histogram(ser, val_counts, nan_per)
 
 class ColDisplayHints(ColAnalysis):
     requires_summary = ['min', 'max'] # What summary stats does this analysis provide
