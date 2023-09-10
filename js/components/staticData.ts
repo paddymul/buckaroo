@@ -69,6 +69,110 @@ export const EmptyDf: DFWhole = {
 
 //print(sdf.to_json(orient='table', indent=2))
 
+export const histograms = {
+  num_histo : [
+    {'name': '-406 - -332', 'population':  0},
+    {'name': '-332 - -258', 'population':  0},
+    {'name': '-258 - -184', 'population':  2},
+    {'name': '-184 - -111', 'population': 10},
+    {'name': '-111 - -37',  'population': 22},
+    {'name': '-37 - 36',    'population': 30},
+    {'name': '36 - 109',    'population': 22},
+    {'name': '109 - 183',   'population': 10},
+    {'name': '183 - 257',   'population':  3},
+    {'name': '257 - 331',   'population':  0}],
+
+  bool_histo : [
+    {'name': 'False', 'false': 50},
+    {'name': 'True', 'true': 30},
+    {'name': 'NA', 'NA': 20}],
+
+  NA_Only : [
+    {'name': 'NA', 'NA': 100}],
+
+  simple_catgeorical : [
+    {'name': 2, 'cat_pop': 87.0},
+    {'name': 1, 'cat_pop': 13.0}],
+    
+  categorical_histo : [
+    {'name': 'KTM', 'cat_pop': 30},
+    {'name': 'Gas Gas', 'cat_pop': 15},
+    {'name': 'Yamaha', 'cat_pop': 10},
+    {'name': 'unique', 'unique': 25},
+    {'name': 'NA', 'NA': 20}
+  ],
+
+  categorical_histo_lt : [
+    {'name': 'KTM', 'cat_pop': 25},
+    {'name': 'Gas Gas', 'cat_pop': 12},
+    {'name': 'Yamaha', 'cat_pop': 8},
+    {'name': 'NA', 'NA': 20},
+    {'name': 'longtail', 'unique': 15, 'longtail':20},
+  ],
+
+  all_unique : [
+    {'name': 'unique', 'unique': 100},
+  ],
+
+  unique_na : [
+    {'name': 'unique', 'unique': 80},
+    {'name': 'NA', 'NA': 20}
+  ],
+
+  unique_continuous : [
+    {'name': '-406   -332', 'population': 0},
+    {'name': '-332   -258', 'population': 0},
+    {'name': '-258   -184', 'population': 0},
+    {'name': '-184   -111', 'population': 10},
+    {'name': '-111   -37', 'population':  21},
+    {'name': '-37   36', 'population':    29},
+    {'name': '36   109', 'population':    22},
+    {'name': '109   183', 'population':   9},
+    {'name': '183   257', 'population':   3},
+    {'name': '257   331', 'population':   0},
+    {'name': 'unique', 'unique': 100},
+  ],
+
+  unique_continuous_scaled : [
+    {'name': '-406   -332', 'population': 0},
+    {'name': '-332   -258', 'population': 0},
+    {'name': '-258   -184', 'population': 0},
+    {'name': '-184   -111', 'population': 10},
+    {'name': '-111   -37', 'population':  21},
+    {'name': '-37   36', 'population':    29},
+    {'name': '36   109', 'population':    22},
+    {'name': '109   183', 'population':   9},
+    {'name': '183   257', 'population':   3},
+    {'name': '257   331', 'population':   0},
+    {'name': 'unique', 'unique': 29},
+  ],
+
+  unique_continuous_scaled_50 : [
+    {'name': '-406   -332', 'population': 0},
+    {'name': '-332   -258', 'population': 0},
+    {'name': '-258   -184', 'population': 0},
+    {'name': '-184   -111', 'population': 10},
+    {'name': '-111   -37', 'population':  21},
+    {'name': '-37   36', 'population':    29},
+    {'name': '36   109', 'population':    22},
+    {'name': '109   183', 'population':   9},
+    {'name': '183   257', 'population':   3},
+    {'name': '257   331', 'population':   0},
+    {'name': 'longtail', 'unique': 15},
+  ],
+  start_station_categorical : [{'name': 'Pershing Square N', 'cat_pop': 1},
+				    {'name': '8 Ave & W 31 St', 'cat_pop': 1},
+				    {'name': 'Lafayette St & E 8 St', 'cat_pop': 1},
+				    {'name': 'W 21 St & 6 Ave', 'cat_pop': 1},
+				    {'name': 'E 17 St & Broadway', 'cat_pop': 1},
+				    {'name': '8 Ave & W 33 St', 'cat_pop': 1},
+				    {'name': 'E 43 St & Vanderbilt Ave', 'cat_pop': 1},
+				    {'name': 'unique', 'cat_pop': 0},
+				    {'name': 'long_tail', 'cat_pop': 92},
+				    {'name': 'NA', 'cat_pop': 0}]
+
+};
+
 //export const tableDf2:DFWhole = {
 export const foo: DFWhole = {
   schema: {
@@ -90,7 +194,7 @@ export const foo: DFWhole = {
   },
   table_hints: {
     index: { is_numeric: false },
-    tripduration: { is_numeric: false },
+    tripduration: { is_numeric: false,},
     starttime: { is_numeric: false },
     stoptime: { is_numeric: false },
     'start station id': { is_numeric: false },

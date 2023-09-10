@@ -163,7 +163,8 @@ export const HistogramCell = (props: any) => {
             height="10"
             patternUnits="userSpaceOnUse"
           >
-            <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
+      <polygon               stroke="pink"
+    points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
           </pattern>
           <pattern
             id="stripe"
@@ -182,7 +183,7 @@ export const HistogramCell = (props: any) => {
           >
             <circle
               data-color="outline"
-              stroke="#FFF"
+              stroke="pink"
               cx=".5"
               cy=".5"
               r="1.5"
@@ -197,7 +198,7 @@ export const HistogramCell = (props: any) => {
             height="4"
             patternUnits="userSpaceOnUse"
           >
-            <rect x="0" width="2" height="2" y="0"></rect>
+            <rect stroke="#0f0" x="0" width="2" height="2" y="0"></rect>
             <rect x="2" width="2" height="2" y="2"></rect>
           </pattern>
 
@@ -211,7 +212,7 @@ export const HistogramCell = (props: any) => {
             patternTransform="translate(1, 1) rotate(0) skewX(0)"
           >
             <svg width="5" height="5" viewBox="0 0 100 100">
-              <g fill="#141414" opacity="1">
+              <g fill="teal" opacity="1">
                 <path d="M99.9557 99.9557C45.4895 98.3748 1.6248 54.5101 0.0439453 0.0439453C54.5101 1.6248 98.3748 45.4895 99.9557 99.9557Z"></path>
               </g>
             </svg>
@@ -219,23 +220,23 @@ export const HistogramCell = (props: any) => {
         </defs>
         <Bar dataKey="population" stroke="#000" fill="gray" stackId="stack" />
         <Bar dataKey="tail" stroke="#000" fill="gray" stackId="stack" />
-        <Bar dataKey="true" stroke="#000" fill="#000" stackId="stack" />
+        <Bar dataKey="true" stroke="#00f" fill="#00f" stackId="stack" />
         <Bar dataKey="false" stroke="#000" fill="#fff" stackId="stack" />
         <Bar
           dataKey="cat_pop"
-          stroke="gray"
-          fill="url(#circles)"
+          stroke="pink"
+          fill="url(#star)"
           stackId="stack"
         />
         <Bar
           dataKey="unique"
-          stroke="#000"
+          stroke="#0f0"
           fill="url(#checkers)"
           stackId="stack"
         />
         <Bar
           dataKey="longtail"
-          stroke="#000"
+          stroke="teal"
           fill="url(#leafs)"
           stackId="stack"
         />
