@@ -8,6 +8,7 @@
 TODO: Add module docstring
 """
 import json
+import warnings
 
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
@@ -95,6 +96,9 @@ class BuckarooWidget(DOMWidget):
                  really_reorder_columns=False):
         super().__init__()
 
+
+        warnings.filterwarnings('ignore')
+
         rows = len(df)
         cols = len(df.columns)
         item_count = rows * cols
@@ -125,6 +129,7 @@ class BuckarooWidget(DOMWidget):
             'transformed_df':self.origDf,
             'generated_py_code':'#from py widget init'}
         self.setup_from_command_kls_list()
+        warnings.filterwarnings('default')
 
     def add_analysis(self, analysis_obj):
         self.stats.add_analysis(analysis_obj)

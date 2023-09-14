@@ -71,7 +71,7 @@ export const EmptyDf: DFWhole = {
 
 export const histograms = {
   num_histo : [
-    {'name': '-406 - -332', 'population':  0},
+    {'name': '-406 - -332', 'population':  1},
     {'name': '-332 - -258', 'population':  0},
     {'name': '-258 - -184', 'population':  2},
     {'name': '-184 - -111', 'population': 10},
@@ -120,7 +120,7 @@ export const histograms = {
   ],
 
   unique_continuous : [
-    {'name': '-406   -332', 'population': 0},
+    {'name': '-406   -332', 'population': 1},
     {'name': '-332   -258', 'population': 0},
     {'name': '-258   -184', 'population': 0},
     {'name': '-184   -111', 'population': 10},
@@ -194,7 +194,7 @@ export const foo: DFWhole = {
   },
   table_hints: {
     index: { is_numeric: false },
-    tripduration: { is_numeric: false,},
+    tripduration: { is_numeric: false, histogram:histograms.num_histo},
     starttime: { is_numeric: false },
     stoptime: { is_numeric: false },
     'start station id': { is_numeric: false },
@@ -318,21 +318,15 @@ export const tableDf: DFWhole = {
     },
   ],
   table_hints: {
-    'end station name': { is_numeric: false, histogram: [] },
+    'end station name': { is_numeric: false, histogram: histograms.categorical_histo_lt },
     tripduration: {
       is_numeric: true,
       is_integer: true,
       min_digits: 3,
       max_digits: 4,
-      histogram: [
-        [0.6, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2],
-        [
-          373.0, 485.1, 597.2, 709.3, 821.4, 933.5, 1045.6, 1157.7, 1269.8,
-          1381.9, 1494.0,
-        ],
-      ],
+      histogram:histograms.num_histo
     },
-    'start station name': { is_numeric: false, histogram: [] },
+    'start station name': { is_numeric: false, histogram: histograms.bool_histo },
     floatCol: {
       is_numeric: true,
       is_integer: false,

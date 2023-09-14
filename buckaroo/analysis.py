@@ -144,7 +144,12 @@ def histo_format(v, l):
 def categorical_dict(ser, val_counts, top_n_positions=7):
     l = len(ser)
     top = min(len(val_counts), top_n_positions)
+
+
     top_vals = val_counts.iloc[:top]
+    #top_percentage = top_vals.sum() / l
+    #if len(val_counts) > 5 and top_percentage < .05:
+        
     rest_vals = val_counts.iloc[top:]
     histogram = top_vals.to_dict()
 

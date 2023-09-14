@@ -225,7 +225,7 @@ export const HistogramCell = (props: any) => {
         <Bar
           dataKey="cat_pop"
           stroke="pink"
-          fill="url(#star)"
+          fill="url(#circles)"
           stackId="stack"
         />
         <Bar
