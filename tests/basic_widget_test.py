@@ -38,6 +38,7 @@ def test_symbol_meta():
     w.operations = [[{"symbol":"dropcol", "meta":{}},{"symbol":"df"},"starttime"]]
 
     tdf = w.operation_results['transformed_df']
+    print("transform_error", w.operation_results['transform_error'])
     assert w.operation_results['transform_error'] == False
     field_names = [ f['name'] for f in tdf['schema']['fields'] ]
     assert 'starttime' not in field_names

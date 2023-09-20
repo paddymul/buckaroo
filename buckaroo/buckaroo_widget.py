@@ -187,6 +187,7 @@ class BuckarooWidget(DOMWidget):
         print("interpret_operations")
         results = {}
         try:
+        #if True:
             transformed_df = self.interpret_ops(new_ops, self.typed_df)
             #note we call gneerate_py_code based on the full
             #self.operations, this makes sure that machine_gen
@@ -200,10 +201,11 @@ class BuckarooWidget(DOMWidget):
             results['transform_error'] = str(e)
         self.operation_results = results
     
-    def generate_code(self, new_ops):
+    def generate_code(self, operations):
+        
         if len(operations) == 0:
             return 'no operations'
-        return self.buckaroo_to_py_core(new_ops)
+        return self.buckaroo_to_py_core(operations)
     
     def interpret_ops(self, new_ops, df):
         operations = [{'symbol': 'begin'}]
@@ -211,7 +213,7 @@ class BuckarooWidget(DOMWidget):
         #print("interpret_operations", operations)
         if len(operations) == 1:
             return df
-        return self.buckaroo_transform(operations, df)
+        return self.buckaroo_transform(operations , df)
 
     def setup_from_command_kls_list(self):
         #used to initially setup the interpreter, and when a command
