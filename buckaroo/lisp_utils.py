@@ -1,5 +1,3 @@
-
-
 """
 It would be awesome to have cleaning and verification commands that add new columns with related names
 
@@ -14,7 +12,7 @@ sick.  And still ahve high perfromance properly typed columns
 """
 
 def is_symbol(obj):
-    return isinstance(obj, dict) and obj.has_key("symbol")
+    return isinstance(obj, dict) and "symbol" in obj
 
 def is_generated_symbol(obj):
     return is_symbol(obj) and obj.get("meta", False)
@@ -38,22 +36,12 @@ def split_operations(full_operations):
             continue
         raise Exception("Unexpected token %r" % command)
     return machine_generated, user_entered
+
+def lists_match(l1, l2):
+    #https://note.nkmk.me/en/python-list-compare/#checking-the-exact-match-of-lists
+    if len(l1) != len(l2):
+        return False
+    return all(x == y and type(x) == type(y) for x, y in zip(l1, l2))
+
+print('loaded lisp_utils')
             
-
-def test_split_operations():
-
-    full_ops = [
-        [{"symbol":"dropcol", "meta":{"precleaning":True}},{"symbol":"df"},"starttime"],
-        [{"symbol":"dropcol"},{"symbol":"df"},"starttime"],
-    ]
-
-    EXPECTED_cleaning_ops = [
-        [{"symbol":"dropcol", "meta":{"precleaning":True}},{"symbol":"df"},"starttime"]]
-    
-    EXPECTED_user_gen_ops = [
-        [{"symbol":"dropcol"},{"symbol":"df"},"starttime"]]
-
-    cleaning_ops, user_gen_ops = split_operations(full_ops)
-
-    assert EXPECTED_cleaning_ops == cleaning_ops
-    assert EXPECTED_user_gen_ops == user_gen_ops
