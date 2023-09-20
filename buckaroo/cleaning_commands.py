@@ -28,8 +28,8 @@ class to_datetime(Command):
 
     @staticmethod 
     def transform(df, col):
-        # ser = df[col]
-        # df[col] =  pd.to_datetime(ser, errors='coerce').reindex(ser.index)
+        ser = df[col]
+        df[col] =  pd.to_datetime(ser, errors='coerce').reindex(ser.index)
         return df
 
     @staticmethod 
