@@ -142,16 +142,10 @@ def coerce_series(ser, new_type):
     else:
         raise Exception("Unkown type of %s" % new_type)
 
-def auto_type_df(df):
-    #this is much faster because we only run the slow function on a maximum of 200 rows.  
-    #That's a good size for an estimate
-    sample_size = min(len(df), 200)
-    recommended_types = {}
-    new_data = {}
-    for c in df.columns:
-        recommended_types[c] = recommend_type(get_typing_metadata(df[c].sample(sample_size)))
-        new_data[c] = coerce_series(df[c], recommended_types[c])
-    return pd.DataFrame(new_data)
+def emit_command(col_name, new_type):
+    # I need a "no-op" new_type that doesn't change a column at all
+    # also possible meta tags about commands taht will change data, vs just re-typing
+    return [{"symbol":"to_%s" % new_type , "meta":{"precleaning":True}},{"symbol":"df"}, col_name],
 
 def auto_type_df(df):
     #this is much faster because we only run the slow function on a maximum of 200 rows.  
@@ -163,6 +157,16 @@ def auto_type_df(df):
         recommended_types[c] = recommend_type(get_typing_metadata(df[c].sample(sample_size)))
         new_data[c] = coerce_series(df[c], recommended_types[c])
     return pd.DataFrame(new_data)
+
+def get_auto_type_commands(df):
+    #this is much faster because we only run the slow function on a maximum of 200 rows.  
+    #That's a good size for an estimate
+    sample_size = min(len(df), 200)
+    cleaning_commands = []
+    for c in df.columns:
+        new_type = recommend_type(get_typing_metadata(df[c].sample(sample_size)))
+        cleaning_commands.append(emit_command(c, new_type))
+    return cleaning_commands
 
 
 
