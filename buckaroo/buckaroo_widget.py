@@ -108,14 +108,13 @@ class BuckarooWidget(DOMWidget):
             return True
         return False
 
-    def get_df_config(self, df, sampled, reorderdColumns, showTransformed):
+    def get_df_config(self, df, sampled, reorderdColumns, showCommands):
         tempDfc = self.dfConfig.copy()
         tempDfc.update(dict(
             totalRows=len(df),
             columns=len(df.columns),
-            showTransformed=showTransformed,
             #removing showCommands for now, mirroring showTransformed
-            showCommands=showTransformed))
+            showCommands=showCommands))
         tempDfc['sampled'] = self.should_sample(df, sampled, reorderdColumns)
         return tempDfc
     
@@ -123,14 +122,14 @@ class BuckarooWidget(DOMWidget):
                  sampled=True,
                  summaryStats=False,
                  reorderdColumns=False,
-                 showTransformed=True):
+                 showCommands=True):
         super().__init__()
         warnings.filterwarnings('ignore')
         #moving setup_from_command_kls_list early in the init because
         #it's relatively benign and not tied to other linked updates
 
         self.setup_from_command_kls_list()
-        self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showTransformed)
+        self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showCommands)
         #we need dfConfig setup first before we get the proper
         #workind_df and generate the typed_df
         self.raw_df = df
