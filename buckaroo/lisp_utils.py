@@ -43,5 +43,4 @@ def lists_match(l1, l2):
         return False
     return all(x == y and type(x) == type(y) for x, y in zip(l1, l2))
 
-print('loaded lisp_utils')
             

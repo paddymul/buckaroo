@@ -145,7 +145,7 @@ def coerce_series(ser, new_type):
 def emit_command(col_name, new_type):
     # I need a "no-op" new_type that doesn't change a column at all
     # also possible meta tags about commands taht will change data, vs just re-typing
-    return [{"symbol":"to_%s" % new_type , "meta":{"precleaning":True}},{"symbol":"df"}, col_name],
+    return [{"symbol":"to_%s" % new_type , "meta":{"precleaning":True}},{"symbol":"df"}, col_name]
 
 def auto_type_df(df):
     #this is much faster because we only run the slow function on a maximum of 200 rows.  

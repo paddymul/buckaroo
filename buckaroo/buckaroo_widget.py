@@ -15,11 +15,17 @@ from traitlets import Unicode, List, Dict, observe
 
 from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
+from .lisp_utils import (lists_match, split_operations)
+
 from .auto_clean import get_auto_type_commands
 from .down_sample import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
+
+
 from .analysis_management import DfStats
+
+
 
 from pandas.io.json import dumps as pdumps
 
@@ -67,6 +73,8 @@ class BuckarooWidget(DOMWidget):
 
     commandConfig = Dict({}).tag(sync=True)
     operations = List().tag(sync=True)
+    machine_gen_operations = List().tag(sync=True)
+    user_entered_operations = List().tag(sync=True)
 
     command_classes = DefaultCommandKlsList
 
@@ -122,7 +130,7 @@ class BuckarooWidget(DOMWidget):
         #it's relatively benign and not tied to other linked updates
 
         self.setup_from_command_kls_list()
-        self.dfConfig = self.get_df_config(df, showTransformed)
+        self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showTransformed)
         #we need dfConfig setup first before we get the proper
         #workind_df and generate the typed_df
         self.raw_df = df
@@ -135,7 +143,9 @@ class BuckarooWidget(DOMWidget):
 
     @observe('dfConfig')
     def update_based_on_df_config(self, change):
-	self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+        if hasattr(self, 'typed_df'):
+            self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+        #otherwise this is a call before typed_df has been completely setup
 
     @observe('operations')
     def handle_operations(self, change):
@@ -157,8 +167,9 @@ class BuckarooWidget(DOMWidget):
         print("interpret_machine_gen_ops")
         new_ops = change['new']
 
+        #this won't listen to sampled changes proeprly
         if self.dfConfig['sampled']:
-            working_df = sample(self.df, self.dfConfig['sampleSize'])
+            working_df = sample(self.raw_df, self.dfConfig['sampleSize'])
         else:
             working_df = self.raw_df
         self.typed_df = self.interpret_ops(new_ops, working_df)

@@ -16,7 +16,7 @@ def test_basic_display():
 def test_interpreter():    
     df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
     w = BuckarooWidget(df)
-    assert w.operation_results['generated_py_code']  == '#from py widget init'
+    assert w.operation_results['generated_py_code']  == '# never seen from py widget init'
     w.operations = [[{"symbol":"dropcol"},{"symbol":"df"},"starttime"]]
 
     tdf = w.operation_results['transformed_df']
@@ -34,7 +34,7 @@ def test_symbol_meta():
 
     df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
     w = BuckarooWidget(df)
-    assert w.operation_results['generated_py_code']  == '#from py widget init'
+    assert w.operation_results['generated_py_code']  == '# never seen from py widget init'
     w.operations = [[{"symbol":"dropcol", "meta":{}},{"symbol":"df"},"starttime"]]
 
     tdf = w.operation_results['transformed_df']
@@ -46,10 +46,9 @@ def test_symbol_meta():
 def test_interpreter_errors():
     df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
     w = BuckarooWidget(df)
-    assert w.operation_results['generated_py_code']  == '#from py widget init'
+    assert w.operation_results['generated_py_code']  == '# never seen from py widget init'
     w.operations = [
         [{"symbol":"dropcol"},{"symbol":"df"},"starttime"],
         [{"symbol":"dropcol"},{"symbol":"df"},"starttime"]]
     assert w.operation_results['transform_error'] == '''"['starttime'] not found in axis"'''
-
 
