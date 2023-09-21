@@ -71,7 +71,9 @@ def get_object_typing_metadata(ser):
             counts['bool'] += 1
         else:
             counts['bool_error'] += 1
-            
+
+    if len(ser) == 0:
+        return counts
     ret_dict = dict([[k, v/len(ser)] for k,v in counts.items()])
     
     #this is an ugly hack, but it really speeds things up if there are
