@@ -125,7 +125,12 @@ def recommend_type(type_dict):
     return 'string'
 
 def smart_to_int(ser):
-    lower, upper = ser.min(), ser.max()
+    if pd.api.types.is_numeric_dtype(ser):
+        print("here is_numeric")
+        lower, upper = ser.min(), ser.max()
+    else:
+        ser = pd.to_numeric(ser, errors='coerce')
+        lower, upper = ser.min(), ser.max()
     
     if lower < 0:
         if upper < np.iinfo(np.int8).max:

@@ -81,7 +81,9 @@ class BuckarooWidget(DOMWidget):
     origDf = Dict({}).tag(sync=True)
     summaryDf = Dict({}).tag(sync=True)
 
-    operation_results = Dict({}).tag(sync=True)
+    operation_results = Dict(
+        {'transformed_df':EMPTY_DF_OBJ, 'generated_py_code':'# instantiation, unused'}
+    ).tag(sync=True)
 
     dfConfig = Dict(
         {
@@ -130,16 +132,12 @@ class BuckarooWidget(DOMWidget):
 
         self.setup_from_command_kls_list()
         self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showCommands)
-
         #we need dfConfig setup first before we get the proper
-        #workind_df and generate the typed_df
+        #working_df  and generate the typed_df
         self.raw_df = df
 
         # this will trigger the setting of self.typed_df
-        ops = get_auto_type_operations(df)
-        self.operations = ops
-        # self.operation_results = {
-        #     'transformed_df':self.origDf, 'generated_py_code':'# never seen from py widget init'}
+        self.operations = get_auto_type_operations(df)
         warnings.filterwarnings('default')
 
     @observe('dfConfig')

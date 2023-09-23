@@ -78,6 +78,12 @@ def test_recommend_type():
     WEIRD_INT_SER = pd.Series(['a', 2, 3, 4, None])
     assert ac.recommend_type( ac.get_typing_metadata(WEIRD_INT_SER)) == 'int'
 
+def test_smart_to_int():
+    assert_series_equal(
+        ac.smart_to_int(pd.Series(['a', 2, 3, 4, None])),
+        pd.Series([NA, 2,3,4, NA], dtype='Int8'))
+
+
 def test_coerce_series():
     assert_series_equal(
         ac.coerce_series(pd.Series(['a', 2, 3, 4, None]), 'int'),
