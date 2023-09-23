@@ -17,7 +17,7 @@ from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
 from .lisp_utils import (lists_match, split_operations)
 
-from .auto_clean import get_auto_type_commands
+from .auto_clean import get_auto_type_operations
 from .down_sample import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
@@ -130,14 +130,16 @@ class BuckarooWidget(DOMWidget):
 
         self.setup_from_command_kls_list()
         self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showCommands)
+
         #we need dfConfig setup first before we get the proper
         #workind_df and generate the typed_df
         self.raw_df = df
 
         # this will trigger the setting of self.typed_df
-        self.operations = get_auto_type_commands(df)
-        self.operation_results = {
-            'transformed_df':self.origDf, 'generated_py_code':'# never seen from py widget init'}
+        ops = get_auto_type_operations(df)
+        self.operations = ops
+        # self.operation_results = {
+        #     'transformed_df':self.origDf, 'generated_py_code':'# never seen from py widget init'}
         warnings.filterwarnings('default')
 
     @observe('dfConfig')
@@ -163,7 +165,6 @@ class BuckarooWidget(DOMWidget):
     def interpret_machine_gen_ops(self, change, force=False):
         if (not force) and lists_match(change['old'], change['new']):
             return # nothing changed, do no computations
-        print("interpret_machine_gen_ops")
         new_ops = change['new']
 
         #this won't listen to sampled changes proeprly
@@ -183,10 +184,8 @@ class BuckarooWidget(DOMWidget):
         if lists_match(change['old'], change['new']):
             return
         new_ops = change['new']
-        print("interpret_operations")
         results = {}
         try:
-        #if True:
             transformed_df = self.interpret_ops(new_ops, self.typed_df)
             #note we call gneerate_py_code based on the full
             #self.operations, this makes sure that machine_gen
@@ -209,7 +208,6 @@ class BuckarooWidget(DOMWidget):
     def interpret_ops(self, new_ops, df):
         operations = [{'symbol': 'begin'}]
         operations.extend(new_ops)
-        #print("interpret_operations", operations)
         if len(operations) == 1:
             return df
         return self.buckaroo_transform(operations , df)

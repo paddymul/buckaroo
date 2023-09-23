@@ -1,5 +1,6 @@
 from .lispy import s
 from .configure_utils import configure_buckaroo
+from .auto_clean import smart_to_int, get_auto_type_operations
 import pandas as pd
 import numpy as np
 
@@ -45,8 +46,8 @@ class to_int(Command):
     def transform(df, col):
         ser = df[col]
         try:
-            df[col] = pd.to_numeric(ser, errors='coerce').dropna().astype('Int64').reindex(ser.index)
-        except:
+            df[col] = smart_to_int(ser)
+        except Exception as e:
             #just let pandas figure it out, we recommended the wrong type
             df[col] = pd.to_numeric(ser, errors='coerce')
 
@@ -86,3 +87,15 @@ class to_string(Command):
     def transform_to_py(df, col):
         return "    #to_string %s" % col
 
+
+cleaning_classes = [to_bool, to_datetime, to_int, to_float, to_string,]
+
+def auto_type_df2(df):
+    _command_defaults, _command_patterns, transform, buckaroo_to_py_core = configure_buckaroo(
+            cleaning_classes)
+
+    cleaning_operations = get_auto_type_operations(df)
+
+    full_ops  = [{'symbol': 'begin'}]
+    full_ops.extend(cleaning_operations)
+    return transform(full_ops, df)

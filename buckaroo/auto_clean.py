@@ -6,7 +6,7 @@ from datetime import timedelta
 from collections import defaultdict
 
 import pandas as pd
-
+import numpy as np
 
 
 #adapted from https://docs.python.org/3/library/warnings.html
@@ -124,6 +124,28 @@ def recommend_type(type_dict):
             return 'float'
     return 'string'
 
+def smart_to_int(ser):
+    lower, upper = ser.min(), ser.max()
+    
+    if lower < 0:
+        if upper < np.iinfo(np.int8).max:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int8')
+        if upper < np.iinfo(np.int16).max:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int16')
+        if upper < np.iinfo(np.int32).max:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int32')
+        else:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int64')
+    else:
+        if upper < np.iinfo(np.uint8).max:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt8')
+        if upper < np.iinfo(np.uint16).max:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt16')
+        if upper < np.iinfo(np.uint32).max:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt32')
+        else:
+            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt64')
+
 def coerce_series(ser, new_type):
     if new_type == 'bool':
         #dropna is key here, otherwise Nan's and errors are treated as true
@@ -132,7 +154,7 @@ def coerce_series(ser, new_type):
         return pd.to_datetime(ser, errors='coerce').reindex(ser.index)
     elif new_type == 'int':
         try:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int64').reindex(ser.index)
+            return smart_to_int(ser)
         except:
             #just let pandas figure it out, we recommended the wrong type
             return pd.to_numeric(ser, errors='coerce')
@@ -160,7 +182,7 @@ def auto_type_df(df):
         new_data[c] = coerce_series(df[c], recommended_types[c])
     return pd.DataFrame(new_data)
 
-def get_auto_type_commands(df):
+def get_auto_type_operations(df):
     #this is much faster because we only run the slow function on a maximum of 200 rows.  
     #That's a good size for an estimate
     sample_size = min(len(df), 200)

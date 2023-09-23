@@ -186,7 +186,6 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                     eval(exp, env)
                 x = x[-1]
             else:                    # (proc exp*)
-                print("exp", x)
                 exps = [eval(exp, env) for exp in x]
                 proc = exps.pop(0)
                 if isa(proc, Procedure):
