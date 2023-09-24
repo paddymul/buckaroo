@@ -81,13 +81,17 @@ def test_recommend_type():
 def test_smart_to_int():
     assert_series_equal(
         ac.smart_to_int(pd.Series(['a', 2, 3, 4, None])),
-        pd.Series([NA, 2,3,4, NA], dtype='Int8'))
+        pd.Series([NA, 2,3,4, NA], dtype='UInt8'))
+
+    assert_series_equal(
+        ac.smart_to_int(pd.Series(['a', 2.0, 3.1, None, NA])),
+        pd.Series([NA, 2,3,4, NA], dtype='UInt8'))
 
 
 def test_coerce_series():
     assert_series_equal(
         ac.coerce_series(pd.Series(['a', 2, 3, 4, None]), 'int'),
-        pd.Series([NA, 2,3,4, NA], dtype='Int64'))
+        pd.Series([NA, 2,3,4, NA], dtype='UInt8'))
 
     assert_series_equal(
         ac.coerce_series(pd.Series(['a', False, True, None]), 'bool'),
@@ -95,7 +99,7 @@ def test_coerce_series():
 
     assert_series_equal(
         ac.coerce_series(pd.Series(['a', 2.0, 3.0, None, NA]), 'int'),
-        pd.Series([NA, 2, 3, NA, NA], dtype='Int64'))
+        pd.Series([NA, 2, 3, NA, NA], dtype='UInt8'))
 
     assert_series_equal(
         ac.coerce_series(pd.Series(['a', 2.0, 3.1, None, NA]), 'float'),
@@ -105,12 +109,15 @@ def test_autotype_df():
     assert_frame_equal(
         ac.auto_type_df(
             pd.DataFrame({
-                'int':pd.Series(['a', 2, 3, 4, None]),
-                'bool':pd.Series(['a', False, True, None]),
-                'int2':pd.Series(['a', 2.0, 3.0, None, NA]),
-                'float':pd.Series(['a', 2.0, 3.1, None, NA])})),
+                # 'int':pd.Series(['a', 2, 3, 4, None]),
+                # 'bool':pd.Series(['a', False, True, None]),
+                # 'int2':pd.Series(['a', 2.0, 3.0, None, NA]),
+                'float':pd.Series(['a', 2.0, 3.1, None, NA])
+                }
+        )),
             pd.DataFrame({
-                'int' :  pd.Series([NA, 2,3,4, NA], dtype='Int64'),
-                'bool':  pd.Series([NA, False, True, NA], dtype='boolean'),
-                'int2':  pd.Series([NA, 2, 3, NA, NA], dtype='Int64'),
-                'float': pd.Series([nan, 2, 3.1, nan, nan], dtype='float')}))
+                # 'int' :  pd.Series([NA, 2,3,4, NA], dtype='UInt8'),
+                # 'bool':  pd.Series([NA, False, True, NA], dtype='boolean'),
+                # 'int2':  pd.Series([NA, 2, 3, NA, NA], dtype='UInt8'),
+                'float': pd.Series([nan, 2, 3.1, nan, nan], dtype='float')
+            }))

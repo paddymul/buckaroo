@@ -125,31 +125,37 @@ def recommend_type(type_dict):
     return 'string'
 
 def smart_to_int(ser):
+
     if pd.api.types.is_numeric_dtype(ser):
         print("here is_numeric")
+        working_ser = ser
         lower, upper = ser.min(), ser.max()
     else:
-        ser = pd.to_numeric(ser, errors='coerce')
-        lower, upper = ser.min(), ser.max()
-    
+        working_ser = pd.to_numeric(ser, errors='coerce')
+        lower, upper = working_ser.min(), working_ser.max()
+
+
     if lower < 0:
         if upper < np.iinfo(np.int8).max:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int8')
-        if upper < np.iinfo(np.int16).max:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int16')
-        if upper < np.iinfo(np.int32).max:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int32')
+            new_type = 'Int8'
+        elif upper < np.iinfo(np.int16).max:
+            new_type = 'Int16'
+        elif upper < np.iinfo(np.int32).max:
+            new_type = 'Int32'
         else:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('Int64')
+            new_type = 'Int64'
     else:
+        print("upper, uint8", upper, np.iinfo(np.uint8).max)
         if upper < np.iinfo(np.uint8).max:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt8')
-        if upper < np.iinfo(np.uint16).max:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt16')
-        if upper < np.iinfo(np.uint32).max:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt32')
+            new_type = 'UInt8'
+        elif upper < np.iinfo(np.uint16).max:
+            new_type = 'UInt16'
+        elif upper < np.iinfo(np.uint32).max:
+            new_type = 'UInt32'
         else:
-            return pd.to_numeric(ser, errors='coerce').dropna().astype('UInt64')
+            new_type = 'UInt64'
+    base_ser = pd.to_numeric(ser, errors='coerce').dropna()
+    return base_ser.astype(new_type).reindex(ser.index)
 
 def coerce_series(ser, new_type):
     if new_type == 'bool':
@@ -158,11 +164,11 @@ def coerce_series(ser, new_type):
     elif new_type == 'datetime':
         return pd.to_datetime(ser, errors='coerce').reindex(ser.index)
     elif new_type == 'int':
-        try:
+        # try:
             return smart_to_int(ser)
-        except:
-            #just let pandas figure it out, we recommended the wrong type
-            return pd.to_numeric(ser, errors='coerce')
+        # except:
+        #     #just let pandas figure it out, we recommended the wrong type
+        #     return pd.to_numeric(ser, errors='coerce')
         
     elif new_type == 'float':
         return pd.to_numeric(ser, errors='coerce').dropna().astype('float').reindex(ser.index)
