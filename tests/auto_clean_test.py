@@ -39,6 +39,8 @@ DATETIME_DTYPE_META = assign_values(ac.default_type_dict,
 
 MIXED_EXACT = assign_values(ac.default_type_dict, {'exact_type': 'Int64', 'general_type': 'int', 'int':1})
 
+ONLY_NANS_META = {'datetime': 0, 'datetime_error': 0, 'int': 0, 'int_error': 0, 'float': 0, 'float_error': 0, 'bool': 0, 'bool_error': 0}
+
 # WEIRD_INT = {'bool': 0.0, 'bool_error': 1.0,
 #                       'datetime': 0.0, 'datetime_error': 1.0,
 #                       'float': (2/3), 'float_error': (1/3),
@@ -61,9 +63,11 @@ def test_get_typing_metadata():
     assert BOOL_META == ac.get_typing_metadata(pd.Series(['a', 'b', False, True, False]))
 
     #only nans
-    print(ac.get_typing_metadata(pd.Series([nan, NA])))
-    print(ac.get_typing_metadata(pd.Series([])))
-
+    assert ac.get_typing_metadata(pd.Series([None])) == ONLY_NANS_META
+    assert ac.get_typing_metadata(pd.Series([NA, NA])) == ONLY_NANS_META
+    assert ac.get_typing_metadata(pd.Series([])) == ONLY_NANS_META
+    assert ac.get_typing_metadata(pd.Series([nan, NA])) == ONLY_NANS_META
+    #assert ac.get_typing_metadata(pd.Series([nan, nan])) == ONLY_NANS_META
 
 def test_recommend_type():
     assert ac.recommend_type(DATETIME_META) == 'datetime'

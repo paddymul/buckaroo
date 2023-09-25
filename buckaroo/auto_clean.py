@@ -130,7 +130,6 @@ def recommend_type(type_dict):
 def smart_to_int(ser):
 
     if pd.api.types.is_numeric_dtype(ser):
-        print("here is_numeric")
         working_ser = ser
         lower, upper = ser.min(), ser.max()
     else:
@@ -148,7 +147,6 @@ def smart_to_int(ser):
         else:
             new_type = 'Int64'
     else:
-        print("upper, uint8", upper, np.iinfo(np.uint8).max)
         if upper < np.iinfo(np.uint8).max:
             new_type = 'UInt8'
         elif upper < np.iinfo(np.uint16).max:
