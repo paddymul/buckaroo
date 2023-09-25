@@ -74,8 +74,6 @@ class BuckarooWidget(DOMWidget):
     commandConfig = Dict({}).tag(sync=True)
     operations = List().tag(sync=True)
     machine_gen_operations = List().tag(sync=True)
-    user_entered_operations = List().tag(sync=True)
-
     command_classes = DefaultCommandKlsList
 
     origDf = Dict({}).tag(sync=True)
@@ -153,18 +151,34 @@ class BuckarooWidget(DOMWidget):
         new_ops = change['new']
         split_ops = split_operations(new_ops)
         self.machine_gen_operations = split_ops[0]
-        #not using array destructuring here so we can be absolutely
-        #sure that the setter for user_entered_operations executes
-        #after the setter for machine_gen_operations
-        self.user_entered_operations = split_ops[1]
+        
+        user_gen_ops = split_ops[1]
 
+        #if either the user_gen part or the machine_gen part changes,
+        #we still have to recompute the generated code and
+        #resulting_df because the input df will be different
+
+        results = {}
+        try:
+            transformed_df = self.interpret_ops(user_gen_ops, self.typed_df)
+            #note we call gneerate_py_code based on the full
+            #self.operations, this makes sure that machine_gen
+            #cleaning code shows up too
+            results['generated_py_code'] = self.generate_code(new_ops)
+            results['transformed_df'] = json.loads(transformed_df.to_json(orient='table', indent=2))
+            results['transform_error'] = False
+        except Exception as e:
+            results['transformed_df'] = EMPTY_DF_OBJ
+            print(e)
+            results['transform_error'] = str(e)
+        self.operation_results = results
 
     @observe('machine_gen_operations')
     def interpret_machine_gen_ops(self, change, force=False):
         if (not force) and lists_match(change['old'], change['new']):
             return # nothing changed, do no computations
         new_ops = change['new']
-
+        
         #this won't listen to sampled changes proeprly
         if self.dfConfig['sampled']:
             working_df = sample(self.raw_df, self.dfConfig['sampleSize'])
@@ -177,28 +191,7 @@ class BuckarooWidget(DOMWidget):
         self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         self.update_based_on_df_config(3)
 
-    @observe('user_entered_operations')
-    def interpret_user_operations(self, change):
-        if lists_match(change['old'], change['new']):
-            return
-        new_ops = change['new']
-        results = {}
-        try:
-            transformed_df = self.interpret_ops(new_ops, self.typed_df)
-            #note we call gneerate_py_code based on the full
-            #self.operations, this makes sure that machine_gen
-            #cleaning code shows up too
-            results['generated_py_code'] = self.generate_code(self.operations)
-            results['transformed_df'] = json.loads(transformed_df.to_json(orient='table', indent=2))
-            results['transform_error'] = False
-        except Exception as e:
-            results['transformed_df'] = EMPTY_DF_OBJ
-            print(e)
-            results['transform_error'] = str(e)
-        self.operation_results = results
-    
     def generate_code(self, operations):
-        
         if len(operations) == 0:
             return 'no operations'
         return self.buckaroo_to_py_core(operations)

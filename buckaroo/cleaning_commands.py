@@ -55,7 +55,7 @@ class to_int(Command):
 
     @staticmethod 
     def transform_to_py(df, col):
-        return "    #to_int %s" % col
+        return "    df['%s'] = smart_int(df['%s'])" % (col, col)
 
 class to_float(Command):
     #argument_names = ["df", "col"]
@@ -70,7 +70,7 @@ class to_float(Command):
 
     @staticmethod 
     def transform_to_py(df, col):
-        return "    #to_float %s" % col
+        return "    df['%s'] = pd.to_numeric(df['%s'], errors='coerce')" % (col, col)
 
 class to_string(Command):
     #argument_names = ["df", "col"]
@@ -85,7 +85,8 @@ class to_string(Command):
 
     @staticmethod 
     def transform_to_py(df, col):
-        return "    #to_string %s" % col
+        return "    df['%s'] = df['%s'].fillna(value='').astype('string').replace('', None)" % (col, col)
+
 
 
 cleaning_classes = [to_bool, to_datetime, to_int, to_float, to_string,]
