@@ -81,7 +81,10 @@ def get_object_typing_metadata(ser):
     if ret_dict['datetime_error'] < .5:
         if check_for_datetime_warnings(ser):
             ret_dict['datetime_error'] = 1.0
-        
+    if ret_dict['int_error'] < .5:
+        float_remainder = (pd.to_numeric(ser, errors='coerce').abs() % 1).sum()
+        if float_remainder > 0.0001:
+            ret_dict['int_error'] = 1
     return ret_dict
 
 def get_typing_metadata(ser):
