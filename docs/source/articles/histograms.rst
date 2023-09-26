@@ -38,3 +38,19 @@ Objections to this approach
 
 This is not a traditional histogram and should not be read as such.  It is the best way to show the most insight about frequency of values in a column that we could come up with.
 
+
+Other research
+==============
+
+https://edwinth.github.io/blog/outlier-bin/
+
+https://stackoverflow.com/questions/11882393/matplotlib-disregard-outliers-when-plotting
+references
+
+        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and
+        Handle Outliers", The ASQC Basic References in Quality Control:
+        Statistical Techniques, Edward F. Mykytka, Ph.D., Editor.
+
+
+
+	
