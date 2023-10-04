@@ -45,7 +45,6 @@ def atest_symbol_meta():
 
     """
 
-
     df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
     w = BuckarooWidget(df)
     assert w.operation_results['generated_py_code'] == '# instantiation, unused'
@@ -75,5 +74,14 @@ def test_autotype_false():
     w = BuckarooWidget(simple_df, autoType=False)
     assert w.stats.ap.unit_test() == True
     
+def test_post_processing():
+    def my_func(df):
+        return df['int_col'].sum()
+    
+    bw = BuckarooWidget(simple_df, postProcessingF=my_func)
+    assert bw.processed_result == 6
+
+    bw2 = BuckarooWidget(simple_df, autoType=False, postProcessingF=my_func)
+    assert bw2.processed_result == 6
     
 

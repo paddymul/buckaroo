@@ -9,6 +9,7 @@ TODO: Add module docstring
 """
 import json
 import warnings
+import traceback
 
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
@@ -192,7 +193,7 @@ class BuckarooWidget(DOMWidget):
             results['generated_py_code'] = self.generate_code(new_ops)
             results['transformed_df'] = json.loads(self.transformed_df.to_json(orient='table', indent=2))
             results['transform_error'] = False
-            self.run_post_processing()
+            self.run_post_processing()            
         except Exception as e:
             results['transformed_df'] = EMPTY_DF_OBJ
             print(e)
@@ -202,10 +203,13 @@ class BuckarooWidget(DOMWidget):
     def run_post_processing(self):
         if self.postProcessingF:
             try:
-                working_df = self.transformed_df or self.get_working_df()
-                self.processed_result = postProcessingF(working_df)
+                if self.transformed_df is None:
+                    working_df = self.get_working_df()
+                else:
+                    working_df = self.transformed_df
+                self.processed_result = self.postProcessingF(working_df)
             except Exception as e:
-                print(e)
+                traceback.print_exc()
 
     @observe('machine_gen_operations')
     def interpret_machine_gen_ops(self, change, force=False):
