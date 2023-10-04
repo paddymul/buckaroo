@@ -128,6 +128,11 @@ class AnalsysisPipeline(object):
             new_aobj_set.append(aobj)
         new_aobj_set.append(new_aobj)
         self.verify_analysis_objects(new_aobj_set)
+        if not self.unit_test():
+            print("new analysis fails unit tests")
+            return False
+        return True
+            
 
 class DfStats(object):
     '''
