@@ -60,7 +60,12 @@ PERVERSE_DF = pd.DataFrame({
     'all_nan': [np.nan] * 10,
     'all_false': [False] * 10,
     'all_True': [True] * 10,
-    'mixed_bool': np.concatenate([[True]*5, [False]*5])})
+    'mixed_bool': np.concatenate([[True]*5, [False]*5]),
+    'mixed_float': np.concatenate([[0.5, np.nan, None], [6]*7]),
+    'float': [0.5] *10,
+    'int': [8] *10,
+    'negative': [-1] *10,
+    })
 
 class AnalsysisPipeline(object):
     """
