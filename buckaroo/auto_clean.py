@@ -200,6 +200,7 @@ def get_auto_type_operations(df, metadata_f, recommend_f):
     sample_size = min(len(df), 200)
     cleaning_commands = []
     for c in df.columns:
-        new_type = recommend_f(metadata_f(df[c].sample(sample_size)))
+        metadata = metadata_f(df[c].sample(sample_size))
+        new_type = recommend_f(metadata)
         cleaning_commands.append(emit_command(c, new_type))
     return cleaning_commands

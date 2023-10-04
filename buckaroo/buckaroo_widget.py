@@ -76,6 +76,9 @@ class BuckarooWidget(DOMWidget):
     machine_gen_operations = List().tag(sync=True)
     command_classes = DefaultCommandKlsList
 
+    typing_metadata_f = staticmethod(get_typing_metadata)
+    typing_recommend_f = staticmethod(recommend_type)
+
     origDf = Dict({}).tag(sync=True)
     summaryDf = Dict({}).tag(sync=True)
 
@@ -113,11 +116,12 @@ class BuckarooWidget(DOMWidget):
         tempDfc.update(dict(
             totalRows=len(df),
             columns=len(df.columns),
-            #removing showCommands for now, mirroring showTransformed
             showCommands=showCommands))
         tempDfc['sampled'] = self.should_sample(df, sampled, reorderdColumns)
         return tempDfc
     
+
+
     def __init__(self, df,
                  sampled=True,
                  summaryStats=False,
@@ -131,17 +135,28 @@ class BuckarooWidget(DOMWidget):
 
         self.setup_from_command_kls_list()
         self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showCommands)
-        #we need dfConfig setup first before we get the proper
-        #working_df  and generate the typed_df
+        #we need dfConfig setup first before we get the proper working_df for auto_cleaning
         self.raw_df = df
 
         if autoType:
             # this will trigger the setting of self.typed_df
-            self.operations = get_auto_type_operations(
-                df, metadata_f=get_typing_metadata, recommend_f=recommend_type)
+            self.run_autoclean()
         else:
             self.set_typed_df(self.get_working_df())
         warnings.filterwarnings('default')
+
+    def run_autoclean(self):
+        self.operations = get_auto_type_operations(
+            self.raw_df, metadata_f=self.typing_metadata_f,
+            recommend_f=self.typing_recommend_f)
+        
+    def set_metadata_f(self, new_f):
+        self.typing_metadata_f = staticmethod(new_f)
+        self.run_autoclean()
+
+    def set_recommend_f(self, new_f):
+        self.typing_recommend_f = staticmethod(new_f)
+        self.run_autoclean()
 
     @observe('dfConfig')
     def update_based_on_df_config(self, change):
