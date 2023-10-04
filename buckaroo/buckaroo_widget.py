@@ -21,17 +21,10 @@ from .auto_clean import get_auto_type_operations, get_typing_metadata, recommend
 from .down_sample import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
-
-
 from .analysis_management import DfStats
-
-
-
 from pandas.io.json import dumps as pdumps
 
 
-#empty_df = pd.DataFrame({})
-#json.loads(empty_df.to_json(orient='table', indent=2))
 EMPTY_DF_OBJ = {'schema': {'fields': [{'name': 'index', 'type': 'string'}],
   'primaryKey': ['index'],
   'pandas_version': '1.4.0'},
@@ -120,35 +113,41 @@ class BuckarooWidget(DOMWidget):
         tempDfc['sampled'] = self.should_sample(df, sampled, reorderdColumns)
         return tempDfc
     
-
-
     def __init__(self, df,
                  sampled=True,
                  summaryStats=False,
                  reorderdColumns=False,
                  showCommands=True,
-                 autoType=True):
+                 autoType=True,
+                 postProcessingF=None,
+                 ):
+
         super().__init__()
         warnings.filterwarnings('ignore')
         #moving setup_from_command_kls_list early in the init because
         #it's relatively benign and not tied to other linked updates
+        self.postProcessingF = postProcessingF
+        self.processed_result = None
+        self.transformed_df = None
 
         self.setup_from_command_kls_list()
         self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showCommands)
         #we need dfConfig setup first before we get the proper working_df for auto_cleaning
         self.raw_df = df
-
-        if autoType:
-            # this will trigger the setting of self.typed_df
-            self.run_autoclean()
-        else:
-            self.set_typed_df(self.get_working_df())
+        self.run_autoclean(autoType)
+            
         warnings.filterwarnings('default')
 
-    def run_autoclean(self):
-        self.operations = get_auto_type_operations(
-            self.raw_df, metadata_f=self.typing_metadata_f,
-            recommend_f=self.typing_recommend_f)
+    def run_autoclean(self, autoType):
+        if autoType:
+            # this will trigger the setting of self.typed_df
+            self.operations = get_auto_type_operations(
+                self.raw_df, metadata_f=self.typing_metadata_f,
+                recommend_f=self.typing_recommend_f)
+        else:
+            self.set_typed_df(self.get_working_df())
+            #need to run this for the no autoclean case
+            self.run_post_processing()
         
     def set_metadata_f(self, new_f):
         self.typing_metadata_f = staticmethod(new_f)
@@ -170,9 +169,6 @@ class BuckarooWidget(DOMWidget):
             else:
                 self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
 
-
-
-
     @observe('operations')
     def handle_operations(self, change):
         if lists_match(change['old'], change['new']):
@@ -189,18 +185,27 @@ class BuckarooWidget(DOMWidget):
 
         results = {}
         try:
-            transformed_df = self.interpret_ops(user_gen_ops, self.typed_df)
+            self.transformed_df = self.interpret_ops(user_gen_ops, self.typed_df)
             #note we call gneerate_py_code based on the full
             #self.operations, this makes sure that machine_gen
             #cleaning code shows up too
             results['generated_py_code'] = self.generate_code(new_ops)
-            results['transformed_df'] = json.loads(transformed_df.to_json(orient='table', indent=2))
+            results['transformed_df'] = json.loads(self.transformed_df.to_json(orient='table', indent=2))
             results['transform_error'] = False
+            self.run_post_processing()
         except Exception as e:
             results['transformed_df'] = EMPTY_DF_OBJ
             print(e)
             results['transform_error'] = str(e)
         self.operation_results = results
+
+    def run_post_processing(self):
+        if self.postProcessingF:
+            try:
+                working_df = self.transformed_df or self.get_working_df()
+                self.processed_result = postProcessingF(working_df)
+            except Exception as e:
+                print(e)
 
     @observe('machine_gen_operations')
     def interpret_machine_gen_ops(self, change, force=False):
