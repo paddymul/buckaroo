@@ -194,15 +194,12 @@ def auto_type_df(df):
         new_data[c] = coerce_series(df[c], recommended_types[c])
     return pd.DataFrame(new_data)
 
-def get_auto_type_operations(df):
+def get_auto_type_operations(df, metadata_f, recommend_f):
     #this is much faster because we only run the slow function on a maximum of 200 rows.  
     #That's a good size for an estimate
     sample_size = min(len(df), 200)
     cleaning_commands = []
     for c in df.columns:
-        new_type = recommend_type(get_typing_metadata(df[c].sample(sample_size)))
+        new_type = recommend_f(metadata_f(df[c].sample(sample_size)))
         cleaning_commands.append(emit_command(c, new_type))
     return cleaning_commands
-
-
-

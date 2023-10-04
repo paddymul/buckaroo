@@ -17,7 +17,7 @@ from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
 from .lisp_utils import (lists_match, split_operations)
 
-from .auto_clean import get_auto_type_operations
+from .auto_clean import get_auto_type_operations, get_typing_metadata, recommend_type
 from .down_sample import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
@@ -137,16 +137,18 @@ class BuckarooWidget(DOMWidget):
 
         if autoType:
             # this will trigger the setting of self.typed_df
-            self.operations = get_auto_type_operations(df)
+            self.operations = get_auto_type_operations(
+                df, metadata_f=get_typing_metadata, recommend_f=recommend_type)
         else:
             self.set_typed_df(self.get_working_df())
         warnings.filterwarnings('default')
 
     @observe('dfConfig')
     def update_based_on_df_config(self, change):
+        #otherwise this is a call before typed_df has been completely setup
         if hasattr(self, 'typed_df'):
             self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
-        #otherwise this is a call before typed_df has been completely setup
+
 
     @observe('operations')
     def handle_operations(self, change):
