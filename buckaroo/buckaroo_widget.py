@@ -92,8 +92,8 @@ class BuckarooWidget(DOMWidget):
         'sampled':False,
         'summaryStats': False,
         'reorderdColumns': False,
-        'showTransformed': True,
         'showCommands': True,
+        'autoType': True,
     }).tag(sync=True)
 
 
@@ -122,7 +122,8 @@ class BuckarooWidget(DOMWidget):
                  sampled=True,
                  summaryStats=False,
                  reorderdColumns=False,
-                 showCommands=True):
+                 showCommands=True,
+                 autoType=True):
         super().__init__()
         warnings.filterwarnings('ignore')
         #moving setup_from_command_kls_list early in the init because
@@ -134,8 +135,11 @@ class BuckarooWidget(DOMWidget):
         #working_df  and generate the typed_df
         self.raw_df = df
 
-        # this will trigger the setting of self.typed_df
-        self.operations = get_auto_type_operations(df)
+        if autoType:
+            # this will trigger the setting of self.typed_df
+            self.operations = get_auto_type_operations(df)
+        else:
+            self.set_typed_df(self.get_working_df())
         warnings.filterwarnings('default')
 
     @observe('dfConfig')
@@ -178,18 +182,22 @@ class BuckarooWidget(DOMWidget):
         if (not force) and lists_match(change['old'], change['new']):
             return # nothing changed, do no computations
         new_ops = change['new']
-        
+        self.set_typed_df(self.interpret_ops(new_ops, self.get_working_df()))
+
+    def get_working_df(self):
         #this won't listen to sampled changes proeprly
         if self.dfConfig['sampled']:
-            working_df = sample(self.raw_df, self.dfConfig['sampleSize'])
+            return sample(self.raw_df, self.dfConfig['sampleSize'])
         else:
-            working_df = self.raw_df
-        self.typed_df = self.interpret_ops(new_ops, working_df)
-
+            return self.raw_df        
+        
+    def set_typed_df(self, new_df):
+        self.typed_df = new_df
         # stats need to be rerun each time 
         self.stats = DfStats(self.typed_df, [TypingStats, DefaultSummaryStats, ColDisplayHints])
         self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         self.update_based_on_df_config(3)
+
 
     def generate_code(self, operations):
         if len(operations) == 0:

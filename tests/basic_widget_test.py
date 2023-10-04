@@ -69,6 +69,11 @@ def test_analysis_pipeline():
     """  uses built in analysis_management unit tests on the Buckaroo Widget as configured"""
     w = BuckarooWidget(simple_df)
     assert w.stats.ap.unit_test() == True
+
+def test_autotype_false():
+    """  uses built in analysis_management unit tests on the Buckaroo Widget as configured"""
+    w = BuckarooWidget(simple_df, autoType=False)
+    assert w.stats.ap.unit_test() == True
     
     
 
