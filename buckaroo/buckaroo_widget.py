@@ -162,7 +162,15 @@ class BuckarooWidget(DOMWidget):
     def update_based_on_df_config(self, change):
         #otherwise this is a call before typed_df has been completely setup
         if hasattr(self, 'typed_df'):
-            self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+            if self.dfConfig['reorderdColumns']:
+                #ideally this won't require a reserialization.  All
+                #possible col_orders shoudl be serialized once, and the
+                #frontend should just toggle from them
+              self.origDf = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
+            else:
+                self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+
+
 
 
     @observe('operations')
@@ -247,16 +255,3 @@ class BuckarooWidget(DOMWidget):
         self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         #just trigger redisplay
         self.update_based_on_df_config(3)
-
-        
-class Unused():
-    def update_based_on_df_config(self, change):
-
-        if self.dfConfig['reorderdColumns']:
-            #ideally this won't require a reserialization.  All
-            #possible col_orders shoudl be serialized once, and the
-            #frontend should just toggle from them
-            #self.origDf = df_to_obj(tdf, self.stats.col_order, table_hints=self.stats.table_hints)
-            self.origDf = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
-        else:
-            self.origDf = df_to_obj(tdf, tdf.columns, table_hints=self.stats.table_hints)
