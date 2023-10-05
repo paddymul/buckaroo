@@ -65,6 +65,7 @@ PERVERSE_DF = pd.DataFrame({
     'float': [0.5] *10,
     'int': [8] *10,
     'negative': [-1] *10,
+    'UInt32': pd.Series([5]*10, dtype='UInt32')
     })
 
 class AnalsysisPipeline(object):
@@ -87,7 +88,6 @@ class AnalsysisPipeline(object):
 
         self.provided_summary_facts_set = set(all_provided)
 
-
         #all is a special value that will dipslay every row
         if self.summary_stats_display and not self.summary_stats_display == "all":
             #verify that we have a way of computing all of the facts we are displaying
@@ -106,7 +106,7 @@ class AnalsysisPipeline(object):
         not implemented yet.
 
         This helps interactive development by doing a smoke test on
-        each new iteration of summary stats function
+        each new iteration of summary stats function.
 
         """
         try:

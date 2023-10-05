@@ -56,21 +56,29 @@ def get_object_typing_metadata(ser):
                 counts['datetime_error'] += 1
         except (pd.core.tools.datetimes.DateParseError, ValueError, TypeError):
             counts['datetime_error'] += 1
-        try:
-            int(v)
-            counts['int'] += 1
-        except ValueError:
-            counts['int_error'] += 1
-        try:
-            float(v)
-            counts['float'] += 1
-        except ValueError:
-            counts['float_error'] += 1
-        
+
         if isinstance(v, bool):
             counts['bool'] += 1
         else:
             counts['bool_error'] += 1
+        if isinstance(v, str):
+            try:
+                int(v)
+                counts['int'] += 1
+            except ValueError:
+                counts['int_error'] += 1
+            try:
+                float(v)
+                counts['float'] += 1
+            except ValueError:
+                counts['float_error'] += 1
+        elif isinstance(v, float) or isinstance(v, int):
+            int(v)
+            counts['int'] += 1
+            float(v)
+            counts['float'] += 1
+            
+        
 
     if len(ser) == 0:
         return counts
