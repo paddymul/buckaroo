@@ -39,6 +39,20 @@ def pick(dct, keys):
     return new_dict
 
 
+def reproduce_summary(ser_name, kls, summary_df):
+    from pandas.io.json import dumps as pdumps
+    import json
+    print("from buckaroo.analysis_management import PERVERSE_DF")
+
+    summary_ser = summary_df[ser_name]
+
+    minimal_summary_dict = pick(summary_ser, kls.requires_summary)
+
+    sum_ser_repr = "pd.Series(%r)" % json.loads(pdumps(minimal_summary_dict))
+
+    print("%s.summary(PERVERSE_DF['%s'], %s, PERVERSE_DF['%s'])"  % (kls.cname(), ser_name, sum_ser_repr, ser_name))
+
+
 def produce_summary_df(df, ordered_objs, df_name='test_df'):
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
@@ -73,16 +87,23 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
         table_hint_col_dict[ser_name] = pick(
             d_update(BASE_COL_HINT, summary_ser.to_dict()),
             BASE_COL_HINT.keys())
+    summary_df = pd.DataFrame(summary_col_dict)
+    table_hints = table_hint_col_dict
     if errs:
         for ser_name, err_kls in errs.items():
-            err, kls = err_kls
-            print("%r failed on %s with %r" % (kls, ser_name, err))
-        print("Reproduce")
-        print("from pluggable_analysis import test_ser")
-        for ser_name, err_kls in errs.items():
-            err, kls = err_kls
-            print("%s.summary(test_ser.%s)" % (kls.__name__, ser_name))
-    return pd.DataFrame(summary_col_dict), table_hint_col_dict, errs
+          err, kls = err_kls
+          print("%r failed on %s with %r" % (kls, ser_name, err))
+          reproduce_summary(ser_name, kls, summary_df)
+        # print("Reproduce")
+        # print("from pluggable_analysis import test_ser")
+        # for ser_name, err_kls in errs.items():
+        #     err, kls = err_kls
+        #     print("%s.summary(test_ser.%s)" % (kls.__name__, ser_name))
+
+
+    return summary_df, table_hints, errs
+
+
 
 class NonExistentSummaryRowException(Exception):
     pass
@@ -112,7 +133,8 @@ class AnalsysisPipeline(object):
         if self.summary_stats_display and not self.summary_stats_display == "all":
             #verify that we have a way of computing all of the facts we are displaying
             if not self.provided_summary_facts_set.issuperset(set(self.summary_stats_display)):
-                raise NonExistentSummaryRowException()
+                missing = set(self.summary_stats_display) - set(self.provided_summary_facts_set)
+                raise NonExistentSummaryRowException(missing)
 
     def verify_analysis_objects(self, analysis_objects):
         self.ordered_a_objs = order_analysis(analysis_objects)

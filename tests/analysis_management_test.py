@@ -28,6 +28,8 @@ class TestAnalysisPipeline(unittest.TestCase):
         produce_summary_df(test_df, [DistinctCount, Len, DistinctPer], 'test_df')
 
     def test_produce_summary_df_hints(self):
+        #this test should be ported over to the full basic_widget test with actaul verificaiton of values
+        
         summary_df, hints, errs = produce_summary_df(
             test_df, [DumbTableHints], 'test_df')
 
@@ -39,9 +41,6 @@ class TestAnalysisPipeline(unittest.TestCase):
                 expected_set = set(
                     ['is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram'])
                 assert expected_set == set(hint_obj.keys())
-
-
-
 
     def test_pipeline_base(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])

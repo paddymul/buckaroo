@@ -30,14 +30,12 @@ class ColAnalysis(object):
         #print(dir(kls))
         return kls.__qualname__
     
-
-
 class NotProvidedException(Exception):
     pass
 
 def check_solvable(a_objs):
     """
-    checks taht all of the required  inputs are provided by another analysis object.
+    checks that all of the required  inputs are provided by another analysis object.
     """
     provides = []
     required = []
