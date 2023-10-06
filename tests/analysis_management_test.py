@@ -23,8 +23,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_add_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provided_summary = [
-                'foo',]
+            provides_summary = ['foo']
             requires_summary = ['length']
 
             @staticmethod
@@ -37,8 +36,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_add_buggy_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provided_summary = [
-                'foo',]
+            provides_summary = ['foo']
             requires_summary = ['length']
 
             @staticmethod
@@ -50,8 +48,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_replace_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provided_summary = [
-                'foo',]
+            provides_summary = ['foo']
             requires_summary = ['length']
 
             @staticmethod
@@ -64,8 +61,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         self.assertEqual(len(sdf['tripduration']), 18)
         #Create an updated Foo that returns 9
         class Foo(ColAnalysis):
-            provided_summary = [
-                'foo',]
+            provides_summary = ['foo']
             requires_summary = ['length']
 
             @staticmethod
@@ -88,7 +84,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_add_summary_stats_display(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provided_summary = ['foo']
+            provides_summary = ['foo']
             requires_summary = ['length']
             summary_stats_display = ['foo']
 
@@ -98,7 +94,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_invalid_summary_stats_display_throws(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provided_summary = ['foo']
+            provides_summary = ['foo']
             requires_summary = ['length']
             summary_stats_display = ['not_provided']
 

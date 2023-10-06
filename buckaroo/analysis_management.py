@@ -78,7 +78,7 @@ class AnalsysisPipeline(object):
     def process_summary_facts_set(self):
         all_provided = []
         for a_obj in self.ordered_a_objs:
-            all_provided.extend(a_obj.provided_summary)
+            all_provided.extend(a_obj.provides_summary)
             if a_obj.summary_stats_display:
                 self.summary_stats_display = a_obj.summary_stats_display
 

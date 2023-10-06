@@ -35,7 +35,7 @@ Overtime codebases will probably trend towards many classes with single facts, b
 """
 
 class TypingStats(ColAnalysis):
-    provided_summary = [
+    provides_summary = [
         'dtype', 'is_numeric', 'is_integer', 'is_datetime',]
 
     @staticmethod
@@ -49,7 +49,7 @@ class TypingStats(ColAnalysis):
             )
 
 class DefaultSummaryStats(ColAnalysis):
-    provided_summary = [
+    provides_summary = [
         'length', 'min', 'max', 'mean', 'nan_count', 'distinct_count',
         'distinct_per', 'empty_count', 'empty_per', 'unique_per', 'nan_per',
         'mode']
@@ -198,7 +198,7 @@ def histogram(ser, nan_per):
 
 class ColDisplayHints(ColAnalysis):
     requires_summary = ['min', 'max'] # What summary stats does this analysis provide
-    provided_summary = []
+    provides_summary = []
     
     provides_hints = [
         'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram']
