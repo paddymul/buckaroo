@@ -68,7 +68,7 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
             except Exception as e:
                 if not a_kls.quiet:
                     errs[ser_name] = e, a_kls
-                    traceback.print_exc()
+                    #traceback.print_exc()
                 continue
         summary_col_dict[ser_name] = summary_ser
 
@@ -82,12 +82,13 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
           err, kls = err_kls
           print("%r failed on %s with %r" % (kls, ser_name, err))
 
-        print("Reproduction instructions")
+        print("Reproduction code")
         print("-" * 80)
-        print("from buckaroo.analysis_management import PERVERSE_DF")    
+        print("from buckaroo.analysis_management import PERVERSE_DF")
         for ser_name, err_kls in errs.items():
           err, kls = err_kls
           reproduce_summary(ser_name, kls, summary_df)
+        print("-" * 80)
 
     return summary_df, table_hints, errs
 
