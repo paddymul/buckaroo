@@ -3,6 +3,7 @@ import pandas as pd
 import traceback
 from buckaroo.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException)
+from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
 
 FAST_SUMMARY_WHEN_GREATER = 1_000_000
 
@@ -27,30 +28,13 @@ BASE_COL_HINT = {
     'max_digits':None,
     'histogram': []}
 
-def d_update(d1, d2):
-    ret_dict = d1.copy()
-    ret_dict.update(d2)
-    return ret_dict
-
-def pick(dct, keys):
-    new_dict = {}
-    for k in keys:
-        new_dict[k] = dct[k]
-    return new_dict
-
-
 def reproduce_summary(ser_name, kls, summary_df):
-    from pandas.io.json import dumps as pdumps
-    import json
-    print("from buckaroo.analysis_management import PERVERSE_DF")
-
     summary_ser = summary_df[ser_name]
-
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)
+    sum_ser_repr = "pd.Series(%s)" % pd_py_serialize(minimal_summary_dict)
 
-    sum_ser_repr = "pd.Series(%r)" % json.loads(pdumps(minimal_summary_dict))
-
-    print("%s.summary(PERVERSE_DF['%s'], %s, PERVERSE_DF['%s'])"  % (kls.cname(), ser_name, sum_ser_repr, ser_name))
+    print("%s.summary(PERVERSE_DF['%s'], %s, PERVERSE_DF['%s'])" % (
+        kls.cname(), ser_name, sum_ser_repr, ser_name))
 
 
 def produce_summary_df(df, ordered_objs, df_name='test_df'):
@@ -61,7 +45,6 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
     errs = {}
     summary_col_dict = {}
     table_hint_col_dict = {}
-
 
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
@@ -93,21 +76,18 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
         for ser_name, err_kls in errs.items():
           err, kls = err_kls
           print("%r failed on %s with %r" % (kls, ser_name, err))
-          reproduce_summary(ser_name, kls, summary_df)
-        # print("Reproduce")
-        # print("from pluggable_analysis import test_ser")
-        # for ser_name, err_kls in errs.items():
-        #     err, kls = err_kls
-        #     print("%s.summary(test_ser.%s)" % (kls.__name__, ser_name))
 
+        print("Reproduction instructions")
+        print("-" * 80)
+        print("from buckaroo.analysis_management import PERVERSE_DF")    
+        for ser_name, err_kls in errs.items():
+          err, kls = err_kls
+          reproduce_summary(ser_name, kls, summary_df)
 
     return summary_df, table_hints, errs
 
-
-
 class NonExistentSummaryRowException(Exception):
     pass
-
 
 class AnalsysisPipeline(object):
     """
