@@ -64,11 +64,12 @@ class TestOrderAnalysis(unittest.TestCase):
             # as long as they occur before other classes
 
     def test_no_provides(self):
-        # order_analysis should work properly with ColAnalysis objects taht don't provide any summary_stats
+        # order_analysis should work properly with ColAnalysis objects that don't provide any summary_stats
+
         self.assertEqual(
             order_analysis([DCLen, DistinctPer, DependsNoProvides]),
             [DCLen, DependsNoProvides, DistinctPer])
-        
+
     def test_cycle(self):
         with self.assertRaises(graphlib.CycleError):
             order_analysis([CycleA, CycleB])
@@ -77,56 +78,3 @@ class TestOrderAnalysis(unittest.TestCase):
         check_solvable([Len])
         with self.assertRaises(NotProvidedException):
             check_solvable([NoRoute])
-'''
-class TestOrderAnalysisWithHints(unittest.TestCase):
-    """
-    hints are added to the dag, and need to be handled also
-    """
-    def test_default_order(self):
-        self.assertEqual(
-            order_analysis([DistinctCount, Len, DistinctPer]),
-            [DistinctCount, Len, DistinctPer])
-        self.assertEqual(
-            order_analysis([DistinctPer, DistinctCount, Len]),
-            [DistinctCount, Len, DistinctPer])
-    
-    def test_multiple_provides(self):
-        self.assertEqual(
-            order_analysis([DCLen, DistinctPer]),
-            [DCLen, DistinctPer])
-        self.assertEqual(
-            order_analysis([DistinctPer, DCLen]),
-            [DCLen, DistinctPer])
-        self.assertEqual(
-            order_analysis([CA_G, CA_CD, CA_AB, CA_EF]),
-            [CA_CD, CA_AB, CA_EF, CA_G])
-            #note the order between CA_CD and CA_AB doesn't matter - 
-            # as long as they occur before other classes
-
-    def test_no_provides(self):
-        # order_analysis should work properly with ColAnalysis objects taht don't provide any summary_stats
-        self.assertEqual(
-            order_analysis([DCLen, DistinctPer, DependsNoProvides]),
-            [DCLen, DependsNoProvides, DistinctPer])
-        
-    def test_cycle(self):
-        with self.assertRaises(graphlib.CycleError):
-            order_analysis([CycleA, CycleB])
-            
-    def test_no_route(self):
-        check_solvable([Len])
-        with self.assertRaises(NotProvidedException):
-            check_solvable([NoRoute])
-'''
-
-
-"""
-to run the tests as regular python functions use the following code.
-This will be useful for live testing adding analysis funcs
-
-loader = unittest.TestLoader()
-suite  = unittest.TestSuite()
-tests = loader.loadTestsFromTestCase(TestOrderAnalysis)
-suite.addTests(tests)
-ab = unittest.TextTestRunner(verbosity=3).run(suite)
-"""
