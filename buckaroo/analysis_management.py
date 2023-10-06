@@ -12,9 +12,9 @@ PERVERSE_DF = pd.DataFrame({
     'all_True': [True] * 10,
     'mixed_bool': np.concatenate([[True]*5, [False]*5]),
     'mixed_float': np.concatenate([[0.5, np.nan, None], [6]*7]),
-    'float': [0.5] *10,
+    'float': [0.5]*10,
     'int': [8] *10,
-    'negative': [-1] *10,
+    'negative': [-1]*10,
     'UInt32': pd.Series([5]*10, dtype='UInt32'),
     'UInt8None':pd.Series([None] * 10, dtype='UInt8')
     })
@@ -40,6 +40,7 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
                 for k,v in summary_res.items():
                     summary_ser.loc[k] = v
                 th_dict = a_kls.table_hints(sampled_ser, summary_ser, table_hint_dict)
+                
                 for k,v in th_dict.items():
                     table_hint_dict[k] = v
             except Exception as e:
