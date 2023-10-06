@@ -11,8 +11,6 @@ class ColAnalysis(object):
     requires_raw = False
     requires_summary = [] # What summary stats does this analysis provide
     provides_summary = [] # mean/max/histogram
-    provides_table_hints = [] # display hints provided ex 'red_negative'
-    requires_table_hints = [] # display hints provided ex 'red_negative'
     summary_stats_display = None
     
     @staticmethod
