@@ -19,6 +19,26 @@ PERVERSE_DF = pd.DataFrame({
     'UInt8None':pd.Series([None] * 10, dtype='UInt8')
     })
 
+
+BASE_COL_HINT = {
+    'is_numeric': False,
+    'is_integer': None,
+    'min_digits':None,
+    'max_digits':None,
+    'histogram': []}
+
+def d_update(d1, d2):
+    ret_dict = d1.copy()
+    ret_dict.update(d2)
+    return ret_dict
+
+def pick(dct, keys):
+    new_dict = {}
+    for k in keys:
+        new_dict[k] = dct[k]
+    return new_dict
+
+
 def produce_summary_df(df, ordered_objs, df_name='test_df'):
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
@@ -27,10 +47,14 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
     errs = {}
     summary_col_dict = {}
     table_hint_col_dict = {}
+
+
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
         ser = df[ser_name]
-        #fixme
+        #FIXME: actually sample the series.  waiting until I have time
+        #to proeprly benchmark
+
         sampled_ser = ser
         summary_ser = pd.Series({}, dtype='object')
         table_hint_dict = {}
@@ -39,17 +63,16 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
                 summary_res = a_kls.summary(ser, summary_ser, ser)
                 for k,v in summary_res.items():
                     summary_ser.loc[k] = v
-                th_dict = a_kls.table_hints(sampled_ser, summary_ser, table_hint_dict)
-                
-                for k,v in th_dict.items():
-                    table_hint_dict[k] = v
             except Exception as e:
                 print("summary_ser", summary_ser)
                 errs[ser_name] = e, a_kls
                 traceback.print_exc()
                 continue
         summary_col_dict[ser_name] = summary_ser
-        table_hint_col_dict[ser_name] = table_hint_dict
+
+        table_hint_col_dict[ser_name] = pick(
+            d_update(BASE_COL_HINT, summary_ser.to_dict()),
+            BASE_COL_HINT.keys())
     if errs:
         for ser_name, err_kls in errs.items():
             err, kls = err_kls
