@@ -57,13 +57,18 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
         table_hint_dict = {}
         for a_kls in ordered_objs:
             try:
-                summary_res = a_kls.summary(ser, summary_ser, ser)
+                if a_kls.quiet or a_kls.quiet_warnings:
+                    warnings.filterwarnings('ignore')
+                    summary_res = a_kls.summary(ser, summary_ser, ser)
+                    warnings.filterwarnings('default')
+                else:
+                    summary_res = a_kls.summary(ser, summary_ser, ser)
                 for k,v in summary_res.items():
                     summary_ser.loc[k] = v
             except Exception as e:
-                print("summary_ser", summary_ser)
-                errs[ser_name] = e, a_kls
-                traceback.print_exc()
+                if not a_kls.quiet:
+                    errs[ser_name] = e, a_kls
+                    traceback.print_exc()
                 continue
         summary_col_dict[ser_name] = summary_ser
 

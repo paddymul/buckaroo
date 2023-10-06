@@ -12,6 +12,8 @@ class ColAnalysis(object):
     requires_summary = [] # What summary stats does this analysis provide
     provides_summary = [] # mean/max/histogram
     summary_stats_display = None
+    quiet = False
+    quiet_warnings = False
     
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
