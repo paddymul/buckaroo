@@ -91,8 +91,6 @@ function getFormatter(hint: ColumnHint): ValueFormatterFunc<unknown> {
   }
 }
 
-
-
 export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
   const fields = tdf.schema.fields;
   //console.log("tdf", tdf);

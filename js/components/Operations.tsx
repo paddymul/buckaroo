@@ -56,7 +56,6 @@ export const OperationsList = ({
     { cellStyle: {} }
   );
 
-
   const gridOptions: GridOptions = {
     rowSelection: 'single',
     headerHeight: 30,
