@@ -23,7 +23,7 @@ const examples = {
 // The examples use a code-loading technique that I have described in
 // https://mmomtchev.medium.com/making-examples-displaying-code-along-its-output-with-webpack-a28dcf5439c6
 
-const CodeBlock = React.lazy(() => import(/* webpackPrefetch: true */ './CodeBlock'));
+//const CodeBlock = React.lazy(() => import(/* webpackPrefetch: true */ './CodeBlock'));
 
 for (const ex of Object.keys(examples)) {
     examples[ex].comp = React.lazy(
