@@ -65,7 +65,15 @@ def dumb_table_sumarize(df):
 def df_to_obj(df, order = None, table_hints=None):
     if order is None:
         order = df.columns
+
+    #utter hack, expedient.  pandas json serialization doesn't like named indexes
+    if not df.index.name is None:
+        df.loc[:,'index'] = df.index
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+    if not df.index.name is None:
+        df.drop('index', axis=1, inplace=True)
+
+    
     if table_hints is None:
         obj['table_hints'] = json.loads(pdumps(dumb_table_sumarize(df)))
     else:
