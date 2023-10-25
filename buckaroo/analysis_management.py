@@ -1,6 +1,8 @@
+import sys
+import traceback
+
 import numpy as np
 import pandas as pd
-import traceback
 from buckaroo.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException)
 from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
@@ -28,7 +30,7 @@ BASE_COL_HINT = {
     'max_digits':None,
     'histogram': []}
 
-import sys
+
 
 def get_df_name(df, level=0):
     """ looks up the call stack until it finds the variable with this name"""
@@ -37,7 +39,6 @@ def get_df_name(df, level=0):
     elif level < 60:
         try:
             call_frame = sys._getframe(level)
-            #print(level, call_frame.f_locals.keys())
             _globals = call_frame.f_globals
         except ValueError:
             return None #we went to far up the stacktrace to a non-existent frame
@@ -51,27 +52,6 @@ def get_df_name(df, level=0):
         #+2 because the function is recursive, and we need to skip over this frame
         return get_df_name(df, level + 2)
 
-def get_df_local_name(df, level=0):
-    """ looks up the call stack until it finds the variable with this name"""
-    if level == 0:
-        _globals = globals()
-    elif level < 60:
-        try:
-            call_frame = sys._getframe(level)
-            #print(level, call_frame.f_locals.keys())
-            _globals = call_frame.f_locals
-        except ValueError:
-            return None #we went to far up the stacktrace to a non-existent frame
-    else:
-        return None
-
-    name_possibs = [x for x in _globals.keys() if _globals[x] is df]
-    if name_possibs:
-        return name_possibs[0]
-    else:
-        #+2 because the function is recursive, and we need to skip over this frame
-        return get_df_local_name(df, level + 2)
-
 def safe_summary_df(base_summary_df, index_list):
     #there are instances where not all indexes of the summary_df will
     #be available, because there was no valid data to produce those
@@ -84,19 +64,10 @@ def reproduce_summary(ser_name, kls, summary_df, err, operating_df_name):
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)
     sum_ser_repr = "pd.Series(%s)" % pd_py_serialize(minimal_summary_dict)
 
-
-    # print('{quantity} {item} cost ${price}'.format(
-    #     quantity=6,
-    #     item='bananas',
-    #     price=1.74))
-
     f = "{kls}.summary({df_name}['{ser_name}'], {summary_ser_repr}, {df_name}['{ser_name}']) # {err_msg}"
     print(f.format(
         kls=kls.cname(), df_name=operating_df_name, ser_name=ser_name,
         summary_ser_repr=sum_ser_repr, err_msg=err))
-    # print("%s.summary(%s['%s'], %s, %s['%s']) # %r" % (
-    #     kls.cname(), operating_df_name, ser_name, sum_ser_repr, operating_df_name, ser_name, err))
-
 
 def output_reproduce_preamble():
     print("#Reproduction code")
@@ -104,7 +75,6 @@ def output_reproduce_preamble():
     print("from buckaroo.analysis_management import PERVERSE_DF")
 
 def output_full_reproduce(errs, summary_df, df_name):
-    # print("start output_full_reproduce")
     if len(errs) == 0:
         raise Exception("output_full_reproduce called with 0 len errs")
 
@@ -115,8 +85,6 @@ def output_full_reproduce(errs, summary_df, df_name):
     except Exception as e:
         #this is tricky stuff that shouldn't error, I want these stack traces to escape being caught
         traceback.print_exc()
-    # print("#" + "-" * 80)
-    # print("end output_full_reproduce")
 
 
 
@@ -152,7 +120,6 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
             except Exception as e:
                 if not a_kls.quiet:
                     errs[ser_name] = e, a_kls
-                    #traceback.print_exc()
                 continue
         summary_col_dict[ser_name] = summary_ser
 
@@ -206,27 +173,18 @@ class AnalsysisPipeline(object):
         each new iteration of summary stats function.
 
         """
-        # print("start unit_test")
         try:
             output_df, table_hint_dict, errs = produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
             if len(errs) == 0:
-                # print("end 144 unit_test")
                 return True, []
             else:
-                # print("unit test failure")
-                #output_full_reproduce(errs, output_df, PERVERSE_DF)
-                # print("end 147 unit_test")
                 return False, errs
         except KeyError:
             pass
 
 
     def process_df(self, input_df):
-        # print("start process_df")
         output_df, table_hint_dict, errs = produce_summary_df(input_df, self.ordered_a_objs)
-        # if len(errs) > 0:
-        #     output_full_reproduce(errs, output_df, input_df)
-        # print("end start process_df")
         return output_df, table_hint_dict, errs
 
     def add_analysis(self, new_aobj):
@@ -240,7 +198,6 @@ class AnalsysisPipeline(object):
         self.verify_analysis_objects(new_aobj_set)
         passed_unit_test, errs = self.unit_test()
         if passed_unit_test is False:
-            # print("176, new analysis fails unit tests")
             return False, errs
         return True, []
             
@@ -282,7 +239,7 @@ class DfStats(object):
         if passed_unit_tests == False:
             print("Unit tests failed")
         if errs:
-            print("errors on original dataframe")
+            print("Errors on original dataframe")
 
         if ut_errs or errs:
             output_reproduce_preamble()
