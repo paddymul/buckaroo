@@ -193,7 +193,7 @@ class DfStats(object):
     def presentation_sdf(self):
         if self.ap.summary_stats_display == "all":
             return self.sdf
-        return self.sdf.loc[self.ap.summary_stats_display]
+        return pd.DataFrame(self.sdf, self.ap.summary_stats_display)
 
     def add_analysis(self, a_obj):
         self.ap.add_analysis(a_obj)

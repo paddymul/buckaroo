@@ -2,12 +2,10 @@ import pandas as pd
 from IPython.display import display
 from buckaroo.buckaroo_widget import BuckarooWidget
 from buckaroo.analysis_management import PERVERSE_DF
-
+from .fixtures import (word_only_df)
 
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 
-#test against this too
-word_only_df = pd.DataFrame({'letters': 'h o r s e'.split(' ')})
 
 
 def test_basic_instantiation():
@@ -18,8 +16,8 @@ def test_perverse_instantiation():
     w = BuckarooWidget(PERVERSE_DF)
     assert w.dfConfig['totalRows'] == 10
 
-# def test_word_only_instantiation():
-#     w = BuckarooWidget(word_only_df)
+def test_word_only_instantiation():
+    w = BuckarooWidget(word_only_df)
 
 def test_basic_display():
     df = simple_df
