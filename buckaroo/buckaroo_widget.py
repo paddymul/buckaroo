@@ -113,6 +113,7 @@ class BuckarooWidget(DOMWidget):
             
         warnings.filterwarnings('default')
 
+
     def run_autoclean(self, autoType):
         if autoType:
             # this will trigger the setting of self.typed_df

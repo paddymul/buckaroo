@@ -28,13 +28,13 @@ BASE_COL_HINT = {
     'max_digits':None,
     'histogram': []}
 
-def reproduce_summary(ser_name, kls, summary_df):
+def reproduce_summary(ser_name, kls, summary_df, err):
     summary_ser = summary_df[ser_name]
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)
     sum_ser_repr = "pd.Series(%s)" % pd_py_serialize(minimal_summary_dict)
 
-    print("%s.summary(PERVERSE_DF['%s'], %s, PERVERSE_DF['%s'])" % (
-        kls.cname(), ser_name, sum_ser_repr, ser_name))
+    print("%s.summary(PERVERSE_DF['%s'], %s, PERVERSE_DF['%s']) # %r" % (
+        kls.cname(), ser_name, sum_ser_repr, ser_name, err))
 
 
 def produce_summary_df(df, ordered_objs, df_name='test_df'):
@@ -77,20 +77,21 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
             BASE_COL_HINT.keys())
     summary_df = pd.DataFrame(summary_col_dict)
     table_hints = table_hint_col_dict
-    if errs:
-        for ser_name, err_kls in errs.items():
-          err, kls = err_kls
-          print("%r failed on %s with %r" % (kls, ser_name, err))
-
-        print("Reproduction code")
-        print("-" * 80)
-        print("from buckaroo.analysis_management import PERVERSE_DF")
-        for ser_name, err_kls in errs.items():
-          err, kls = err_kls
-          reproduce_summary(ser_name, kls, summary_df)
-        print("-" * 80)
-
     return summary_df, table_hints, errs
+
+def output_full_reproduce(errs, summary_df):
+    # for ser_name, err_kls in errs.items():
+    #     err, kls = err_kls
+    #     print("%r failed on %s with %r" % (kls, ser_name, err))
+
+    print("Reproduction code")
+    print("-" * 80)
+    print("from buckaroo.analysis_management import PERVERSE_DF")
+    for ser_name, err_kls in errs.items():
+        err, kls = err_kls
+        reproduce_summary(ser_name, kls, summary_df, err)
+    print("-" * 80)
+
 
 class NonExistentSummaryRowException(Exception):
     pass
@@ -126,8 +127,6 @@ class AnalsysisPipeline(object):
         self.ordered_a_objs = order_analysis(analysis_objects)
         check_solvable(self.ordered_a_objs)
         self.process_summary_facts_set()
-        if self.unit_test_objs:
-            self.unit_test()
 
     def unit_test(self):
         """test a single, or each col_analysis object with a set of commonly difficult series.
@@ -137,19 +136,31 @@ class AnalsysisPipeline(object):
         each new iteration of summary stats function.
 
         """
+        print("start unit_test")
         try:
             output_df, table_hint_dict, errs = produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
             if len(errs) == 0:
+                print("end 144 unit_test")
                 return True
-            return False
-        except Exception as e:
-            print("analysis pipeline unit_test failed")
-            print(e)
-            return False
+            else:
+                print("unit test failure")
+                output_full_reproduce(errs, PERVERSE_DF)
+                print("end 147 unit_test")
+                return False
+        except KeyError:
+            pass
+        # except Exception as e:
+        #     print("analysis pipeline unit_test failed with error")
+        #     print(e)
+        #     return False
 
 
     def process_df(self, input_df):
+        print("start process_df")
         output_df, table_hint_dict, errs = produce_summary_df(input_df, self.ordered_a_objs)
+        if len(errs) > 0:
+            output_full_reproduce(errs, output_df)
+        print("end start process_df")
         return output_df, table_hint_dict
 
     def add_analysis(self, new_aobj):
@@ -197,5 +208,6 @@ class DfStats(object):
 
     def add_analysis(self, a_obj):
         self.ap.add_analysis(a_obj)
+        print("211, after ap.add_analysis")
         self.sdf, self.table_hints = self.ap.process_df(self.df)
 
