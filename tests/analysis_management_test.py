@@ -160,6 +160,18 @@ class SometimesProvides(ColAnalysis):
 
 class TestDfStats(unittest.TestCase):
     def test_dfstats_sometimes_present(self):
+        """many ColAnalysis objects are written such that they only
+        provide stats for certain dtypes. This used to cause
+        instantiation failures. This test verifies that there are no
+        stack traces. The alternative would be to have ColAnalyis
+        objects always return every key, even if NA. That's a less
+        natural style to write analyis code.
+
+        Possible future improvement is to run through PERVERSE_DF and
+        verify that each ColAnalyis provides its specified value as
+        non NA at least once
+
+        """
         dfs = DfStats(word_only_df, [SometimesProvides])
         ab = dfs.presentation_sdf
 
