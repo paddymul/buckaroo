@@ -386,12 +386,14 @@ export const stringIndexDf: DFWhole ={
     fields: [
       {name: 'index', type:'integer'},
       {name: 'a', type:'integer'},
-      {name: 'b', type:'boolean'}],
+      {name: 'b', type:'boolean'},
+      {name: 'strings', type:'boolean'}],
     primaryKey: ['index'],
     pandas_version: '1.4.0',
   },
-  data: [{index: 0, a: 1, b: true},
-	 {index: 1, a: 2, b: false}],
+  data: [{index: 0, a: 1, b: true,   strings:"a", },
+	 {index: 1, a: 2, b: false,  strings:"", },
+	 {index: 2, a: 3, b: false,  strings:" ", }],
   table_hints: {
     a: {is_numeric: true,
 	is_integer: true,
