@@ -215,7 +215,7 @@ class DfStats(object):
 
         self.sdf, self.table_hints, errs = self.ap.process_df(self.df)
         if errs:
-            output_full_reproduce(errs, self.sdf, self.df)
+            output_full_reproduce(errs, self.sdf, operating_df_name)
         
     def get_operating_df(self, df, force_full_eval):
         rows = len(df)
