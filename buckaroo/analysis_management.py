@@ -28,13 +28,66 @@ BASE_COL_HINT = {
     'max_digits':None,
     'histogram': []}
 
+import sys
+
+def get_df_name(df, level=0):
+    """ looks up the call stack until it finds the variable with this name"""
+    if level == 0:
+        _globals = globals()
+    elif level < 60:
+        call_frame = sys._getframe(level)
+        #print(level, call_frame.f_locals.keys())
+        _globals = call_frame.f_globals
+    else:
+        return None
+
+    name_possibs = [x for x in _globals.keys() if _globals[x] is df]
+    if name_possibs:
+        return name_possibs[0]
+    else:
+        #+2 because the function is recursive, and we need to skip over this frame
+        return get_df_name(df, level + 2)
+
+def safe_summary_df(base_summary_df, index_list):
+    #there are instances where not all indexes of the summary_df will
+    #be available, because there was no valid data to produce those
+    #indexes. This fixes them and explicitly. Empty rows will have NaN
+    return pd.DataFrame(base_summary_df, index_list)
+
 def reproduce_summary(ser_name, kls, summary_df, err):
-    summary_ser = summary_df[ser_name]
+    ssdf = safe_summary_df(summary_df, kls.requires_summary)
+    summary_ser = ssdf[ser_name]
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)
     sum_ser_repr = "pd.Series(%s)" % pd_py_serialize(minimal_summary_dict)
 
     print("%s.summary(PERVERSE_DF['%s'], %s, PERVERSE_DF['%s']) # %r" % (
         kls.cname(), ser_name, sum_ser_repr, ser_name, err))
+
+
+
+def output_full_reproduce(errs, summary_df):
+    print("start output_full_reproduce")
+    if len(errs) == 0:
+        raise Exception("output_full_reproduce called with 0 len errs")
+    # for ser_name, err_kls in errs.items():
+    #     err, kls = err_kls
+    #     print("%r failed on %s with %r" % (kls, ser_name, err))
+
+    print("#Reproduction code")
+    #print(errs)
+    print("#" + "-" * 80)
+    print("from buckaroo.analysis_management import PERVERSE_DF")
+    try:
+        for ser_name, err_kls in errs.items():
+            err, kls = err_kls
+            reproduce_summary(ser_name, kls, summary_df, err)
+    except Exception as e:
+        #this is tricky stuff that shouldn't error, I want these stack traces to escape being caught
+        traceback.print_exc()
+    print("#" + "-" * 80)
+    print("end output_full_reproduce")
+
+
 
 
 def produce_summary_df(df, ordered_objs, df_name='test_df'):
@@ -78,20 +131,6 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
     summary_df = pd.DataFrame(summary_col_dict)
     table_hints = table_hint_col_dict
     return summary_df, table_hints, errs
-
-def output_full_reproduce(errs, summary_df):
-    # for ser_name, err_kls in errs.items():
-    #     err, kls = err_kls
-    #     print("%r failed on %s with %r" % (kls, ser_name, err))
-
-    print("Reproduction code")
-    print("-" * 80)
-    print("from buckaroo.analysis_management import PERVERSE_DF")
-    for ser_name, err_kls in errs.items():
-        err, kls = err_kls
-        reproduce_summary(ser_name, kls, summary_df, err)
-    print("-" * 80)
-
 
 class NonExistentSummaryRowException(Exception):
     pass
@@ -173,7 +212,7 @@ class AnalsysisPipeline(object):
         new_aobj_set.append(new_aobj)
         self.verify_analysis_objects(new_aobj_set)
         if not self.unit_test():
-            print("new analysis fails unit tests")
+            print("176, new analysis fails unit tests")
             return False
         return True
             
@@ -204,7 +243,8 @@ class DfStats(object):
     def presentation_sdf(self):
         if self.ap.summary_stats_display == "all":
             return self.sdf
-        return pd.DataFrame(self.sdf, self.ap.summary_stats_display)
+        return safe_summary_df(self.sdf, self.ap.summary_stats_display)
+        #return pd.DataFrame(self.sdf, self.ap.summary_stats_display)
 
     def add_analysis(self, a_obj):
         self.ap.add_analysis(a_obj)
