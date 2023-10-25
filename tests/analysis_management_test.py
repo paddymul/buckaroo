@@ -5,10 +5,11 @@ from buckaroo.pluggable_analysis_framework import (
     ColAnalysis)
 
 from buckaroo.analysis_management import (
-    AnalsysisPipeline, produce_summary_df, NonExistentSummaryRowException)
+    AnalsysisPipeline, produce_summary_df, NonExistentSummaryRowException,
+    DfStats)
 
-from buckaroo.analysis import (TypingStats, DefaultSummaryStats)
-from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, DCLen)
+from buckaroo.analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
+from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, DCLen, word_only_df)
 
 class DumbTableHints(ColAnalysis):
     provides_summary = [
@@ -141,4 +142,25 @@ class TestAnalysisPipeline(unittest.TestCase):
             ap.add_analysis(Foo)            
 
         self.assertRaises(NonExistentSummaryRowException, bad_add)
+
+
+
+class SometimesProvides(ColAnalysis):
+    provides_summary = ['conditional_on_dtype']
+
+    summary_stats_display = ['conditional_on_dtype']
+    
+    @staticmethod
+    def summary(sampled_ser, summary_ser, ser):
+        import pandas as pd
+        is_numeric = pd.api.types.is_numeric_dtype(ser)
+        if is_numeric:
+            return dict(conditional_on_dtype=True)
+        return {}
+
+class TestDfStats(unittest.TestCase):
+    def test_dfstats_sometimes_present(self):
+        dfs = DfStats(word_only_df, [SometimesProvides])
+        ab = dfs.presentation_sdf
+
 

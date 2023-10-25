@@ -18,6 +18,9 @@ def test_perverse_instantiation():
     w = BuckarooWidget(PERVERSE_DF)
     assert w.dfConfig['totalRows'] == 10
 
+# def test_word_only_instantiation():
+#     w = BuckarooWidget(word_only_df)
+
 def test_basic_display():
     df = simple_df
     w = BuckarooWidget(df)
