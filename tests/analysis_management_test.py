@@ -57,8 +57,8 @@ class TestAnalysisPipeline(unittest.TestCase):
             @staticmethod
             def summary(sampled_ser, summary_ser, ser):
                 return dict(foo=8)
-        assert ap.add_analysis(Foo) == True #verify no errors thrown
-        sdf, _unused = ap.process_df(df)
+        assert ap.add_analysis(Foo) == (True, []) #verify no errors thrown
+        sdf, _unused, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf.loc['foo']['tripduration'], 8)
 
     def test_add_buggy_aobj(self):
@@ -71,7 +71,9 @@ class TestAnalysisPipeline(unittest.TestCase):
             def summary(sampled_ser, summary_ser, ser):
                 1/0 #throw an error
                 return dict(foo=8)
-        assert ap.add_analysis(Foo) == False
+        unit_test_results, errs = ap.add_analysis(Foo)
+        
+        assert unit_test_results == False
 
     def test_replace_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
@@ -83,7 +85,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             def summary(sampled_ser, summary_ser, ser):
                 return dict(foo=8)
         ap.add_analysis(Foo)
-        sdf, _unused = ap.process_df(df)
+        sdf, _unused, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf.loc['foo']['tripduration'], 8)
         #18 facts returned about tripduration
         self.assertEqual(len(sdf['tripduration']), 18)
@@ -96,7 +98,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             def summary(sampled_ser, summary_ser, ser):
                 return dict(foo=9)
         ap.add_analysis(Foo)
-        sdf2, _unused = ap.process_df(df)
+        sdf2, _unused, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf2.loc['foo']['tripduration'], 9)
         #still 18 facts returned about tripduration
         self.assertEqual(len(sdf2['tripduration']), 18)
