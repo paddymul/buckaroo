@@ -28,27 +28,36 @@ export type DFDataRow = Record<string, string | number | boolean | null>;
 export type DFData = DFDataRow[];
 
 export interface ColumnObjHint {
-  is_numeric: false;
   type: "obj"
   histogram?: any[];
 }
 
-export interface ColumnSpecificHint {
-  is_numeric: false;
-  type: "string" | "int";
+export interface ColumnStringHint {
+  type: "string";
   histogram?: any[];
 }
 
+export interface ColumnBooleanHint {
+  type: "boolean";
+  histogram?: any[];
+}
 
-export interface ColumnNumHint {
-  is_numeric: true;
-  is_integer: boolean;
+export interface ColumnIntegertHint {
+  type: "integer"
   min_digits: number;
   max_digits: number;
   histogram: any[];
 }
 
-export type ColumnHint = ColumnObjHint | ColumnNumHint | ColumnSpecificHint;
+export interface ColumnFloatHint {
+  type: "float"
+  histogram: any[];
+}
+
+
+export type ColumnHint = ColumnObjHint | ColumnIntegertHint | ColumnFloatHint | ColumnStringHint | ColumnBooleanHint;
+
+
 export interface DFWhole {
   schema: {
     fields: DFColumn[];
@@ -192,16 +201,16 @@ export const foo: DFWhole = {
     pandas_version: '1.4.0',
   },
   table_hints: {
-    index: { is_numeric: false, type:"obj" },
-    tripduration: { is_numeric: false, histogram: histograms.num_histo, type:"obj"},
-    starttime: { is_numeric: false, type:"obj" },
-    stoptime: { is_numeric: false, type:"obj" },
-    'start station id': { is_numeric: false, type:"obj" },
-    'start station name': { is_numeric: false, type:"obj" },
-    'start station latitude': { is_numeric: false, type:"obj" },
-    bikeid: { is_numeric: false, type:"obj" },
-    'birth year': { is_numeric: false, type:"obj" },
-    gender: { is_numeric: false, type:"obj" },
+    index: {  type:"obj" },
+    tripduration: {  histogram: histograms.num_histo, type:"obj"},
+    starttime: { type:"obj" },
+    stoptime: {  type:"obj" },
+    'start station id': {  type:"obj" },
+    'start station name': {  type:"obj" },
+    'start station latitude': {  type:"obj" },
+    bikeid: {  type:"obj" },
+    'birth year': {  type:"obj" },
+    gender: {  type:"obj" },
   },
   data: [
     {
@@ -337,26 +346,23 @@ export const tableDf: DFWhole = {
   ],
   table_hints: {
     'end station name': {
-      is_numeric: false,
+      
       histogram: histograms.categorical_histo_lt,
       type:"obj" },
     
     tripduration: {
-      is_numeric: true,
-      is_integer: true,
+      type:"integer",      
       min_digits: 3,
       max_digits: 4,
       histogram: histograms.num_histo,
     },
     'start station name': {
-      is_numeric: false,
+      
       histogram: histograms.bool_histo,
-      type:"obj" },
+      type:"string" },
     floatCol: {
-      is_numeric: true,
-      is_integer: false,
-      min_digits: 1,
-      max_digits: 3,
+      type:"float",
+      
       histogram: [
         { name: 521, cat_pop: 0.0103 },
         { name: 358, cat_pop: 0.0096 },
@@ -371,21 +377,17 @@ export const tableDf: DFWhole = {
       ],
     },
     nanNumeric: {
-      is_numeric: true,
-      is_integer: true,
+      type: "integer", 
       min_digits: 1,
       max_digits: 3,
       histogram: histograms.num_histo,
     },
     nanFloat: {
-      is_numeric: true,
-      is_integer: false,
-      min_digits: 1,
-      max_digits: 3,
+      type:"float",
       histogram: histograms.num_histo,
     },
     nanObject: {
-      is_numeric: false,
+      
       type:"obj"
     },
   },
@@ -405,21 +407,19 @@ export const stringIndexDf: DFWhole ={
 	 {index: 1, a: 2, b: false,  strings:"", },
 	 {index: 2, a: 3, b: false,  strings:" ", }],
   table_hints: {
-    a: {is_numeric: true,
-	is_integer: true,
-	min_digits: 1,
-	max_digits: 1,
-	histogram: [{name: 1, cat_pop: 50.0},
+    a: {type:"integer",
+      min_digits: 1,
+      max_digits: 1,
+  
+  	histogram: [{name: 1, cat_pop: 50.0},
 		      {name: 2, cat_pop: 50.0},
 		      {name: 'longtail', unique: 100.0}]},
-    b: {is_numeric: true,
-	is_integer: false,
+    b: {type:"integer",
 	min_digits: 1,
 	max_digits: 1,
 	histogram: [{name: true, cat_pop: 50.0},
 		    {name: false, cat_pop: 50.0},
 		    {name: 'longtail', unique: 100.0}]},
     strings: {type:"string",
-	      is_numeric:false,
 	      histogram: []}
   }}

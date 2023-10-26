@@ -3,7 +3,7 @@ import {
   ValueFormatterFunc,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import { DFWhole, DFColumn, ColumnHint } from './staticData';
+import { DFWhole, DFColumn, ColumnHint, ColumnIntegertHint, ColumnFloatHint } from './staticData';
 import _ from 'lodash';
 export const updateAtMatch = (
   cols: ColDef[],
@@ -27,44 +27,35 @@ export const updateAtMatch = (
   inside of AG-Grid, and independently.
   */
 
-export const intFormatter = new Intl.NumberFormat('en-US', {
+
+export const basicIntFormatter  = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 3,
 });
-
-const floatFormatter = new Intl.NumberFormat('en-US', {
-  minimumFractionDigits: 3,
-  maximumFractionDigits: 3,
-});
-
-export const anyFormatter = (params: ValueFormatterParams): string => {
-  const val = params.value;
-  try {
-    const num = Number(val);
-    if (val === null) {
-      return '';
-    } else if (val === undefined) {
-      return '';
-    } else if (Number.isFinite(num)) {
-      if (Number.isInteger(num)) {
-        const formatted = intFormatter.format(num);
-        return `${formatted}    `;
-      } else {
-        return floatFormatter.format(num);
-      }
-    }
-  } catch (e: any) {
-    //console.log("formatting error", val, e);
-  }
-  return val;
-};
 
 export const stringFormatter = (params: ValueFormatterParams): string => {
   const val = params.value;
   return val;
 };
 
-const getNumericFormatter = (totalWidth: number) => {
+
+export const booleanFormatter = (params: ValueFormatterParams): string => {
+  const val = params.value;
+  if (val === true) {
+    return "True"
+  } else if (val === false) {
+    return "False"
+  }
+  return ""
+};
+
+
+
+const getIntegerFormatter = (hint: ColumnIntegertHint) => {
+
+  const commas = Math.floor(hint.max_digits / 3);
+  const totalWidth = commas + hint.max_digits;
+
   const formatter = new Intl.NumberFormat('en-US');
   const numericFormatter = (params: ValueFormatterParams): string => {
     const val = params.value;
@@ -76,30 +67,38 @@ const getNumericFormatter = (totalWidth: number) => {
   return numericFormatter;
 };
 
+const getFloatFormatter = (hint: ColumnFloatHint) => {
+
+  const floatFormatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
+  return (params: ValueFormatterParams): string => {
+    if (params.value === null) {
+      return '';
+    }
+    return floatFormatter.format(params.value);
+  };
+}
+
 function getFormatter(hint: ColumnHint): ValueFormatterFunc<unknown> {
   if (hint === undefined) {
-    return anyFormatter;
+    return stringFormatter;
   }
-  if (hint.is_numeric === false) {
-    if (hint?.type === "string") {
+  if (hint.type === "integer") {
+    return getIntegerFormatter(hint);
+  }
+  else if (hint.type === "string") {
       return stringFormatter;
-    }
-    return anyFormatter;
-  } else {
-    const commas = Math.floor(hint.max_digits / 3);
-
-    if (hint.is_integer) {
-      const totalWidth = commas + hint.max_digits;
-      return getNumericFormatter(totalWidth);
-    } else {
-      return (params: ValueFormatterParams): string => {
-        if (params.value === null) {
-          return '';
-        }
-        return floatFormatter.format(params.value);
-      };
-    }
+    
+  } else if (hint.type === "float") {
+    return getFloatFormatter(hint);
+  } else if (hint.type === "boolean") {
+    return booleanFormatter;
+  } else if (hint.type === "obj") {
+    return stringFormatter;
   }
+  return stringFormatter;
 }
 
 export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
