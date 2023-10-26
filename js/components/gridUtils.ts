@@ -59,6 +59,11 @@ export const anyFormatter = (params: ValueFormatterParams): string => {
   return val;
 };
 
+export const stringFormatter = (params: ValueFormatterParams): string => {
+  const val = params.value;
+  return val;
+};
+
 const getNumericFormatter = (totalWidth: number) => {
   const formatter = new Intl.NumberFormat('en-US');
   const numericFormatter = (params: ValueFormatterParams): string => {
@@ -72,7 +77,13 @@ const getNumericFormatter = (totalWidth: number) => {
 };
 
 function getFormatter(hint: ColumnHint): ValueFormatterFunc<unknown> {
-  if (hint === undefined || hint.is_numeric === false) {
+  if (hint === undefined) {
+    return anyFormatter;
+  }
+  if (hint.is_numeric === false) {
+    if (hint?.type === "string") {
+      return stringFormatter;
+    }
     return anyFormatter;
   } else {
     const commas = Math.floor(hint.max_digits / 3);
@@ -101,7 +112,7 @@ export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
       field: f.name,
       headerName: f.name,
       valueFormatter: getFormatter(
-        _.get(tdf.table_hints, f.name, { is_numeric: false })
+        _.get(tdf.table_hints, f.name, { is_numeric: false, type:"obj" })
       ),
     };
     if (f.name === 'index') {

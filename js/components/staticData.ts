@@ -29,8 +29,16 @@ export type DFData = DFDataRow[];
 
 export interface ColumnObjHint {
   is_numeric: false;
+  type: "obj"
   histogram?: any[];
 }
+
+export interface ColumnSpecificHint {
+  is_numeric: false;
+  type: "string" | "int";
+  histogram?: any[];
+}
+
 
 export interface ColumnNumHint {
   is_numeric: true;
@@ -40,7 +48,7 @@ export interface ColumnNumHint {
   histogram: any[];
 }
 
-export type ColumnHint = ColumnObjHint | ColumnNumHint;
+export type ColumnHint = ColumnObjHint | ColumnNumHint | ColumnSpecificHint;
 export interface DFWhole {
   schema: {
     fields: DFColumn[];
@@ -184,16 +192,16 @@ export const foo: DFWhole = {
     pandas_version: '1.4.0',
   },
   table_hints: {
-    index: { is_numeric: false },
-    tripduration: { is_numeric: false, histogram: histograms.num_histo },
-    starttime: { is_numeric: false },
-    stoptime: { is_numeric: false },
-    'start station id': { is_numeric: false },
-    'start station name': { is_numeric: false },
-    'start station latitude': { is_numeric: false },
-    bikeid: { is_numeric: false },
-    'birth year': { is_numeric: false },
-    gender: { is_numeric: false },
+    index: { is_numeric: false, type:"obj" },
+    tripduration: { is_numeric: false, histogram: histograms.num_histo, type:"obj"},
+    starttime: { is_numeric: false, type:"obj" },
+    stoptime: { is_numeric: false, type:"obj" },
+    'start station id': { is_numeric: false, type:"obj" },
+    'start station name': { is_numeric: false, type:"obj" },
+    'start station latitude': { is_numeric: false, type:"obj" },
+    bikeid: { is_numeric: false, type:"obj" },
+    'birth year': { is_numeric: false, type:"obj" },
+    gender: { is_numeric: false, type:"obj" },
   },
   data: [
     {
@@ -331,7 +339,8 @@ export const tableDf: DFWhole = {
     'end station name': {
       is_numeric: false,
       histogram: histograms.categorical_histo_lt,
-    },
+      type:"obj" },
+    
     tripduration: {
       is_numeric: true,
       is_integer: true,
@@ -342,7 +351,7 @@ export const tableDf: DFWhole = {
     'start station name': {
       is_numeric: false,
       histogram: histograms.bool_histo,
-    },
+      type:"obj" },
     floatCol: {
       is_numeric: true,
       is_integer: false,
@@ -377,6 +386,7 @@ export const tableDf: DFWhole = {
     },
     nanObject: {
       is_numeric: false,
+      type:"obj"
     },
   },
 };
@@ -407,5 +417,9 @@ export const stringIndexDf: DFWhole ={
 	min_digits: 1,
 	max_digits: 1,
 	histogram: [{name: true, cat_pop: 50.0},
-		      {name: false, cat_pop: 50.0},
-		      {name: 'longtail', unique: 100.0}]}}}
+		    {name: false, cat_pop: 50.0},
+		    {name: 'longtail', unique: 100.0}]},
+    strings: {type:"string",
+	      is_numeric:false,
+	      histogram: []}
+  }}
