@@ -73,6 +73,19 @@ def df_to_obj(df, order = None, table_hints=None):
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
     if temp_index_name:
         df.index.name = temp_index_name
+
+    if isinstance(df.index,  pd.MultiIndex):
+        old_index = df.index
+        temp_index = pd.Index(df.index.to_list(), tupleize_cols=False)
+        df.index = temp_index
+        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+        df.index = old_index
+    else:
+        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+
+    if temp_index_name:
+        df.index.name = temp_index_name
+
     
     if table_hints is None:
         obj['table_hints'] = json.loads(pdumps(dumb_table_sumarize(df)))
