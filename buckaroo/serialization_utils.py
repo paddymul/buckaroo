@@ -81,6 +81,6 @@ def df_to_obj(df, order = None, table_hints=None):
         obj['table_hints'] = json.loads(pdumps(table_hints))
     fields=[{'name': df.index.name or "index" }]
     for c in order:
-        fields.append({'name':c})
+        fields.append({'name':str(c)})
     obj['schema'] = dict(fields=fields)
     return obj
