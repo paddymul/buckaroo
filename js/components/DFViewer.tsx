@@ -86,7 +86,7 @@ export function DFViewer(
       currentColWidth = 200;
     } else {
       try {
-        const dc = gridRef!.current!.columnApi.getAllDisplayedColumns();
+        const dc = gridRef?.current?.columnApi.getAllDisplayedColumns();
 
         if (dc.length !== 0) {
           currentColWidth = dc[0].getActualWidth();
