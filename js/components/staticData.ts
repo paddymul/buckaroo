@@ -350,11 +350,11 @@ export const tableDf: DFWhole = {
   table_hints: {
     'end station name': {
       histogram: histograms.categorical_histo_lt,
-      type:'obj' },
+      type: 'obj',
     },
 
     tripduration: {
-      type:'integer',      
+      type: 'integer',
       min_digits: 3,
       max_digits: 4,
       histogram: histograms.num_histo,
@@ -380,7 +380,7 @@ export const tableDf: DFWhole = {
       ],
     },
     nanNumeric: {
-      type: 'integer', 
+      type: 'integer',
       min_digits: 1,
       max_digits: 3,
       histogram: histograms.num_histo,

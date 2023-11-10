@@ -9,7 +9,6 @@ import { DFViewer } from './DFViewer';
 import _ from 'lodash';
 import { Operation } from './OperationUtils';
 
-//@ts-ignore
 export function OperationDisplayer({ filledOperations, style }) {
   const baseStyle = { margin: '0', textAlign: 'left' };
   const localStyle = { ...baseStyle, ...style };
