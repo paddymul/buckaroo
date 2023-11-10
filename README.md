@@ -1,5 +1,8 @@
 # Buckaroo - The Data Table for Jupyter
 
+Buckaroo is a modern data table for Jupyter that expedites the most common exploratory data analysis tasks.  It is built around sensible defaults
+
+
 We all know how awkward it is to clean data in jupyter notebooks.  Multiple cells of exploratory work, trying different transforms, looking up different transforms, adhoc functions that work in one notebook and have to be either copied/pasta-ed to the next notebook, or rewritten from scratch.  Buckaro makes all of that better by providing a visual UI for common cleaning operations AND emitting python code that performs the transformation. Specifically, the Buckaroo is a tool built to interactively explore, clean, and transform pandas dataframes.
 
 ## Try it today
@@ -10,34 +13,35 @@ We all know how awkward it is to clean data in jupyter notebooks.  Multiple cell
 
 ![Buckaroo Screenshot](https://raw.githubusercontent.com/paddymul/buckaroo-assets/main/quick-buckaroo.gif)
 
-## Installation
+## Buckaroo quick start
 
-If using JupyterLab, `buckaroo` requires JupyterLab version 3 or higher.
+run `pip install buckaroo`
+in a notebook execute the following to see Buckaroo
 
-You can install `buckaroo` using `pip`
+```
+import pandas as pd
+import buckaroo
+pd.DataFrame({'a':[1, 2, 10, 30, 50, 60, 50], 'b': ['foo', 'foo', 'bar', pd.NA, pd.NA, pd.NA, pd. NA]})
 
-Using `pip`:
-
-```bash
-pip install buckaroo
 ```
 
-## Documentation
+When you run `import buckaroo` in a Jupyter notebook, Buckaroo becoes the default display method for Pandas and Polars DataFrames
 
-To get started with using Buckaroo, check out the full documentation:
+## Compatability
 
-https://buckaroo-data.readthedocs.io/en/latest/
+Buckaroo works in Notebook > 7, Jupyter Lab > 3.6.  VSCode, and Google Colab.  It works with pandas > ?? and polars > ???
 
+## Main Features
 
-# Using Buckaroo
+### Histograms
 
-in a jupyter lab notebook just add the following to a cell
+Visible for every column
 
-```python
-from buckaroo.buckaroo_widget import BuckarooWidget
-BuckarooWidget(df=df)  #df being the dataframe you want to explore
-``` 
-and you will see the UI for Buckaroo
+### Summary stats
+
+### Sorting
+
+### Automatic downsampling
 
 
 ## Using commands
@@ -267,4 +271,8 @@ We welcome issue reports [here](../../issues); be sure to choose the proper issu
 
 Before sending a [Pull Request](../../pulls), please make sure you read our
 
+
+
+
+#IBM watson dataframe viewer
 
