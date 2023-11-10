@@ -125,7 +125,6 @@ export function DFViewer(
       if (counter > 0 && colWidthHasBeenSet === false) {
         counter -= 1;
         // console.log("no gridRef or gridRef.current, setting delay", counter)
-        //@ts-ignore
         timer = setTimeout(conditionallyAutosize, delay);
         return;
       } else if (counter > 0 && currentColWidth === 200) {
@@ -134,12 +133,10 @@ export function DFViewer(
         // console.log(
         //     "new colwidth not recognized yet",
         //     counter, originalColWidth, gridRef.current!.columnApi!.columnModel!.displayedColumns[0].actualWidth)
-        //@ts-ignore
         timer = setTimeout(conditionallyAutosize, delay);
         return;
       }
     };
-    //@ts-ignore
     timer = setTimeout(conditionallyAutosize, delay);
     return () => clearTimeout(timer);
   };
