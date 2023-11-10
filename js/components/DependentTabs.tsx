@@ -32,8 +32,8 @@ export function PythonDisplayer({
   style: CSSProperties;
   generatedPyCode: string;
 }) {
-  const baseStyle:CSSProperties = { margin: '0', textAlign: 'left' };
-  const localStyle:CSSProperties = { ...baseStyle, ...style };
+  const baseStyle: CSSProperties = { margin: '0', textAlign: 'left' };
+  const localStyle: CSSProperties = { ...baseStyle, ...style };
   return (
     <div className="python-displayer" style={{ width: '100%' }}>
       <pre style={localStyle}>{generatedPyCode}</pre>
