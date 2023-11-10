@@ -93,8 +93,6 @@ const resolve = {
 };
 
 module.exports = [
-
-*/
   /**
    * Notebook extension
    *
