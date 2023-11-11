@@ -241,8 +241,6 @@ nest-asyncio==1.5.6
     #   jupyter-client
     #   nbclassic
     #   notebook
-notebook==6.5.4
-    # via jupyterlab
 notebook-shim==0.2.3
     # via nbclassic
 numpy==1.24.3
@@ -331,7 +329,7 @@ python-slugify==8.0.1
     # via pytest-playwright
 pytz==2023.3
     # via pandas
-pyyaml==6.0
+pyyaml==6.0.1
     # via
     #   jupyter-events
     #   pymdown-extensions
@@ -464,3 +462,4 @@ y-py==0.5.9
     #   ypy-websocket
 ypy-websocket==0.8.2
     # via jupyter-server-ydoc
+buckaroo==0.4.4
