@@ -82,7 +82,7 @@ def warn_on_incompatible():
     if not is_notebook_compatible():
         import notebook
         print("Buckaroo is compatible with jupyter notebook > 7, or jupyterlab >3.6.0")
-        print("You seem to be executing this in jupyter notebook version %r" % notebook.version_info)
+        print("You seem to be executing this in jupyter notebook version %r" % str(notebook.__version__))
         print("You can upgrade to notebook 7 by running 'pip install --upgrade notebook'")
         print("Or you can try running jupyter lab with 'jupyter lab'")
         
