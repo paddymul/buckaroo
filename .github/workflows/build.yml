@@ -14,7 +14,6 @@ jobs:
       matrix:
         #os: [ubuntu-latest, windows-latest, macos-latest]
         os: [ubuntu-latest]
-#       python-version: ["3.8", "3.11"]
 	python-version: "3.8"
     steps:
       - name: Checkout
@@ -50,15 +49,9 @@ jobs:
           python -m pytest --check-links
 
   ui-test:
-#    needs: [build]
     runs-on: ubuntu-latests
     steps:
       - uses: actions/checkout@v2
-
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: ipyaggrid-dist-${{ github.run_number }}
-
       - name: Install Python
         uses: actions/setup-python@v2
         with:
