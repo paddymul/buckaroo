@@ -62,16 +62,21 @@ jobs:
           python -m pytest --check-links
 
   ui-test:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+        with:
+          name: buckaroo-dist-${{ github.run_number }}
+
       - name: Install Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
 
       - name: Setup buckaroo ui test
-        run: pip install -r requirements-ui-test.txt
+        run: pip install `echo dist/*.whl`[ui-test] -r requirements-ui-test.txt
 
       - name: Install playwright browsers
         run: playwright install chromium
