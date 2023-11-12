@@ -49,7 +49,7 @@ jobs:
           python -m pytest --check-links
 
   ui-test:
-    runs-on: ubuntu-latests
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install Python
