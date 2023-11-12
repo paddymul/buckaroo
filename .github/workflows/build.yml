@@ -64,7 +64,7 @@ jobs:
         run: playwright install chromium
 
       - name: Run ui-tests
-        run: pytest tests/ui/ --video=retain-on-failure
+        run: SOLARA_TEST_RUNNERS=jupyter_lab pytest tests/ui/ --video=retain-on-failure
 
       - name: Upload Test artifacts
         if: always()
