@@ -23,7 +23,8 @@ tag_template = "v{new_version}"
 # section containing the path of the file, relative to the
 # tbump.toml location.
 [[file]]
-src = "..."
+src = "pyproject.toml"
+
 
 # You can specify a list of commands to
 # run after the files have been patched
