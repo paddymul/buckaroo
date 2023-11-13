@@ -1,6 +1,6 @@
 # Buckaroo - The Data Table for Jupyter
 
-Buckaroo is a modern data table for Jupyter that expedites the most common exploratory data analysis tasks. The most basic data analysis task - looking at the raw data, is cumbersome with the existing pandas tooling.  Buckaroo starts with a modern performant data table that displays up to 10k rows, is sortable, has value formatting, and scrolls.  On top of the core table experience extra features like summary stats, histograms, smart sampling, auto-cleaning, and a low code UI are added.  All of the functionality has sensible defaults that can be overriden to customize the experience for your workflow.
+Buckaroo is a modern data table for Jupyter that expedites the most common exploratory data analysis tasks. The most basic data analysis task - looking at the raw data, is cumbersome with the existing pandas tooling.  Buckaroo starts with a modern performant data table that displays up to 10k rows, is sortable, has value formatting, and scrolls.  On top of the core table experience extra features like summary stats, histograms, smart sampling, auto-cleaning, and a low code UI are added.  All of the functionality has sensible defaults that can be overridden to customize the experience for your workflow.
 
 ## Try it today
 
@@ -20,10 +20,10 @@ pd.DataFrame({'a':[1, 2, 10, 30, 50, 60, 50], 'b': ['foo', 'foo', 'bar', pd.NA, 
 
 ```
 
-When you run `import buckaroo` in a Jupyter notebook, Buckaroo becoes the default display method for Pandas and Polars DataFrames
+When you run `import buckaroo` in a Jupyter notebook, Buckaroo becomes the default display method for Pandas and Polars DataFrames
 
 
-## Compatability
+## Compatibility
 
 Buckaroo works in the following notebook environments
 
@@ -39,18 +39,39 @@ Buckaroo works with the following DataFrame libraries
 
 # Features
 
-### Histograms
+## High performance table
+The core data grid of buckaroo is based on [AG-Grid](https://www.ag-grid.com/). This loads 1000s of cells in less than a second, with highly customizable display, formatting and scrolling.  You no longer have to use `df.head()` to poke at portions of your data.
 
-Visible for every column
+## Fixed width formatting by default
 
-### Summary stats
+By default numeric columns are formatted to use a fixed width font and commas are added.  This allows quick visual confirmation of magnitudes in a column.
 
-### Sorting
+## Histograms
 
-### Automatic downsampling
+[Histograms](https://buckaroo-data.readthedocs.io/en/latest/articles/histograms.html) for every column give you a very quick overview of the distribution of values, including uniques and N/A.
 
+## Summary stats
+The summary stats view can be toggled by clicking on the `0` below the `Σ` icon.  Summary stats are similar to `df.describe` and extensible.
 
+## Inteligent sampling
 
+Buckaroo will display entire DataFrames up to 10k rows.  Displaying more than that would run into performance problems that would make display too slow.  When a DataFrame has more than 10k rows, Buckaroo samples a random set of 10k rows, and also adds in the rwos with the 5 most extreme values for each column.
+
+## Sorting
+
+All of the data visible in the table (rows shown), is sortable by clicking on a column name, further clicks change sort direction then disable sort for that column.  Because extreme values are included with sample rows, you can see outlier values too.
+
+## Extensibility at the core
+
+Buckaroo summary stats are built on the [Pluggable Analysis Framework](https://buckaroo-data.readthedocs.io/en/latest/articles/pluggable.html) that allows individual summary stats to be overridden, and new summary stats to be built in terms of existing summary stats.  Care is taken to prevent errors in summary stats from preventing display of a dataframe.
+
+## Lowcode UI (beta)
+
+Buckaroo has a simple low code UI with python code gen. This view can be toggled by clicking on the `0` below the ` λ ` icon.
+
+## Auto cleaning (beta)
+
+Buckaroo can [automatically clean](https://buckaroo-data.readthedocs.io/en/latest/articles/auto_clean.html) dataframes to remove common data errors (a single string in a column of ints, recognizing date times...).  This feature is in beta.  You can access it by invoking buckaroo as `BuckarooWidget(df, auto_clean=True)`
 
 ## Development installation
 
