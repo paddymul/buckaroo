@@ -217,7 +217,6 @@ class ColDisplayHints(ColAnalysis):
 
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
-        print("summary_ser", summary_ser)
         is_numeric = pd.api.types.is_numeric_dtype(sampled_ser)
         is_bool = pd.api.types.is_bool_dtype(sampled_ser)
         _type = "obj"
