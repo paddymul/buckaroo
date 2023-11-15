@@ -43,13 +43,23 @@ export const stringFormatter = (params: ValueFormatterParams): string => {
   return val;
 };
 
+const dictDisplayer = (val: Record<string, any>): string => {
+  const objBody = _.map(
+    val,
+    (value, key) => `'${key}': ${objDisplayer(value)}`
+  ).join(',');
+  return `{ ${objBody} }`;
+};
+
 const objDisplayer = (val: any | any[]): string => {
-  if (_.isArray(val)) {
+  if (val === undefined || val === null) {
+    return 'None';
+  } else if (_.isArray(val)) {
     return `[ ${val.map(objDisplayer).join(', ')}]`;
   } else if (_.isBoolean(val)) {
     return boolDisplayer(val);
-  } else if (val === undefined || val === null) {
-    return 'None';
+  } else if (_.isObject(val)) {
+    return dictDisplayer(val);
   } else {
     return val.toString();
   }
