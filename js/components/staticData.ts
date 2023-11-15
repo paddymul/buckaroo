@@ -23,7 +23,10 @@ export interface DFColumn {
   name: string;
   type: string;
 }
-export type DFDataRow = Record<string, string | number | boolean | null>;
+export type DFDataRow = Record<
+  string,
+  string | number | boolean | any[] | null
+>;
 
 export type DFData = DFDataRow[];
 
@@ -401,15 +404,16 @@ export const stringIndexDf: DFWhole = {
       { name: 'index', type: 'integer' },
       { name: 'a', type: 'integer' },
       { name: 'b', type: 'boolean' },
+      { name: 'list_col', type: 'obj' },
       { name: 'strings', type: 'boolean' },
     ],
     primaryKey: ['index'],
     pandas_version: '1.4.0',
   },
   data: [
-    { index: 0, a: 1, b: true, strings: 'a' },
-    { index: 1, a: 2, b: false, strings: '' },
-    { index: 2, a: 3, b: false, strings: ' ' },
+    { index: 0, a: 1, b: true, strings: 'a', list_col: ['a', 'b'] },
+    { index: 1, a: 2, b: false, strings: '', list_col: [1, 2] },
+    { index: 2, a: 3, b: false, strings: ' ', list_col: [true, false] },
   ],
   table_hints: {
     a: {

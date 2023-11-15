@@ -43,14 +43,36 @@ export const stringFormatter = (params: ValueFormatterParams): string => {
   return val;
 };
 
-export const booleanFormatter = (params: ValueFormatterParams): string => {
+const objDisplayer = (val: any | any[]): string => {
+  if (_.isArray(val)) {
+    return `[ ${val.map(objDisplayer).join(', ')}]`;
+  } else if (_.isBoolean(val)) {
+    return boolDisplayer(val);
+  } else if (val === undefined || val === null) {
+    return 'None';
+  } else {
+    return val.toString();
+  }
+  return val;
+};
+
+const objFormatter = (params: ValueFormatterParams): string => {
   const val = params.value;
+  return objDisplayer(val);
+};
+
+export const boolDisplayer = (val: boolean) => {
   if (val === true) {
     return 'True';
   } else if (val === false) {
     return 'False';
   }
   return '';
+};
+
+export const booleanFormatter = (params: ValueFormatterParams): string => {
+  const val = params.value;
+  return boolDisplayer(val);
 };
 
 const getIntegerFormatter = (hint: ColumnIntegertHint) => {
@@ -94,7 +116,7 @@ function getFormatter(hint: ColumnHint): ValueFormatterFunc<unknown> {
   } else if (hint.type === 'boolean') {
     return booleanFormatter;
   } else if (hint.type === 'obj') {
-    return stringFormatter;
+    return objFormatter;
   }
   return stringFormatter;
 }
