@@ -75,7 +75,10 @@ class DefaultSummaryStats(ColAnalysis):
         distinct_count= len(val_counts)
         nan_count = l - len(ser.dropna())
         unique_count = len(val_counts[val_counts==1])
-        empty_count = val_counts.get('', 0)
+        try:
+            empty_count = val_counts.get('', 0)
+        except:
+            empty_count = 0
 
         is_numeric = pd.api.types.is_numeric_dtype(ser)
         is_object = pd.api.types.is_object_dtype
@@ -163,8 +166,11 @@ def categorical_dict(ser, val_counts, top_n_positions=7):
     #if len(val_counts) > 5 and top_percentage < .05:
         
     rest_vals = val_counts.iloc[top:]
-    histogram = top_vals.to_dict()
-
+    try:
+        histogram = top_vals.to_dict()
+    except TypeError:
+        top_vals.index = top_vals.index.map(str)
+        histogram = top_vals.to_dict()
 
     full_long_tail = rest_vals.sum()
     unique_count = sum(val_counts == 1)
@@ -211,7 +217,7 @@ class ColDisplayHints(ColAnalysis):
 
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
-
+        print("summary_ser", summary_ser)
         is_numeric = pd.api.types.is_numeric_dtype(sampled_ser)
         is_bool = pd.api.types.is_bool_dtype(sampled_ser)
         _type = "obj"
