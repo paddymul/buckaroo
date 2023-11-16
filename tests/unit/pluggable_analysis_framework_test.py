@@ -9,7 +9,7 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 from buckaroo.pluggable_analysis_framework.analysis_management import (
     AnalsysisPipeline, produce_summary_df)
 
-from buckaroo.analysis import (TypingStats, DefaultSummaryStats)
+from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
 
 from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, DCLen, DependsNoProvides)
 

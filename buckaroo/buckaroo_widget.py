@@ -14,13 +14,13 @@ from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
 
 from ._frontend import module_name, module_version
-from .all_transforms import configure_buckaroo, DefaultCommandKlsList
+from .customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 from .jlisp.lisp_utils import (lists_match, split_operations)
 
 from .auto_clean.auto_clean import get_auto_type_operations, get_typing_metadata, recommend_type
-from .down_sample import sample
+from .customizations.down_sample import sample
 
-from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
+from .customizations.analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
 from .pluggable_analysis_framework.analysis_management import DfStats, get_df_name
 
 from .serialization_utils import df_to_obj, EMPTY_DF_OBJ
