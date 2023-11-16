@@ -9,6 +9,7 @@ import {
   ColumnHint,
   ColumnIntegertHint,
   ColumnFloatHint,
+  ColumnDatetimeHint
 } from './staticData';
 import _ from 'lodash';
 export const updateAtMatch = (
@@ -50,6 +51,30 @@ const dictDisplayer = (val: Record<string, any>): string => {
   ).join(',');
   return `{ ${objBody} }`;
 };
+
+export const getDatetimeFormatter = (colHint: ColumnDatetimeHint) => {
+  return (params: ValueFormatterParams): string => {
+    // console.log("params", params)
+    const val = params.value;
+    if (val === null || val === undefined) {
+      return ""
+    }
+    // console.log("val", val);
+    const d = new Date(val)
+    // console.log(d);
+    const rawDateStr = d.toLocaleDateString(
+      'en-us',
+      {  year:"numeric", month:"numeric", day:"numeric",
+	 hour:"numeric", minute: "numeric", second:"numeric"})
+    
+    if(rawDateStr === "Invalid Date") {
+      return "";
+    }
+    const [dateStr, timeStr] = rawDateStr.split(",");
+    const retVal = `${dateStr} ${timeStr.padStart(12)}`
+    return retVal
+  }
+}
 
 const objDisplayer = (val: any | any[]): string => {
   if (val === undefined || val === null) {
@@ -121,6 +146,8 @@ function getFormatter(hint: ColumnHint): ValueFormatterFunc<unknown> {
     return getIntegerFormatter(hint);
   } else if (hint.type === 'string') {
     return stringFormatter;
+  } else if (hint.type === 'datetime') {
+    return getDatetimeFormatter(hint);
   } else if (hint.type === 'float') {
     return getFloatFormatter(hint);
   } else if (hint.type === 'boolean') {
