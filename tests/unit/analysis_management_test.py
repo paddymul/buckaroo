@@ -1,10 +1,10 @@
 import unittest
 import pytest
 
-from buckaroo.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
 
-from buckaroo.analysis_management import (
+from buckaroo.pluggable_analysis_framework.analysis_management import (
     AnalsysisPipeline, produce_summary_df, NonExistentSummaryRowException,
     DfStats)
 

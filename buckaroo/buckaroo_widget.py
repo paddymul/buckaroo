@@ -21,7 +21,7 @@ from .auto_clean import get_auto_type_operations, get_typing_metadata, recommend
 from .down_sample import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
-from .analysis_management import DfStats, get_df_name
+from .pluggable_analysis_framework.analysis_management import DfStats, get_df_name
 
 from .serialization_utils import df_to_obj, EMPTY_DF_OBJ
 

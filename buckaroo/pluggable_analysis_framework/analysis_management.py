@@ -3,7 +3,7 @@ import traceback
 
 import numpy as np
 import pandas as pd
-from buckaroo.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException)
 from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
 
