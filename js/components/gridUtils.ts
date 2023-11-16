@@ -66,12 +66,14 @@ const DEFAULT_DATE_FORMAT: Intl.DateTimeFormatOptions = {
   hour: 'numeric',
   minute: 'numeric',
   second: 'numeric',
+  hour12: false,
 };
 
 export const dateDisplayerDefault = (d: Date): string => {
-  const fullStr = d.toLocaleDateString('en-us', DEFAULT_DATE_FORMAT);
+  const fullStr = d.toLocaleDateString('en-CA', DEFAULT_DATE_FORMAT);
   const [dateStr, timeStr] = fullStr.split(',');
-  const retVal = `${dateStr} ${timeStr.padStart(12)}`;
+  //const retVal = `${dateStr} ${timeStr.padStart(12)}`;
+  const retVal = `${dateStr} ${timeStr}`;
   return retVal;
 };
 

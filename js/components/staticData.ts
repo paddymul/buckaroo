@@ -491,7 +491,7 @@ export const stringIndexDf: DFWhole = {
       type: 'datetime',
       formatter: 'toLocaleString',
       args: { year: 'numeric', month: 'numeric', day: 'numeric' },
-      locale: 'en-GB',
+      locale: 'en-CA',
       histogram: [],
     },
   },

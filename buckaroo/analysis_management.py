@@ -29,6 +29,7 @@ BASE_COL_HINT = {
     'is_integer': None,
     'min_digits':None,
     'max_digits':None,
+    'formatter':None,
     'histogram': []}
 
 

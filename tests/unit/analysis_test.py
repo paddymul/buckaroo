@@ -1,6 +1,7 @@
+from datetime import datetime as dtdt
 import numpy as np
 import pandas as pd
-from buckaroo.analysis import TypingStats, DefaultSummaryStats
+from buckaroo.analysis import TypingStats, DefaultSummaryStats, ColDisplayHints
 
 
 text_ser = pd.Series(["foo", "bar", "baz"])
@@ -8,6 +9,7 @@ datelike_ser = pd.Series([
     "2014-01-01 00:00:06",
     "2014-01-01 00:00:38",
     "2014-01-01 00:03:59"])
+datetime_ser = pd.Series([dtdt(2000, 1, 1), dtdt(2001, 1, 1), pd.NaT])
 all_nan_ser = pd.Series([np.nan, np.nan])
 int_ser = pd.Series([10, 30, -10, 33])
 fp_ser = pd.Series([33.2, 83.2, -1.0, 0])
@@ -40,3 +42,16 @@ def test_default_summary_stats():
     for ser in all_sers:
         print(DefaultSummaryStats.summary(ser, ser, ser))
 
+def test_datetime_hints():
+    result = ColDisplayHints.summary(
+        datetime_ser, {'nan_per':0}, datetime_ser)
+    assert     {'type': 'datetime',
+                'formatter': 'default',
+                'is_integer': False,
+                'is_numeric': False,
+                'histogram': [{'cat_pop': 33.0,
+                               'name': pd.Timestamp('2000-01-01 00:00:00')},
+                              {'cat_pop': 33.0,
+                               'name': pd.Timestamp('2001-01-01 00:00:00')},
+                              {'name': 'longtail', 'unique': 67.0}],
+                } == result    

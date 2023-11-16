@@ -213,13 +213,14 @@ def histogram(ser, nan_per):
 class ColDisplayHints(ColAnalysis):
     requires_summary = ['min', 'max', 'nan_per']
     provides_summary = [
-        'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram', 'type']
+        'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram', 'type', 'formatter']
 
     @staticmethod
     def summary(sampled_ser, summary_ser, ser):
         is_numeric = pd.api.types.is_numeric_dtype(sampled_ser)
         is_bool = pd.api.types.is_bool_dtype(sampled_ser)
         _type = "obj"
+        extras = {}
         if is_bool:
             _type = "boolean"
         elif is_numeric:
@@ -227,6 +228,8 @@ class ColDisplayHints(ColAnalysis):
                 _type = "float"
             else:
                 _type = "integer"
+        elif pd.api.types.is_datetime64_any_dtype(ser):
+            extras = {'type':'datetime', 'formatter': 'default'}
         elif pd.api.types.is_string_dtype(sampled_ser):
             _type = "string"
         base_dict = dict(
@@ -234,7 +237,8 @@ class ColDisplayHints(ColAnalysis):
             is_numeric=is_numeric,
             is_integer=pd.api.types.is_integer_dtype(sampled_ser),
             histogram=histogram(sampled_ser, summary_ser['nan_per']))
-
+        print("extras", extras)
+        base_dict.update(extras)
         if is_numeric and not is_bool:
             base_dict.update({
                 'min_digits':int_digits(summary_ser.loc['min']),
