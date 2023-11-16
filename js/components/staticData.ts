@@ -421,6 +421,7 @@ export const stringIndexDf: DFWhole = {
     fields: [
       { name: 'index', type: 'integer' },
       { name: 'datetime_col', type: 'datetime' },
+      { name: 'datetime_col2', type: 'datetime' },
       { name: 'a', type: 'integer' },
       { name: 'b', type: 'boolean' },
       { name: 'list_col', type: 'obj' },
@@ -439,6 +440,7 @@ export const stringIndexDf: DFWhole = {
       list_col: ['a', 'b'],
       dict_col: { a: 10, b: 20 },
       datetime_col: '2001-01-01T00:00:00.000',
+      datetime_col2: '2001-01-01T00:00:00.000',
     },
     {
       index: 1,
@@ -448,6 +450,7 @@ export const stringIndexDf: DFWhole = {
       list_col: [1, 2],
       dict_col: { b: 20, c: 30 },
       datetime_col: '2001-05-03T00:01:00.000',
+      datetime_col2: '2001-05-03T00:01:00.000',
     },
     {
       index: 2,
@@ -457,6 +460,7 @@ export const stringIndexDf: DFWhole = {
       list_col: [true, false],
       dict_col: { a: 'foo' },
       datetime_col: '2001-05-03T15:44:55.000',
+      datetime_col2: '2001-05-03T15:44:55.000',
     },
   ],
   table_hints: {
@@ -483,5 +487,12 @@ export const stringIndexDf: DFWhole = {
     },
     strings: { type: 'string', histogram: [] },
     datetime_col: { type: 'datetime', formatter: 'default', histogram: [] },
+    datetime_col2: {
+      type: 'datetime',
+      formatter: 'toLocaleString',
+      args: { year: 'numeric', month: 'numeric', day: 'numeric' },
+      locale: 'en-GB',
+      histogram: [],
+    },
   },
 };
