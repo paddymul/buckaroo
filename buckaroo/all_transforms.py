@@ -3,7 +3,7 @@ import numpy as np
 
 from .jlisp.lispy import s
 from .jlisp.configure_utils import configure_buckaroo
-from .cleaning_commands import (to_bool, to_datetime, to_int, to_float, to_string)
+from .auto_clean.cleaning_commands import (to_bool, to_datetime, to_int, to_float, to_string)
 
 class Command(object):
     pass

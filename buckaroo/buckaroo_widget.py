@@ -17,7 +17,7 @@ from ._frontend import module_name, module_version
 from .all_transforms import configure_buckaroo, DefaultCommandKlsList
 from .jlisp.lisp_utils import (lists_match, split_operations)
 
-from .auto_clean import get_auto_type_operations, get_typing_metadata, recommend_type
+from .auto_clean.auto_clean import get_auto_type_operations, get_typing_metadata, recommend_type
 from .down_sample import sample
 
 from .analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
