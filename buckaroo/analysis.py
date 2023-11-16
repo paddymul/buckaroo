@@ -237,7 +237,6 @@ class ColDisplayHints(ColAnalysis):
             is_numeric=is_numeric,
             is_integer=pd.api.types.is_integer_dtype(sampled_ser),
             histogram=histogram(sampled_ser, summary_ser['nan_per']))
-        print("extras", extras)
         base_dict.update(extras)
         if is_numeric and not is_bool:
             base_dict.update({
