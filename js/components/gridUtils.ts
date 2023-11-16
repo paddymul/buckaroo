@@ -9,7 +9,7 @@ import {
   ColumnHint,
   ColumnIntegertHint,
   ColumnFloatHint,
-  ColumnDatetimeHint
+  ColumnDatetimeHint,
 } from './staticData';
 import _ from 'lodash';
 export const updateAtMatch = (
@@ -52,29 +52,48 @@ const dictDisplayer = (val: Record<string, any>): string => {
   return `{ ${objBody} }`;
 };
 
+export const isValidDate = (possibleDate: any): boolean => {
+  if (_.isDate(possibleDate) && isFinite(possibleDate.getTime())) {
+    return true;
+  }
+  return false;
+};
+
+const DEFAULT_DATE_FORMAT: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+};
+
+export const dateDisplayerDefault = (d: Date): string => {
+  const fullStr = d.toLocaleDateString('en-us', DEFAULT_DATE_FORMAT);
+  const [dateStr, timeStr] = fullStr.split(',');
+  const retVal = `${dateStr} ${timeStr.padStart(12)}`;
+  return retVal;
+};
+
 export const getDatetimeFormatter = (colHint: ColumnDatetimeHint) => {
   return (params: ValueFormatterParams): string => {
     // console.log("params", params)
     const val = params.value;
     if (val === null || val === undefined) {
-      return ""
+      return '';
     }
-    // console.log("val", val);
-    const d = new Date(val)
-    // console.log(d);
-    const rawDateStr = d.toLocaleDateString(
-      'en-us',
-      {  year:"numeric", month:"numeric", day:"numeric",
-	 hour:"numeric", minute: "numeric", second:"numeric"})
-    
-    if(rawDateStr === "Invalid Date") {
-      return "";
+    const d = new Date(val);
+    if (!isValidDate(d)) {
+      return '';
     }
-    const [dateStr, timeStr] = rawDateStr.split(",");
-    const retVal = `${dateStr} ${timeStr.padStart(12)}`
-    return retVal
-  }
-}
+    if (colHint.formatter === 'default') {
+      return dateDisplayerDefault(d);
+    } else if (colHint.formatter === 'toLocaleString') {
+      return d.toLocaleDateString(colHint.locale, colHint.args);
+    }
+    throw new Error('unreachable code in getDatetimeFormatter');
+  };
+};
 
 const objDisplayer = (val: any | any[]): string => {
   if (val === undefined || val === null) {

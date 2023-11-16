@@ -35,11 +35,22 @@ export interface ColumnObjHint {
   histogram?: any[];
 }
 
-export interface ColumnDatetimeHint {
+export interface ColumnDatetimeDefaultHint {
   type: 'datetime';
-  formatter: "default";
+  formatter: 'default';
   histogram?: any[];
 }
+
+export interface ColumnDatetimeFormatHint {
+  type: 'datetime';
+  formatter: 'toLocaleString';
+  locale: 'en-US' | 'en-GB' | 'en-CA' | 'fr-FR' | 'es-ES' | 'de-DE' | 'ja-JP';
+  args: Intl.DateTimeFormatOptions;
+  histogram?: any[];
+}
+export type ColumnDatetimeHint =
+  | ColumnDatetimeDefaultHint
+  | ColumnDatetimeFormatHint;
 
 export interface ColumnStringHint {
   type: 'string';
@@ -415,7 +426,6 @@ export const stringIndexDf: DFWhole = {
       { name: 'list_col', type: 'obj' },
       { name: 'strings', type: 'boolean' },
       { name: 'dict_col', type: 'obj' },
-
     ],
     primaryKey: ['index'],
     pandas_version: '1.4.0',
@@ -428,7 +438,7 @@ export const stringIndexDf: DFWhole = {
       strings: 'a',
       list_col: ['a', 'b'],
       dict_col: { a: 10, b: 20 },
-      datetime_col:"2001-01-01T00:00:00.000",
+      datetime_col: '2001-01-01T00:00:00.000',
     },
     {
       index: 1,
@@ -437,8 +447,7 @@ export const stringIndexDf: DFWhole = {
       strings: '',
       list_col: [1, 2],
       dict_col: { b: 20, c: 30 },
-      datetime_col:"2001-05-03T00:01:00.000",
-
+      datetime_col: '2001-05-03T00:01:00.000',
     },
     {
       index: 2,
@@ -447,7 +456,7 @@ export const stringIndexDf: DFWhole = {
       strings: ' ',
       list_col: [true, false],
       dict_col: { a: 'foo' },
-      datetime_col:"2001-05-03T15:44:55.000",
+      datetime_col: '2001-05-03T15:44:55.000',
     },
   ],
   table_hints: {
@@ -473,6 +482,6 @@ export const stringIndexDf: DFWhole = {
       ],
     },
     strings: { type: 'string', histogram: [] },
-    datetime_col: { type: 'datetime', formatter:"default", histogram: [] },
+    datetime_col: { type: 'datetime', formatter: 'default', histogram: [] },
   },
 };
