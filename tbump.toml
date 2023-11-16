@@ -28,6 +28,8 @@ src = "pyproject.toml"
 src = "package.json"
 [[file]]
 src = "buckaroo/_version.py"
+[[file]]
+src = "docs/source/conf.py"
 
 
 # You can specify a list of commands to
