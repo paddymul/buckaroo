@@ -42,6 +42,8 @@ def enable(sampled=True,
             if debug:
                 traceback.print_exc()
                 return
+            # returning NotImplementedError causes IPython to find the
+            # next registered formatter for the type
             raise NotImplementedError
 
     def _display_polars_as_buckaroo(polars_df):
