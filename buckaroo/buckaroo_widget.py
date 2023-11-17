@@ -43,11 +43,12 @@ class BuckarooWidget(DOMWidget):
     operations = List().tag(sync=True)
     machine_gen_operations = List().tag(sync=True)
     command_classes = DefaultCommandKlsList
+    analysis_classes = [TypingStats, DefaultSummaryStats, ColDisplayHints]
 
     typing_metadata_f = staticmethod(get_typing_metadata)
     typing_recommend_f = staticmethod(recommend_type)
 
-    origDf = Dict({}).tag(sync=True)
+    json_serialized_df = Dict({}).tag(sync=True)
     summaryDf = Dict({}).tag(sync=True)
 
     operation_results = Dict(
@@ -144,9 +145,9 @@ class BuckarooWidget(DOMWidget):
                 #ideally this won't require a reserialization.  All
                 #possible col_orders shoudl be serialized once, and the
                 #frontend should just toggle from them
-              self.origDf = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
+              self.json_serialized_df = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
             else:
-                self.origDf = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+                self.json_serialized_df = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
 
     @observe('operations')
     def handle_operations(self, change):
