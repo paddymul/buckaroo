@@ -19,7 +19,7 @@ export type CommandConfigSetterT = (
   TODO:add height settings to dfConfig rather than hardcoded.
  */
 export function WidgetDCFCell({
-   json_serialized_df,
+  json_serialized_df,
   operations,
   on_operations,
   operation_results,
@@ -39,7 +39,10 @@ export function WidgetDCFCell({
 }) {
   const [activeCol, setActiveCol] = useState('stoptime');
   const widgetConfig: WidgetConfig = { showCommands: dfConfig.showCommands };
-  const localDfConfig = { ...dfConfig, rowsShown: json_serialized_df.data.length || 0 };
+  const localDfConfig = {
+    ...dfConfig,
+    rowsShown: json_serialized_df.data.length || 0,
+  };
   return (
     <div
       className="dcf-root flex flex-col"
