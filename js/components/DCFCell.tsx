@@ -19,23 +19,23 @@ export type CommandConfigSetterT = (
   TODO:add height settings to dfConfig rather than hardcoded.
  */
 export function WidgetDCFCell({
-  json_serialized_df,
+  df_json: json_serialized_df,
   operations,
   on_operations,
   operation_results,
   commandConfig,
   dfConfig,
   on_dfConfig,
-  summaryDf,
+  summary_df_json: summaryDf,
 }: {
-  json_serialized_df: DFWhole;
+  df_json: DFWhole;
   operations: Operation[];
   on_operations: (ops: Operation[]) => void;
   operation_results: OperationResult;
   commandConfig: CommandConfigT;
   dfConfig: DfConfig;
   on_dfConfig: unknown;
-  summaryDf: DFWhole;
+  summary_df_json: DFWhole;
 }) {
   const [activeCol, setActiveCol] = useState('stoptime');
   const widgetConfig: WidgetConfig = { showCommands: dfConfig.showCommands };
@@ -90,14 +90,14 @@ export function WidgetDCFCellExample() {
   const [operations, setOperations] = useState<Operation[]>(bakedOperations);
   return (
     <WidgetDCFCell
-      json_serialized_df={tableDf}
+      df_json={tableDf}
       operations={operations}
       on_operations={setOperations}
       operation_results={baseOperationResults}
       commandConfig={bakedCommandConfig}
       dfConfig={sampleConfig}
       on_dfConfig={setConfig}
-      summaryDf={tableDf}
+      summary_df_json={tableDf}
     />
   );
 }

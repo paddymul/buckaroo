@@ -48,8 +48,8 @@ class BuckarooWidget(DOMWidget):
     typing_metadata_f = staticmethod(get_typing_metadata)
     typing_recommend_f = staticmethod(recommend_type)
 
-    json_serialized_df = Dict({}).tag(sync=True)
-    summaryDf = Dict({}).tag(sync=True)
+    df_json = Dict({}).tag(sync=True)
+    summary_df_json = Dict({}).tag(sync=True)
 
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_OBJ, 'generated_py_code':'# instantiation, unused'}
@@ -145,9 +145,9 @@ class BuckarooWidget(DOMWidget):
                 #ideally this won't require a reserialization.  All
                 #possible col_orders shoudl be serialized once, and the
                 #frontend should just toggle from them
-              self.json_serialized_df = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
+              self.df_json = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
             else:
-                self.json_serialized_df = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+                self.df_json = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
 
     @observe('operations')
     def handle_operations(self, change):
@@ -211,7 +211,7 @@ class BuckarooWidget(DOMWidget):
             self.typed_df,
             [TypingStats, DefaultSummaryStats, ColDisplayHints],
             self.df_name, debug=self.debug)
-        self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
+        self.summary_df_json = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         self.update_based_on_df_config(3)
 
     def generate_code(self, operations):
@@ -242,6 +242,6 @@ class BuckarooWidget(DOMWidget):
 
     def add_analysis(self, analysis_obj):
         self.stats.add_analysis(analysis_obj)
-        self.summaryDf = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
+        self.summary_df_json = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         #just trigger redisplay
         self.update_based_on_df_config(3)
