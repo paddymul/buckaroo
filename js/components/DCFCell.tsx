@@ -19,7 +19,7 @@ export type CommandConfigSetterT = (
   TODO:add height settings to dfConfig rather than hardcoded.
  */
 export function WidgetDCFCell({
-  origDf,
+   json_serialized_df,
   operations,
   on_operations,
   operation_results,
@@ -28,7 +28,7 @@ export function WidgetDCFCell({
   on_dfConfig,
   summaryDf,
 }: {
-  origDf: DFWhole;
+  json_serialized_df: DFWhole;
   operations: Operation[];
   on_operations: (ops: Operation[]) => void;
   operation_results: OperationResult;
@@ -39,7 +39,7 @@ export function WidgetDCFCell({
 }) {
   const [activeCol, setActiveCol] = useState('stoptime');
   const widgetConfig: WidgetConfig = { showCommands: dfConfig.showCommands };
-  const localDfConfig = { ...dfConfig, rowsShown: origDf.data.length || 0 };
+  const localDfConfig = { ...dfConfig, rowsShown: json_serialized_df.data.length || 0 };
   return (
     <div
       className="dcf-root flex flex-col"
@@ -51,14 +51,14 @@ export function WidgetDCFCell({
       >
         <StatusBar config={localDfConfig} setConfig={on_dfConfig} />
         <DFViewer
-          df={dfConfig.summaryStats ? summaryDf : origDf}
+          df={dfConfig.summaryStats ? summaryDf : json_serialized_df}
           activeCol={activeCol}
           setActiveCol={setActiveCol}
         />
       </div>
       {widgetConfig.showCommands ? (
         <ColumnsEditor
-          df={origDf}
+          df={json_serialized_df}
           activeColumn={activeCol}
           operations={operations}
           setOperations={on_operations}
@@ -87,7 +87,7 @@ export function WidgetDCFCellExample() {
   const [operations, setOperations] = useState<Operation[]>(bakedOperations);
   return (
     <WidgetDCFCell
-      origDf={tableDf}
+      json_serialized_df={tableDf}
       operations={operations}
       on_operations={setOperations}
       operation_results={baseOperationResults}
