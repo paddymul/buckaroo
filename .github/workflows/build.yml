@@ -38,6 +38,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           yarn run lint:check
+          ruff check . 
 
       - name: Package
         run: |
