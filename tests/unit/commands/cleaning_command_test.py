@@ -26,6 +26,25 @@ def test_to_datetime():
     assert pd.api.types.is_datetime64_any_dtype(output_df['mixed_dates'])
     assert output_df['mixed_dates'].to_list() == [
         pd.Timestamp('2021-02-03'), pd.Timestamp('2022-05-07'), pd.NaT, pd.NaT]
+
+def test_to_int():
+    base_df = pd.DataFrame({
+        'mixed_ints':['3', '4', '3.', 'asdf', pd.NA], 'b': [pd.NA] * 5})
+    
+    output_df = same(to_int, [[s('to_int'), s('df'), "mixed_ints"]], base_df)
+    pd.testing.assert_series_equal(
+        output_df['mixed_ints'],
+        pd.Series([3,4,3, pd.NA, pd.NA], dtype='UInt8', name='mixed_ints'))
+
+def test_to_float():
+    base_df = pd.DataFrame({
+        'mixed_floats':['3', '4', '7.1', 'asdf', np.nan], 'b': [pd.NA] * 5})
+    
+    output_df = same(to_float, [[s('to_float'), s('df'), "mixed_floats"]], base_df)
+    pd.testing.assert_series_equal(
+        output_df['mixed_floats'],
+        pd.Series([3, 4, 7.1, np.nan, np.nan], dtype='float64', name='mixed_floats'))
+
     
 
 # def test_dropcol():
