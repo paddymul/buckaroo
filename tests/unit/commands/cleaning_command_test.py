@@ -18,6 +18,16 @@ def test_to_bool():
     assert isinstance(output_df['mixed_bool'].dtype , pd.core.arrays.boolean.BooleanDtype)
     assert output_df['mixed_bool'].to_list() == [True, False, False, True, pd.NA]
 
+def test_to_datetime():
+    base_df = pd.DataFrame({
+        'mixed_dates':['2021-02-03', '2022-05-07', 'asdf', pd.NA], 'b': [pd.NA] * 4})
+    
+    output_df = same(to_datetime, [[s('to_datetime'), s('df'), "mixed_dates"]], base_df)
+    assert pd.api.types.is_datetime64_any_dtype(output_df['mixed_dates'])
+    assert output_df['mixed_dates'].to_list() == [
+        pd.Timestamp('2021-02-03'), pd.Timestamp('2022-05-07'), pd.NaT, pd.NaT]
+    
+
 # def test_dropcol():
 #     base_df = pd.DataFrame({
 #         'a':np.random.randint(1, 10, 5), 'b':np.random.randint(1, 10, 5),
