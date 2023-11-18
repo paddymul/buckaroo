@@ -120,15 +120,6 @@ known_first_party = [
 ]
 line_length = 80
 
-[tool.pylint.messages_control]
-disable = "C0330, C0326"
-
-[tool.pylint.format]
-max-line-length = "80"
-
-[tool.black]
-line-length = 80
-exclude = "/(\n    \\.eggs\n  | \\.git\n  | \\.hg\n  | \\.mypy_cache\n  | \\.tox\n  | \\.venv\n  | _build\n  | buck-out\n  | build\n  | dist\n)/\n"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -188,7 +179,8 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 #__init__.py and widget utils does some bare excepts because it absolutely cannot error
 #and give a non displayable dataframe
 "buckaroo/__init__.py" = ["E722"]
-"buckaroo/widget_utils.py" = ["E722"]
+
+#"buckaroo/widget_utils.py" = ["E722"]
 "buckaroo/customizations/order_columns.py" = ["ALL"]
 
 #used for safe_int
