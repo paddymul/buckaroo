@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from buckaroo.jlisp.lispy import s
-from buckaroo.jlisp.configure_utils import configure_buckaroo
 from .command_tests import assert_to_py_same_transform_df
 from buckaroo.auto_clean.cleaning_commands import (
     to_bool, to_datetime, to_int, to_float,
