@@ -4,7 +4,7 @@ import numpy as np
 from buckaroo.jlisp.lispy import s
 from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.all_transforms import (
-    DropCol, FillNA, OneHot, GroupBy )
+    DropCol, FillNA, OneHot, GroupBy, reindex )
 
 
 def result_from_exec(code_str, df_input):
@@ -62,3 +62,9 @@ def test_groupby():
                                    index=pd.Index(['cc', 'ee', 'ff'], dtype='object', name='a'))
     pd.testing.assert_frame_equal(output_df, expected_output)
     
+def test_reindex():
+    base_df = pd.DataFrame({
+        'a':['ca', 'cb', 'cd', 'ee', 'ff'], 'b': [pd.NA, 2, 2, 2, pd.NA]})
+    
+    output_df = same(reindex, [[s('reindex'), s('df'), "a"]], base_df)
+    assert output_df.index.to_list() == ['ca', 'cb', 'cd', 'ee', 'ff']
