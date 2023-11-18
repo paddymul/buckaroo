@@ -35,7 +35,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         for col, hint_obj in hints.items():
             #hacky replication of typescript types, just basically testing that hints are constructed properly
-            if hint_obj['is_numeric'] == False:
+            if hint_obj['is_numeric'] is False:
                 assert 'histogram' in hint_obj.keys()
             else:
                 expected_set = set(
@@ -72,7 +72,7 @@ class TestAnalysisPipeline(unittest.TestCase):
                 return dict(foo=8)
         unit_test_results, errs = ap.add_analysis(Foo)
         
-        assert unit_test_results == False
+        assert unit_test_results is False
 
     def test_replace_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
@@ -132,7 +132,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         self.assertRaises(NonExistentSummaryRowException, bad_add)
 
-    def test_invalid_summary_stats_display_throws(self):
+    def test_invalid_summary_stats_display_throws2(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
@@ -173,7 +173,10 @@ class TestDfStats(unittest.TestCase):
         non NA at least once
 
         """
-        dfs = DfStats(word_only_df, [SometimesProvides])
-        ab = dfs.presentation_sdf
+        #dfs = DfStats(word_only_df, [SometimesProvides])
+        #ab = dfs.presentation_sdf
+
+        #triggers a getter?
+        DfStats(word_only_df, [SometimesProvides]).presentation_sdf
 
 
