@@ -4,11 +4,11 @@ import numpy as np
 from buckaroo.jlisp.lispy import s
 from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.all_transforms import (
-    DropCol, FillNA, OneHot )
+    DropCol, FillNA, OneHot, GroupBy )
 
 
 def result_from_exec(code_str, df_input):
-    CODE_PREAMBLE = "import pandas as pd\n"
+    CODE_PREAMBLE = "import pandas as pd\nimport numpy as np\n"
     RETRIEVE_RESULT_STR = '\n__ret_closure[0] = clean(__test_df)'
     outer_scope_result = [0]
     full_code_str = CODE_PREAMBLE + code_str + RETRIEVE_RESULT_STR
@@ -52,4 +52,13 @@ def test_onehot():
     
     output_df = same(OneHot, [[s('onehot'), s('df'), "a"]], base_df)
     assert output_df.columns.to_list() == ['b', 'cc', 'dd', 'ee', 'ff']
+    
+def test_groupby():
+    base_df = pd.DataFrame({
+        'a':['cc', 'cc', 'cc', 'ee', 'ff'], 'b': [pd.NA, 2, 2, 2, pd.NA]})
+    
+    output_df = same(GroupBy, [[s('groupby'), s('df'), "a", {'b':'count'}]], base_df)
+    expected_output = pd.DataFrame({'b': {'cc': 2, 'ee': 1, 'ff': 0}},
+                                   index=pd.Index(['cc', 'ee', 'ff'], dtype='object', name='a'))
+    pd.testing.assert_frame_equal(output_df, expected_output)
     
