@@ -1,9 +1,10 @@
 import sys
 import traceback
+import warnings
 
 import numpy as np
 import pandas as pd
-from buckaroo.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis, order_analysis, check_solvable, NotProvidedException)
 from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
 
@@ -29,6 +30,7 @@ BASE_COL_HINT = {
     'is_integer': None,
     'min_digits':None,
     'max_digits':None,
+    'formatter':None,
     'histogram': []}
 
 
@@ -73,7 +75,7 @@ def reproduce_summary(ser_name, kls, summary_df, err, operating_df_name):
 def output_reproduce_preamble():
     print("#Reproduction code")
     print("#" + "-" * 80)
-    print("from buckaroo.analysis_management import PERVERSE_DF")
+    print("from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF")
 
 def output_full_reproduce(errs, summary_df, df_name):
     if len(errs) == 0:
@@ -88,9 +90,7 @@ def output_full_reproduce(errs, summary_df, df_name):
         traceback.print_exc()
 
 
-
-
-def produce_summary_df(df, ordered_objs, df_name='test_df'):
+def produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
     then it produces a summary dataframe
@@ -111,7 +111,8 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
         for a_kls in ordered_objs:
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
-                    warnings.filterwarnings('ignore')
+                    if debug == False:
+                        warnings.filterwarnings('ignore')
                     summary_res = a_kls.summary(ser, summary_ser, ser)
                     warnings.filterwarnings('default')
                 else:
@@ -121,6 +122,8 @@ def produce_summary_df(df, ordered_objs, df_name='test_df'):
             except Exception as e:
                 if not a_kls.quiet:
                     errs[ser_name] = e, a_kls
+                if debug:
+                    traceback.print_exc()
                 continue
         summary_col_dict[ser_name] = summary_ser
 
@@ -184,8 +187,8 @@ class AnalsysisPipeline(object):
             pass
 
 
-    def process_df(self, input_df):
-        output_df, table_hint_dict, errs = produce_summary_df(input_df, self.ordered_a_objs)
+    def process_df(self, input_df, debug=False):
+        output_df, table_hint_dict, errs = produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
         return output_df, table_hint_dict, errs
 
     def add_analysis(self, new_aobj):
@@ -208,13 +211,14 @@ class DfStats(object):
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
 
-    def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None):
+    def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
         self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
         self.col_order = self.df.columns
         self.ap = AnalsysisPipeline(col_analysis_objs)
         self.operating_df_name = operating_df_name
+        self.debug = debug
 
-        self.sdf, self.table_hints, errs = self.ap.process_df(self.df)
+        self.sdf, self.table_hints, errs = self.ap.process_df(self.df, self.debug)
         if errs:
             output_full_reproduce(errs, self.sdf, operating_df_name)
         
@@ -236,7 +240,8 @@ class DfStats(object):
 
     def add_analysis(self, a_obj):
         passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
-        self.sdf, self.table_hints, errs = self.ap.process_df(self.df)
+        #if you're adding analysis interactively, of course you want debug info... I think
+        self.sdf, self.table_hints, errs = self.ap.process_df(self.df, debug=True)
         if passed_unit_tests == False:
             print("Unit tests failed")
         if errs:
@@ -245,8 +250,9 @@ class DfStats(object):
         if ut_errs or errs:
             output_reproduce_preamble()
         if ut_errs:
+            # setting debug=False here because we're already printing reproduce instructions, let the users produce their own stacktrace.. I think
             ut_summary_df, _unused_table_hint_dict, ut_errs2 = produce_summary_df(
-                PERVERSE_DF, self.ap.ordered_a_objs)
+                PERVERSE_DF, self.ap.ordered_a_objs, debug=False)
             output_full_reproduce(ut_errs, ut_summary_df, "PERVERSE_DF")
         if errs:
             output_full_reproduce(errs, self.sdf, self.operating_df_name)

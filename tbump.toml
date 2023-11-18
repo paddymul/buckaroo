@@ -2,7 +2,7 @@
 # github_url = "https://github.com/<user or organization>/<project>/"
 
 [version]
-current = "0.4.5"
+current = "0.4.7"
 
 # Example of a semver regexp.
 # Make sure this matches current_version before
@@ -28,6 +28,8 @@ src = "pyproject.toml"
 src = "package.json"
 [[file]]
 src = "buckaroo/_version.py"
+[[file]]
+src = "docs/source/conf.py"
 
 
 # You can specify a list of commands to

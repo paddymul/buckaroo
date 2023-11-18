@@ -1,14 +1,14 @@
 import unittest
 import pytest
 
-from buckaroo.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
 
-from buckaroo.analysis_management import (
+from buckaroo.pluggable_analysis_framework.analysis_management import (
     AnalsysisPipeline, produce_summary_df, NonExistentSummaryRowException,
     DfStats)
 
-from buckaroo.analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
+from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
 from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, DCLen, word_only_df)
 
 class DumbTableHints(ColAnalysis):
@@ -40,7 +40,7 @@ class TestAnalysisPipeline(unittest.TestCase):
                 assert 'histogram' in hint_obj.keys()
             else:
                 expected_set = set(
-                    ['is_numeric', 'is_integer', 'min_digits', 'max_digits', 'type', 'histogram'])
+                    ['is_numeric', 'is_integer', 'min_digits', 'max_digits', 'type', 'formatter', 'histogram'])
                 assert expected_set == set(hint_obj.keys())
 
     def test_pipeline_base(self):
