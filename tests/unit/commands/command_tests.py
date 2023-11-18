@@ -15,34 +15,15 @@ def result_from_exec(code_str, df_input):
 
 
 def assert_to_py_same_transform_df(command_kls, operations, test_df):
-
     _a, _b, transform_df, transform_to_py = configure_buckaroo([command_kls])
-
-    #operations = [[s('dropcol'), s('df'), "a"]]
     tdf_ops = [{'symbol': 'begin'}]
     tdf_ops.extend(operations)
     tdf = transform_df(tdf_ops, test_df.copy())
     py_code_string = transform_to_py(operations)
     edf = result_from_exec(py_code_string, test_df.copy())
     pd.testing.assert_frame_equal(tdf, edf)
-    
 
 def test_dropcol():
-    base_df = pd.DataFrame({
-        'a':np.random.randint(1, 10, 5), 'b':np.random.randint(1, 10, 5),
-        'c':np.random.randint(1, 10, 5)})
-
-    _a, _b, transform_df, transform_to_py = configure_buckaroo([DropCol])
-
-    operations = [[s('dropcol'), s('df'), "a"]]
-    tdf_ops = [{'symbol': 'begin'}]
-    tdf_ops.extend(operations)
-    tdf = transform_df(tdf_ops, base_df.copy())
-    py_code_string = transform_to_py(operations)
-    edf = result_from_exec(py_code_string, base_df.copy())
-    pd.testing.assert_frame_equal(tdf, edf)
-
-def test_dropcol2():
     base_df = pd.DataFrame({
         'a':np.random.randint(1, 10, 5), 'b':np.random.randint(1, 10, 5),
         'c':np.random.randint(1, 10, 5)})
