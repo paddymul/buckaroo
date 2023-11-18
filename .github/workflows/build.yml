@@ -38,7 +38,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           yarn run lint:check
-	  pip install ruff
+          pip install ruff
           ruff check . 
 
       - name: Package
