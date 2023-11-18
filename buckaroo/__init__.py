@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from .widget_utils import enable
+from ._version import __version__
+from .buckaroo_widget import BuckarooWidget
+from .widget_utils import enable, disable
 
 
 def _jupyter_nbextension_paths():

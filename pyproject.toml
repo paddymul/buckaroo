@@ -178,7 +178,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 #__init__.py and widget utils does some bare excepts because it absolutely cannot error
 #and give a non displayable dataframe
-"buckaroo/__init__.py" = ["E722"]
+"buckaroo/__init__.py" = ["E722",
+		          "F401",  #it's an __init__.py,  it needs to import unused imports
+]
 
 "buckaroo/widget_utils.py" = ["E722"]
 "buckaroo/customizations/order_columns.py" = ["ALL"]
