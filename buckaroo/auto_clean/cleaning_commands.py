@@ -46,7 +46,7 @@ class to_int(Command):
         ser = df[col]
         try:
             df[col] = smart_to_int(ser)
-        except Exception as e:
+        except Exception:
             #just let pandas figure it out, we recommended the wrong type
             df[col] = pd.to_numeric(ser, errors='coerce')
 
