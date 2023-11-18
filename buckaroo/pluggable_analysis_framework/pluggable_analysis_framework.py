@@ -1,7 +1,4 @@
 import graphlib
-import unittest
-import pandas as pd
-import numpy as np
 from collections import OrderedDict
 
 class ColAnalysis(object):

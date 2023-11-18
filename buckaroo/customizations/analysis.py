@@ -1,6 +1,4 @@
-from functools import reduce
 import pandas as pd
-from pandas.io.json import dumps as pdumps
 import numpy as np
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings

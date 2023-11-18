@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
-    ColAnalysis, order_analysis, check_solvable, NotProvidedException)
+    order_analysis, check_solvable)
 from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
 
 FAST_SUMMARY_WHEN_GREATER = 1_000_000

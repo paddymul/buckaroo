@@ -1,5 +1,4 @@
 import unittest
-import pytest
 
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
@@ -8,8 +7,8 @@ from buckaroo.pluggable_analysis_framework.analysis_management import (
     AnalsysisPipeline, produce_summary_df, NonExistentSummaryRowException,
     DfStats)
 
-from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
-from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, DCLen, word_only_df)
+from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
+from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, word_only_df)
 
 class DumbTableHints(ColAnalysis):
     provides_summary = [
