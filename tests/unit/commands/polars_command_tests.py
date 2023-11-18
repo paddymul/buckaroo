@@ -5,8 +5,7 @@ from buckaroo.jlisp.lispy import s
 from polars.testing import assert_frame_equal
 from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.polars_commands import (
-    DropCol
-    #, FillNA, OneHot, GroupBy, reindex
+    DropCol, FillNA #, OneHot, GroupBy, reindex
 )
 
 
@@ -36,6 +35,13 @@ def assert_to_py_same_transform_df(command_kls, operations, test_df):
     return tdf
 same = assert_to_py_same_transform_df
 
+def test_fillna():
+    base_df = pl.DataFrame({
+        'a':[1,2,3,4,5], 'b': [None, 2, 2, 2, None]})
+    
+    output_df = same(FillNA, [[s('fillna'), s('df'), "b", 100]], base_df)
+    assert output_df[0, 'b'] == 100
+
 def test_dropcol():
     base_df = pl.DataFrame({
         'a':np.random.randint(1, 10, 5), 'b':np.random.randint(1, 10, 5),
@@ -45,12 +51,6 @@ def test_dropcol():
 
 
 '''
-def test_fillna():
-    base_df = pd.DataFrame({
-        'a':[1,2,3,4,5], 'b': [pd.NA, 2, 2, 2, pd.NA]})
-    
-    output_df = same(FillNA, [[s('fillna'), s('df'), "b", 100]], base_df)
-    assert output_df.iloc[0]['b'] == 100
 
 
 def test_onehot():

@@ -15,12 +15,12 @@ class FillNA(Command):
 
     @staticmethod 
     def transform(df, col, val):
-        df.fillna({col:val}, inplace=True)
+        return df.with_columns(pl.col(col).fill_null(val))
         return df
 
     @staticmethod 
     def transform_to_py(df, col, val):
-        return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
+        return "    df = df.with_columns(pl.col('%s').fill_null(%r))" % (col, val)
 
 class DropCol(Command):
     #argument_names = ["df", "col"]
