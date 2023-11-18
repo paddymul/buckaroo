@@ -192,7 +192,11 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 "buckaroo/customizations/order_columns.py" = ["ALL"]
 
 #used for safe_int
-"buckaroo/customizations/all_transforms.py" = ["E722"] #all transforms
+"buckaroo/customizations/all_transforms.py" = ["E722"] #bare except
+
+"buckaroo/customizations/analysis.py" = [
+				      "E741", #ambiguous variable name
+				      "E722"] #bare except
 
 
 
