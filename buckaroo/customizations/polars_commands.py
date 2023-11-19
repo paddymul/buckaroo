@@ -37,50 +37,60 @@ class DropCol(Command):
         return "    df.drop_in_place('%s')" % col
 
 
-'''
-
 class GroupBy(Command):
     command_default = [s("groupby"), s('df'), 'col', {}]
     command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count']]]
     @staticmethod 
     def transform(df, col, col_spec):
-        grps = df.groupby(col)
-        df_contents = {}
+        agg_clauses = []
         for k, v in col_spec.items():
             if v == "sum":
-                df_contents[k] = grps[k].apply(lambda x: x.sum())
+                agg_clauses.append(pl.col(k).sum().alias("%s(sum)" % k))
             elif v == "mean":
-                df_contents[k] = grps[k].apply(lambda x: x.mean())
+                agg_clauses.append(pl.col(k).mean().alias("%s(mean)" % k))
             elif v == "median":
-                df_contents[k] = grps[k].apply(lambda x: x.median())
+                agg_clauses.append(pl.col(k).median.alias("%s(median)" % k))
             elif v == "count":
-                df_contents[k] = grps[k].apply(lambda x: x.count())
-        return pd.DataFrame(df_contents)
+                agg_clauses.append(pl.col(k).drop_nulls().count().alias("%s(count)" % k))
 
-    test_df = group_df
-    test_sequence = [s("groupby"), s('df'), 'c', dict(a='sum', b='mean')]
-    test_output = pd.DataFrame(
-        {'a':[100, 110], 'b':[2.5, 5.5]},
-        index=['q','w'])
+        q = (
+            df
+            .lazy()
+            .group_by(by=col)
+            .agg(*agg_clauses)
+            .sort(col, descending=True)
+        )
+        return q.collect()
+
+
 
     @staticmethod 
     def transform_to_py(df, col, col_spec):
-        commands = [
-            "    grps = df.groupby('%s')" % col,
-            "    df_contents = {}"
-        ]
+        agg_clauses = []
         for k, v in col_spec.items():
             if v == "sum":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.sum())" % (k, k))
+                agg_clauses.append("    pl.col('%s').sum().alias('%s(sum)')"  % (k, k))
             elif v == "mean":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.mean())" % (k, k))
+                agg_clauses.append("    pl.col('%s').mean().alias('%s(mean)')"  % (k, k))
             elif v == "median":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.median())" % (k, k))
+                agg_clauses.append("    pl.col('%s').median().alias('%s(median)')"  % (k, k))
             elif v == "count":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.count())" % (k, k))
-        #print("commands", commands)
-        commands.append("    df = pd.DataFrame(df_contents)")
-        return "\n".join(commands)
+                agg_clauses.append("    pl.col('%s').drop_nulls().count().alias('%s(count)')"  % (k, k))
+        full_agg_text = ",\n".join(agg_clauses)
+        command_template = """
+    q = (
+         df
+        .lazy()
+        .group_by(by='%s')
+        .agg(%s)
+        .sort('%s', descending=True)
+        )
+    df = q.collect()
+        """
+        return command_template % (col, full_agg_text, col)
+
+'''
+
     
 class OneHot(Command):
     command_default = [s('onehot'), s('df'), "col"]

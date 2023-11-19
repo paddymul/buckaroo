@@ -6,7 +6,7 @@ from buckaroo.jlisp.lispy import s
 from polars.testing import assert_frame_equal
 from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.polars_commands import (
-    DropCol, FillNA #, OneHot, GroupBy, reindex
+    DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
 )
 
 
@@ -21,7 +21,7 @@ def result_from_exec(code_str, df_input):
     except:
         print("Failure calling exec with following code string")
         print(full_code_str)
-    #print(full_code_str)
+    print(full_code_str)
     return outer_scope_result[0]
 
 def assert_to_py_same_transform_df(command_kls, operations, test_df):
@@ -57,12 +57,11 @@ def test_groupby():
     
     output_df = same(GroupBy, [[s('groupby'), s('df'), "a", {'b':'count', 'c': 'sum'}]], base_df)
     expected = pl.DataFrame(
-        {'a':  ["ff", "cc", "ee"],
-         'b(count)': [0, 2, 1],
-         'c(sum)': [50, 60, 40]},
+        {'a':        ["ff", "ee",  "cc"],
+         'b(count)': [   0,    1,    2],
+         'c(sum)':   [  50,   40,   60]},
         schema=OrderedDict([('a', pl.Utf8), ('b(count)', pl.UInt32), ('c(sum)', pl.Int64)])
     )
-
     assert_frame_equal(output_df, expected)
 
 
