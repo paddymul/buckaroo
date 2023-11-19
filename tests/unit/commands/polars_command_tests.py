@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import polars as pl
 import numpy as np
 
@@ -49,6 +50,21 @@ def test_dropcol():
 
     same(DropCol, [[s('dropcol'), s('df'), "a"]], base_df)
 
+def test_groupby():
+    base_df = pl.DataFrame({
+        'a':['cc', 'cc', 'cc', 'ee', 'ff'], 'b': [None, 2, 2, 2, None], 
+        'c': [10, 20, 30, 40, 50]})
+    
+    output_df = same(GroupBy, [[s('groupby'), s('df'), "a", {'b':'count', 'c': 'sum'}]], base_df)
+    expected = pl.DataFrame(
+        {'a':  ["ff", "cc", "ee"],
+         'b(count)': [0, 2, 1],
+         'c(sum)': [50, 60, 40]},
+        schema=OrderedDict([('a', pl.Utf8), ('b(count)', pl.UInt32), ('c(sum)', pl.Int64)])
+    )
+
+    assert_frame_equal(output_df, expected)
+
 
 '''
 
@@ -60,14 +76,6 @@ def test_onehot():
     output_df = same(OneHot, [[s('onehot'), s('df'), "a"]], base_df)
     assert output_df.columns.to_list() == ['b', 'cc', 'dd', 'ee', 'ff']
     
-def test_groupby():
-    base_df = pd.DataFrame({
-        'a':['cc', 'cc', 'cc', 'ee', 'ff'], 'b': [pd.NA, 2, 2, 2, pd.NA]})
-    
-    output_df = same(GroupBy, [[s('groupby'), s('df'), "a", {'b':'count'}]], base_df)
-    expected_output = pd.DataFrame({'b': {'cc': 2, 'ee': 1, 'ff': 0}},
-                                   index=pd.Index(['cc', 'ee', 'ff'], dtype='object', name='a'))
-    pd.testing.assert_frame_equal(output_df, expected_output)
     
 def test_reindex():
     base_df = pd.DataFrame({
