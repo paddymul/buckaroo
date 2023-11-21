@@ -17,7 +17,7 @@ jobs:
         python-version: ["3.8"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: actions/setup-node@v3
@@ -67,7 +67,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
         with:
           name: buckaroo-dist-${{ github.run_number }}
