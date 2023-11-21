@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.8"
           cache: "pip"
-        run: |
+      - run: |
           python -m pip install -U codecov
           npm install -g codecov
       - name: Test the extension
