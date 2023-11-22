@@ -56,21 +56,14 @@ class TypingStats(ColAnalysis):
 
 class DefaultSummaryStats(ColAnalysis):
     provides_summary = [
-        'length', 'min', 'max', 'mean', 'nan_count', 'distinct_count',
-        'distinct_per', 'empty_count', 'empty_per', 'unique_per', 'nan_per',
-        'mode']
+        'length', 'min', 'max', 'mean', 'nan_count', 'empty_count',
+        'distinct_count', 'unique_count', 'mode']
 
-    summary_stats_display = [
-        'dtype',
-        'length', 'nan_count', 'distinct_count', 'empty_count',
-        'empty_per', 'unique_per', 'nan_per', 'is_numeric', 'is_integer',
-        'is_datetime', 'mode', 'min', 'max','mean']
     
     @staticmethod
-    def summary(sampled_ser, summary_ser, ser):
+    def series_summary(sampled_ser, ser):
         l = len(ser)
         val_counts = ser.value_counts()
-        distinct_count= len(val_counts)
         nan_count = l - len(ser.dropna())
         unique_count = len(val_counts[val_counts==1])
         try:
@@ -85,11 +78,8 @@ class DefaultSummaryStats(ColAnalysis):
             length=l,
             nan_count=nan_count,
             distinct_count=distinct_count,
-            distinct_per=distinct_count/l,
             empty_count=empty_count,
-            empty_per=empty_count/l,
-            unique_per=unique_count/l,
-            nan_per=nan_count/l,
+            unique_count=unique_count,
             mode=get_mode(ser),
             min=np.nan,
             max=np.nan)
@@ -99,6 +89,28 @@ class DefaultSummaryStats(ColAnalysis):
                 'min': ser.dropna().min(),
                 'max': ser.dropna().max()})
         return base_d
+
+class ComputedDefaultSummaryStats(ColAnalysis):
+
+    summary_stats_display = [
+        'dtype',
+        'length', 'nan_count', 'distinct_count', 'empty_count',
+        'empty_per', 'unique_per', 'is_numeric', 'is_integer',
+        'is_datetime', 'mode', 'min', 'max','mean']
+    #'nan_per'
+
+    requires_summary = ['length', 'distinct_count', 'unique_count', 'nan_count']
+    provides_summary = ['distinct_per', 'empty_per', 'unique_per', 'nan_per']
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        l = summary_dict['length']
+        return dict(
+            distinct_per=summary_dict['distinct_count']/l,
+            empty_per=summary_dict['empty_count']/l,
+            unique_per=summary_dict['unique_count']/l,
+            nan_per=summary_dict['nan_count']/l)
+
 
 def int_digits(n):
     if pd.isna(n):

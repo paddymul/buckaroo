@@ -20,7 +20,7 @@ from .jlisp.lisp_utils import (lists_match, split_operations)
 from .auto_clean.auto_clean import get_auto_type_operations, get_typing_metadata, recommend_type
 from .customizations.down_sample import sample
 
-from .customizations.analysis import (TypingStats, DefaultSummaryStats, ColDisplayHints)
+from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats, ColDisplayHints)
 from .pluggable_analysis_framework.analysis_management import DfStats, get_df_name
 
 from .serialization_utils import df_to_obj, EMPTY_DF_OBJ
@@ -43,7 +43,10 @@ class BuckarooWidget(DOMWidget):
     operations = List().tag(sync=True)
     machine_gen_operations = List().tag(sync=True)
     command_classes = DefaultCommandKlsList
-    analysis_classes = [TypingStats, DefaultSummaryStats, ColDisplayHints]
+    analysis_classes = [TypingStats, DefaultSummaryStats,
+
+                        ComputedDefaultSummaryStats,
+                        ColDisplayHints]
 
     typing_metadata_f = staticmethod(get_typing_metadata)
     typing_recommend_f = staticmethod(recommend_type)
@@ -209,7 +212,7 @@ class BuckarooWidget(DOMWidget):
         # stats need to be rerun each time 
         self.stats = DfStats(
             self.typed_df,
-            [TypingStats, DefaultSummaryStats, ColDisplayHints],
+            self.analysis_classes,
             self.df_name, debug=self.debug)
         self.summary_df_json = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         self.update_based_on_df_config(3)

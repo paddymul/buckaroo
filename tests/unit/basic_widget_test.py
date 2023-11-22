@@ -24,6 +24,11 @@ def test_basic_display():
     w = BuckarooWidget(df)
     display(w)
 
+def test_debug_true():
+    df = simple_df
+    w = BuckarooWidget(df, debug=True)
+    display(w)
+
 def test_interpreter():    
     #df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
 
