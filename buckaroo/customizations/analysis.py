@@ -56,30 +56,22 @@ class TypingStats(ColAnalysis):
 
 class DefaultSummaryStats(ColAnalysis):
     provides_summary = [
-        'length', 'min', 'max', 'mean', 'nan_count', 'empty_count',
-        'distinct_count', 'unique_count', 'mode']
+        'length', 'min', 'max', 'mean', 'nan_count',
+        'value_counts', 'mode']
 
     
     @staticmethod
     def series_summary(sampled_ser, ser):
         l = len(ser)
-        val_counts = ser.value_counts()
+        value_counts = ser.value_counts()
         nan_count = l - len(ser.dropna())
-        unique_count = len(val_counts[val_counts==1])
-        try:
-            empty_count = val_counts.get('', 0)
-        except:
-            empty_count = 0
-
         is_numeric = pd.api.types.is_numeric_dtype(ser)
         is_bool = pd.api.types.is_bool_dtype(ser)
 
         base_d = dict(
             length=l,
             nan_count=nan_count,
-            distinct_count=len(val_counts),
-            empty_count=empty_count,
-            unique_count=unique_count,
+            value_counts=value_counts,
             mode=get_mode(ser),
             min=np.nan,
             max=np.nan)
@@ -99,16 +91,29 @@ class ComputedDefaultSummaryStats(ColAnalysis):
         'is_datetime', 'mode', 'min', 'max','mean']
     #'nan_per'
 
-    requires_summary = ['length', 'distinct_count', 'unique_count', 'nan_count']
-    provides_summary = ['distinct_per', 'empty_per', 'unique_per', 'nan_per']
+    requires_summary = ['length', 'nan_count',
+                        'value_counts']
+    provides_summary = ['distinct_per', 'empty_per', 'unique_per', 'nan_per',
+                        'unique_count', 'empty_count', 'distinct_count']
 
     @staticmethod
     def computed_summary(summary_dict):
         l = summary_dict['length']
+        value_counts = summary_dict['value_counts']
+        try:
+            empty_count = value_counts.get('', 0)
+        except:
+            empty_count = 0
+        distinct_count=len(value_counts)
+        unique_count = len(value_counts[value_counts==1])
+
         return dict(
-            distinct_per=summary_dict['distinct_count']/l,
-            empty_per=summary_dict['empty_count']/l,
-            unique_per=summary_dict['unique_count']/l,
+            unique_count=unique_count,
+            empty_count=empty_count,
+            distinct_count=distinct_count,
+            distinct_per=distinct_count/l,
+            empty_per=empty_count/l,
+            unique_per=unique_count/l,
             nan_per=summary_dict['nan_count']/l)
 
 

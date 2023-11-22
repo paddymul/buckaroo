@@ -18,7 +18,9 @@ def pick(dct, keys):
 def val_replace(dct, replacements):
     ret_dict = {}
     for k, v in dct.items():
-        if v in replacements:
+        if isinstance(v, pd.Series):
+            ret_dict[k] = UnquotedString('pd.Series()')
+        elif v in replacements:
             ret_dict[k] = replacements[v]
         else:
             ret_dict[k] = v
