@@ -28,7 +28,7 @@ class Len(ColAnalysis):
 
     @staticmethod
     def series_summary(sampled_ser, ser):
-        return {'len': len(raw_ser)}
+        return {'len': len(ser)}
 
 class DCLen(ColAnalysis):
     provides_series_stats = ["len", "distinct_count"]

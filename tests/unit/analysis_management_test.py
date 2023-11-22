@@ -29,9 +29,16 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_produce_series_df(self):
         """just make sure this doesn't fail"""
 
-        sdf, th, errs = full_produce_summary_df(
-            test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
-        assert errs == []
+        sdf, errs = produce_series_df(
+            test_df, [Len], 'test_df', debug=True)
+        ld = {'len':4}
+        assert sdf == {'normal_int_series': ld, 'empty_na_ser': ld, 'float_nan_ser': ld}
+
+        sdf2, errs = produce_series_df(
+            test_df, [DistinctCount], 'test_df', debug=True)
+        dc = {'distinct_count':4}
+        assert sdf2 == {'normal_int_series': {'distinct_count': 4},
+                        'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
     def xtest_produce_summary_df(self):
         """just make sure this doesn't fail"""
