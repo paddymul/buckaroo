@@ -1,3 +1,4 @@
+from collections import defaultdict 
 import sys
 import traceback
 import warnings
@@ -94,8 +95,8 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
 
     """
     errs = {}
-    series_stats = {} 
-
+    series_stats = defaultdict(lambda: {})
+    
     for ser_name in df.columns:
         ser = df[ser_name]
 
@@ -114,7 +115,7 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
                 else:
                     col_stat_dict = a_kls.series_summary(sampled_ser, ser)
 
-                series_stats[ser_name] = col_stat_dict
+                series_stats[ser_name].update(col_stat_dict)
             except Exception as e:
                 if not a_kls.quiet:
                     errs[ser_name] = e, a_kls
@@ -131,7 +132,7 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     errs = {}
     summary_col_dict = {}
     table_hint_col_dict = {}
-
+    print("series_stat_dict", series_stats)
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
         ser = df[ser_name]
@@ -168,7 +169,7 @@ def full_produce_summary_df(df, ordered_objs, df_name, debug=False):
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, table_hints, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
-    series_errs.extend(summary_errs)
+    series_errs.update(summary_errs)
     return summary_df, table_hints, series_errs
 
 class NonExistentSummaryRowException(Exception):

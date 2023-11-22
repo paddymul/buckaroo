@@ -36,16 +36,20 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         sdf2, errs = produce_series_df(
             test_df, [DistinctCount], 'test_df', debug=True)
-        dc = {'distinct_count':4}
         assert sdf2 == {'normal_int_series': {'distinct_count': 4},
                         'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
-    def xtest_produce_summary_df(self):
+        sdf3, errs = produce_series_df(
+            test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+        assert sdf3 == {'normal_int_series': {'distinct_count': 4},
+                        'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
+
+    def test_produce_summary_df(self):
         """just make sure this doesn't fail"""
         empty_summary_dict = {'normal_int_series':{}, 'empty_na_ser': {}, 'float_nan_ser': {}}
         sdf, th, errs = full_produce_summary_df(
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
-        assert errs == []
+        assert errs == {}
 
     def xtest_produce_summary_df_hints(self):
         #this test should be ported over to the full basic_widget test with actaul verificaiton of values
