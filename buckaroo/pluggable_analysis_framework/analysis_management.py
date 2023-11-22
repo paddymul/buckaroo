@@ -128,7 +128,6 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     """
     errs = {}
     summary_col_dict = {}
-    print("series_stat_dict", series_stats)
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
         ser = df[ser_name]
@@ -153,7 +152,7 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
         summary_col_dict[ser_name] = base_summary_dict
     return summary_col_dict, errs
 
-def full_produce_summary_df(df, ordered_objs, df_name, debug=False):
+def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
@@ -210,7 +209,7 @@ class AnalsysisPipeline(object):
 
         """
         try:
-            output_df, table_hint_dict, errs = produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
+            output_df, table_hint_dict, errs = full_produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
             if len(errs) == 0:
                 return True, []
             else:
@@ -220,7 +219,7 @@ class AnalsysisPipeline(object):
 
 
     def process_df(self, input_df, debug=False):
-        output_df, table_hint_dict, errs = produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
+        output_df, table_hint_dict, errs = full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
         return output_df, table_hint_dict, errs
 
     def add_analysis(self, new_aobj):

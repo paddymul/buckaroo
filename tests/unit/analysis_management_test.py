@@ -51,10 +51,10 @@ class TestAnalysisPipeline(unittest.TestCase):
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
-    def xtest_produce_summary_df_hints(self):
+    def test_produce_summary_df_hints(self):
         #this test should be ported over to the full basic_widget test with actaul verificaiton of values
         
-        summary_df, hints, errs = produce_summary_df(
+        summary_df, hints, errs = full_produce_summary_df(
             test_df, [DumbTableHints], 'test_df')
 
         for col, hint_obj in hints.items():
@@ -66,23 +66,23 @@ class TestAnalysisPipeline(unittest.TestCase):
                     ['is_numeric', 'is_integer', 'min_digits', 'max_digits', 'type', 'formatter', 'histogram'])
                 assert expected_set == set(hint_obj.keys())
 
-    def xtest_pipeline_base(self):
+    def test_pipeline_base(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         #just verify that there are no errors
         ap.process_df(df)
 
-    def xtest_add_aobj(self):
+    def test_add_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']
 
             @staticmethod
-            def summary(sampled_ser, summary_ser, ser):
+            def computed_summary(summary):
                 return dict(foo=8)
         assert ap.add_analysis(Foo) == (True, []) #verify no errors thrown
         sdf, _unused, _unused_errs = ap.process_df(df)
-        self.assertEqual(sdf.loc['foo']['tripduration'], 8)
+        self.assertEqual(sdf['tripduration']['foo'], 8)
 
     def xtest_add_buggy_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
