@@ -5,7 +5,9 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 
 from buckaroo.pluggable_analysis_framework.analysis_management import (
     AnalsysisPipeline, NonExistentSummaryRowException, DfStats,
-    produce_summary_df, full_produce_summary_df, produce_series_df)
+    #produce_summary_df, #test this too
+
+    full_produce_summary_df, produce_series_df)
 
 
 from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
@@ -46,7 +48,6 @@ class TestAnalysisPipeline(unittest.TestCase):
 
     def test_produce_summary_df(self):
         """just make sure this doesn't fail"""
-        empty_summary_dict = {'normal_int_series':{}, 'empty_na_ser': {}, 'float_nan_ser': {}}
         sdf, th, errs = full_produce_summary_df(
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}

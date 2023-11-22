@@ -131,7 +131,6 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     summary_col_dict = {}
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
-        ser = df[ser_name]
         base_summary_dict = series_stats[ser_name]
         for a_kls in ordered_objs:
             try:
