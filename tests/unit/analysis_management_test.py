@@ -128,7 +128,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         #self.assertEqual(len(sdf2['tripduration']), 18)
         #Create an updated Foo that returns 9
 
-    def xtest_summary_stats_display(self):
+    def test_summary_stats_display(self):
         ap = AnalsysisPipeline([TypingStats])
         self.assertEqual(ap.summary_stats_display, "all")
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
