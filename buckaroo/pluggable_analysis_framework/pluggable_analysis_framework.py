@@ -4,25 +4,30 @@ from collections import OrderedDict
 class ColAnalysis(object):
     """
     Col Analysis runs on a single column
+
+    this is the pandas based implementation
     """
     requires_raw = False
     requires_summary = [] # What summary stats does this analysis provide
     provides_summary = [] # mean/max/histogram
+
+    provides_series_stats = [] # what does this provide at a series level
+
     summary_stats_display = None
     quiet = False
     quiet_warnings = False
     
     @staticmethod
-    def summary(sampled_ser, summary_ser, ser):
+    def series_summary(sampled_ser, ser):
+        return {}
+
+    @staticmethod
+    def computed_summary(summary_dict):
         return {}
 
     @staticmethod
     def column_order(sampled_ser, summary_ser):
         pass
-
-    @staticmethod
-    def table_hints(sampled_ser, summary_ser, existing_table_hints):
-        return {}
 
     @classmethod
     def cname(kls):
@@ -40,6 +45,9 @@ def check_solvable(a_objs):
     required = []
     for ao in a_objs:
         provides.extend(ao.provides_summary)
+        #probably
+        provides.extend(ao.provides_series_stats)
+
         required.extend(ao.requires_summary)
     all_provides = set(provides)
     all_required = set(required)

@@ -14,36 +14,41 @@ df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
 
 class DistinctCount(ColAnalysis):
     requires_raw = True
-    provides_summary = ["distinct_count"]
+    provides_series_stats = ["distinct_count"]
+
     @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
+    def series_summary(sampled_ser, raw_ser):
         val_counts = raw_ser.value_counts()
         distinct_count= len(val_counts)
         return {'distinct_count': distinct_count}
 
 class Len(ColAnalysis):
-    provides_summary = ["len"]
+    provides_series_stats = ["len"]
     requires_raw = True
+
     @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
+    def series_summary(sampled_ser, ser):
         return {'len': len(raw_ser)}
 
 class DCLen(ColAnalysis):
-    provides_summary = ["len", "distinct_count"]
+    provides_series_stats = ["len", "distinct_count"]
     requires_raw = True
+
     @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
+    def series_summary(sampled_ser, raw_ser):
         val_counts = raw_ser.value_counts()
         distinct_count= len(val_counts)
-        return {'len':len(raw_ser), 'distinct_count':distinct_count}
+        return {'distinct_count': distinct_count}
+
 
 class DistinctPer(ColAnalysis):
     provides_summary = ["distinct_per"]
     requires_summary = ["len", "distinct_count"]
     
     @staticmethod
-    def summary(sampled_ser, summary_ser, raw_ser):
-        return {'distinct_per': summary_ser.loc['distinct_count'] / summary_ser.loc['len']}
+    def computed_summary(summary_dict):
+        print("summary_dict", summary_dict)
+        return {'distinct_per': summary_dict['distinct_count'] / summary_dict['len']}
 
 class DependsNoProvides(ColAnalysis):
     requires_summary = ["len"]

@@ -89,8 +89,41 @@ def output_full_reproduce(errs, summary_df, df_name):
         #this is tricky stuff that shouldn't error, I want these stack traces to escape being caught
         traceback.print_exc()
 
+def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
+    """ just executes the series methods
 
-def produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
+    """
+    errs = {}
+    series_stats = {} 
+
+    for ser_name in df.columns:
+        ser = df[ser_name]
+
+        #FIXME: actually sample the series.  waiting until I have time
+        #to proeprly benchmark
+        sampled_ser = ser
+
+        for a_kls in ordered_objs:
+            try:
+                if a_kls.quiet or a_kls.quiet_warnings:
+                    if debug is False:
+                        warnings.filterwarnings('ignore')
+                        
+                    col_stat_dict = a_kls.series_summary(sampled_ser, ser)
+                    warnings.filterwarnings('default')
+                else:
+                    col_stat_dict = a_kls.series_summary(sampled_ser, ser)
+
+                series_stats[ser_name] = col_stat_dict
+            except Exception as e:
+                if not a_kls.quiet:
+                    errs[ser_name] = e, a_kls
+                if debug:
+                    traceback.print_exc()
+                continue
+    return series_stats, errs
+
+def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=False):
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
     then it produces a summary dataframe
@@ -105,32 +138,38 @@ def produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
         #FIXME: actually sample the series.  waiting until I have time
         #to proeprly benchmark
         sampled_ser = ser
-        summary_ser = pd.Series({}, dtype='object')
+        base_summary_dict = series_stats[ser_name]
         for a_kls in ordered_objs:
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
                         warnings.filterwarnings('ignore')
-                    summary_res = a_kls.summary(sampled_ser, summary_ser, ser)
+                    summary_res = a_kls.computed_summary(base_summary_dict)
                     warnings.filterwarnings('default')
                 else:
-                    summary_res = a_kls.summary(sampled_ser, summary_ser, ser)
+                    summary_res = a_kls.computed_summary(base_summary_dict)
                 for k,v in summary_res.items():
-                    summary_ser.loc[k] = v
+                    base_summary_dict.update(summary_res)
             except Exception as e:
                 if not a_kls.quiet:
                     errs[ser_name] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
-        summary_col_dict[ser_name] = summary_ser
-
+        summary_col_dict[ser_name] = base_summary_dict
         table_hint_col_dict[ser_name] = pick(
-            d_update(BASE_COL_HINT, summary_ser.to_dict()),
+            d_update(BASE_COL_HINT, base_summary_dict),
             BASE_COL_HINT.keys())
     summary_df = pd.DataFrame(summary_col_dict)
     table_hints = table_hint_col_dict
     return summary_df, table_hints, errs
+
+def full_produce_summary_df(df, ordered_objs, df_name, debug=False):
+    series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
+    summary_df, table_hints, summary_errs = produce_summary_df(
+        df, series_stat_dict, ordered_objs, df_name, debug)
+    series_errs.extend(summary_errs)
+    return summary_df, table_hints, series_errs
 
 class NonExistentSummaryRowException(Exception):
     pass
