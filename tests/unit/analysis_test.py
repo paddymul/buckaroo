@@ -25,22 +25,25 @@ all_sers = [
     int_ser, fp_ser, nan_text_ser, nan_mixed_type_ser, unhashable_ser]
 
 def test_text_ser():
-    DefaultSummaryStats.summary(nan_text_ser, nan_text_ser, nan_text_ser)
-    DefaultSummaryStats.summary(nan_mixed_type_ser, nan_mixed_type_ser, nan_mixed_type_ser)
+    DefaultSummaryStats.series_summary(nan_text_ser,  nan_text_ser)
+    DefaultSummaryStats.series_summary(nan_mixed_type_ser, nan_mixed_type_ser)
 
 def test_unhashable():
-    result = DefaultSummaryStats.summary(unhashable_ser, pd.Series({}), unhashable_ser)
+    result = DefaultSummaryStats.series_summary(unhashable_ser, unhashable_ser)
     #print(result)
 
-    assert     {'length': 2, 'nan_count': 0, 'distinct_count': 2, 'distinct_per': 1.0, 'empty_count': 0, 'empty_per': 0.0, 'unique_per': 1.0, 'nan_per': 0.0, 'mode': ['a'], 'min': np.nan, 'max': np.nan} == result
+    assert     {'length': 2, 'nan_count': 0, 'distinct_count': 2, 'empty_count': 0,
+                'unique_count': 2,
+                #'distinct_per': 1.0,  'empty_per': 0.0, 'unique_per': 1.0, 'nan_per': 0.0,
+                'mode': ['a'], 'min': np.nan, 'max': np.nan} == result
 
 def test_unhashable3():
     ser = pd.Series([{'a':1, 'b':2}, {'b':10, 'c': 5}])
-    DefaultSummaryStats.summary(ser, pd.Series({ }), ser) # 'nan_per'
+    DefaultSummaryStats.series_summary(ser, ser) # 'nan_per'
     
 def test_default_summary_stats():
     for ser in all_sers:
-        print(DefaultSummaryStats.summary(ser, ser, ser))
+        print(DefaultSummaryStats.series_summary(ser, ser))
 
 def test_datetime_hints():
     result = ColDisplayHints.summary(
