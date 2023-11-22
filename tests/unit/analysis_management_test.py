@@ -84,7 +84,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         sdf, _unused, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf['tripduration']['foo'], 8)
 
-    def xtest_add_buggy_aobj(self):
+    def test_add_buggy_aobj(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
