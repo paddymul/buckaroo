@@ -96,14 +96,11 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """
     errs = {}
     series_stats = defaultdict(lambda: {})
-    
     for ser_name in df.columns:
         ser = df[ser_name]
-
         #FIXME: actually sample the series.  waiting until I have time
         #to proeprly benchmark
         sampled_ser = ser
-
         for a_kls in ordered_objs:
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
@@ -118,7 +115,7 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
                 series_stats[ser_name].update(col_stat_dict)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[ser_name] = e, a_kls
+                    errs[ser_name + ":series_summary"] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
@@ -131,14 +128,10 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     """
     errs = {}
     summary_col_dict = {}
-    table_hint_col_dict = {}
     print("series_stat_dict", series_stats)
     #figure out how to add in "index"... but just for table_hints
     for ser_name in df.columns:
         ser = df[ser_name]
-        #FIXME: actually sample the series.  waiting until I have time
-        #to proeprly benchmark
-        sampled_ser = ser
         base_summary_dict = series_stats[ser_name]
         for a_kls in ordered_objs:
             try:
@@ -153,24 +146,25 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
                     base_summary_dict.update(summary_res)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[ser_name] = e, a_kls
+                    errs[ser_name + ":computed_summary"] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
         summary_col_dict[ser_name] = base_summary_dict
-        table_hint_col_dict[ser_name] = pick(
-            d_update(BASE_COL_HINT, base_summary_dict),
-            BASE_COL_HINT.keys())
-    summary_df = pd.DataFrame(summary_col_dict)
-    table_hints = table_hint_col_dict
-    return summary_df, table_hints, errs
+    return summary_col_dict, errs
 
 def full_produce_summary_df(df, ordered_objs, df_name, debug=False):
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
-    summary_df, table_hints, summary_errs = produce_summary_df(
+    summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
     series_errs.update(summary_errs)
-    return summary_df, table_hints, series_errs
+    table_hint_col_dict = {}
+    for ser_name in df.columns:
+        table_hint_col_dict[ser_name] = pick(
+            d_update(BASE_COL_HINT, summary_df[ser_name]),
+            BASE_COL_HINT.keys())
+
+    return summary_df, table_hint_col_dict, series_errs
 
 class NonExistentSummaryRowException(Exception):
     pass
