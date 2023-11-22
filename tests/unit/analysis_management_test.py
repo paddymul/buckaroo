@@ -135,7 +135,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         print(ap.summary_stats_display)
         self.assertTrue("dtype" in ap.summary_stats_display)
 
-    def xtest_add_summary_stats_display(self):
+    def test_add_summary_stats_display(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
@@ -145,7 +145,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         ap.add_analysis(Foo)
         self.assertEquals(ap.summary_stats_display, ['foo'])
 
-    def xtest_invalid_summary_stats_display_throws(self):
+    def test_invalid_summary_stats_display_throws(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
@@ -157,7 +157,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         self.assertRaises(NonExistentSummaryRowException, bad_add)
 
-    def xtest_invalid_summary_stats_display_throws2(self):
+    def test_invalid_summary_stats_display_throws2(self):
         ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
@@ -177,15 +177,15 @@ class SometimesProvides(ColAnalysis):
     summary_stats_display = ['conditional_on_dtype']
     
     @staticmethod
-    def summary(sampled_ser, summary_ser, ser):
+    def computed_summary(_unused):
         import pandas as pd
         is_numeric = pd.api.types.is_numeric_dtype(ser)
         if is_numeric:
             return dict(conditional_on_dtype=True)
         return {}
 
-class xTestDfStats(unittest.TestCase):
-    def xtest_dfstats_sometimes_present(self):
+class TestDfStats(unittest.TestCase):
+    def test_dfstats_sometimes_present(self):
         """many ColAnalysis objects are written such that they only
         provide stats for certain dtypes. This used to cause
         instantiation failures. This test verifies that there are no
