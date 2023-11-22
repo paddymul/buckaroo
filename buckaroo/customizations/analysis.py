@@ -77,7 +77,7 @@ class DefaultSummaryStats(ColAnalysis):
         base_d = dict(
             length=l,
             nan_count=nan_count,
-            distinct_count=distinct_count,
+            distinct_count=len(val_counts),
             empty_count=empty_count,
             unique_count=unique_count,
             mode=get_mode(ser),
