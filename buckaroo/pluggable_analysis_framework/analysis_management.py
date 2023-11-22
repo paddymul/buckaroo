@@ -62,7 +62,8 @@ def safe_summary_df(base_summary_df, index_list):
     #indexes. This fixes them and explicitly. Empty rows will have NaN
     return pd.DataFrame(base_summary_df, index_list)
 
-def reproduce_summary(ser_name, kls, summary_df, err, operating_df_name):
+def reproduce_summary(ser_name_qualifier, kls, summary_df, err, operating_df_name):
+    ser_name, method_name = ser_name_qualifier.split(':')
     ssdf = safe_summary_df(summary_df, kls.requires_summary)
     summary_ser = ssdf[ser_name]
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)
