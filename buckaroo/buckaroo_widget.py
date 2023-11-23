@@ -21,6 +21,7 @@ from .auto_clean.auto_clean import get_auto_type_operations, get_typing_metadata
 from .customizations.down_sample import sample
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats, ColDisplayHints)
+from .customizations.histograms import (Histogram)
 from .pluggable_analysis_framework.analysis_management import DfStats, get_df_name
 
 from .serialization_utils import df_to_obj, EMPTY_DF_OBJ
@@ -44,7 +45,7 @@ class BuckarooWidget(DOMWidget):
     machine_gen_operations = List().tag(sync=True)
     command_classes = DefaultCommandKlsList
     analysis_classes = [TypingStats, DefaultSummaryStats,
-
+                        Histogram,
                         ComputedDefaultSummaryStats,
                         ColDisplayHints]
 
