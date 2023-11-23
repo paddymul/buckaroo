@@ -4,6 +4,11 @@ import pandas as pd
 from buckaroo.customizations.analysis import DefaultSummaryStats, ColDisplayHints
 from buckaroo.customizations.histogram import Histogram
 
+def without(dct, *keys):
+    cleaned_result = dct.copy()
+    for k in keys:
+        cleaned_result = {i:cleaned_result[i] for i in cleaned_result if i!= k }
+    return cleaned_result
 
 text_ser = pd.Series(["foo", "bar", "baz"])
 datelike_ser = pd.Series([
@@ -21,6 +26,10 @@ nan_text_ser = pd.Series([np.nan, np.nan, 'y', 'y'])
 nan_mixed_type_ser = pd.Series([np.nan, np.nan, 'y', 'y', 8.0])
 unhashable_ser = pd.Series([['a'], ['b']])
 
+fifty_int_ser = pd.Series([
+    5, 1, 6, 8, 3, 5, 9, 2, 4, 2, 4, 4, 9, 3, 5, 1, 4, 2, 2, 9, 2, 5,
+    3, 8, 3, 9, 4, 2, 5, 6, 2, 3, 8, 1, 1, 4, 5, 9, 6, 5, 6, 7, 6, 1,
+    7, 5, 8, 7, 3, 1])
 
 
 all_sers = [
@@ -85,18 +94,18 @@ def test_datetime_histogram():
                               ],
                 } == summary_result
 
-fifty_int_ser = pd.Series([5, 1, 6, 8, 3, 5, 9, 2, 4, 2, 4, 4, 9, 3, 5, 1, 4, 2, 2, 9, 2, 5,
-        3, 8, 3, 9, 4, 2, 5, 6, 2, 3, 8, 1, 1, 4, 5, 9, 6, 5, 6, 7, 6, 1,
-        7, 5, 8, 7, 3, 1])
 def test_numeric_histogram():
 
     series_result = Histogram.series_summary(
         fifty_int_ser, fifty_int_ser)
 
-    expected_histogram_args= {
-        'hight_tail': 9.0,
-        'low_tail': 1.0,
-        'meat_histogram': ([7, 6, 0, 6, 0, 8, 5, 0, 3, 4],
-                           [2. , 2.6, 3.2, 3.8, 4.4, 5. , 5.6, 6.2, 6.8, 7.4, 8. ])}
+    actual_histogram_args = series_result['histogram_args']
 
-    assert series_result == {'histogram_args':expected_histogram_args}
+    rest_ha = without(actual_histogram_args, 'meat_histogram')
+    assert rest_ha ==  {'hight_tail': 9.0, 'low_tail': 1.0}
+    
+    expected_meat_histogram = [[7, 6, 0, 6, 0, 8, 5, 0, 3, 4],
+                               [2. , 2.6, 3.2, 3.8, 4.4, 5. , 5.6, 6.2, 6.8, 7.3999999999999995, 8. ]]
+    meat_histogram = [x.tolist() for x in actual_histogram_args['meat_histogram']]
+    assert meat_histogram == expected_meat_histogram
+

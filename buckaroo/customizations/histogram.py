@@ -82,7 +82,7 @@ def histogram(histogram_args, length, value_counts, min_, max_, is_numeric, nan_
         if len(temp_histo) > 5:
             #if we had basically a categorical variable encoded into an integer.. don't return it
             return temp_histo
-    return categorical_histogram(histogram_args, length, value_counts, nan_per)
+    return categorical_histogram(length, value_counts, nan_per)
 
 
 class Histogram(ColAnalysis):
