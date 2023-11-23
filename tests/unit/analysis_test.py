@@ -127,6 +127,23 @@ def test_perverse_on_histogram():
              nan_per=0
              ))
 
+def test_perverse_on_histogram2():
+
+    series_result = Histogram.series_summary(
+        PERVERSE_DF['UInt8None'], PERVERSE_DF['UInt8None'])
+    assert series_result == {'histogram_args':{}}
+    summary_result = Histogram.computed_summary(
+        dict(histogram_args={},
+             length=10, 
+             value_counts=pd.Series(
+                 [10],
+                 index=[False]),
+             min=False,
+             max=False,
+             is_numeric=True,
+             nan_per=0
+             ))
+
     
 
 
