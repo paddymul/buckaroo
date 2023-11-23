@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
@@ -88,6 +89,8 @@ class Histogram(ColAnalysis):
 
     @staticmethod
     def series_summary(sampled_ser, ser):
+        if not pd.api.types.is_numeric_dtype(ser):
+            return dict(histogram_args={})
         vals = ser.dropna()
         low_tail, high_tail = np.quantile(ser, 0.01), np.quantile(ser, 0.99),
         low_pass  = ser > low_tail 

@@ -2,13 +2,16 @@ from datetime import datetime as dtdt
 import numpy as np
 import pandas as pd
 from buckaroo.customizations.analysis import DefaultSummaryStats, ColDisplayHints
+from buckaroo.customizations.histogram import Histogram
 
 
 text_ser = pd.Series(["foo", "bar", "baz"])
 datelike_ser = pd.Series([
     "2014-01-01 00:00:06",
     "2014-01-01 00:00:38",
-    "2014-01-01 00:03:59"])
+    "2014-01-01 00:03:59"
+
+])
 datetime_ser = pd.Series([dtdt(2000, 1, 1), dtdt(2001, 1, 1), pd.NaT])
 all_nan_ser = pd.Series([np.nan, np.nan])
 int_ser = pd.Series([10, 30, -10, 33])
@@ -50,9 +53,34 @@ def test_datetime_hints():
                 'formatter': 'default',
                 'is_integer': False,
                 'is_numeric': False,
+                } == result    
+
+def test_datetime_histogram():
+    series_result = Histogram.series_summary(
+        datetime_ser, datetime_ser)
+    assert series_result == {'histogram_args':{}}
+
+    summary_result = Histogram.computed_summary(
+        dict(histogram_args={},
+             length=3, 
+             value_counts=pd.Series(
+                 [1,1],
+                 index=pd.DatetimeIndex([                   
+                     dtdt(2000, 1, 1),
+                     dtdt(2001, 1, 1)])),
+
+             min=dtdt(2000, 1, 1),
+             max=dtdt(2001, 1, 1),
+             is_numeric=False,
+             nan_per=.33
+             ))
+
+    assert     {
                 'histogram': [{'cat_pop': 33.0,
                                'name': pd.Timestamp('2000-01-01 00:00:00')},
                               {'cat_pop': 33.0,
                                'name': pd.Timestamp('2001-01-01 00:00:00')},
-                              {'name': 'longtail', 'unique': 67.0}],
-                } == result    
+                              {'name': 'longtail', 'unique': 67.0},
+                              {'NA': 33.0, 'name': 'NA'}
+                              ],
+                } == summary_result
