@@ -42,7 +42,7 @@ Overtime codebases will probably trend towards many classes with single facts, b
 
 class TypingStats(ColAnalysis):
     provides_summary = [
-        'dtype', 'is_numeric', 'is_integer', 'is_datetime',]
+        'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
 
     @staticmethod
     def series_summary(sampled_ser, ser):
@@ -51,7 +51,27 @@ class TypingStats(ColAnalysis):
             is_numeric=pd.api.types.is_numeric_dtype(ser),
             is_integer=pd.api.types.is_integer_dtype(ser),
             is_datetime=probable_datetime(ser),
+            is_bool=pd.api.types.is_bool_dtype(ser),
+            is_float=pd.api.types.is_float_dtype(ser),
+            is_string=pd.api.types.is_string_dtype(ser),
             memory_usage=ser.memory_usage())
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        _type = "obj"
+        if summary_dict['is_bool']:
+            _type = "boolean"
+        elif summary_dict['is_numeric']:
+            if summary_dict['is_float']:
+                _type = "float"
+            else:
+                _type = "integer"
+        #elif pd.api.types.is_datetime64_any_dtype(ser):
+        elif summary_dict['is_datetime']:
+            _type = 'datetime'
+        elif summary_dict['is_string']:
+            _type = "string"
+        return dict(_type=_type)
 
 class DefaultSummaryStats(ColAnalysis):
     provides_summary = [
@@ -88,7 +108,6 @@ class ComputedDefaultSummaryStats(ColAnalysis):
         'length', 'nan_count', 'distinct_count', 'empty_count',
         'empty_per', 'unique_per', 'is_numeric', 'is_integer',
         'is_datetime', 'mode', 'min', 'max','mean']
-    #'nan_per'
 
     requires_summary = ['length', 'nan_count',
                         'value_counts']
@@ -128,37 +147,22 @@ def int_digits(n):
     return int(np.floor(np.log10(n)+1))
 
 
+
+
 class ColDisplayHints(ColAnalysis):
-    requires_summary = ['min', 'max']
+    requires_summary = ['min', 'max', '_type']
     provides_summary = [
         'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'type', 'formatter']
 
     @staticmethod
-    def summary(sampled_ser, summary_ser, ser):
-        is_numeric = pd.api.types.is_numeric_dtype(sampled_ser)
-        is_bool = pd.api.types.is_bool_dtype(sampled_ser)
-        _type = "obj"
-        extras = {}
-        if is_bool:
-            _type = "boolean"
-        elif is_numeric:
-            if pd.api.types.is_float_dtype(sampled_ser):
-                _type = "float"
-            else:
-                _type = "integer"
-        elif pd.api.types.is_datetime64_any_dtype(ser):
-            extras = {'type':'datetime', 'formatter': 'default'}
-        elif pd.api.types.is_string_dtype(sampled_ser):
-            _type = "string"
-        base_dict = dict(
-            type=_type,
-            is_numeric=is_numeric,
-            is_integer=pd.api.types.is_integer_dtype(sampled_ser))
-        base_dict.update(extras)
-        if is_numeric and not is_bool:
+    def computed_summary(summary_dict):
+        base_dict = {'type':summary_dict['_type']}
+        if summary_dict['is_datetime']:
+            base_dict['formatter'] = 'default'
+        if summary_dict['is_numeric'] and not summary_dict['is_bool']:
             base_dict.update({
-                'min_digits':int_digits(summary_ser.loc['min']),
-                'max_digits':int_digits(summary_ser.loc['max']),
+                'min_digits':int_digits(summary_dict['min']),
+                'max_digits':int_digits(summary_dict['max']),
                 })
         return base_dict
 
