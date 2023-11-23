@@ -32,7 +32,7 @@ def categorical_dict(len_, val_counts, top_n_positions=7):
         histogram['longtail'] = np.round((long_tail/len_) * 100,0)
     return histogram    
 
-def categorical_histogram(ser, length, val_counts, nan_per, top_n_positions=7):
+def categorical_histogram(length, val_counts, nan_per, top_n_positions=7):
     nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
     cd = categorical_dict(length, val_counts, top_n_positions)
     

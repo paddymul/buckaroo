@@ -84,3 +84,19 @@ def test_datetime_histogram():
                               {'NA': 33.0, 'name': 'NA'}
                               ],
                 } == summary_result
+
+fifty_int_ser = pd.Series([5, 1, 6, 8, 3, 5, 9, 2, 4, 2, 4, 4, 9, 3, 5, 1, 4, 2, 2, 9, 2, 5,
+        3, 8, 3, 9, 4, 2, 5, 6, 2, 3, 8, 1, 1, 4, 5, 9, 6, 5, 6, 7, 6, 1,
+        7, 5, 8, 7, 3, 1])
+def test_numeric_histogram():
+
+    series_result = Histogram.series_summary(
+        fifty_int_ser, fifty_int_ser)
+
+    expected_histogram_args= {
+        'hight_tail': 9.0,
+        'low_tail': 1.0,
+        'meat_histogram': ([7, 6, 0, 6, 0, 8, 5, 0, 3, 4],
+                           [2. , 2.6, 3.2, 3.8, 4.4, 5. , 5.6, 6.2, 6.8, 7.4, 8. ])}
+
+    assert series_result == {'histogram_args':expected_histogram_args}

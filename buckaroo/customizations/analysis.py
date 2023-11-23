@@ -51,8 +51,7 @@ class TypingStats(ColAnalysis):
             is_numeric=pd.api.types.is_numeric_dtype(ser),
             is_integer=pd.api.types.is_integer_dtype(ser),
             is_datetime=probable_datetime(ser),
-            memory_usage=ser.memory_usage()
-            )
+            memory_usage=ser.memory_usage())
 
 class DefaultSummaryStats(ColAnalysis):
     provides_summary = [
