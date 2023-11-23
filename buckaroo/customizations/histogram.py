@@ -91,8 +91,11 @@ class Histogram(ColAnalysis):
     def series_summary(sampled_ser, ser):
         if not pd.api.types.is_numeric_dtype(ser):
             return dict(histogram_args={})
+        if pd.api.types.is_bool_dtype(ser):
+            return dict(histogram_args={})
         vals = ser.dropna()
-        low_tail, high_tail = np.quantile(ser, 0.01), np.quantile(ser, 0.99),
+        low_tail = np.quantile(ser, 0.01)
+        high_tail =  np.quantile(ser, 0.99)
         low_pass  = ser > low_tail 
         high_pass = ser < high_tail
         meat = vals[low_pass & high_pass]

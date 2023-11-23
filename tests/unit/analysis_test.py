@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from buckaroo.customizations.analysis import DefaultSummaryStats, ColDisplayHints
 from buckaroo.customizations.histogram import Histogram
+from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF
 
 def without(dct, *keys):
     cleaned_result = dct.copy()
@@ -109,3 +110,24 @@ def test_numeric_histogram():
     meat_histogram = [x.tolist() for x in actual_histogram_args['meat_histogram']]
     assert meat_histogram == expected_meat_histogram
 
+def test_perverse_on_histogram():
+
+    series_result = Histogram.series_summary(
+        PERVERSE_DF['all_false'], PERVERSE_DF['all_false'])
+    assert series_result == {'histogram_args':{}}
+    summary_result = Histogram.computed_summary(
+        dict(histogram_args={},
+             length=10, 
+             value_counts=pd.Series(
+                 [10],
+                 index=[False]),
+             min=False,
+             max=False,
+             is_numeric=True,
+             nan_per=0
+             ))
+
+    
+
+
+    
