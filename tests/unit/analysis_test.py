@@ -103,12 +103,20 @@ def test_numeric_histogram():
     actual_histogram_args = series_result['histogram_args']
 
     rest_ha = without(actual_histogram_args, 'meat_histogram')
-    assert rest_ha ==  {'hight_tail': 9.0, 'low_tail': 1.0}
+    assert rest_ha ==  {'high_tail': 9.0, 'low_tail': 1.0}
     
     expected_meat_histogram = [[7, 6, 0, 6, 0, 8, 5, 0, 3, 4],
                                [2. , 2.6, 3.2, 3.8, 4.4, 5. , 5.6, 6.2, 6.8, 7.3999999999999995, 8. ]]
     meat_histogram = [x.tolist() for x in actual_histogram_args['meat_histogram']]
     assert meat_histogram == expected_meat_histogram
+    summary_result = Histogram.computed_summary(
+        {'histogram_args': actual_histogram_args,
+         'value_counts': fifty_int_ser.value_counts(),
+         'length':50,
+         'min': 1,
+         'max': 9,
+         'is_numeric':True,
+         'nan_per':0})
 
 def test_perverse_on_histogram():
 
@@ -144,7 +152,3 @@ def test_perverse_on_histogram2():
              nan_per=0
              ))
 
-    
-
-
-    

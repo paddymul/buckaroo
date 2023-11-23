@@ -106,7 +106,7 @@ class Histogram(ColAnalysis):
             histogram_args=dict(
                 meat_histogram=np.histogram(meat, 10),
                 low_tail=low_tail,
-                hight_tail=high_tail))
+                high_tail=high_tail))
 
 
     requires_summary = ['value_counts', 'nan_per', 'is_numeric', 'length',
