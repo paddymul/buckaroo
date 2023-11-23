@@ -115,7 +115,7 @@ def test_perverse_on_histogram():
     series_result = Histogram.series_summary(
         PERVERSE_DF['all_false'], PERVERSE_DF['all_false'])
     assert series_result == {'histogram_args':{}}
-    summary_result = Histogram.computed_summary(
+    Histogram.computed_summary(
         dict(histogram_args={},
              length=10, 
              value_counts=pd.Series(
@@ -132,7 +132,7 @@ def test_perverse_on_histogram2():
     series_result = Histogram.series_summary(
         PERVERSE_DF['UInt8None'], PERVERSE_DF['UInt8None'])
     assert series_result == {'histogram_args':{}}
-    summary_result = Histogram.computed_summary(
+    Histogram.computed_summary(
         dict(histogram_args={},
              length=10, 
              value_counts=pd.Series(
