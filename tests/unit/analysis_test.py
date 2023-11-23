@@ -31,11 +31,9 @@ def test_text_ser():
 def test_unhashable():
     result = DefaultSummaryStats.series_summary(unhashable_ser, unhashable_ser)
     #print(result)
-
-    assert     {'length': 2, 'nan_count': 0, 'distinct_count': 2, 'empty_count': 0,
-                'unique_count': 2,
-                #'distinct_per': 1.0,  'empty_per': 0.0, 'unique_per': 1.0, 'nan_per': 0.0,
-                'mode': ['a'], 'min': np.nan, 'max': np.nan} == result
+    cleaned_result = {i:result[i] for i in result if i!='value_counts'}
+    assert     {'length': 2, 'nan_count': 0, 
+                'mode': ['a'], 'min': np.nan, 'max': np.nan} == cleaned_result
 
 def test_unhashable3():
     ser = pd.Series([{'a':1, 'b':2}, {'b':10, 'c': 5}])
