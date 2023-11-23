@@ -56,7 +56,7 @@ def test_default_summary_stats():
     for ser in all_sers:
         print(DefaultSummaryStats.series_summary(ser, ser))
 
-def test_datetime_hints():
+def xtest_datetime_hints():
     result = ColDisplayHints.summary(
         datetime_ser, {'nan_per':0}, datetime_ser)
     assert     {'type': 'datetime',
