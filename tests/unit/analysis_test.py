@@ -109,7 +109,7 @@ def test_numeric_histogram():
                                [2. , 2.6, 3.2, 3.8, 4.4, 5. , 5.6, 6.2, 6.8, 7.3999999999999995, 8. ]]
     meat_histogram = [x.tolist() for x in actual_histogram_args['meat_histogram']]
     assert meat_histogram == expected_meat_histogram
-    summary_result = Histogram.computed_summary(
+    Histogram.computed_summary(
         {'histogram_args': actual_histogram_args,
          'value_counts': fifty_int_ser.value_counts(),
          'length':50,
