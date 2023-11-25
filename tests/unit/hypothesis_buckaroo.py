@@ -39,4 +39,8 @@ def test_buckaroo_hypothesis(ser_1, ser_2):
 @hypothesis.given(ser_1=get_strategy(1), ser_2=get_strategy(1))
 def test_buckaroo_hypothesis_single_row(ser_1, ser_2):
     df = pd.DataFrame({"a": ser_1, "b":ser_2})
+
+    # debug=True turns off warning quieting and will throw an error
+    # instead of collecting errors, it's what we want here. The option
+    # could be better named
     buckaroo.BuckarooWidget(df, debug=True)
