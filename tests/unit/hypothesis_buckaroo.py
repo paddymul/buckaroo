@@ -1,8 +1,7 @@
-import pandas as pd
 import hypothesis
 
 import buckaroo
-from hypothesis import given, strategies as st
+from hypothesis import strategies as st
 from hypothesis.extra.pandas import data_frames, column
 
 
