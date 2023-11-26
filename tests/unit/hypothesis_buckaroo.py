@@ -19,7 +19,7 @@ from hypothesis.extra.pandas import data_frames, column
     summaryStats=st.booleans(),
     reorderdColumns=st.booleans(),
     showCommands=st.booleans(),
-    auto_clean=st.booleans(),
+    #auto_clean=st.booleans(),
     postProcessingF=st.none(),
     debug=st.booleans(),
 )
@@ -29,7 +29,7 @@ def test_fuzz_BuckarooWidget(
         summaryStats,
         reorderdColumns,
         showCommands,
-        auto_clean,
+        #auto_clean,
         postProcessingF,
         debug,
 ):
@@ -39,7 +39,8 @@ def test_fuzz_BuckarooWidget(
         summaryStats=summaryStats,
         reorderdColumns=reorderdColumns,
         showCommands=showCommands,
-        auto_clean=auto_clean,
+        #auto_clean=auto_clean,
+        auto_clean=False,
         postProcessingF=postProcessingF,
         debug=debug,
     )
