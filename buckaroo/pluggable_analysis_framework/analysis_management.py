@@ -62,8 +62,8 @@ def safe_summary_df(base_summary_df, index_list):
     #indexes. This fixes them and explicitly. Empty rows will have NaN
     return pd.DataFrame(base_summary_df, index_list)
 
-def reproduce_summary(ser_name_qualifier, kls, summary_df, err, operating_df_name):
-    ser_name, method_name = ser_name_qualifier.split(':')
+def reproduce_summary(ser_funcname_tuple, kls, summary_df, err, operating_df_name):
+    ser_name, method_name = ser_funcname_tuple
     ssdf = safe_summary_df(summary_df, kls.requires_summary)
     summary_ser = ssdf[ser_name]
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)
@@ -84,9 +84,9 @@ def output_full_reproduce(errs, summary_df, df_name):
         raise Exception("output_full_reproduce called with 0 len errs")
 
     try:
-        for ser_name, err_kls in errs.items():
+        for ser_funcname_tuple, err_kls in errs.items():
             err, kls = err_kls
-            reproduce_summary(ser_name, kls, summary_df, err, df_name)
+            reproduce_summary(ser_funcname_tuple, kls, summary_df, err, df_name)
     except Exception:
         #this is tricky stuff that shouldn't error, I want these stack traces to escape being caught
         traceback.print_exc()
@@ -116,7 +116,7 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
                 series_stats[ser_name].update(col_stat_dict)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[ser_name + ":series_summary"] = e, a_kls
+                    errs[(ser_name, "series_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
@@ -145,7 +145,7 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
                     base_summary_dict.update(summary_res)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[ser_name + ":computed_summary"] = e, a_kls
+                    errs[(ser_name, "computed_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
