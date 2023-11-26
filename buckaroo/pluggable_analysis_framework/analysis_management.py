@@ -153,6 +153,9 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     return summary_col_dict, errs
 
 def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
+    if len(df) == 0:
+        return {}, {}, {}
+
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)

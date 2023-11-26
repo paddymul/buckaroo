@@ -11,7 +11,8 @@ from buckaroo.pluggable_analysis_framework.analysis_management import (
 
 
 from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
-from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, word_only_df)
+from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, word_only_df,
+                       empty_df, empty_df_with_columns)
 
 class DumbTableHints(ColAnalysis):
     provides_summary = [
@@ -46,10 +47,24 @@ class TestAnalysisPipeline(unittest.TestCase):
         assert sdf3 == {'normal_int_series': {'distinct_count': 4},
                         'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
-    def test_produce_summary_df(self):
+    def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
         sdf, th, errs = full_produce_summary_df(
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
+        assert errs == {}
+
+    def test_full_produce_summary_df_empy(self):
+        """just make sure this doesn't fail"""
+        
+        sdf, th, errs = full_produce_summary_df(
+            empty_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
+        assert errs == {}
+
+    def test_full_produce_summary_df_empy2(self):
+        """just make sure this doesn't fail"""
+        
+        sdf, th, errs = full_produce_summary_df(
+            empty_df_with_columns, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_produce_summary_df_hints(self):
