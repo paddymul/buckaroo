@@ -9,89 +9,60 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
 
-FAST_SUMMARY_WHEN_GREATER = 1_000_000
-
-PERVERSE_DF = pd.DataFrame({
-    'all_nan': [np.nan] * 10,
-    'all_false': [False] * 10,
-    'all_True': [True] * 10,
-    'mixed_bool': np.concatenate([[True]*5, [False]*5]),
-    'mixed_float': np.concatenate([[0.5, np.nan, None], [6]*7]),
-    'float': [0.5]*10,
-    'int': [8] *10,
-    'negative': [-1]*10,
-    'UInt32': pd.Series([5]*10, dtype='UInt32'),
-    'UInt8None':pd.Series([None] * 10, dtype='UInt8')
-    })
+def json_postfix(postfix):
+    return lambda nm: json.dumps([nm, postfix])
 
 
-BASE_COL_HINT = {
-    'type':'string',
-    'is_numeric': False,
-    'is_integer': None,
-    'min_digits':None,
-    'max_digits':None,
-    'formatter':None,
-    'histogram': []}
+stats_df = df.select(
+    F.all().name.map(json_postfix('null_count')),
+    F.all().mean().name.map(json_postfix('mean')),
+    F.all().quantile(.99).name.map(json_postfix('quin99'))
+)
+stats_df.columns
+
+def split_to_dicts(stat_df):
+    summary = defaultdict(lambda : {})
+    for col in stat_df.columns:
+        orig_col, measure = json.loads(col)
+        summary[orig_col][measure] = stat_df[col][0]
+    return summary
+split_to_dicts(stats_df)
+
+class PolarsAnalysis:
+
+    select_clauses = [
+        F.all().name.map(json_postfix('null_count')),
+        F.all().mean().name.map(json_postfix('mean')),
+        F.all().quantile(.99).name.map(json_postfix('quin99'))
+    ]
+
+    column_ops = {
+        hist: lambda col_series: col_series.hist(bin_count=10),
+        value_counts: lambda col_series: col_series.value_counts()
+        }
+
+
+def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
+    """ just executes the series methods
+
+    """
+    errs = {}
+    series_stats = defaultdict(lambda: {})
+    all_clauses = []
+    for obj in unordered_objs:
+        all_clauses.extend(obj.select_clauses)
+    result_df = df.lazy().select(all_clauses).collect()
+    summary_dict = split_to_dicts(result_df)
+
+    for pa in unordered_objs:
+        for col in df.columns:
+            for measure_name, func in pa.column_ops.items():
+                summary_dict[col][measure_name] = func(df[col])
+    return summary_dict, {}
 
 
 
-def get_df_name(df, level=0):
-    """ looks up the call stack until it finds the variable with this name"""
-    if level == 0:
-        _globals = globals()
-    elif level < 60:
-        try:
-            call_frame = sys._getframe(level)
-            _globals = call_frame.f_globals
-        except ValueError:
-            return None #we went to far up the stacktrace to a non-existent frame
-    else:
-        return None
-
-    name_possibs = [x for x in _globals.keys() if _globals[x] is df]
-    if name_possibs:
-        return name_possibs[0]
-    else:
-        #+2 because the function is recursive, and we need to skip over this frame
-        return get_df_name(df, level + 2)
-
-def safe_summary_df(base_summary_df, index_list):
-    #there are instances where not all indexes of the summary_df will
-    #be available, because there was no valid data to produce those
-    #indexes. This fixes them and explicitly. Empty rows will have NaN
-    return pd.DataFrame(base_summary_df, index_list)
-
-def reproduce_summary(ser_name_qualifier, kls, summary_df, err, operating_df_name):
-    ser_name, method_name = ser_name_qualifier.split(':')
-    ssdf = safe_summary_df(summary_df, kls.requires_summary)
-    summary_ser = ssdf[ser_name]
-    minimal_summary_dict = pick(summary_ser, kls.requires_summary)
-    sum_ser_repr = "pd.Series(%s)" % pd_py_serialize(minimal_summary_dict)
-
-    f = "{kls}.summary({df_name}['{ser_name}'], {summary_ser_repr}, {df_name}['{ser_name}']) # {err_msg}"
-    print(f.format(
-        kls=kls.cname(), df_name=operating_df_name, ser_name=ser_name,
-        summary_ser_repr=sum_ser_repr, err_msg=err))
-
-def output_reproduce_preamble():
-    print("#Reproduction code")
-    print("#" + "-" * 80)
-    print("from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF")
-
-def output_full_reproduce(errs, summary_df, df_name):
-    if len(errs) == 0:
-        raise Exception("output_full_reproduce called with 0 len errs")
-
-    try:
-        for ser_name, err_kls in errs.items():
-            err, kls = err_kls
-            reproduce_summary(ser_name, kls, summary_df, err, df_name)
-    except Exception:
-        #this is tricky stuff that shouldn't error, I want these stack traces to escape being caught
-        traceback.print_exc()
-
-def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
+def orig_produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """ just executes the series methods
 
     """
