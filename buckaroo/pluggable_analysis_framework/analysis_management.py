@@ -8,6 +8,7 @@ from buckaroo.pluggable_analysis_framework.utils import BASE_COL_HINT, FAST_SUMM
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 from buckaroo.serialization_utils import pick, d_update
+from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
 
 def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """ just executes the series methods
@@ -34,7 +35,7 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
                 series_stats[ser_name].update(col_stat_dict)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[ser_name + ":series_summary"] = e, a_kls
+                    errs[(ser_name, "series_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
@@ -63,7 +64,7 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
                     base_summary_dict.update(summary_res)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[ser_name + ":computed_summary"] = e, a_kls
+                    errs[(ser_name, "computed_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
@@ -71,6 +72,9 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     return summary_col_dict, errs
 
 def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
+    if len(df) == 0:
+        return {}, {}, {}
+
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
