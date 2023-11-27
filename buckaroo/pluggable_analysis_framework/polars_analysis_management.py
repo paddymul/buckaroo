@@ -33,13 +33,18 @@ class PolarsAnalysis:
     select_clauses = [
         F.all().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
-        F.all().quantile(.99).name.map(json_postfix('quin99'))
+        F.all().quantile(.99).name.map(json_postfix('quin99')),
+
     ]
 
     column_ops = {
         hist: lambda col_series: col_series.hist(bin_count=10),
-        value_counts: lambda col_series: col_series.value_counts()
         }
+
+class HistogramAnalysis:
+    select_clauses = [
+        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
+        ]
 
 
 def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
