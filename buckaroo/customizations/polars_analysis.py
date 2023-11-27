@@ -81,14 +81,14 @@ class DefaultSummaryStats(ColAnalysis):
     
     @staticmethod
     def series_summary(sampled_ser, ser):
-        l = len(ser)
+        len_ = len(ser)
         value_counts = ser.value_counts()
-        nan_count = l - len(ser.dropna())
+        nan_count = len_ - len(ser.dropna())
         is_numeric = pd.api.types.is_numeric_dtype(ser)
         is_bool = pd.api.types.is_bool_dtype(ser)
 
         base_d = dict(
-            length=l,
+            length=len_,
             nan_count=nan_count,
             value_counts=value_counts,
             mode=get_mode(ser),
@@ -116,11 +116,11 @@ class ComputedDefaultSummaryStats(ColAnalysis):
 
     @staticmethod
     def computed_summary(summary_dict):
-        l = summary_dict['length']
+        len_ = summary_dict['length']
         value_counts = summary_dict['value_counts']
         try:
             empty_count = value_counts.get('', 0)
-        except:
+        except Exception:
             empty_count = 0
         distinct_count=len(value_counts)
         unique_count = len(value_counts[value_counts==1])
@@ -129,10 +129,10 @@ class ComputedDefaultSummaryStats(ColAnalysis):
             unique_count=unique_count,
             empty_count=empty_count,
             distinct_count=distinct_count,
-            distinct_per=distinct_count/l,
-            empty_per=empty_count/l,
-            unique_per=unique_count/l,
-            nan_per=summary_dict['nan_count']/l)
+            distinct_per=distinct_count/len_,
+            empty_per=empty_count/len_,
+            unique_per=unique_count/len_,
+            nan_per=summary_dict['nan_count']/len_)
 
 
 def int_digits(n):

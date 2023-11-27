@@ -8,7 +8,6 @@ from buckaroo.pluggable_analysis_framework.utils import BASE_COL_HINT, FAST_SUMM
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 from buckaroo.serialization_utils import pick, d_update
-from buckaroo.serialization_utils import pick, d_update
 
 
 def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
