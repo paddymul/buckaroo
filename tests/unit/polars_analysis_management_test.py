@@ -41,16 +41,41 @@ class DumbTableHints(ColAnalysis):
                 'histogram': []}
 
 
+def replace_in_dict(input_dict, replace_tuples):
+    ret_dict = {}
+    for k,v in input_dict.items():
+        if type(v) == dict:
+            ret_dict[k] = replace_in_dict(v, replace_tuples)
+        elif np.isnan(v):
+            ret_dict[k] = None
+        else:
+            for old, new in replace_tuples:
+                if v is old:
+                    ret_dict[k] = new
+                    break
+                elif v == old:
+                    ret_dict[k] = new
+                    break
+            ret_dict[k] = v
+    return ret_dict
+    
 def test_produce_series_df():
     """just make sure this doesn't fail"""
     
     sdf, errs = produce_series_df(
         test_df, [PolarsAnalysis], 'test_df', debug=True)
     expected = {
-        'float_nan_ser':      {'mean': np.nan, 'null_count':      0, 'quin99':np.nan},
-        'normal_int_series':  {'mean': 2.5,    'null_count':      0, 'quin99':   4.0},
+        'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None},
+        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0},
         }
-    assert dict(sdf.items()) == expected
+    expected_float_nan = {'mean': np.nan, 'null_count':      0, 'quin99':np.nan}
+
+    #dsdf = dict(sdf.items())
+    dsdf = replace_in_dict(sdf, [(np.nan, None)])
+    assert dsdf == expected
+    assert None == None
+    #assert dsdf['float_nan_ser'] == expected_float_nan
+    #assert dict(sdf.items()) == expected
     # ld = {'len':4}
     # assert sdf == {'normal_int_series': ld, 'empty_na_ser': ld, 'float_nan_ser': ld}
     
