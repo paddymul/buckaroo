@@ -64,6 +64,13 @@ def dumb_table_sumarize(df):
 
 
 def df_to_obj(df, order = None, table_hints=None):
+    try:
+        import polars as pl
+        #hack for now so everything else flows through
+        if isinstance(df, pl.DataFrame):
+            df = df.to_pandas()
+    except ImportError:
+        pass
     if order is None:
         order = df.columns
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))

@@ -49,6 +49,7 @@ class BuckarooWidget(DOMWidget):
                         Histogram,
                         ComputedDefaultSummaryStats,
                         ColDisplayHints]
+    DFStatsClass = DfStats
 
     typing_metadata_f = staticmethod(get_typing_metadata)
     typing_recommend_f = staticmethod(recommend_type)
@@ -212,7 +213,7 @@ class BuckarooWidget(DOMWidget):
     def set_typed_df(self, new_df):
         self.typed_df = new_df
         # stats need to be rerun each time 
-        self.stats = DfStats(
+        self.stats = self.DFStatsClass(
             self.typed_df,
             self.analysis_classes,
             self.df_name, debug=self.debug)
