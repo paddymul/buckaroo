@@ -1,3 +1,5 @@
+import polars as pl
+import numpy as np
 
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
@@ -7,11 +9,23 @@ from buckaroo.pluggable_analysis_framework.analysis_management import (
 
 
 
-from .fixtures import (test_df)
+#from .fixtures import (test_df)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, produce_series_df)
 
+test_df = pl.DataFrame({
+        'normal_int_series' : pl.Series([1,2,3,4]),
+        #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
+        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])
+    })
+
+word_only_df = pl.DataFrame({'letters': 'h o r s e'.split(' ')})
+
+df = pl.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
+
+empty_df = pl.DataFrame({})
+#empty_df_with_columns = pl.DataFrame({}, columns=[0])
 
 
 class DumbTableHints(ColAnalysis):
@@ -27,7 +41,7 @@ class DumbTableHints(ColAnalysis):
                 'histogram': []}
 
 
-def test_produce_series_df(self):
+def test_produce_series_df():
     """just make sure this doesn't fail"""
     
     sdf, errs = produce_series_df(

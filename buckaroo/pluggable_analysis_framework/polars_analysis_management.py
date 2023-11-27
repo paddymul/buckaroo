@@ -1,3 +1,6 @@
+import polars as pl
+from polars import functions as F
+
 from collections import defaultdict 
 import traceback
 import warnings
@@ -11,12 +14,12 @@ def json_postfix(postfix):
     return lambda nm: json.dumps([nm, postfix])
 
 
-stats_df = df.select(
-    F.all().name.map(json_postfix('null_count')),
-    F.all().mean().name.map(json_postfix('mean')),
-    F.all().quantile(.99).name.map(json_postfix('quin99'))
-)
-stats_df.columns
+# stats_df = df.select(
+#     F.all().name.map(json_postfix('null_count')),
+#     F.all().mean().name.map(json_postfix('mean')),
+#     F.all().quantile(.99).name.map(json_postfix('quin99'))
+# )
+# stats_df.columns
 
 def split_to_dicts(stat_df):
     summary = defaultdict(lambda : {})
@@ -24,7 +27,7 @@ def split_to_dicts(stat_df):
         orig_col, measure = json.loads(col)
         summary[orig_col][measure] = stat_df[col][0]
     return summary
-split_to_dicts(stats_df)
+# split_to_dicts(stats_df)
 
 class PolarsAnalysis:
 
@@ -36,7 +39,7 @@ class PolarsAnalysis:
     ]
 
     column_ops = {
-        hist: lambda col_series: col_series.hist(bin_count=10),
+        'hist': lambda col_series: col_series.hist(bin_count=10),
         }
 
 class HistogramAnalysis:
@@ -60,7 +63,8 @@ def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
     for pa in unordered_objs:
         for col in df.columns:
             for measure_name, func in pa.column_ops.items():
-                summary_dict[col][measure_name] = func(df[col])
+                print("col", col, "df[col]", df[col])
+                #summary_dict[col][measure_name] = func(df[col])
     return summary_dict, {}
 
 
