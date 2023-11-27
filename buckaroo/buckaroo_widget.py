@@ -28,8 +28,6 @@ from .pluggable_analysis_framework.utils  import get_df_name
 from .serialization_utils import df_to_obj, EMPTY_DF_OBJ
 
 
-
-
 FAST_SUMMARY_WHEN_GREATER = 1_000_000
 class BuckarooWidget(DOMWidget):
     """TODO: Add docstring here
@@ -251,3 +249,4 @@ class BuckarooWidget(DOMWidget):
         self.summary_df_json = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
         #just trigger redisplay
         self.update_based_on_df_config(3)
+
