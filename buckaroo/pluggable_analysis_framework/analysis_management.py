@@ -4,6 +4,7 @@ import warnings
 
 import numpy as np
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble, safe_summary_df
+
 from buckaroo.pluggable_analysis_framework.utils import BASE_COL_HINT, FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
@@ -93,6 +94,9 @@ class AnalsysisPipeline(object):
     allow for computing summary_stats (and other oberservation sets) based on col_analysis objects
     allow col_anlysis objects to be added
     """
+
+    full_produce_func = [full_produce_summary_df]
+    
     def __init__(self, analysis_objects, unit_test_objs=True):
         self.summary_stats_display = "all"
         self.unit_test_objs = unit_test_objs
@@ -128,7 +132,7 @@ class AnalsysisPipeline(object):
 
         """
         try:
-            output_df, table_hint_dict, errs = full_produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
+            output_df, table_hint_dict, errs = self.full_produce_func[0](PERVERSE_DF, self.ordered_a_objs)
             if len(errs) == 0:
                 return True, []
             else:
@@ -138,7 +142,7 @@ class AnalsysisPipeline(object):
 
 
     def process_df(self, input_df, debug=False):
-        output_df, table_hint_dict, errs = full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
+        output_df, table_hint_dict, errs = self.full_produce_func[0](input_df, self.ordered_a_objs, debug=debug)
         return output_df, table_hint_dict, errs
 
     def add_analysis(self, new_aobj):

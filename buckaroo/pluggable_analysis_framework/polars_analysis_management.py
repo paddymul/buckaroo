@@ -6,7 +6,7 @@ import polars as pl
 from polars import functions as F
 
 from .pluggable_analysis_framework import ColAnalysis
-from .analysis_management import (produce_summary_df, AnalsysisPipeline)
+from .analysis_management import (produce_summary_df, AnalsysisPipeline, DfStats)
 from .utils import (BASE_COL_HINT, 
                     FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF)
 from buckaroo.serialization_utils import pick, d_update
@@ -163,7 +163,7 @@ class PolarsAnalsysisPipeline(AnalsysisPipeline):
         return True, []
             
 
-class PlDfStats(object):
+class PlDfStats(DfStats):
     '''
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
@@ -179,15 +179,15 @@ class PlDfStats(object):
         if errs:
             output_full_reproduce(errs, self.sdf, operating_df_name)
         
-    def get_operating_df(self, df, force_full_eval):
-        rows = len(df)
-        cols = len(df.columns)
-        item_count = rows * cols
+    # def get_operating_df(self, df, force_full_eval):
+    #     rows = len(df)
+    #     cols = len(df.columns)
+    #     item_count = rows * cols
 
-        if item_count > FAST_SUMMARY_WHEN_GREATER:
-            return df.sample(min([50_000, len(df)]))
-        else:
-            return df
+    #     if item_count > FAST_SUMMARY_WHEN_GREATER:
+    #         return df.sample(min([50_000, len(df)]))
+    #     else:
+    #         return df
 
     @property
     def presentation_sdf(self):
@@ -196,22 +196,22 @@ class PlDfStats(object):
             return pd.DataFrame(self.sdf)
         return safe_summary_df(self.sdf, self.ap.summary_stats_display)
 
-    def add_analysis(self, a_obj):
-        passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
-        #if you're adding analysis interactively, of course you want debug info... I think
-        self.sdf, self.table_hints, errs = self.ap.process_df(self.df, debug=True)
-        if passed_unit_tests is False:
-            print("Unit tests failed")
-        if errs:
-            print("Errors on original dataframe")
+    # def add_analysis(self, a_obj):
+    #     passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
+    #     #if you're adding analysis interactively, of course you want debug info... I think
+    #     self.sdf, self.table_hints, errs = self.ap.process_df(self.df, debug=True)
+    #     if passed_unit_tests is False:
+    #         print("Unit tests failed")
+    #     if errs:
+    #         print("Errors on original dataframe")
 
-        if ut_errs or errs:
-            output_reproduce_preamble()
-        if ut_errs:
-            # setting debug=False here because we're already printing reproduce instructions, let the users produce their own stacktrace.. I think
-            ut_summary_df, _unused_table_hint_dict, ut_errs2 = produce_summary_df(
-                PERVERSE_DF, self.ap.ordered_a_objs, debug=False)
-            output_full_reproduce(ut_errs, ut_summary_df, "PERVERSE_DF")
-        if errs:
-            output_full_reproduce(errs, self.sdf, self.operating_df_name)
+    #     if ut_errs or errs:
+    #         output_reproduce_preamble()
+    #     if ut_errs:
+    #         # setting debug=False here because we're already printing reproduce instructions, let the users produce their own stacktrace.. I think
+    #         ut_summary_df, _unused_table_hint_dict, ut_errs2 = produce_summary_df(
+    #             PERVERSE_DF, self.ap.ordered_a_objs, debug=False)
+    #         output_full_reproduce(ut_errs, ut_summary_df, "PERVERSE_DF")
+    #     if errs:
+    #         output_full_reproduce(errs, self.sdf, self.operating_df_name)
 
