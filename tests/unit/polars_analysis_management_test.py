@@ -10,7 +10,7 @@ from buckaroo.pluggable_analysis_framework.utils import (replace_in_dict)
 #from .fixtures import (test_df)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    produce_series_df, json_postfix)
+    produce_series_df, json_postfix, PolarsAnalysis, HistogramAnalysis)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -27,7 +27,7 @@ empty_df = pl.DataFrame({})
 
 
 
-class SelectOnlyAnalysis:
+class SelectOnlyAnalysis(PolarsAnalysis):
 
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
@@ -38,13 +38,16 @@ class SelectOnlyAnalysis:
     column_ops = {
         #'hist': lambda col_series: col_series.hist(bin_count=10),
         }
-
+'''
 class HistogramAnalysis:
     select_clauses = [
         F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
         ]
 
-
+    column_ops = {
+        #'hist': lambda col_series: col_series.hist(bin_count=10),
+        }
+'''
 
 def test_produce_series_df():
     """just make sure this doesn't fail"""
@@ -79,6 +82,20 @@ def test_produce_series_combine_df():
         }
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
+
+def test_produce_series_column_ops():
+    mixed_df = pl.DataFrame(
+        {'string_col': ["foo", "bar", "baz"] + [""]*2,
+         'int_col':[1,2,3,30, 100],
+         'float_col':[1.1, 1.1, 3, 3, 5]})
+
+    summary_df, _unused = produce_series_df(mixed_df, [HistogramAnalysis])
+    assert summary_df["string_col"] == {}
+
+    assert summary_df["int_col"]["hist"] ==  (
+        [3, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 10.1, 20.2, 30.299999999999997, 40.4, 50.5, 60.599999999999994, 70.7,
+         80.8, 90.89999999999999, 100])
 
 
 

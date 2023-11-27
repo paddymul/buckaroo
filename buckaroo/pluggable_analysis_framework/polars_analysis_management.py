@@ -1,23 +1,14 @@
+
 import json
 from collections import defaultdict 
 
-
+import polars as pl
 
 from polars import functions as F
-
-
-
 
 def json_postfix(postfix):
     return lambda nm: json.dumps([nm, postfix])
 
-
-# stats_df = df.select(
-#     F.all().name.map(json_postfix('null_count')),
-#     F.all().mean().name.map(json_postfix('mean')),
-#     F.all().quantile(.99).name.map(json_postfix('quin99'))
-# )
-# stats_df.columns
 
 def split_to_dicts(stat_df):
     summary = defaultdict(lambda : {})
@@ -25,24 +16,39 @@ def split_to_dicts(stat_df):
         orig_col, measure = json.loads(col)
         summary[orig_col][measure] = stat_df[col][0]
     return summary
-# split_to_dicts(stats_df)
 
 class PolarsAnalysis:
+
+    select_clauses = []
+    column_ops = {}
+
+class BasicAnalysis(PolarsAnalysis):
 
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().quantile(.99).name.map(json_postfix('quin99')),
+        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
     ]
 
-    column_ops = {
-        #'hist': lambda col_series: col_series.hist(bin_count=10),
-        }
 
-class HistogramAnalysis:
-    select_clauses = [
-        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
-        ]
+def normalize_polars_histogram(ph, ser):
+    edges = ph['break_point'].to_list()
+    edges[0], edges[-1] = ser.min(), ser.max()
+    #col_series.hist(bin_count=10)
+    col_only_df = ph.select(pl.col("^.*_count$"))
+    counts = col_only_df[col_only_df.columns[0]].to_list()
+    #counts = ph['_count'].to_list()
+    return counts[1:], edges
+
+NUMERIC_POLARS_DTYPES = [
+    pl.Int8, pl.Int16, pl.Int32, pl.Int64, 
+    pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
+    pl.Float32, pl.Float64, 
+]
+
+class HistogramAnalysis(PolarsAnalysis):
+    column_ops = {'hist': (NUMERIC_POLARS_DTYPES, lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 
 
 def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
@@ -56,11 +62,13 @@ def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
     result_df = df.lazy().select(all_clauses).collect()
     summary_dict = split_to_dicts(result_df)
 
+    summary = defaultdict(lambda : {})
     for pa in unordered_objs:
-        for col in df.columns:
-            for measure_name, func in pa.column_ops.items():
+        for measure_name, action_tuple in pa.column_ops.items():
+            col_selector, func = action_tuple
+            sub_df = df.select(pl.col(col_selector))
+            for col in sub_df.columns:
                 print("measure_name", measure_name, "col", col, "df[col]", df[col])
-                1/0
                 summary_dict[col][measure_name] = func(df[col])
                 pass
     return summary_dict, errs
