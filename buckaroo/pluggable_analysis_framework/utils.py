@@ -49,3 +49,23 @@ def get_df_name(df, level=0):
     else:
         #+2 because the function is recursive, and we need to skip over this frame
         return get_df_name(df, level + 2)
+
+
+def replace_in_dict(input_dict, replace_tuples):
+    ret_dict = {}
+    for k,v in input_dict.items():
+        if type(v) == dict:
+            ret_dict[k] = replace_in_dict(v, replace_tuples)
+        elif np.isnan(v):
+            ret_dict[k] = None
+        else:
+            for old, new in replace_tuples:
+                if v is old:
+                    ret_dict[k] = new
+                    break
+                elif v == old:
+                    ret_dict[k] = new
+                    break
+            ret_dict[k] = v
+    return ret_dict
+    

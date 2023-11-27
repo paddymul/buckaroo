@@ -6,6 +6,8 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 
 from buckaroo.pluggable_analysis_framework.analysis_management import (
     produce_series_df)
+from buckaroo.pluggable_analysis_framework.utils import (replace_in_dict)
+
 
 
 
@@ -28,37 +30,6 @@ empty_df = pl.DataFrame({})
 #empty_df_with_columns = pl.DataFrame({}, columns=[0])
 
 
-class DumbTableHints(ColAnalysis):
-    provides_summary = [
-        'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram']
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        return {'is_numeric':True,
-                'is_integer':False,
-                'min_digits':3,
-                'max_digits':10,
-                'histogram': []}
-
-
-def replace_in_dict(input_dict, replace_tuples):
-    ret_dict = {}
-    for k,v in input_dict.items():
-        if type(v) == dict:
-            ret_dict[k] = replace_in_dict(v, replace_tuples)
-        elif np.isnan(v):
-            ret_dict[k] = None
-        else:
-            for old, new in replace_tuples:
-                if v is old:
-                    ret_dict[k] = new
-                    break
-                elif v == old:
-                    ret_dict[k] = new
-                    break
-            ret_dict[k] = v
-    return ret_dict
-    
 def test_produce_series_df():
     """just make sure this doesn't fail"""
     
