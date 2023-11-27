@@ -63,7 +63,7 @@ def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
                 1/0
                 summary_dict[col][measure_name] = func(df[col])
                 pass
-    return summary_dict, {}
+    return summary_dict, errs
 
 
 
