@@ -62,7 +62,7 @@ def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
     result_df = df.lazy().select(all_clauses).collect()
     summary_dict = split_to_dicts(result_df)
 
-    summary = defaultdict(lambda : {})
+    #summary = defaultdict(lambda : {})
     for pa in unordered_objs:
         for measure_name, action_tuple in pa.column_ops.items():
             col_selector, func = action_tuple
