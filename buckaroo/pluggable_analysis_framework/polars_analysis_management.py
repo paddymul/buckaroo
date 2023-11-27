@@ -43,7 +43,7 @@ class PolarsAnalysis:
     ]
 
     column_ops = {
-        'hist': lambda col_series: col_series.hist(bin_count=10),
+        #'hist': lambda col_series: col_series.hist(bin_count=10),
         }
 
 class HistogramAnalysis:
@@ -67,8 +67,10 @@ def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
     for pa in unordered_objs:
         for col in df.columns:
             for measure_name, func in pa.column_ops.items():
-                print("col", col, "df[col]", df[col])
-                #summary_dict[col][measure_name] = func(df[col])
+                print("measure_name", measure_name, "col", col, "df[col]", df[col])
+                1/0
+                summary_dict[col][measure_name] = func(df[col])
+                pass
     return summary_dict, {}
 
 

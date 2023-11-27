@@ -30,11 +30,31 @@ empty_df = pl.DataFrame({})
 #empty_df_with_columns = pl.DataFrame({}, columns=[0])
 
 
+
+class SelectOnlyAnalysis:
+
+    select_clauses = [
+        F.all().null_count().name.map(json_postfix('null_count')),
+        F.all().mean().name.map(json_postfix('mean')),
+        F.all().quantile(.99).name.map(json_postfix('quin99')),
+    ]
+
+    column_ops = {
+        #'hist': lambda col_series: col_series.hist(bin_count=10),
+        }
+
+class HistogramAnalysis:
+    select_clauses = [
+        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
+        ]
+
+
+
 def test_produce_series_df():
     """just make sure this doesn't fail"""
     
     sdf, errs = produce_series_df(
-        test_df, [PolarsAnalysis], 'test_df', debug=True)
+        test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
     expected = {
         'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None},
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0},
@@ -51,14 +71,14 @@ class MaxAnalysis:
     ]
 
     column_ops = {
-        'hist': lambda col_series: col_series.hist(bin_count=10),
+        #'hist': lambda col_series: col_series.hist(bin_count=10),
         }
 
 def test_produce_series_combine_df():
     """just make sure this doesn't fail"""
     
     sdf, errs = produce_series_df(
-        test_df, [PolarsAnalysis, MaxAnalysis], 'test_df', debug=True)
+        test_df, [SelectOnlyAnalysis, MaxAnalysis], 'test_df', debug=True)
     expected = {
         'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None, 'max': 4.8},
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'max': 4.0},

@@ -51,12 +51,18 @@ def get_df_name(df, level=0):
         return get_df_name(df, level + 2)
 
 
+def safe_isnan(v):
+    try:
+        return np.isnan(v)
+    except:
+        return False
+
 def replace_in_dict(input_dict, replace_tuples):
     ret_dict = {}
     for k,v in input_dict.items():
         if type(v) == dict:
             ret_dict[k] = replace_in_dict(v, replace_tuples)
-        elif np.isnan(v):
+        elif safe_isnan(v):
             ret_dict[k] = None
         else:
             for old, new in replace_tuples:
