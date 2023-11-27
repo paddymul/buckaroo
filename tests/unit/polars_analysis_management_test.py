@@ -1,6 +1,6 @@
 import polars as pl
 import numpy as np
-
+from polars import functions as F
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
 
@@ -12,7 +12,7 @@ from buckaroo.pluggable_analysis_framework.analysis_management import (
 #from .fixtures import (test_df)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    PolarsAnalysis, produce_series_df)
+    PolarsAnalysis, produce_series_df, json_postfix)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -70,10 +70,35 @@ def test_produce_series_df():
         }
     expected_float_nan = {'mean': np.nan, 'null_count':      0, 'quin99':np.nan}
 
-    #dsdf = dict(sdf.items())
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
-    assert None == None
+
+class MaxAnalysis:
+
+    select_clauses = [
+        F.all().max().name.map(json_postfix('max')),
+    ]
+
+    column_ops = {
+        'hist': lambda col_series: col_series.hist(bin_count=10),
+        }
+
+def test_produce_series_combine_df():
+    """just make sure this doesn't fail"""
+    
+    sdf, errs = produce_series_df(
+        test_df, [PolarsAnalysis, MaxAnalysis], 'test_df', debug=True)
+    expected = {
+        'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None, 'max': 4.8},
+        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'max': 4.0},
+        }
+    expected_float_nan = {'mean': np.nan, 'null_count':      0, 'quin99':np.nan}
+
+    dsdf = replace_in_dict(sdf, [(np.nan, None)])
+    assert dsdf == expected
+
+
+
     #assert dsdf['float_nan_ser'] == expected_float_nan
     #assert dict(sdf.items()) == expected
     # ld = {'len':4}

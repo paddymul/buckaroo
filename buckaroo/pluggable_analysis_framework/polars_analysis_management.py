@@ -40,7 +40,6 @@ class PolarsAnalysis:
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().quantile(.99).name.map(json_postfix('quin99')),
-
     ]
 
     column_ops = {
