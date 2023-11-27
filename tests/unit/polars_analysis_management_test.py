@@ -1,4 +1,3 @@
-import json
 import polars as pl
 import numpy as np
 
@@ -47,7 +46,11 @@ def test_produce_series_df():
     
     sdf, errs = produce_series_df(
         test_df, [PolarsAnalysis], 'test_df', debug=True)
-    assert sdf == {}
+    expected = {
+        'float_nan_ser':      {'mean': np.nan, 'null_count':      0, 'quin99':np.nan},
+        'normal_int_series':  {'mean': 2.5,    'null_count':      0, 'quin99':   4.0},
+        }
+    assert dict(sdf.items()) == expected
     # ld = {'len':4}
     # assert sdf == {'normal_int_series': ld, 'empty_na_ser': ld, 'float_nan_ser': ld}
     

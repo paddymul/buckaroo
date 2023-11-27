@@ -1,11 +1,16 @@
-import polars as pl
-from polars import functions as F
-
+import json
 from collections import defaultdict 
 import traceback
 import warnings
 
+
 import numpy as np
+
+import polars as pl
+from polars import functions as F
+
+
+
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 from buckaroo.serialization_utils import pick, d_update
@@ -32,7 +37,7 @@ def split_to_dicts(stat_df):
 class PolarsAnalysis:
 
     select_clauses = [
-        F.all().name.map(json_postfix('null_count')),
+        F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().quantile(.99).name.map(json_postfix('quin99')),
 
