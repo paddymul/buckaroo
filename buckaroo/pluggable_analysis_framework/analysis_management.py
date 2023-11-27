@@ -165,10 +165,12 @@ class DfStats(object):
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
 
+    ap_class = AnalsysisPipeline
+
     def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
         self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
         self.col_order = self.df.columns
-        self.ap = AnalsysisPipeline(col_analysis_objs)
+        self.ap = self.ap_class(col_analysis_objs)
         self.operating_df_name = operating_df_name
         self.debug = debug
 

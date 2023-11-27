@@ -98,54 +98,7 @@ class PolarsAnalsysisPipeline(AnalsysisPipeline):
     allow for computing summary_stats (and other oberservation sets) based on col_analysis objects
     allow col_anlysis objects to be added
     """
-
-    # def __init__(self, analysis_objects, unit_test_objs=True):
-    #     self.summary_stats_display = "all"
-    #     self.unit_test_objs = unit_test_objs
-    #     self.verify_analysis_objects(analysis_objects)
-
-    # def process_summary_facts_set(self):
-    #     all_provided = []
-    #     for a_obj in self.ordered_a_objs:
-    #         all_provided.extend(a_obj.provides_summary)
-    #         if a_obj.summary_stats_display:
-    #             self.summary_stats_display = a_obj.summary_stats_display
-
-    #     self.provided_summary_facts_set = set(all_provided)
-
-    #     #all is a special value that will dipslay every row
-    #     if self.summary_stats_display and not self.summary_stats_display == "all":
-    #         #verify that we have a way of computing all of the facts we are displaying
-    #         if not self.provided_summary_facts_set.issuperset(set(self.summary_stats_display)):
-    #             missing = set(self.summary_stats_display) - set(self.provided_summary_facts_set)
-    #             raise NonExistentSummaryRowException(missing)
-
-    # def verify_analysis_objects(self, analysis_objects):
-    #     self.ordered_a_objs = order_analysis(analysis_objects)
-    #     check_solvable(self.ordered_a_objs)
-    #     self.process_summary_facts_set()
-
-    def unit_test(self):
-        """test a single, or each col_analysis object with a set of commonly difficult series.
-        not implemented yet.
-
-        This helps interactive development by doing a smoke test on
-        each new iteration of summary stats function.
-
-        """
-        try:
-            output_df, table_hint_dict, errs = full_produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
-            if len(errs) == 0:
-                return True, []
-            else:
-                return False, errs
-        except KeyError:
-            pass
-
-
-    def process_df(self, input_df, debug=False):
-        output_df, table_hint_dict, errs = full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
-        return output_df, table_hint_dict, errs
+    full_produce_func = [full_produce_summary_df]
 
     def add_analysis(self, new_aobj):
         new_cname = new_aobj.cname()
@@ -167,17 +120,18 @@ class PlDfStats(DfStats):
     '''
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
+    ap_class = PolarsAnalsysisPipeline
+    
+    # def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
+    #     self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
+    #     self.col_order = self.df.columns
+    #     self.ap = PolarsAnalsysisPipeline(col_analysis_objs)
+    #     self.operating_df_name = operating_df_name
+    #     self.debug = debug
 
-    def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
-        self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
-        self.col_order = self.df.columns
-        self.ap = PolarsAnalsysisPipeline(col_analysis_objs)
-        self.operating_df_name = operating_df_name
-        self.debug = debug
-
-        self.sdf, self.table_hints, errs = self.ap.process_df(self.df, self.debug)
-        if errs:
-            output_full_reproduce(errs, self.sdf, operating_df_name)
+    #     self.sdf, self.table_hints, errs = self.ap.process_df(self.df, self.debug)
+    #     if errs:
+    #         output_full_reproduce(errs, self.sdf, operating_df_name)
         
     # def get_operating_df(self, df, force_full_eval):
     #     rows = len(df)
