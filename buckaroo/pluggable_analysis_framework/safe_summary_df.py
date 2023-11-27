@@ -1,3 +1,4 @@
+import pandas as pd
 import sys
 import traceback
 from buckaroo.serialization_utils import pd_py_serialize, pick
