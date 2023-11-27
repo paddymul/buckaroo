@@ -1,13 +1,11 @@
 from collections import defaultdict 
-import sys
 import traceback
 import warnings
 
 import numpy as np
-import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
-from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
+from buckaroo.serialization_utils import pick, d_update
 
 def json_postfix(postfix):
     return lambda nm: json.dumps([nm, postfix])

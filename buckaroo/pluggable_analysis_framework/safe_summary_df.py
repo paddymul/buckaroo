@@ -1,6 +1,6 @@
 import sys
 import traceback
-from buckaroo.serialization_utils import pd_py_serialize, pick, d_update
+from buckaroo.serialization_utils import pd_py_serialize, pick
 
 
 def get_df_name(df, level=0):
