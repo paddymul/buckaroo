@@ -6,10 +6,13 @@ import polars as pl
 from polars import functions as F
 
 from .pluggable_analysis_framework import ColAnalysis
-from .analysis_management import (produce_summary_df, DfStats, AnalsysisPipeline)
+from .analysis_management import (produce_summary_df, AnalsysisPipeline)
 from .utils import (BASE_COL_HINT, 
-                    FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException)
+                    FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF)
 from buckaroo.serialization_utils import pick, d_update
+from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble, safe_summary_df
+
+
 
 def json_postfix(postfix):
     return lambda nm: json.dumps([nm, postfix])
@@ -182,7 +185,7 @@ class PlDfStats(object):
         item_count = rows * cols
 
         if item_count > FAST_SUMMARY_WHEN_GREATER:
-            return df.sample(np.min([50_000, len(df)]))
+            return df.sample(min([50_000, len(df)]))
         else:
             return df
 
