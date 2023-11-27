@@ -1,12 +1,15 @@
+
 import json
 from collections import defaultdict 
+
 import polars as pl
 from polars import functions as F
 
-from .pluggable_analysis_framework.analysis_management import (produce_summary_df, DfStats, AnalysisPipeline)
-from .pluggable_analysis_framework.utils import (BASE_COL_HINT)
-
-
+from .pluggable_analysis_framework import ColAnalysis
+from .analysis_management import (produce_summary_df, DfStats, AnalsysisPipeline)
+from .utils import (BASE_COL_HINT, 
+                    FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException)
+from buckaroo.serialization_utils import pick, d_update
 
 def json_postfix(postfix):
     return lambda nm: json.dumps([nm, postfix])
@@ -19,7 +22,7 @@ def split_to_dicts(stat_df):
         summary[orig_col][measure] = stat_df[col][0]
     return summary
 
-class PolarsAnalysis:
+class PolarsAnalysis(ColAnalysis):
     select_clauses = []
     column_ops = {}
 
@@ -86,7 +89,7 @@ def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
 
 
 
-class PolarsAnalsysisPipeline(AnalysisPipeline):
+class PolarsAnalsysisPipeline(AnalsysisPipeline):
     """
     manage the ordering of a set of col_analysis objects
     allow for computing summary_stats (and other oberservation sets) based on col_analysis objects
@@ -185,8 +188,9 @@ class PlDfStats(object):
 
     @property
     def presentation_sdf(self):
+        import pandas as pd
         if self.ap.summary_stats_display == "all":
-            return self.sdf
+            return pd.DataFrame(self.sdf)
         return safe_summary_df(self.sdf, self.ap.summary_stats_display)
 
     def add_analysis(self, a_obj):
