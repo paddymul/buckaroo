@@ -5,11 +5,6 @@ from buckaroo.customizations.polars_analysis import HistogramAnalysis
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
-
-
-
-#from .fixtures import (test_df)
-
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     produce_series_df, PolarsAnalysis)
 
@@ -33,22 +28,8 @@ class SelectOnlyAnalysis(PolarsAnalysis):
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
-        F.all().quantile(.99).name.map(json_postfix('quin99')),
-    ]
+        F.all().quantile(.99).name.map(json_postfix('quin99'))]
 
-    column_ops = {
-        #'hist': lambda col_series: col_series.hist(bin_count=10),
-        }
-'''
-class HistogramAnalysis:
-    select_clauses = [
-        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
-        ]
-
-    column_ops = {
-        #'hist': lambda col_series: col_series.hist(bin_count=10),
-        }
-'''
 
 def test_produce_series_df():
     """just make sure this doesn't fail"""
@@ -57,20 +38,14 @@ def test_produce_series_df():
         test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
     expected = {
         'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None},
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0},
-        }
+        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
 
-class MaxAnalysis:
+class MaxAnalysis(PolarsAnalysis):
 
-    select_clauses = [
-        F.all().max().name.map(json_postfix('max')),
-    ]
+    select_clauses = [F.all().max().name.map(json_postfix('max'))]
 
-    column_ops = {
-        #'hist': lambda col_series: col_series.hist(bin_count=10),
-        }
 
 def test_produce_series_combine_df():
     """just make sure this doesn't fail"""
@@ -98,22 +73,6 @@ def test_produce_series_column_ops():
         [1, 10.1, 20.2, 30.299999999999997, 40.4, 50.5, 60.599999999999994, 70.7,
          80.8, 90.89999999999999, 100])
 
-
-
-    #assert dsdf['float_nan_ser'] == expected_float_nan
-    #assert dict(sdf.items()) == expected
-    # ld = {'len':4}
-    # assert sdf == {'normal_int_series': ld, 'empty_na_ser': ld, 'float_nan_ser': ld}
-    
-    # sdf2, errs = produce_series_df(
-    #     test_df, [DistinctCount], 'test_df', debug=True)
-    # assert sdf2 == {'normal_int_series': {'distinct_count': 4},
-    #                 'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
-
-    # sdf3, errs = produce_series_df(
-    #     test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-    # assert sdf3 == {'normal_int_series': {'distinct_count': 4},
-    #                 'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
 
 

@@ -1,3 +1,4 @@
+import polars as pl
 import pandas as pd
 import numpy as np
 from polars import functions as F
@@ -176,13 +177,18 @@ class BasicAnalysis(PolarsAnalysis):
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
+        F.all().max().name.map(json_postfix('max')),
+        F.all().min().name.map(json_postfix('min')),
         F.all().quantile(.99).name.map(json_postfix('quin99')),
         F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
     ]
 
+class PlTyping:
+    column_ops = {'dtype':  (pl.all(), lambda col_series: col_series.dtype)}
 
 class HistogramAnalysis(PolarsAnalysis):
     column_ops = {
         'hist': (NUMERIC_POLARS_DTYPES,
                  lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 
+PL_Analysis_Klasses = [BasicAnalysis]

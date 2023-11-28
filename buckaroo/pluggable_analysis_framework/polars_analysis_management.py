@@ -2,7 +2,7 @@
 
 import polars as pl
 
-from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts, NUMERIC_POLARS_DTYPES
+from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 
 from .pluggable_analysis_framework import ColAnalysis

@@ -9,7 +9,6 @@ from buckaroo.pluggable_analysis_framework.utils import BASE_COL_HINT, FAST_SUMM
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 from buckaroo.serialization_utils import pick, d_update
-from typing import Mapping, Any, Callable, Tuple, List, MutableMapping, TypeVar
 
 def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """ just executes the series methods
