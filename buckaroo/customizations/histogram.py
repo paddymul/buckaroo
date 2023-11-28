@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
+import numpy.typing as npt
+from typing_extensions import TypedDict
+from typing import List, Tuple, Any
+
 
 def numeric_histogram_labels(endpoints):
     left = endpoints[0]
@@ -10,7 +14,6 @@ def numeric_histogram_labels(endpoints):
         labels.append("{:.0f}-{:.0f}".format(left, edge))
         left = edge
     return labels
-#histogram_labels(endpoints)
 
 def categorical_dict(len_, val_counts, top_n_positions=7):
     top = min(len(val_counts), top_n_positions)
@@ -32,7 +35,8 @@ def categorical_dict(len_, val_counts, top_n_positions=7):
         histogram['longtail'] = np.round((long_tail/len_) * 100,0)
     return histogram    
 
-def categorical_histogram(length, val_counts, nan_per, top_n_positions=7):
+
+def categorical_histogram(length:int, val_counts, nan_per:float, top_n_positions=7):
     nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
     cd = categorical_dict(length, val_counts, top_n_positions)
     
@@ -49,7 +53,11 @@ def categorical_histogram(length, val_counts, nan_per, top_n_positions=7):
         histogram.append(nan_observation)
     return histogram
 
-def numeric_histogram(histogram_args, min_, max_, nan_per):
+histogram_args = TypedDict('histogram_args', {
+    'meat_histogram': Tuple[npt.NDArray[np.intp], npt.NDArray[Any]],
+    'low_tail': float, 'high_tail':float})
+
+def numeric_histogram(histogram_args: histogram_args , min_, max_, nan_per):
 
     low_tail, high_tail = histogram_args['low_tail'], histogram_args['high_tail']
     ret_histo = []
@@ -72,7 +80,9 @@ def numeric_histogram(histogram_args, min_, max_, nan_per):
         ret_histo.append(nan_observation)
     return ret_histo
 
+
 class Histogram(ColAnalysis):
+
     @staticmethod
     def series_summary(sampled_ser, ser):
         if not pd.api.types.is_numeric_dtype(ser):
