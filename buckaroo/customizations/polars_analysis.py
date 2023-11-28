@@ -9,25 +9,6 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import Pol
 from buckaroo.pluggable_analysis_framework.polars_utils import NUMERIC_POLARS_DTYPES
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
 
-def probable_datetime(ser):
-    #turning off warnings in this single function is a bit of a hack.
-    #Understandable since this is explicitly abusing pd.to_datetime
-    #which throws warnings.
-
-    warnings.filterwarnings('ignore')
-    s_ser = ser.sample(np.min([len(ser), 500]))
-    try:
-        dt_ser = pd.to_datetime(s_ser)
-        #pd.to_datetime(1_00_000_000_000_000_000) == pd.to_datetime('1973-01-01') 
-        warnings.filterwarnings('default')
-        if dt_ser.max() < pd.to_datetime('1973-01-01'):
-            return False
-        return True
-        
-    except Exception:
-        warnings.filterwarnings('default')
-        return False
-
 def get_mode(ser):
     mode_raw = ser.mode()
     if len(mode_raw) == 0:
@@ -125,7 +106,7 @@ def int_digits(n):
 class ColDisplayHints(ColAnalysis):
     requires_summary = ['min', 'max', '_type']
     provides_summary = [
-        'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'type', 'formatter']
+        'is_numeric', 'min_digits', 'max_digits', 'type', 'formatter']
 
     @staticmethod
     def computed_summary(summary_dict):
@@ -139,9 +120,26 @@ class ColDisplayHints(ColAnalysis):
                 })
         return base_dict
 
+class PlColDisplayHints(PolarsAnalysis):
+    requires_summary = ['min', 'max', '_type', 'is_numeric']
+    provides_summary = [
+        'min_digits', 'max_digits', 'type', 'formatter']
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        base_dict = {'type':summary_dict['_type']}
+        if summary_dict['type_'] == 'datetime':
+            base_dict['formatter'] = 'default'
+        if summary_dict['is_numeric']:
+            base_dict.update({
+                'min_digits':int_digits(summary_dict['min']),
+                'max_digits':int_digits(summary_dict['max']),
+                })
+        return base_dict
+
 
 class BasicAnalysis(PolarsAnalysis):
-
+    provides_summary = ['null_count', 'mean', 'max', 'min', 'value_counts']
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
@@ -154,28 +152,31 @@ class BasicAnalysis(PolarsAnalysis):
 
 class PlTyping(PolarsAnalysis):
     column_ops = {'dtype':  ("all", lambda col_series: col_series.dtype)}
-    provides_summary = ['_type']
+    provides_summary = ['_type', 'is_numeric']
 
 
     @staticmethod
     def computed_summary(summary_dict):
         dt = summary_dict['dtype']
-        print("summary[dtype]", dt, type(dt))
+
+        res = {'is_numeric':  False}
 
         if dt in pdt.INTEGER_DTYPES:
-            summary_dict['_type'] = 'integer'
+            t = 'integer'
         elif dt in pdt.DATETIME_DTYPES:
-            summary_dict['_type'] = 'datetime'
+            t = 'datetime'
         elif dt in pdt.FLOAT_DTYPES:
-            summary_dict['_type'] = 'float'
+            t = 'float'
         elif dt == pdt.Utf8:
-            summary_dict['_type'] = 'string'
+            t = 'string'
         elif dt == pdt.Boolean:
-            summary_dict['_type'] = 'boolean'
+            t = 'boolean'
         else:
-            summary_dict['_type'] = 'unknown'
-        print(summary_dict['_type'])
-        return summary_dict
+            t = 'unknown'
+        if t in ('integer', 'float'):
+            res['is_numeric'] = True
+        res['_type'] = t
+        return res
 
 class TypingStats(ColAnalysis):
     provides_summary = [
@@ -217,4 +218,4 @@ class HistogramAnalysis(PolarsAnalysis):
         'hist': (NUMERIC_POLARS_DTYPES,
                  lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 
-PL_Analysis_Klasses = [BasicAnalysis, PlTyping]
+PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints]
