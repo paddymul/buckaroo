@@ -32,76 +32,11 @@ Overtime codebases will probably trend towards many classes with single facts, b
 
 
 
-class TypingStats(ColAnalysis):
-    provides_summary = [
-        'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
-    #requires_summary = ['min', 'max', '_type']
-
-    @staticmethod
-    def series_summary(sampled_ser, ser):
-        return dict(
-            dtype=ser.dtype,
-            is_numeric=pd.api.types.is_numeric_dtype(ser),
-            is_integer=pd.api.types.is_integer_dtype(ser),
-            is_datetime=probable_datetime(ser),
-            is_bool=pd.api.types.is_bool_dtype(ser),
-            is_float=pd.api.types.is_float_dtype(ser),
-            is_string=pd.api.types.is_string_dtype(ser),
-            memory_usage=ser.memory_usage())
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        _type = "obj"
-        if summary_dict['is_bool']:
-            _type = "boolean"
-        elif summary_dict['is_numeric']:
-            if summary_dict['is_float']:
-                _type = "float"
-            else:
-                _type = "integer"
-        #elif pd.api.types.is_datetime64_any_dtype(ser):
-        elif summary_dict['is_datetime']:
-            _type = 'datetime'
-        elif summary_dict['is_string']:
-            _type = "string"
-        return dict(_type=_type)
-
-
-
-class DefaultSummaryStats(ColAnalysis):
-    provides_summary = [
-        'length', 'min', 'max', 'mean', 'nan_count',
-        'value_counts', 'mode']
-
-    @staticmethod
-    def series_summary(sampled_ser, ser):
-        len_ = len(ser)
-        value_counts = ser.value_counts()
-        nan_count = len_ - len(ser.dropna())
-        is_numeric = pd.api.types.is_numeric_dtype(ser)
-        is_bool = pd.api.types.is_bool_dtype(ser)
-
-        base_d = dict(
-            length=len_,
-            nan_count=nan_count,
-            value_counts=value_counts,
-            mode=get_mode(ser),
-            min=np.nan,
-            max=np.nan)
-        if is_numeric and not is_bool:
-            base_d.update({
-                'mean': ser.mean(),
-                'min': ser.dropna().min(),
-                'max': ser.dropna().max()})
-        return base_d
-
 class ComputedDefaultSummaryStats(PolarsAnalysis):
-
     summary_stats_display = [
         'dtype',
         'length', 'nan_count', 'distinct_count', 'empty_count',
         'empty_per', 'unique_per', 'is_numeric', 
-        #'is_integer', 'is_datetime', 
         'mode', 'min', 'max','mean']
 
     requires_summary = ['length', 'nan_count',
@@ -112,21 +47,11 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
     @staticmethod
     def computed_summary(summary_dict):
         len_ = summary_dict['length']
-        # value_counts = summary_dict['value_counts']
-        # try:
-        #     empty_count = value_counts.get('', 0)
-        # except Exception:
-        #     empty_count = 0
-        # distinct_count=len(value_counts)
-        # unique_count = len(value_counts[value_counts==1])
-
+        
         return dict(
-            unique_count=unique_count,
-            empty_count=empty_count,
-            distinct_count=distinct_count,
-            distinct_per=distinct_count/len_,
-            empty_per=empty_count/len_,
-            unique_per=unique_count/len_,
+            distinct_per=summary_dict['distinct_count']/len_,
+            empty_per=summary_dict.get('empty_count',0)/len_,
+            unique_per=summary_dict['unique_count']/len_,
             nan_per=summary_dict['nan_count']/len_)
 
 
@@ -141,14 +66,12 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().null_count().name.map(json_postfix('nan_count')),
         F.all().min().name.map(json_postfix('min')),
         F.all().max().name.map(json_postfix('max')),
-        F.all().mode().name.map(json_postfix('mode')),
+        F.all().mode().implode().name.map(json_postfix('mode')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().value_counts(sort=True).slice(10).implode().name.map(json_postfix('value_counts')),
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
         F.all().approx_n_unique().name.map(json_postfix('distinct_count')),
         (F.all().len() - F.all().is_duplicated().sum()).name.map(json_postfix('unique_count')),
-
-
     ]
 
 class PlTyping(PolarsAnalysis):
@@ -201,6 +124,6 @@ class PlColDisplayHints(PolarsAnalysis):
                 })
         return base_dict
 
-
-
-PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints, HistogramAnalysis, ComputedDefaultSummaryStats]
+PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints,
+                       #HistogramAnalysis,
+                       ComputedDefaultSummaryStats]
