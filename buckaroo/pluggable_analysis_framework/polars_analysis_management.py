@@ -57,7 +57,7 @@ class HistogramAnalysis(PolarsAnalysis):
 
 def produce_series_df(df:pl.DataFrame,
                       unordered_objs:List[PolarsAnalysis],
-                      df_name='test_df', debug=False):
+                      df_name:str='test_df', debug:bool=False):
     """ just executes the series methods
 
     """
@@ -80,7 +80,7 @@ def produce_series_df(df:pl.DataFrame,
 
 def full_produce_summary_df(
         df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
-        df_name='test_df', debug=False):
+        df_name:str='test_df', debug:bool=False):
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
