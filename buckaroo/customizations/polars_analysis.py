@@ -102,40 +102,39 @@ def int_digits(n):
 
 
 
-
-class ColDisplayHints(ColAnalysis):
-    requires_summary = ['min', 'max', '_type']
+class TypingStats(ColAnalysis):
     provides_summary = [
-        'is_numeric', 'min_digits', 'max_digits', 'type', 'formatter']
+        'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
+    #requires_summary = ['min', 'max', '_type']
+
+    @staticmethod
+    def series_summary(sampled_ser, ser):
+        return dict(
+            dtype=ser.dtype,
+            is_numeric=pd.api.types.is_numeric_dtype(ser),
+            is_integer=pd.api.types.is_integer_dtype(ser),
+            is_datetime=probable_datetime(ser),
+            is_bool=pd.api.types.is_bool_dtype(ser),
+            is_float=pd.api.types.is_float_dtype(ser),
+            is_string=pd.api.types.is_string_dtype(ser),
+            memory_usage=ser.memory_usage())
 
     @staticmethod
     def computed_summary(summary_dict):
-        base_dict = {'type':summary_dict['_type']}
-        if summary_dict['is_datetime']:
-            base_dict['formatter'] = 'default'
-        if summary_dict['is_numeric'] and not summary_dict['is_bool']:
-            base_dict.update({
-                'min_digits':int_digits(summary_dict['min']),
-                'max_digits':int_digits(summary_dict['max']),
-                })
-        return base_dict
-
-class PlColDisplayHints(PolarsAnalysis):
-    requires_summary = ['min', 'max', '_type', 'is_numeric']
-    provides_summary = [
-        'min_digits', 'max_digits', 'type', 'formatter']
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        base_dict = {'type':summary_dict['_type']}
-        if summary_dict['type_'] == 'datetime':
-            base_dict['formatter'] = 'default'
-        if summary_dict['is_numeric']:
-            base_dict.update({
-                'min_digits':int_digits(summary_dict['min']),
-                'max_digits':int_digits(summary_dict['max']),
-                })
-        return base_dict
+        _type = "obj"
+        if summary_dict['is_bool']:
+            _type = "boolean"
+        elif summary_dict['is_numeric']:
+            if summary_dict['is_float']:
+                _type = "float"
+            else:
+                _type = "integer"
+        #elif pd.api.types.is_datetime64_any_dtype(ser):
+        elif summary_dict['is_datetime']:
+            _type = 'datetime'
+        elif summary_dict['is_string']:
+            _type = "string"
+        return dict(_type=_type)
 
 
 class BasicAnalysis(PolarsAnalysis):
@@ -178,44 +177,48 @@ class PlTyping(PolarsAnalysis):
         res['_type'] = t
         return res
 
-class TypingStats(ColAnalysis):
-    provides_summary = [
-        'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
-    #requires_summary = ['min', 'max', '_type']
-
-    @staticmethod
-    def series_summary(sampled_ser, ser):
-        return dict(
-            dtype=ser.dtype,
-            is_numeric=pd.api.types.is_numeric_dtype(ser),
-            is_integer=pd.api.types.is_integer_dtype(ser),
-            is_datetime=probable_datetime(ser),
-            is_bool=pd.api.types.is_bool_dtype(ser),
-            is_float=pd.api.types.is_float_dtype(ser),
-            is_string=pd.api.types.is_string_dtype(ser),
-            memory_usage=ser.memory_usage())
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        _type = "obj"
-        if summary_dict['is_bool']:
-            _type = "boolean"
-        elif summary_dict['is_numeric']:
-            if summary_dict['is_float']:
-                _type = "float"
-            else:
-                _type = "integer"
-        #elif pd.api.types.is_datetime64_any_dtype(ser):
-        elif summary_dict['is_datetime']:
-            _type = 'datetime'
-        elif summary_dict['is_string']:
-            _type = "string"
-        return dict(_type=_type)
-
-
 class HistogramAnalysis(PolarsAnalysis):
     column_ops = {
         'hist': (NUMERIC_POLARS_DTYPES,
                  lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
+
+
+
+
+class ColDisplayHints(ColAnalysis):
+    requires_summary = ['min', 'max', '_type']
+    provides_summary = [
+        'is_numeric', 'min_digits', 'max_digits', 'type', 'formatter']
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        base_dict = {'type':summary_dict['_type']}
+        if summary_dict['is_datetime']:
+            base_dict['formatter'] = 'default'
+        if summary_dict['is_numeric'] and not summary_dict['is_bool']:
+            base_dict.update({
+                'min_digits':int_digits(summary_dict['min']),
+                'max_digits':int_digits(summary_dict['max']),
+                })
+        return base_dict
+
+class PlColDisplayHints(PolarsAnalysis):
+    requires_summary = ['min', 'max', '_type', 'is_numeric']
+    provides_summary = [
+        'min_digits', 'max_digits', 'type', 'formatter']
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        base_dict = {'type':summary_dict['_type']}
+        if summary_dict['_type'] == 'datetime':
+            base_dict['formatter'] = 'default'
+        if summary_dict['is_numeric']:
+            base_dict.update({
+                'min_digits':int_digits(summary_dict['min']),
+                'max_digits':int_digits(summary_dict['max']),
+                })
+        return base_dict
+
+
 
 PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints]

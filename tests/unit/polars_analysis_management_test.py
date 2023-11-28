@@ -1,3 +1,5 @@
+from unittest import TestCase
+
 import polars as pl
 import numpy as np
 from polars import functions as F
@@ -6,7 +8,7 @@ from buckaroo.customizations.polars_analysis import HistogramAnalysis
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    produce_series_df, PolarsAnalysis)
+    produce_series_df, PolarsAnalysis, extract_table_hint)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -43,9 +45,7 @@ def test_produce_series_df():
     assert dsdf == expected
 
 class MaxAnalysis(PolarsAnalysis):
-
     select_clauses = [F.all().max().name.map(json_postfix('max'))]
-
 
 def test_produce_series_combine_df():
     """just make sure this doesn't fail"""
@@ -72,6 +72,29 @@ def test_produce_series_column_ops():
         [3, 0, 1, 0, 0, 0, 0, 0, 0, 1],
         [1, 10.1, 20.2, 30.299999999999997, 40.4, 50.5, 60.599999999999994, 70.7,
          80.8, 90.89999999999999, 100])
+
+def test_extract_table_hint():
+
+    summary_dict = {'a': {'null_count': 0,
+                          'mean': 35.0,
+                          'max': 100,
+                          'min': 2,
+                          'is_numeric': True,
+                          '_type': 'integer',
+                          'type': 'integer'}
+                    }
+
+
+    expected =  {
+        'a': {
+            'type':'integer',
+            'is_numeric': True,
+            'is_integer': None,
+            'min_digits':None,
+            'max_digits':None,
+            'formatter':None,
+            'histogram': []}}
+    TestCase().assertDictEqual(expected, extract_table_hint(summary_dict, ['a']))
 
 
 
