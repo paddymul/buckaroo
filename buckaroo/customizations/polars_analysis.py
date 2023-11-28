@@ -4,7 +4,7 @@ from polars import functions as F
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings
 
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import NUMERIC_POLARS_DTYPES, PolarsAnalysis, normalize_polars_histogram
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
 
 def probable_datetime(ser):
@@ -179,4 +179,10 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().quantile(.99).name.map(json_postfix('quin99')),
         F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
     ]
+
+
+class HistogramAnalysis(PolarsAnalysis):
+    column_ops = {
+        'hist': (NUMERIC_POLARS_DTYPES,
+                 lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 

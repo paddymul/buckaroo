@@ -1,8 +1,8 @@
 
-import json
-from collections import defaultdict 
 
 import polars as pl
+
+from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 
 from .pluggable_analysis_framework import ColAnalysis
@@ -13,12 +13,6 @@ from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_d
 from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
 
 
-def split_to_dicts(stat_df:pl.DataFrame) -> Mapping[str, MutableMapping[str, Any]]:
-    summary: MutableMapping[str, MutableMapping[str, Any]] = defaultdict(lambda : {})
-    for col in stat_df.columns:
-        orig_col, measure = json.loads(col)
-        summary[orig_col][measure] = stat_df[col][0]
-    return summary
 
 class PolarsAnalysis(ColAnalysis):
     select_clauses:List[pl.Expr] = []
@@ -37,12 +31,6 @@ NUMERIC_POLARS_DTYPES:List[pl.PolarsDataType] = [
     pl.Int8, pl.Int16, pl.Int32, pl.Int64, 
     pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
     pl.Float32, pl.Float64]
-
-class HistogramAnalysis(PolarsAnalysis):
-    column_ops = {
-        'hist': (NUMERIC_POLARS_DTYPES, 
-                 lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
-
 
 def produce_series_df(df:pl.DataFrame,
                       unordered_objs:List[PolarsAnalysis],
