@@ -72,21 +72,7 @@ def numeric_histogram(histogram_args, min_, max_, nan_per):
         ret_histo.append(nan_observation)
     return ret_histo
 
-
-
-def histogram(histogram_args, length, value_counts, min_, max_, is_numeric, nan_per):
-    if is_numeric and len(value_counts)>5:
-        temp_histo =  numeric_histogram(
-            histogram_args,
-            min_, max_, nan_per)
-        if len(temp_histo) > 5:
-            #if we had basically a categorical variable encoded into an integer.. don't return it
-            return temp_histo
-    return categorical_histogram(length, value_counts, nan_per)
-
-
 class Histogram(ColAnalysis):
-
     @staticmethod
     def series_summary(sampled_ser, ser):
         if not pd.api.types.is_numeric_dtype(ser):
@@ -108,20 +94,21 @@ class Histogram(ColAnalysis):
                 low_tail=low_tail,
                 high_tail=high_tail))
 
-
     requires_summary = ['value_counts', 'nan_per', 'is_numeric', 'length',
-                        'min', 'max',
-                        ]
+                        'min', 'max',]
     provides_summary = ['histogram', 'histogram_args']
 
     @staticmethod
     def computed_summary(summary_dict):
-        return dict(
-            histogram=histogram(
-                summary_dict['histogram_args'],
-                summary_dict['length'],
-                summary_dict['value_counts'],
-                summary_dict['min'], summary_dict['max'],
-                summary_dict['is_numeric'], summary_dict['nan_per']))
-    provides_summary = [
-        'dtype', 'is_numeric', 'is_integer', 'is_datetime',]
+        is_numeric = summary_dict['is_numeric']
+        value_counts = summary_dict['value_counts']
+        nan_per = summary_dict['nan_per']
+        if is_numeric and len(value_counts) > 5:
+            histogram_args = summary_dict['histogram_args']
+            min_, max_ = summary_dict['min'], summary_dict['max']
+            temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
+            if len(temp_histo) > 5:
+                #if we had basically a categorical variable encoded into an integer.. don't return it
+                return {'histogram': temp_histo}
+        length = summary_dict['length']
+        return {'histogram':categorical_histogram(length, value_counts, nan_per)}
