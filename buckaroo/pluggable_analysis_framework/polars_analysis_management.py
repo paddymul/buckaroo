@@ -12,19 +12,19 @@ from .analysis_management import (produce_summary_df, AnalsysisPipeline, DfStats
 from .utils import (BASE_COL_HINT)
 from buckaroo.serialization_utils import pick, d_update
 from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
-from typing import Mapping, Any, Callable, Tuple, List
+from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
 
 
-def split_to_dicts(stat_df:pl.DataFrame) -> Mapping[str, Mapping[str, Any]]:
-    summary = defaultdict(lambda : {})
+def split_to_dicts(stat_df:pl.DataFrame) -> Mapping[str, MutableMapping[str, Any]]:
+    summary: MutableMapping[str, MutableMapping[str, Any]] = defaultdict(lambda : {})
     for col in stat_df.columns:
         orig_col, measure = json.loads(col)
         summary[orig_col][measure] = stat_df[col][0]
     return summary
 
 class PolarsAnalysis(ColAnalysis):
-    select_clauses:pl.Expr = []
-    column_ops: Mapping[str, Tuple[pl.PolarsDataType, Callable[[pl.Series], any]]] = {}
+    select_clauses:List[pl.Expr] = []
+    column_ops: Mapping[str, Tuple[List[pl.PolarsDataType], Callable[[pl.Series], Any]]] = {}
 
 class BasicAnalysis(PolarsAnalysis):
 
@@ -55,11 +55,13 @@ class HistogramAnalysis(PolarsAnalysis):
                  lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 
 
-def produce_series_df(df:pl.DataFrame, unordered_objs:PolarsAnalysis, df_name='test_df', debug=False):
+def produce_series_df(df:pl.DataFrame,
+                      unordered_objs:List[PolarsAnalysis],
+                      df_name='test_df', debug=False):
     """ just executes the series methods
 
     """
-    errs = {}
+    errs: MutableMapping[str, str] = {}
     all_clauses = []
     for obj in unordered_objs:
         all_clauses.extend(obj.select_clauses)
@@ -76,7 +78,9 @@ def produce_series_df(df:pl.DataFrame, unordered_objs:PolarsAnalysis, df_name='t
                 pass
     return summary_dict, errs
 
-def full_produce_summary_df(df:pl.DataFrame, ordered_objs:PolarsAnalysis, df_name='test_df', debug=False):
+def full_produce_summary_df(
+        df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
+        df_name='test_df', debug=False):
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
