@@ -2,7 +2,7 @@
 
 import polars as pl
 
-from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
+from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts, NUMERIC_POLARS_DTYPES
 
 
 from .pluggable_analysis_framework import ColAnalysis
@@ -27,10 +27,6 @@ def normalize_polars_histogram(ph:pl.DataFrame, ser:pl.Series):
     #counts = ph['_count'].to_list()
     return counts[1:], edges
 
-NUMERIC_POLARS_DTYPES:List[pl.PolarsDataType] = [
-    pl.Int8, pl.Int16, pl.Int32, pl.Int64, 
-    pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
-    pl.Float32, pl.Float64]
 
 def produce_series_df(df:pl.DataFrame,
                       unordered_objs:List[PolarsAnalysis],
