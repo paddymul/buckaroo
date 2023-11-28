@@ -1,3 +1,4 @@
+import json
 import sys
 import pandas as pd
 import numpy as np
@@ -74,4 +75,9 @@ def replace_in_dict(input_dict, replace_tuples):
                     break
             ret_dict[k] = v
     return ret_dict
+
+
+def json_postfix(postfix):
+    return lambda nm: json.dumps([nm, postfix])
     
+

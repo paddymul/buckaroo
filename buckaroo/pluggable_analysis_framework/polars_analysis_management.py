@@ -5,19 +5,17 @@ from collections import defaultdict
 import polars as pl
 from polars import functions as F
 
+from buckaroo.pluggable_analysis_framework.utils import json_postfix
+
 from .pluggable_analysis_framework import ColAnalysis
 from .analysis_management import (produce_summary_df, AnalsysisPipeline, DfStats)
 from .utils import (BASE_COL_HINT)
 from buckaroo.serialization_utils import pick, d_update
 from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
+from typing import Mapping, Any, Callable, Tuple, List
 
 
-
-def json_postfix(postfix):
-    return lambda nm: json.dumps([nm, postfix])
-
-
-def split_to_dicts(stat_df):
+def split_to_dicts(stat_df:pl.DataFrame) -> Mapping[str, Mapping[str, Any]]:
     summary = defaultdict(lambda : {})
     for col in stat_df.columns:
         orig_col, measure = json.loads(col)
@@ -25,8 +23,8 @@ def split_to_dicts(stat_df):
     return summary
 
 class PolarsAnalysis(ColAnalysis):
-    select_clauses = []
-    column_ops = {}
+    select_clauses:pl.Expr = []
+    column_ops: Mapping[str, Tuple[pl.PolarsDataType, Callable[[pl.Series], any]]] = {}
 
 class BasicAnalysis(PolarsAnalysis):
 
@@ -37,7 +35,7 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
     ]
 
-def normalize_polars_histogram(ph, ser):
+def normalize_polars_histogram(ph:pl.DataFrame, ser:pl.Series):
     edges = ph['break_point'].to_list()
     edges[0], edges[-1] = ser.min(), ser.max()
     #col_series.hist(bin_count=10)
@@ -46,16 +44,18 @@ def normalize_polars_histogram(ph, ser):
     #counts = ph['_count'].to_list()
     return counts[1:], edges
 
-NUMERIC_POLARS_DTYPES = [
+NUMERIC_POLARS_DTYPES:List[pl.PolarsDataType] = [
     pl.Int8, pl.Int16, pl.Int32, pl.Int64, 
     pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
     pl.Float32, pl.Float64]
 
 class HistogramAnalysis(PolarsAnalysis):
-    column_ops = {'hist': (NUMERIC_POLARS_DTYPES, lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
+    column_ops = {
+        'hist': (NUMERIC_POLARS_DTYPES, 
+                 lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 
 
-def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
+def produce_series_df(df:pl.DataFrame, unordered_objs:PolarsAnalysis, df_name='test_df', debug=False):
     """ just executes the series methods
 
     """
@@ -76,7 +76,7 @@ def produce_series_df(df, unordered_objs, df_name='test_df', debug=False):
                 pass
     return summary_dict, errs
 
-def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
+def full_produce_summary_df(df:pl.DataFrame, ordered_objs:PolarsAnalysis, df_name='test_df', debug=False):
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
@@ -121,50 +121,9 @@ class PlDfStats(DfStats):
     '''
     ap_class = PolarsAnalsysisPipeline
     
-    # def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
-    #     self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
-    #     self.col_order = self.df.columns
-    #     self.ap = PolarsAnalsysisPipeline(col_analysis_objs)
-    #     self.operating_df_name = operating_df_name
-    #     self.debug = debug
-
-    #     self.sdf, self.table_hints, errs = self.ap.process_df(self.df, self.debug)
-    #     if errs:
-    #         output_full_reproduce(errs, self.sdf, operating_df_name)
-        
-    # def get_operating_df(self, df, force_full_eval):
-    #     rows = len(df)
-    #     cols = len(df.columns)
-    #     item_count = rows * cols
-
-    #     if item_count > FAST_SUMMARY_WHEN_GREATER:
-    #         return df.sample(min([50_000, len(df)]))
-    #     else:
-    #         return df
-
     @property
     def presentation_sdf(self):
         import pandas as pd
         if self.ap.summary_stats_display == "all":
             return pd.DataFrame(self.sdf)
         return safe_summary_df(self.sdf, self.ap.summary_stats_display)
-
-    # def add_analysis(self, a_obj):
-    #     passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
-    #     #if you're adding analysis interactively, of course you want debug info... I think
-    #     self.sdf, self.table_hints, errs = self.ap.process_df(self.df, debug=True)
-    #     if passed_unit_tests is False:
-    #         print("Unit tests failed")
-    #     if errs:
-    #         print("Errors on original dataframe")
-
-    #     if ut_errs or errs:
-    #         output_reproduce_preamble()
-    #     if ut_errs:
-    #         # setting debug=False here because we're already printing reproduce instructions, let the users produce their own stacktrace.. I think
-    #         ut_summary_df, _unused_table_hint_dict, ut_errs2 = produce_summary_df(
-    #             PERVERSE_DF, self.ap.ordered_a_objs, debug=False)
-    #         output_full_reproduce(ut_errs, ut_summary_df, "PERVERSE_DF")
-    #     if errs:
-    #         output_full_reproduce(errs, self.sdf, self.operating_df_name)
-
