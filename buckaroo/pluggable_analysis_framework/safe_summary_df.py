@@ -31,7 +31,9 @@ def safe_summary_df(base_summary_df, index_list):
     return pd.DataFrame(base_summary_df, index_list)
 
 def reproduce_summary(ser_name_qualifier, kls, summary_df, err, operating_df_name):
-    ser_name, method_name = ser_name_qualifier.split(':')
+    #print("ser_name_qualifier", ser_name_qualifier)
+    #ser_name, method_name = ser_name_qualifier.split(':')
+    ser_name, method_name = ser_name_qualifier
     ssdf = safe_summary_df(summary_df, kls.requires_summary)
     summary_ser = ssdf[ser_name]
     minimal_summary_dict = pick(summary_ser, kls.requires_summary)

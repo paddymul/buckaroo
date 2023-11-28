@@ -52,7 +52,6 @@ class DefaultSummaryStats(ColAnalysis):
         'length', 'min', 'max', 'mean', 'nan_count',
         'value_counts', 'mode']
 
-    
     @staticmethod
     def series_summary(sampled_ser, ser):
         len_ = len(ser)
@@ -161,18 +160,21 @@ class PlTyping(PolarsAnalysis):
     @staticmethod
     def computed_summary(summary_dict):
         dt = summary_dict['dtype']
-        if dt in [k.name for k in pdt.INTEGER_DTYPES]:
+        print("summary[dtype]", dt, type(dt))
+
+        if dt in pdt.INTEGER_DTYPES:
             summary_dict['_type'] = 'integer'
-        if dt in [k.name for k in pdt.DATETIME_DTYPES]:
+        elif dt in pdt.DATETIME_DTYPES:
             summary_dict['_type'] = 'datetime'
-        elif dt in [k.name for k in pdt.FLOAT_DTYPES]:
+        elif dt in pdt.FLOAT_DTYPES:
             summary_dict['_type'] = 'float'
-        elif dt == "Utf8":
+        elif dt == pdt.Utf8:
             summary_dict['_type'] = 'string'
-        elif dt == "Boolean":
+        elif dt == pdt.Boolean:
             summary_dict['_type'] = 'boolean'
         else:
             summary_dict['_type'] = 'unknown'
+        print(summary_dict['_type'])
         return summary_dict
 
 class TypingStats(ColAnalysis):
