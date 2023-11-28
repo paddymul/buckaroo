@@ -44,9 +44,11 @@ def produce_series_df(df:pl.DataFrame,
     for pa in unordered_objs:
         for measure_name, action_tuple in pa.column_ops.items():
             col_selector, func = action_tuple
-            sub_df = df.select(pl.col(col_selector))
+            if col_selector == "all":
+                sub_df = df.select(pl.all())
+            else:
+                sub_df = df.select(pl.col(col_selector))
             for col in sub_df.columns:
-                print("measure_name", measure_name, "col", col, "df[col]", df[col])
                 summary_dict[col][measure_name] = func(df[col])
                 pass
     return summary_dict, errs

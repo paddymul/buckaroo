@@ -1,11 +1,12 @@
-import polars as pl
 import pandas as pd
 import numpy as np
 from polars import functions as F
+from polars import datatypes as pdt
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings
 
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import NUMERIC_POLARS_DTYPES, PolarsAnalysis, normalize_polars_histogram
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis, normalize_polars_histogram
+from buckaroo.pluggable_analysis_framework.polars_utils import NUMERIC_POLARS_DTYPES
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
 
 def probable_datetime(ser):
@@ -45,38 +46,6 @@ Overtime codebases will probably trend towards many classes with single facts, b
 
 """
 
-class TypingStats(ColAnalysis):
-    provides_summary = [
-        'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
-
-    @staticmethod
-    def series_summary(sampled_ser, ser):
-        return dict(
-            dtype=ser.dtype,
-            is_numeric=pd.api.types.is_numeric_dtype(ser),
-            is_integer=pd.api.types.is_integer_dtype(ser),
-            is_datetime=probable_datetime(ser),
-            is_bool=pd.api.types.is_bool_dtype(ser),
-            is_float=pd.api.types.is_float_dtype(ser),
-            is_string=pd.api.types.is_string_dtype(ser),
-            memory_usage=ser.memory_usage())
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        _type = "obj"
-        if summary_dict['is_bool']:
-            _type = "boolean"
-        elif summary_dict['is_numeric']:
-            if summary_dict['is_float']:
-                _type = "float"
-            else:
-                _type = "integer"
-        #elif pd.api.types.is_datetime64_any_dtype(ser):
-        elif summary_dict['is_datetime']:
-            _type = 'datetime'
-        elif summary_dict['is_string']:
-            _type = "string"
-        return dict(_type=_type)
 
 class DefaultSummaryStats(ColAnalysis):
     provides_summary = [
@@ -183,12 +152,67 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
     ]
 
-class PlTyping:
-    column_ops = {'dtype':  (pl.all(), lambda col_series: col_series.dtype)}
+
+class PlTyping(PolarsAnalysis):
+    column_ops = {'dtype':  ("all", lambda col_series: col_series.dtype)}
+    provides_summary = ['_type']
+
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        dt = summary_dict['dtype']
+        if dt in [k.name for k in pdt.INTEGER_DTYPES]:
+            summary_dict['_type'] = 'integer'
+        if dt in [k.name for k in pdt.DATETIME_DTYPES]:
+            summary_dict['_type'] = 'datetime'
+        elif dt in [k.name for k in pdt.FLOAT_DTYPES]:
+            summary_dict['_type'] = 'float'
+        elif dt == "Utf8":
+            summary_dict['_type'] = 'string'
+        elif dt == "Boolean":
+            summary_dict['_type'] = 'boolean'
+        else:
+            summary_dict['_type'] = 'unknown'
+        return summary_dict
+
+class TypingStats(ColAnalysis):
+    provides_summary = [
+        'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
+    #requires_summary = ['min', 'max', '_type']
+
+    @staticmethod
+    def series_summary(sampled_ser, ser):
+        return dict(
+            dtype=ser.dtype,
+            is_numeric=pd.api.types.is_numeric_dtype(ser),
+            is_integer=pd.api.types.is_integer_dtype(ser),
+            is_datetime=probable_datetime(ser),
+            is_bool=pd.api.types.is_bool_dtype(ser),
+            is_float=pd.api.types.is_float_dtype(ser),
+            is_string=pd.api.types.is_string_dtype(ser),
+            memory_usage=ser.memory_usage())
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        _type = "obj"
+        if summary_dict['is_bool']:
+            _type = "boolean"
+        elif summary_dict['is_numeric']:
+            if summary_dict['is_float']:
+                _type = "float"
+            else:
+                _type = "integer"
+        #elif pd.api.types.is_datetime64_any_dtype(ser):
+        elif summary_dict['is_datetime']:
+            _type = 'datetime'
+        elif summary_dict['is_string']:
+            _type = "string"
+        return dict(_type=_type)
+
 
 class HistogramAnalysis(PolarsAnalysis):
     column_ops = {
         'hist': (NUMERIC_POLARS_DTYPES,
                  lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
 
-PL_Analysis_Klasses = [BasicAnalysis]
+PL_Analysis_Klasses = [BasicAnalysis, PlTyping]
