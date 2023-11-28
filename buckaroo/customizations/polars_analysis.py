@@ -1,3 +1,4 @@
+import polars as pl
 import pandas as pd
 import numpy as np
 from polars import functions as F
@@ -29,65 +30,6 @@ Overtime codebases will probably trend towards many classes with single facts, b
 """
 
 
-class DefaultSummaryStats(ColAnalysis):
-    provides_summary = [
-        'length', 'min', 'max', 'mean', 'nan_count',
-        'value_counts', 'mode']
-
-    @staticmethod
-    def series_summary(sampled_ser, ser):
-        len_ = len(ser)
-        value_counts = ser.value_counts()
-        nan_count = len_ - len(ser.dropna())
-        is_numeric = pd.api.types.is_numeric_dtype(ser)
-        is_bool = pd.api.types.is_bool_dtype(ser)
-
-        base_d = dict(
-            length=len_,
-            nan_count=nan_count,
-            value_counts=value_counts,
-            mode=get_mode(ser),
-            min=np.nan,
-            max=np.nan)
-        if is_numeric and not is_bool:
-            base_d.update({
-                'mean': ser.mean(),
-                'min': ser.dropna().min(),
-                'max': ser.dropna().max()})
-        return base_d
-
-class ComputedDefaultSummaryStats(ColAnalysis):
-
-    summary_stats_display = [
-        'dtype',
-        'length', 'nan_count', 'distinct_count', 'empty_count',
-        'empty_per', 'unique_per', 'is_numeric', 'is_integer',
-        'is_datetime', 'mode', 'min', 'max','mean']
-
-    requires_summary = ['length', 'nan_count',
-                        'value_counts']
-    provides_summary = ['distinct_per', 'empty_per', 'unique_per', 'nan_per',
-                        'unique_count', 'empty_count', 'distinct_count']
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        len_ = summary_dict['length']
-        value_counts = summary_dict['value_counts']
-        try:
-            empty_count = value_counts.get('', 0)
-        except Exception:
-            empty_count = 0
-        distinct_count=len(value_counts)
-        unique_count = len(value_counts[value_counts==1])
-
-        return dict(
-            unique_count=unique_count,
-            empty_count=empty_count,
-            distinct_count=distinct_count,
-            distinct_per=distinct_count/len_,
-            empty_per=empty_count/len_,
-            unique_per=unique_count/len_,
-            nan_per=summary_dict['nan_count']/len_)
 
 
 class TypingStats(ColAnalysis):
@@ -125,21 +67,93 @@ class TypingStats(ColAnalysis):
         return dict(_type=_type)
 
 
-class BasicAnalysis(PolarsAnalysis):
-    provides_summary = ['null_count', 'mean', 'max', 'min', 'value_counts']
-    select_clauses = [
-        F.all().null_count().name.map(json_postfix('null_count')),
-        F.all().mean().name.map(json_postfix('mean')),
-        F.all().max().name.map(json_postfix('max')),
-        F.all().min().name.map(json_postfix('min')),
-        F.all().quantile(.99).name.map(json_postfix('quin99')),
-        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
-    ]
 
+class DefaultSummaryStats(ColAnalysis):
+    provides_summary = [
+        'length', 'min', 'max', 'mean', 'nan_count',
+        'value_counts', 'mode']
+
+    @staticmethod
+    def series_summary(sampled_ser, ser):
+        len_ = len(ser)
+        value_counts = ser.value_counts()
+        nan_count = len_ - len(ser.dropna())
+        is_numeric = pd.api.types.is_numeric_dtype(ser)
+        is_bool = pd.api.types.is_bool_dtype(ser)
+
+        base_d = dict(
+            length=len_,
+            nan_count=nan_count,
+            value_counts=value_counts,
+            mode=get_mode(ser),
+            min=np.nan,
+            max=np.nan)
+        if is_numeric and not is_bool:
+            base_d.update({
+                'mean': ser.mean(),
+                'min': ser.dropna().min(),
+                'max': ser.dropna().max()})
+        return base_d
+
+class ComputedDefaultSummaryStats(PolarsAnalysis):
+
+    summary_stats_display = [
+        'dtype',
+        'length', 'nan_count', 'distinct_count', 'empty_count',
+        'empty_per', 'unique_per', 'is_numeric', 
+        #'is_integer', 'is_datetime', 
+        'mode', 'min', 'max','mean']
+
+    requires_summary = ['length', 'nan_count',
+                        'unique_count', 'empty_count', 'distinct_count']
+    provides_summary = ['distinct_per', 'empty_per', 'unique_per', 'nan_per']
+                        
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        len_ = summary_dict['length']
+        # value_counts = summary_dict['value_counts']
+        # try:
+        #     empty_count = value_counts.get('', 0)
+        # except Exception:
+        #     empty_count = 0
+        # distinct_count=len(value_counts)
+        # unique_count = len(value_counts[value_counts==1])
+
+        return dict(
+            unique_count=unique_count,
+            empty_count=empty_count,
+            distinct_count=distinct_count,
+            distinct_per=distinct_count/len_,
+            empty_per=empty_count/len_,
+            unique_per=unique_count/len_,
+            nan_per=summary_dict['nan_count']/len_)
+
+
+
+class BasicAnalysis(PolarsAnalysis):
+    provides_summary = ['length', 'nan_count', 'min', 'max', 'min',
+                        'mode', 'mean',
+                        'value_counts',
+                        'unique_count', 'empty_count', 'distinct_count']
+    select_clauses = [
+        F.all().len().name.map(json_postfix('length')),
+        F.all().null_count().name.map(json_postfix('nan_count')),
+        F.all().min().name.map(json_postfix('min')),
+        F.all().max().name.map(json_postfix('max')),
+        F.all().mode().name.map(json_postfix('mode')),
+        F.all().mean().name.map(json_postfix('mean')),
+        F.all().value_counts(sort=True).slice(10).implode().name.map(json_postfix('value_counts')),
+        F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
+        F.all().approx_n_unique().name.map(json_postfix('distinct_count')),
+        (F.all().len() - F.all().is_duplicated().sum()).name.map(json_postfix('unique_count')),
+
+
+    ]
 
 class PlTyping(PolarsAnalysis):
     column_ops = {'dtype':  ("all", lambda col_series: col_series.dtype)}
-    provides_summary = ['_type', 'is_numeric']
+    provides_summary = ['dtype', '_type', 'is_numeric']
 
 
     @staticmethod
@@ -189,4 +203,4 @@ class PlColDisplayHints(PolarsAnalysis):
 
 
 
-PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints]
+PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints, HistogramAnalysis, ComputedDefaultSummaryStats]
