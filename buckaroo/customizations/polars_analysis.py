@@ -1,7 +1,11 @@
 import pandas as pd
 import numpy as np
+from polars import functions as F
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings
+
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
+from buckaroo.pluggable_analysis_framework.utils import json_postfix
 
 def probable_datetime(ser):
     #turning off warnings in this single function is a bit of a hack.
@@ -165,4 +169,14 @@ class ColDisplayHints(ColAnalysis):
                 'max_digits':int_digits(summary_dict['max']),
                 })
         return base_dict
+
+
+class BasicAnalysis(PolarsAnalysis):
+
+    select_clauses = [
+        F.all().null_count().name.map(json_postfix('null_count')),
+        F.all().mean().name.map(json_postfix('mean')),
+        F.all().quantile(.99).name.map(json_postfix('quin99')),
+        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
+    ]
 

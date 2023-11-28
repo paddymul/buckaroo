@@ -9,7 +9,7 @@ from buckaroo.pluggable_analysis_framework.utils import BASE_COL_HINT, FAST_SUMM
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 from buckaroo.serialization_utils import pick, d_update
-
+from typing import Mapping, Any, Callable, Tuple, List, MutableMapping, TypeVar
 
 def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """ just executes the series methods
@@ -88,12 +88,19 @@ def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
 
     return summary_df, table_hint_col_dict, series_errs
 
+#TODO Figure out how to do proper typing with AnalysisPipeline and the polars subclasses
+# We want a TypeVar for DFType and AT.  But the main function, process_df whild still return 3 dicts
+#DFT = TypeVar("DFT") #DF Type
+#AT =  TypeVar("AT") #Analysis Type
 class AnalsysisPipeline(object):
     """
     manage the ordering of a set of col_analysis objects
     allow for computing summary_stats (and other oberservation sets) based on col_analysis objects
     allow col_anlysis objects to be added
     """
+
+    #this is only a list to prevent it from being interpretted as an instance method
+    #full_produce_func: List[Callable[[DFT, List[AT], str, bool], Any]] =
 
     full_produce_func = [full_produce_summary_df]
     

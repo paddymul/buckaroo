@@ -3,9 +3,7 @@ import json
 from collections import defaultdict 
 
 import polars as pl
-from polars import functions as F
 
-from buckaroo.pluggable_analysis_framework.utils import json_postfix
 
 from .pluggable_analysis_framework import ColAnalysis
 from .analysis_management import (produce_summary_df, AnalsysisPipeline, DfStats)
@@ -25,15 +23,6 @@ def split_to_dicts(stat_df:pl.DataFrame) -> Mapping[str, MutableMapping[str, Any
 class PolarsAnalysis(ColAnalysis):
     select_clauses:List[pl.Expr] = []
     column_ops: Mapping[str, Tuple[List[pl.PolarsDataType], Callable[[pl.Series], Any]]] = {}
-
-class BasicAnalysis(PolarsAnalysis):
-
-    select_clauses = [
-        F.all().null_count().name.map(json_postfix('null_count')),
-        F.all().mean().name.map(json_postfix('mean')),
-        F.all().quantile(.99).name.map(json_postfix('quin99')),
-        F.all().value_counts(sort=True).slice(0,10).implode().name.map(json_postfix('value_counts'))
-    ]
 
 def normalize_polars_histogram(ph:pl.DataFrame, ser:pl.Series):
     edges = ph['break_point'].to_list()
