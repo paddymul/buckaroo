@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from buckaroo.customizations.analysis_utils import int_digits
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings
 
@@ -133,20 +134,6 @@ class ComputedDefaultSummaryStats(ColAnalysis):
             empty_per=empty_count/l,
             unique_per=unique_count/l,
             nan_per=summary_dict['nan_count']/l)
-
-
-def int_digits(n):
-    if pd.isna(n):
-        return 1
-    if np.isnan(n):
-        return 1
-    if n == 0:
-        return 1
-    if np.sign(n) == -1:
-        return int(np.floor(np.log10(np.abs(n)))) + 2
-    return int(np.floor(np.log10(n)+1))
-
-
 
 
 class ColDisplayHints(ColAnalysis):

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from polars import functions as F
 from polars import datatypes as pdt
+from buckaroo.customizations.analysis_utils import int_digits
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings
 
@@ -89,19 +90,6 @@ class ComputedDefaultSummaryStats(ColAnalysis):
             nan_per=summary_dict['nan_count']/len_)
 
 
-def int_digits(n):
-    if pd.isna(n):
-        return 1
-    if np.isnan(n):
-        return 1
-    if n == 0:
-        return 1
-    if np.sign(n) == -1:
-        return int(np.floor(np.log10(np.abs(n)))) + 2
-    return int(np.floor(np.log10(n)+1))
-
-
-
 class TypingStats(ColAnalysis):
     provides_summary = [
         'dtype', 'is_numeric', 'is_integer', 'is_datetime', 'is_bool', 'is_float', '_type']
@@ -181,26 +169,6 @@ class HistogramAnalysis(PolarsAnalysis):
     column_ops = {
         'hist': (NUMERIC_POLARS_DTYPES,
                  lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
-
-
-
-
-class ColDisplayHints(ColAnalysis):
-    requires_summary = ['min', 'max', '_type']
-    provides_summary = [
-        'is_numeric', 'min_digits', 'max_digits', 'type', 'formatter']
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        base_dict = {'type':summary_dict['_type']}
-        if summary_dict['is_datetime']:
-            base_dict['formatter'] = 'default'
-        if summary_dict['is_numeric'] and not summary_dict['is_bool']:
-            base_dict.update({
-                'min_digits':int_digits(summary_dict['min']),
-                'max_digits':int_digits(summary_dict['max']),
-                })
-        return base_dict
 
 class PlColDisplayHints(PolarsAnalysis):
     requires_summary = ['min', 'max', '_type', 'is_numeric']
