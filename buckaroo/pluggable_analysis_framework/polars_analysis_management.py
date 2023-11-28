@@ -6,7 +6,7 @@ import polars as pl
 
 
 from .pluggable_analysis_framework import ColAnalysis
-from .analysis_management import (produce_summary_df, AnalsysisPipeline, DfStats)
+from .analysis_management import (produce_summary_df, AnalysisPipeline, DfStats)
 from .utils import (BASE_COL_HINT)
 from buckaroo.serialization_utils import pick, d_update
 from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
@@ -84,7 +84,7 @@ def full_produce_summary_df(
 
 
 
-class PolarsAnalsysisPipeline(AnalsysisPipeline):
+class PolarsAnalysisPipeline(AnalysisPipeline):
     """
     manage the ordering of a set of col_analysis objects
     allow for computing summary_stats (and other oberservation sets) based on col_analysis objects
@@ -112,7 +112,7 @@ class PlDfStats(DfStats):
     '''
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
-    ap_class = PolarsAnalsysisPipeline
+    ap_class = PolarsAnalysisPipeline
     
     @property
     def presentation_sdf(self):

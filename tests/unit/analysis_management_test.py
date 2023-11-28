@@ -4,7 +4,7 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
 
 from buckaroo.pluggable_analysis_framework.analysis_management import (
-    AnalsysisPipeline, NonExistentSummaryRowException, DfStats,
+    AnalysisPipeline, NonExistentSummaryRowException, DfStats,
     #produce_summary_df, #test this too
 
     full_produce_summary_df, produce_series_df)
@@ -83,12 +83,12 @@ class TestAnalysisPipeline(unittest.TestCase):
                 assert expected_set == set(hint_obj.keys())
 
     def test_pipeline_base(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         #just verify that there are no errors
         ap.process_df(df)
 
     def test_add_aobj(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']
@@ -101,7 +101,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         self.assertEqual(sdf['tripduration']['foo'], 8)
 
     def test_add_buggy_aobj(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']
@@ -115,7 +115,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         assert unit_test_results is False
 
     def test_replace_aobj(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']
@@ -148,14 +148,14 @@ class TestAnalysisPipeline(unittest.TestCase):
         """I don't remember what this test does, and I can't get it
         to work after the series_summary refactor
         """
-        ap = AnalsysisPipeline([TypingStats])
+        ap = AnalysisPipeline([TypingStats])
         self.assertEqual(ap.summary_stats_display, "all")
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         print(ap.summary_stats_display)
         self.assertTrue("dtype" in ap.summary_stats_display)
 
     def test_add_summary_stats_display(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']
@@ -165,7 +165,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         self.assertEquals(ap.summary_stats_display, ['foo'])
 
     def test_invalid_summary_stats_display_throws(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']
@@ -177,7 +177,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         self.assertRaises(NonExistentSummaryRowException, bad_add)
 
     def test_invalid_summary_stats_display_throws2(self):
-        ap = AnalsysisPipeline([TypingStats, DefaultSummaryStats])
+        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
             provides_summary = ['foo']
             requires_summary = ['length']

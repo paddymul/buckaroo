@@ -92,7 +92,7 @@ def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
 # We want a TypeVar for DFType and AT.  But the main function, process_df whild still return 3 dicts
 #DFT = TypeVar("DFT") #DF Type
 #AT =  TypeVar("AT") #Analysis Type
-class AnalsysisPipeline(object):
+class AnalysisPipeline(object):
     """
     manage the ordering of a set of col_analysis objects
     allow for computing summary_stats (and other oberservation sets) based on col_analysis objects
@@ -172,7 +172,7 @@ class DfStats(object):
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
 
-    ap_class = AnalsysisPipeline
+    ap_class = AnalysisPipeline
 
     def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
         self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
