@@ -26,6 +26,12 @@ class DumbTableHints(ColAnalysis):
                 'max_digits':10,
                 'histogram': []}
 
+class AlwaysErr(ColAnalysis):
+    provides_summary = ['foo']
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        1/0
 
 class TestAnalysisPipeline(unittest.TestCase):
 
@@ -66,6 +72,20 @@ class TestAnalysisPipeline(unittest.TestCase):
         sdf, th, errs = full_produce_summary_df(
             empty_df_with_columns, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
+
+    def test_full_produce_summary_df_errs(self):
+        """just make sure this doesn't fail"""
+        single_col_df = test_df[['empty_na_ser']]
+        sdf, th, errs = full_produce_summary_df(
+            single_col_df, [AlwaysErr], 'test_df', debug=False)
+
+        err_key = list(errs.keys())[0]
+        err_val = list(errs.values())[0]
+        assert err_key == ('empty_na_ser', 'computed_summary')
+        assert err_val[1] ==  AlwaysErr
+        #can't compare instances of Exception classes
+        # assert errs == {
+        #     ('empty_na_ser', 'computed_summary'): (ZeroDivisionError('division by zero'), AlwaysErr)}
 
     def test_produce_summary_df_hints(self):
         #this test should be ported over to the full basic_widget test with actaul verificaiton of values
