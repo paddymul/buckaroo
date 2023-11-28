@@ -7,10 +7,9 @@ from polars import functions as F
 
 from .pluggable_analysis_framework import ColAnalysis
 from .analysis_management import (produce_summary_df, AnalsysisPipeline, DfStats)
-from .utils import (BASE_COL_HINT, 
-                    FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF)
+from .utils import (BASE_COL_HINT)
 from buckaroo.serialization_utils import pick, d_update
-from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble, safe_summary_df
+from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
 
 
 
