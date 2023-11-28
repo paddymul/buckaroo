@@ -9,6 +9,8 @@ from buckaroo.pluggable_analysis_framework.analysis_management import (
 
     full_produce_summary_df, produce_series_df)
 
+from buckaroo.pluggable_analysis_framework.safe_summary_df import (output_full_reproduce)
+
 
 from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
 from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, word_only_df,
@@ -87,6 +89,11 @@ class TestAnalysisPipeline(unittest.TestCase):
         # assert errs == {
         #     ('empty_na_ser', 'computed_summary'): (ZeroDivisionError('division by zero'), AlwaysErr)}
 
+    def test_output_full_reproduce(self):
+        errs = {
+            ('empty_na_ser', 'computed_summary'): (ZeroDivisionError('division by zero'), AlwaysErr)}
+        output_full_reproduce(errs, {'bar':8}, 'testing_df')
+        
     def test_produce_summary_df_hints(self):
         #this test should be ported over to the full basic_widget test with actaul verificaiton of values
         
