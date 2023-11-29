@@ -66,7 +66,7 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().null_count().name.map(json_postfix('nan_count')),
         F.all().min().name.map(json_postfix('min')),
         F.all().max().name.map(json_postfix('max')),
-        F.all().mode().implode().name.map(json_postfix('mode')),
+        #F.all().mode().implode().name.map(json_postfix('mode')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().value_counts(sort=True).slice(10).implode().name.map(json_postfix('value_counts')),
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
@@ -127,3 +127,4 @@ class PlColDisplayHints(PolarsAnalysis):
 PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints,
                        #HistogramAnalysis,
                        ComputedDefaultSummaryStats]
+
