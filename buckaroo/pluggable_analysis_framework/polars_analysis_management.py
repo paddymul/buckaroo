@@ -1,4 +1,4 @@
-
+import traceback
 
 import polars as pl
 
@@ -38,7 +38,13 @@ def produce_series_df(df:pl.DataFrame,
     all_clauses = []
     for obj in unordered_objs:
         all_clauses.extend(obj.select_clauses)
-    result_df = df.lazy().select(all_clauses).collect()
+    try:
+        result_df = df.lazy().select(all_clauses).collect()
+    except Exception as e:
+        if debug:
+            df.write_parquet('error.parq')
+        traceback.print_exc()
+        return dict([[k, {}] for k in df.columns]), {}
     summary_dict = split_to_dicts(result_df)
 
     for pa in unordered_objs:
