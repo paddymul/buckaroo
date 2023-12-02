@@ -57,7 +57,13 @@ histogram_args = TypedDict('histogram_args', {
     'meat_histogram': Tuple[npt.NDArray[np.intp], npt.NDArray[Any]],
     'low_tail': float, 'high_tail':float})
 
-def numeric_histogram(histogram_args: histogram_args , min_, max_, nan_per):
+class Histogram_Args(TypedDict):
+    meat_histogram: Tuple[List[int], List[float]]
+    normalized_populations:List[float]
+    low_tail: float
+    high_tail: float
+
+def numeric_histogram(histogram_args: Histogram_Args , min_, max_, nan_per):
 
     low_tail, high_tail = histogram_args['low_tail'], histogram_args['high_tail']
     ret_histo = []
@@ -68,7 +74,8 @@ def numeric_histogram(histogram_args: histogram_args , min_, max_, nan_per):
     populations, endpoints = histogram_args['meat_histogram']
     
     labels = numeric_histogram_labels(endpoints)
-    normalized_pop = populations / populations.sum()
+    #normalized_pop = populations / populations.sum()
+    normalized_pop = histogram_args['normalized_populations']
     low_label = "%r - %r" % (min_, low_tail)
 
     ret_histo.append({'name': low_label, 'tail':1})
@@ -98,10 +105,13 @@ class Histogram(ColAnalysis):
         high_pass = ser < high_tail
         meat = vals[low_pass & high_pass]
 
+        meat_histogram=np.histogram(meat, 10)
+        populations, _ = meat_histogram
         return dict(
             histogram_args=dict(
-                meat_histogram=np.histogram(meat, 10),
-                low_tail=low_tail,
+                meat_histogram=meat_histogram,
+                normalized_populations=populations/populations.sum().to_list(),
+                LOW_tail=low_tail,
                 high_tail=high_tail))
 
     requires_summary = ['value_counts', 'nan_per', 'is_numeric', 'length',
