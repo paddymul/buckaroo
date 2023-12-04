@@ -35,9 +35,14 @@ def test_int_overflow_validation():
 
     with pytest.raises(ValidationError) as exc_info:
         Model(a=value)
-    #assert exc_info.value.errors(include_url=False) == [
-    assert exc_info.value.errors() == [
-        {'type': 'type_error.integer', 'loc': ('a',), 'msg': 'value is not a valid integer',
+    assert exc_info.value.errors(include_url=False) == [
+        {'type': 'finite_number', 'loc': ('a',), 'msg': 'Input should be a finite number',
+         'input': value
          }]
+
+# from buckaroo.serialization_utils import ColumnStringHint, ColumnBooleanHint, ColumnHint
+# def test_column_hints():
+    
+    
     
     
