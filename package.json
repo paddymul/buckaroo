@@ -1,6 +1,6 @@
 {
-  "name": "buckaroo",
-  "version": "0.4.8",
+  "name": "buckaroo-dfviewer",
+  "version": "0.4.9",
   "description": "Fast Datagrid widget for the Jupyter Notebook and JupyterLab",
   "keywords": [
     "jupyter",
