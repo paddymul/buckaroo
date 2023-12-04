@@ -32,7 +32,7 @@ def test_int_overflow_validation():
     value=float('nan')
     class Model(BaseModel):
         a: int
-
+    Model(a=3)
     with pytest.raises(ValidationError) as exc_info:
         Model(a=value)
     assert exc_info.value.errors(include_url=False) == [
@@ -40,8 +40,17 @@ def test_int_overflow_validation():
          'input': value
          }]
 
-# from buckaroo.serialization_utils import ColumnStringHint, ColumnBooleanHint, ColumnHint
-# def test_column_hints():
+from buckaroo.serialization_utils import ColumnStringHint, ColumnBooleanHint, ColumnHint
+def test_column_hints():
+    ColumnStringHint(type="string", histogram=[])
+    # value=float('nan')
+
+    # with pytest.raises(ValidationError) as exc_info:
+    #     Model(a=value)
+    # assert exc_info.value.errors(include_url=False) == [
+    #     {'type': 'finite_number', 'loc': ('a',), 'msg': 'Input should be a finite number',
+    #      'input': value
+    #      }]
     
     
     
