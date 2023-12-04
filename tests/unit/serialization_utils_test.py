@@ -43,6 +43,7 @@ def test_int_overflow_validation():
 from buckaroo.serialization_utils import ColumnStringHint, ColumnBooleanHint, ColumnHint
 def test_column_hints():
     ColumnStringHint(type="string", histogram=[])
+    ColumnStringHint(type="string", histogram=[{'name':'foo', 'population':3500}])
     # value=float('nan')
 
     # with pytest.raises(ValidationError) as exc_info:
