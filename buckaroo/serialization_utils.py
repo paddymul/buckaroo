@@ -169,6 +169,8 @@ DFData = List[Dict[str, Union[str, int, float, None]]]
 class DFWhole(pydantic.BaseModel):
     schema__ :DFSchema = pydantic.Field(alias='schema')
     table_hints: Dict[str, ColumnHint]
+    #data: DFData
+    #data
     
 class DfViewer(pydantic.BaseModel):
     type: 'DFViewer'
