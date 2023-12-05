@@ -153,5 +153,8 @@ def _test_df_to_obj_timing():
     print("pydantic_time  ", pydantic_time)
     print("json_time      ", json_time)
 
-    #pydantic time was 1/7th of serialization time
+    #pydantic time was about  1/5th of serialization time
+    #json.dumps time was around 2/5ths of serialization time
+
+    #the following line triggers an error which will force printing
     #1/0
