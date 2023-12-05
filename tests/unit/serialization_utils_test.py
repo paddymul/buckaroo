@@ -57,9 +57,12 @@ def test_column_hints():
 # def test_dfschema():
 #     DFSchema({'fields':[{'name':'foo', 'type':'integer'}]
 
-# def test_dfwhole():
-#     DFWhole({'schema__': {'fields':[{'name':'foo', 'type':'integer'}]o
-#     DFSchema(
+def test_dfwhole():
+    temp = {'schema': {'fields':[{'name':'foo', 'type':'integer'}],
+                       'primaryKey':['foo'], 'pandas_version':'1.4.0'},
+            'table_hints': {'foo':{'type':'string', 'histogram':[]},
+                             'bar':{'type':'integer', 'min_digits':2, 'max_digits':4, 'histogram':[]}}}
+    DFWhole(**temp)
               
     # with pytest.raises(ValidationError) as exc_info:
     #     errant_histogram_entry = {'name':'foo', 'no_population':3500}
