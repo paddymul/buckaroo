@@ -1,3 +1,4 @@
+import json
 import pytest
 from pydantic import BaseModel, ValidationError
 import pandas as pd
@@ -54,17 +55,30 @@ def test_column_hints():
     
     ColumnBooleanHint(type="boolean", histogram=[])
 
-# def test_dfschema():
-#     DFSchema({'fields':[{'name':'foo', 'type':'integer'}]
+def test_column_hint_extra():
+    """verify that we can pass in extra unexpected keys"""
+    ColumnStringHint(type="string", histogram=[], foo=8)
 
 def test_dfwhole():
     temp = {'schema': {'fields':[{'name':'foo', 'type':'integer'}],
                        'primaryKey':['foo'], 'pandas_version':'1.4.0'},
             'table_hints': {'foo':{'type':'string', 'histogram':[]},
-                             'bar':{'type':'integer', 'min_digits':2, 'max_digits':4, 'histogram':[]}},
+                            'bar':{'type':'integer', 'min_digits':2, 'max_digits':4, 'histogram':[]},
+                            'baz':{'type':'obj', 'histogram':[]},
+                            },
             'data': [{'foo': 'hello', 'bar':8},
                      {'foo': 'world', 'bar':10}]}
     DFWhole(**temp)
+
+def test_df_to_obj_pydantic():
+    named_index_df = pd.DataFrame(
+        dict(foo=['one', 'two', 'three'],
+             bar=[1, 2, 3]))
+
+    serialized_df = df_to_obj(named_index_df)
+    print(json.dumps(serialized_df, indent=4))
+    DFWhole(**serialized_df)
+
               
     # with pytest.raises(ValidationError) as exc_info:
     #     errant_histogram_entry = {'name':'foo', 'no_population':3500}
