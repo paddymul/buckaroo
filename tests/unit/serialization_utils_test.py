@@ -61,7 +61,9 @@ def test_dfwhole():
     temp = {'schema': {'fields':[{'name':'foo', 'type':'integer'}],
                        'primaryKey':['foo'], 'pandas_version':'1.4.0'},
             'table_hints': {'foo':{'type':'string', 'histogram':[]},
-                             'bar':{'type':'integer', 'min_digits':2, 'max_digits':4, 'histogram':[]}}}
+                             'bar':{'type':'integer', 'min_digits':2, 'max_digits':4, 'histogram':[]}},
+            'data': [{'foo': 'hello', 'bar':8},
+                     {'foo': 'world', 'bar':10}]}
     DFWhole(**temp)
               
     # with pytest.raises(ValidationError) as exc_info:
