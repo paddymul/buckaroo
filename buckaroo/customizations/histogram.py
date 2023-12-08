@@ -110,7 +110,7 @@ class Histogram(ColAnalysis):
         return dict(
             histogram_args=dict(
                 meat_histogram=meat_histogram,
-                normalized_populations=populations/populations.sum().to_list(),
+                normalized_populations=(populations/populations.sum()).tolist(),
                 LOW_tail=low_tail,
                 high_tail=high_tail))
 
