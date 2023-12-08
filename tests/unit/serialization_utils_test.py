@@ -1,5 +1,3 @@
-import time
-import json
 import pytest
 from pydantic import BaseModel, ValidationError
 import pandas as pd

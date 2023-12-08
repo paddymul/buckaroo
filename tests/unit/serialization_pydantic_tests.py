@@ -1,10 +1,10 @@
 import time
 import json
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 import pandas as pd
 import numpy as np
-from buckaroo.serialization_utils import pd_py_serialize, df_to_obj
+from buckaroo.serialization_utils import df_to_obj
 import pydantic
 
 # import typing
@@ -12,7 +12,7 @@ import pydantic
 #     from . import AnyComponent
 
 
-from typing import Optional, List, Any, Literal, Union, Dict, TypedDict
+from typing import Optional, List, Literal, Union, Dict
 
 
 
@@ -75,7 +75,7 @@ class DFColumn(pydantic.BaseModel):
 ColumnHint = Union[ColumnStringHint, ColumnObjHint, ColumnBooleanHint, ColumnIntegerHint]
 
 class DFSchema(pydantic.BaseModel):
-    fields: List[DFColumn];
+    fields: List[DFColumn]
     primaryKey: list[str]  #; //['index']
     pandas_version: str #; //'1.4.0',
 
@@ -93,15 +93,6 @@ class DFWhole(pydantic.BaseModel):
     schema__ :DFSchema = pydantic.Field(alias='schema')
     table_hints: Dict[str, ColumnHint]
     data: DFData
-    #data
-    
-class DfViewer(pydantic.BaseModel):
-    type: 'DFViewer'
-    df: DFWhole
-
-    #Ilike the serialization_alias... but luckily I avoid the need because I don't have any snake cased fields
-    #form_fields: list[FormField] = pydantic.Field(serialization_alias='formFields')
-
 
 def test_column_hints():
     ColumnStringHint(type="string", histogram=[])
@@ -175,7 +166,7 @@ def random_categorical(named_p, unique_per, na_per, longtail_per, N):
     np.random.shuffle(all_arr)
     try:
         return pd.Series(all_arr, dtype='UInt64')
-    except:
+    except Exception: # this is test fixture code
         return pd.Series(all_arr, dtype=pd.StringDtype())        
 
 
@@ -190,7 +181,6 @@ def _test_df_to_obj_timing():
         'all_unique_cat': random_categorical({}, unique_per=1, na_per=0, longtail_per=0, N=N),
         'all_NA' :          pd.Series([pd.NA] * N, dtype='UInt8'),
         'half_NA' :         random_categorical({1: .55}, unique_per=0,   na_per=.45, longtail_per=.0, N=N),
-        'dominant_categories':     random_categorical({'foo': .45, 'bar': .2, 'baz':.15}, unique_per=.2, na_per=0, longtail_per=0, N=N),
         'longtail' :        random_categorical({},      unique_per=0,   na_per=.2, longtail_per=.8, N=N),
         'longtail_unique' : random_categorical({},      unique_per=0.5, na_per=.0, longtail_per=.5, N=N)})
     
