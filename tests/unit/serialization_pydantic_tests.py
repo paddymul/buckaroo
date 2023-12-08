@@ -89,10 +89,20 @@ class DFSchema(pydantic.BaseModel):
 
 DFData = List[Dict[str, Union[str, int, float, None]]]
 
+
+
 class DFWhole(pydantic.BaseModel):
     schema__ :DFSchema = pydantic.Field(alias='schema')
     table_hints: Dict[str, ColumnHint]
     data: DFData
+
+# class DfViewer(pydantic.BaseModel):
+#     type: 'DFViewer'
+#     df: DFWhole
+
+#     #Ilike the serialization_alias... but luckily I avoid the need
+#     #because I don't have any snake cased fields
+
 
 def test_column_hints():
     ColumnStringHint(type="string", histogram=[])
