@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pandas.io.json import dumps as pdumps
 
+
 def d_update(d1, d2):
     ret_dict = d1.copy()
     ret_dict.update(d2)
@@ -58,8 +59,8 @@ EMPTY_DF_OBJ = {'schema': {'fields': [{'name': 'index', 'type': 'string'}],
 
 def dumb_table_sumarize(df):
     """used when table_hints aren't provided.  Trests every column as a string"""
-    table_hints = {col:{'is_numeric':False, type:'obj'}  for col in df}
-    table_hints['index'] = {'is_numeric': False} 
+    table_hints = {col:{'is_numeric':False, 'type':'obj', 'histogram':[]}  for col in df}
+    table_hints['index'] = {'is_numeric': False, 'type':'obj', 'histogram':[] } 
     return table_hints
 
 
@@ -88,8 +89,13 @@ def df_to_obj(df, order = None, table_hints=None):
         obj['table_hints'] = json.loads(pdumps(dumb_table_sumarize(df)))
     else:
         obj['table_hints'] = json.loads(pdumps(table_hints))
-    fields=[{'name': df.index.name or "index" }]
+
+    index_name = df.index.name or "index"
+    fields=[{'name': index_name, 'type':'unused' }]
     for c in order:
-        fields.append({'name':str(c)})
-    obj['schema'] = dict(fields=fields)
+        fields.append({'name':str(c), 'type':'unused'})
+    obj['schema'] = dict(fields=fields, primaryKey=[index_name], pandas_version='1.4.0')
     return obj
+
+
+
