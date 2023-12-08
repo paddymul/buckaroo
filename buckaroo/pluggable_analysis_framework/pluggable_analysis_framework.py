@@ -1,5 +1,6 @@
 import graphlib
 from collections import OrderedDict
+from typing import List, Union
 
 class ColAnalysis(object):
     """
@@ -8,10 +9,10 @@ class ColAnalysis(object):
     this is the pandas based implementation
     """
     requires_raw = False
-    requires_summary = [] # What summary stats does this analysis provide
-    provides_summary = [] # mean/max/histogram
+    requires_summary:List[str] = [] # What summary stats does this analysis provide
+    provides_summary:List[str] = [] # mean/max/histogram
 
-    provides_series_stats = [] # what does this provide at a series level
+    provides_series_stats:List[str] = [] # what does this provide at a series level
 
 
     @classmethod
@@ -20,7 +21,7 @@ class ColAnalysis(object):
         a.extend(cls.provides_summary)
         return a
 
-    summary_stats_display = None
+    summary_stats_display:Union[List[str], None] = None
     quiet = False
     quiet_warnings = False
     
