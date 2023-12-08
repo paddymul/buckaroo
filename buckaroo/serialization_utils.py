@@ -76,7 +76,7 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
     if isinstance(df_pd_or_pl, pl.DataFrame):
         return df_pd_or_pl.to_pandas()
     else:
-        raise Exception("unexpected type for dataframe, got %r" % (type(df)))
+        raise Exception("unexpected type for dataframe, got %r" % (type(df_pd_or_pl)))
 
 
 #def df_to_obj(unknown_df:Union[pd.DataFrame, pl.DataFrame], order = None, table_hints=None):

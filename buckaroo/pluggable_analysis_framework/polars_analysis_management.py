@@ -40,7 +40,7 @@ def produce_series_df(df:pl.DataFrame,
         all_clauses.extend(obj.select_clauses)
     try:
         result_df = df.lazy().select(all_clauses).collect()
-    except Exception as e:
+    except Exception:
         if debug:
             df.write_parquet('error.parq')
         traceback.print_exc()
