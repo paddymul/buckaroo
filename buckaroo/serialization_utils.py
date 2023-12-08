@@ -3,14 +3,6 @@ import numpy as np
 import pandas as pd
 from pandas.io.json import dumps as pdumps
 
-import pydantic
-
-# import typing
-# if typing.TYPE_CHECKING:
-#     from . import AnyComponent
-
-
-from typing import Optional, List, Any, Literal, Union, Dict, TypedDict
 
 def d_update(d1, d2):
     ret_dict = d1.copy()
@@ -98,89 +90,3 @@ def df_to_obj(df, order = None, table_hints=None):
 
 
 
-
-# class BaseFormField(pydantic.BaseModel, ABC, defer_build=True):
-#     name: str
-#     title: str | list[str]
-#     required: bool = False
-#     error: str | None = None
-#     locked: bool = False
-#     description: str | None = None
-#     class_name: _class_name.ClassName = None
-
-
-class HistogramModel(pydantic.BaseModel):
-    name: str
-    population: float
-
-HT = Optional[List[HistogramModel]]
-
-
-# export interface ColumnStringHint {
-#   type: 'string';
-#   histogram?: any[];
-# }
-
-class ColumnStringHint(pydantic.BaseModel):
-    type: Literal["string"]
-    histogram: HT
-
-class ColumnObjHint(pydantic.BaseModel):
-    type: Literal["obj"]
-    histogram: HT
-
-# export interface ColumnBooleanHint {
-#   type: 'boolean';
-#   histogram?: any[];
-# }
-
-class ColumnBooleanHint(pydantic.BaseModel):
-    type: Literal["boolean"]
-    histogram: HT
-
-# export interface ColumnIntegertHint {
-#   type: 'integer';
-#   min_digits: number;
-#   max_digits: number;
-#   histogram: any[];
-# }
-
-class ColumnIntegerHint(pydantic.BaseModel):
-    type: Literal["integer"]
-    min_digits:int
-    max_digits:int
-    histogram: HT
-
-class DFColumn(pydantic.BaseModel):
-    name: str
-    type: str #should be a union
-
-ColumnHint = Union[ColumnStringHint, ColumnObjHint, ColumnBooleanHint, ColumnIntegerHint]
-
-class DFSchema(pydantic.BaseModel):
-    fields: List[DFColumn];
-    primaryKey: list[str]  #; //['index']
-    pandas_version: str #; //'1.4.0',
-
-
-# export type DFDataRow = Record<
-#   string,
-#   string | number | boolean | any[] | Record<string, any> | null
-# >;
-
-# export type DFData = DFDataRow[];
-
-DFData = List[Dict[str, Union[str, int, float, None]]]
-
-class DFWhole(pydantic.BaseModel):
-    schema__ :DFSchema = pydantic.Field(alias='schema')
-    table_hints: Dict[str, ColumnHint]
-    data: DFData
-    #data
-    
-class DfViewer(pydantic.BaseModel):
-    type: 'DFViewer'
-    df: DFWhole
-
-    #Ilike the serialization_alias... but luckily I avoid the need because I don't have any snake cased fields
-    #form_fields: list[FormField] = pydantic.Field(serialization_alias='formFields')
