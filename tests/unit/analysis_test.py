@@ -96,14 +96,15 @@ def test_datetime_histogram():
                 } == summary_result
 
 def test_numeric_histogram():
-
+    assert {'a':[1,2,3]} == {'a':[1,2,3]}
     series_result = Histogram.series_summary(
         fifty_int_ser, fifty_int_ser)
 
     actual_histogram_args = series_result['histogram_args']
 
-    rest_ha = without(actual_histogram_args, 'meat_histogram')
+    rest_ha = without(actual_histogram_args, 'meat_histogram', 'normalized_populations')
     assert rest_ha ==  {'high_tail': 9.0, 'low_tail': 1.0}
+
     
     expected_meat_histogram = [[7, 6, 0, 6, 0, 8, 5, 0, 3, 4],
                                [2. , 2.6, 3.2, 3.8, 4.4, 5. , 5.6, 6.2, 6.8, 7.3999999999999995, 8. ]]
