@@ -2,7 +2,7 @@ import json
 import numpy as np
 import pandas as pd
 from pandas.io.json import dumps as pdumps
-
+from typing import Union
 
 def d_update(d1, d2):
     ret_dict = d1.copy()
@@ -64,14 +64,27 @@ def dumb_table_sumarize(df):
     return table_hints
 
 
-def df_to_obj(df, order = None, table_hints=None):
-    try:
-        import polars as pl
-        #hack for now so everything else flows through
-        if isinstance(df, pl.DataFrame):
-            df = df.to_pandas()
-    except ImportError:
-        pass
+#def force_to_pandas(df_pd_or_pl:Union[pd.DataFrame, pl.DataFrame]) -> pd.DataFrame:
+def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
+    if isinstance(df_pd_or_pl, pd.DataFrame):
+        return df_pd_or_pl
+
+    
+    import polars as pl
+    #hack for now so everything else flows through
+
+    if isinstance(df_pd_or_pl, pl.DataFrame):
+        return df_pd_or_pl.to_pandas()
+    else:
+        raise Exception("unexpected type for dataframe, got %r" % (type(df)))
+
+
+#def df_to_obj(unknown_df:Union[pd.DataFrame, pl.DataFrame], order = None, table_hints=None):
+def df_to_obj(unknown_df:Union[pd.DataFrame], order = None, table_hints=None):
+    df = force_to_pandas(unknown_df)
+    return pd_to_obj(df, order = None, table_hints=None)
+
+def pd_to_obj(df:pd.DataFrame , order = None, table_hints=None):
     if order is None:
         order = df.columns
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
