@@ -99,10 +99,29 @@ class PlTyping(PolarsAnalysis):
         res['_type'] = t
         return res
 
+def normalize_polars_histogram_ser(ser):
+    df = pl.DataFrame({'named_col':ser})
+
+    C = pl.col('named_col')
+    small_q, large_q = C.quantile(.01).alias('small'), C.quantile(.99).alias('large')
+    smallest, largest =  df.select(small_q, large_q).to_numpy()[0]
+    raw_hist = df.lazy().filter(
+        (small_q < C) & (C < large_q)
+    ).select(C).collect()['named_col'].hist(bin_count=10)
+    hist_df = raw_hist.select(pl.col("break_point"), pl.selectors.ends_with("count").alias("count"))
+    edges = hist_df['break_point'].to_list()
+    edges[0], edges[-1] = smallest, largest
+    counts = hist_df['count'][1:]
+    norm_counts = counts/counts.sum()
+    return { 'low_tail': smallest, 'high_tail':largest,
+             'meat_histogram': (counts.to_list(), edges),
+             'normalized_populations': norm_counts.to_list()}
+
 class HistogramAnalysis(PolarsAnalysis):
+
     column_ops = {
-        'hist': (NUMERIC_POLARS_DTYPES,
-                 lambda col_series: normalize_polars_histogram(col_series.hist(bin_count=10), col_series))}
+        'histogram_args': (NUMERIC_POLARS_DTYPES, normalize_polars_histogram_ser)}
+
 
 class PlColDisplayHints(PolarsAnalysis):
     requires_summary = ['min', 'max', '_type', 'is_numeric']
