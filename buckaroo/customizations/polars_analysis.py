@@ -52,20 +52,28 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
             nan_per=summary_dict['nan_count']/len_)
 
 
+class VCAnalysis(PolarsAnalysis):
+    provides_summary = ['value_counts']
+    select_clauses = [
+        pl.all().exclude("counts").value_counts(sort=True)
+        .implode().name.map(json_postfix('value_counts')),
+        pl.selectors.matches("^counts$")
+        .alias("not_counts")
+        .value_counts(sort=True)
+        .implode()
+        .alias("counts").name.map(json_postfix('value_counts'))]
+    
 
 class BasicAnalysis(PolarsAnalysis):
     provides_summary = ['length', 'nan_count', 'min', 'max', 'min',
-                        'mode', 'mean',
-                        'value_counts',
-                        'unique_count', 'empty_count', 'distinct_count']
+                        'mean','unique_count', 'empty_count',
+                        'distinct_count']
     select_clauses = [
         F.all().len().name.map(json_postfix('length')),
         F.all().null_count().name.map(json_postfix('nan_count')),
         F.all().min().name.map(json_postfix('min')),
         F.all().max().name.map(json_postfix('max')),
-        #F.all().mode().implode().name.map(json_postfix('mode')),
         F.all().mean().name.map(json_postfix('mean')),
-        F.all().value_counts(sort=True).slice(10).implode().name.map(json_postfix('value_counts')),
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
         F.all().approx_n_unique().name.map(json_postfix('distinct_count')),
         (F.all().len() - F.all().is_duplicated().sum()).name.map(json_postfix('unique_count')),
@@ -140,7 +148,7 @@ class PlColDisplayHints(PolarsAnalysis):
                 })
         return base_dict
 
-PL_Analysis_Klasses = [BasicAnalysis, PlTyping, PlColDisplayHints,
+PL_Analysis_Klasses = [VCAnalysis, BasicAnalysis, PlTyping, PlColDisplayHints,
                        #HistogramAnalysis,
                        ComputedDefaultSummaryStats]
 
