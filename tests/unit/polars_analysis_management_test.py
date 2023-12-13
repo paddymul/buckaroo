@@ -3,11 +3,12 @@ from unittest import TestCase
 import polars as pl
 import numpy as np
 from polars import functions as F
-from buckaroo.customizations.polars_analysis import VCAnalysis, HistogramAnalysis
+from buckaroo.customizations.polars_analysis import VCAnalysis, BasicAnalysis, HistogramAnalysis
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
+    full_produce_summary_df,
     produce_series_df, PolarsAnalysis, extract_table_hint)
 
 test_df = pl.DataFrame({
@@ -80,7 +81,8 @@ def test_histogram_analysis():
     cats += ['foo']*30 + ['bar'] * 50
 
     df = pl.DataFrame({'categorical': cats})
-    summary_df, _unused = produce_series_df(df, [VCAnalysis, HistogramAnalysis])
+    HA_CLASSES = [VCAnalysis, BasicAnalysis, HistogramAnalysis]
+    summary_df, _unused, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
     assert summary_df["categorical_histogram"] == {'foo':30}
     
     #.5 bar, .3 foo , 10% longtail, 10% unique
@@ -107,12 +109,12 @@ def test_extract_table_hint():
             'formatter':None,
             'histogram': []}}
     TestCase().assertDictEqual(expected, extract_table_hint(summary_dict, ['a']))
-
-
-
-
 '''
-class TestAnalysisPipeline(unittest.TestCase):
+
+
+
+
+class TestAnalysisPipeline(TestCase):
 
     def test_produce_series_df(self):
         """just make sure this doesn't fail"""
@@ -288,7 +290,7 @@ class SometimesProvides(ColAnalysis):
             return dict(conditional_on_dtype=True)
         return {}
 
-class TestDfStats(unittest.TestCase):
+class TestDfStats(TestCase):
     def test_dfstats_sometimes_present(self):
         """many ColAnalysis objects are written such that they only
         provide stats for certain dtypes. This used to cause
@@ -307,6 +309,4 @@ class TestDfStats(unittest.TestCase):
 
         #triggers a getter?
         DfStats(word_only_df, [SometimesProvides]).presentation_sdf
-
-
 '''
