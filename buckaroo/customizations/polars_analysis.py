@@ -67,7 +67,7 @@ class VCAnalysis(PolarsAnalysis):
 
 class BasicAnalysis(PolarsAnalysis):
     provides_summary = ['length', 'nan_count', 'min', 'max', 'min',
-                        'mean','unique_count', 'empty_count',
+                        'mode', 'mean','unique_count', 'empty_count',
                         'distinct_count']
     select_clauses = [
         F.all().len().name.map(json_postfix('length')),
@@ -79,6 +79,13 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().approx_n_unique().name.map(json_postfix('distinct_count')),
         (F.all().len() - F.all().is_duplicated().sum()).name.map(json_postfix('unique_count')),
     ]
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
+        regular_col_vc_df = temp_df.select(pl.all().exclude('counts').alias('key'), pl.col('counts'))
+        return dict(mode=regular_col_vc_df[0]['key'][0])
+
 
 class PlTyping(PolarsAnalysis):
     column_ops = {'dtype':  ("all", lambda col_series: col_series.dtype)}
