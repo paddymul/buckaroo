@@ -2,9 +2,7 @@ import pandas as pd
 import numpy as np
 import polars as pl
 
-import pytest
 
-from pydantic import BaseModel, ValidationError
 from buckaroo.pluggable_analysis_framework.safe_summary_df import pd_py_serialize
 
 def test_py_serialize():

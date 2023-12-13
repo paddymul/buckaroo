@@ -1,7 +1,6 @@
 import pytest
 from pydantic import BaseModel, ValidationError
 import pandas as pd
-import numpy as np
 from buckaroo.serialization_utils import df_to_obj
 
 def test_df_to_obj():
