@@ -3,7 +3,7 @@ from unittest import TestCase
 import polars as pl
 import numpy as np
 from polars import functions as F
-from buckaroo.customizations.polars_analysis import HistogramAnalysis
+from buckaroo.customizations.polars_analysis import VCAnalysis, HistogramAnalysis
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
@@ -68,10 +68,22 @@ def test_produce_series_column_ops():
     summary_df, _unused = produce_series_df(mixed_df, [HistogramAnalysis])
     assert summary_df["string_col"] == {}
 
-    assert summary_df["int_col"]["hist"] ==  (
-        [3, 0, 1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 10.1, 20.2, 30.299999999999997, 40.4, 50.5, 60.599999999999994, 70.7,
-         80.8, 90.89999999999999, 100])
+    assert summary_df["int_col"]["histogram_args"]["meat_histogram"] == (
+        [2,  0,  0,  0,  0,  0,  0,  0,  0,  1],
+        [1.0,  4.0,  7.0,  10.0,  13.0,  16.0,  19.0,  22.0,  25.0,  28.0,  100.0],)
+    
+
+
+def test_histogram_analysis():
+    cats = [chr(x) for x in range(97, 102)] * 2 
+    cats += [chr(x) for x in range(103,113)]
+    cats += ['foo']*30 + ['bar'] * 50
+
+    df = pl.DataFrame({'categorical': cats})
+    summary_df, _unused = produce_series_df(df, [VCAnalysis, HistogramAnalysis])
+    assert summary_df["categorical_histogram"] == {'foo':30}
+    
+    #.5 bar, .3 foo , 10% longtail, 10% unique
 
 def test_extract_table_hint():
 

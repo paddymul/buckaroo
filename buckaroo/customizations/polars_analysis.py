@@ -7,6 +7,7 @@ from buckaroo.customizations.analysis_utils import int_digits
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis, normalize_polars_histogram
 from buckaroo.pluggable_analysis_framework.polars_utils import NUMERIC_POLARS_DTYPES
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
+from typing import Dict
 
 def get_mode(ser):
     mode_raw = ser.mode()
@@ -125,10 +126,42 @@ def normalize_polars_histogram_ser(ser):
              'meat_histogram': (counts.to_list(), edges),
              'normalized_populations': norm_counts.to_list()}
 
+
+def histogram_from_vc(vc_ser) -> Dict[str, int]:
+    temp_df = pl.DataFrame({'vc': vc_ser.explode()}).unnest('vc')
+    regular_col_vc_df = temp_df.select(pl.all().exclude('counts').alias('key'), pl.col('counts'))
+    return dict(zip(regular_col_vc_df['key'].to_list(), regular_col_vc_df['counts'].to_list()))
+
+
+def categorical_dict_parts(vc_ser):
+    temp_df = pl.DataFrame({'vc': vc_ser.explode()}).unnest('vc')
+    normalized_vc_df = temp_df.select(pl.all().exclude('counts').alias('orig_col_name'), pl.col('counts'))
+    full_long_tail = normalized_vc_df['counts'][3:].sum()
+
+
+def categorical_dict_from_parts(histogram_dict, len_, full_longt_tail, unique_count):
+    long_tail = full_long_tail - unique_count
+    if unique_count > 0:
+        histogram_dict['unique'] = np.round( (unique_count/len_)* 100, 0)
+    if long_tail > 0:
+        histogram_dict['longtail'] = np.round((long_tail/len_) * 100,0)
+    return histogram_dict  
+
+
 class HistogramAnalysis(PolarsAnalysis):
 
     column_ops = {
         'histogram_args': (NUMERIC_POLARS_DTYPES, normalize_polars_histogram_ser)}
+
+
+    requires_summary = ['value_counts', 'length', 'unique_count']
+    provides_summary = ['categorical_histogram']
+    @staticmethod
+    def computed_summary(summary_dict):
+        unique_count = summary_dict['unique_count']
+        length = summary_dict['length']
+        vc_ser = summary_dict['value_counts']
+        return dict(categorical_histogram=histogram_from_vc(vc_ser))
 
 
 class PlColDisplayHints(PolarsAnalysis):
