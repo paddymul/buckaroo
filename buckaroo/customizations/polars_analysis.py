@@ -4,7 +4,7 @@ from polars import functions as F
 from polars import datatypes as pdt
 from buckaroo.customizations.analysis_utils import int_digits
 
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis, normalize_polars_histogram
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.pluggable_analysis_framework.polars_utils import NUMERIC_POLARS_DTYPES
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
 from typing import Dict
