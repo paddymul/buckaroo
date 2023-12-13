@@ -69,7 +69,7 @@ class BuckarooWidget(DOMWidget):
         'summaryStats': False,
         'reorderdColumns': False,
         'showCommands': True,
-        'auto_clean': True,
+        'auto_clean': False,
     }).tag(sync=True)
 
 
@@ -98,7 +98,7 @@ class BuckarooWidget(DOMWidget):
                  summaryStats=False,
                  reorderdColumns=False,
                  showCommands=False,
-                 auto_clean=True,
+                 auto_clean=False,
                  postProcessingF=None,
                  debug=False
                  ):

@@ -226,6 +226,6 @@ class PlColDisplayHints(PolarsAnalysis):
         return base_dict
 
 PL_Analysis_Klasses = [VCAnalysis, BasicAnalysis, PlTyping, PlColDisplayHints,
-                       #HistogramAnalysis,
+                       HistogramAnalysis,
                        ComputedDefaultSummaryStats]
 
