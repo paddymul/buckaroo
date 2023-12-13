@@ -167,9 +167,13 @@ def categorical_dict_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
 def categorical_histogram_from_cd(cd):
     histogram = []
     longtail_obs = {'name': 'longtail'}
+    unique_obs = {'name': 'unique'}
     for k,v in cd.items():
-        if k in ["longtail", "unique"]:
-            longtail_obs[k] = np.round((v)*100,0)
+        if k == "longtail":
+            longtail_obs['longtail'] = np.round((v)*100,0)
+            continue
+        elif k == "unique":
+            unique_obs['unique'] = np.round((v)*100,0)
             continue
         histogram.append({'name':k, 'cat_pop': np.round((v)*100,0) })
     if len(longtail_obs) > 1:
@@ -203,10 +207,6 @@ class HistogramAnalysis(PolarsAnalysis):
                 #if we had basically a categorical variable encoded into an integer.. don't return it
                 return {'histogram': temp_histo}
         return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd)}
-        
-
-
-
 
 class PlColDisplayHints(PolarsAnalysis):
     requires_summary = ['min', 'max', '_type', 'is_numeric']

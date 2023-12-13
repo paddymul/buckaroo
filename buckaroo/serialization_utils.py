@@ -82,7 +82,7 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
 #def df_to_obj(unknown_df:Union[pd.DataFrame, pl.DataFrame], order = None, table_hints=None):
 def df_to_obj(unknown_df:Union[pd.DataFrame], order = None, table_hints=None):
     df = force_to_pandas(unknown_df)
-    return pd_to_obj(df, order = None, table_hints=None)
+    return pd_to_obj(df, order=order, table_hints=table_hints)
 
 def pd_to_obj(df:pd.DataFrame , order = None, table_hints=None):
     if order is None:
