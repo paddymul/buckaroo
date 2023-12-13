@@ -184,24 +184,24 @@ class HistogramAnalysis(PolarsAnalysis):
     column_ops = {
         'histogram_args': (NUMERIC_POLARS_DTYPES, normalize_polars_histogram_ser)}
 
-    requires_summary = ['value_counts', 'length', 'unique_count']
+    requires_summary = ['min', 'max', 'value_counts', 'length', 'unique_count', 'is_numeric', 'nan_per']
     provides_summary = ['categorical_histogram', 'histogram']
 
     @staticmethod
     def computed_summary(summary_dict):
-        cd = categorical_dict_from_vc(summary_dict['value_counts'])
-        #         is_numeric = summary_dict['is_numeric']
+        vc = summary_dict['value_counts']
+        cd = categorical_dict_from_vc(vc)
+        is_numeric = summary_dict['is_numeric']
         # value_counts = summary_dict['value_counts']
         # nan_per = summary_dict['nan_per']
-        # if is_numeric and len(value_counts) > 5:
-        #     histogram_args = summary_dict['histogram_args']
-        #     min_, max_ = summary_dict['min'], summary_dict['max']
-        #     temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
-        #     if len(temp_histo) > 5:
-        #         #if we had basically a categorical variable encoded into an integer.. don't return it
-        #         return {'histogram': temp_histo}
-        # length = summary_dict['length']
-
+        if is_numeric and len(vc.explode()) > 5:
+            #histogram_args = summary_dict['histogram_args']
+            histogram_args = summary_dict['histogram_args']
+            min_, max_, nan_per = summary_dict['min'], summary_dict['max'], summary_dict['nan_per']
+            temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
+            if len(temp_histo) > 5:
+                #if we had basically a categorical variable encoded into an integer.. don't return it
+                return {'histogram': temp_histo}
         return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd)}
         
 
