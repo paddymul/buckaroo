@@ -165,9 +165,8 @@ class HistogramAnalysis(PolarsAnalysis):
         unique_count = summary_dict['unique_count']
         length = summary_dict['length']
         vc_ser = summary_dict['value_counts']
-        ab = categorical_histogram_from_vc(vc_ser)
-        print("ab", ab)
-        return dict(categorical_histogram=ab)
+        ch = categorical_histogram_from_vc(vc_ser)
+        return dict(categorical_histogram=ch)
 
 
 class PlColDisplayHints(PolarsAnalysis):

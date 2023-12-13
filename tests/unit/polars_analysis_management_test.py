@@ -83,7 +83,7 @@ def test_histogram_analysis():
     df = pl.DataFrame({'categorical': cats})
     HA_CLASSES = [VCAnalysis, BasicAnalysis, HistogramAnalysis]
     summary_df, _unused, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
-    assert summary_df["categorical_histogram"] == {'foo':30}
+    assert summary_df["categorical"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
     
     #.5 bar, .3 foo , 10% longtail, 10% unique
 
