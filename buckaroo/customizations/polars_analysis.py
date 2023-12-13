@@ -7,6 +7,7 @@ from buckaroo.customizations.analysis_utils import int_digits
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.pluggable_analysis_framework.polars_utils import NUMERIC_POLARS_DTYPES
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
+from buckaroo.customizations.histogram import numeric_histogram
 from typing import Dict
 
 def get_mode(ser):
@@ -139,7 +140,7 @@ def normalize_polars_histogram_ser(ser):
              'normalized_populations': norm_counts.to_list()}
 
 
-def categorical_histogram_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
+def categorical_dict_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
     temp_df = pl.DataFrame({'vc': vc_ser.explode()}).unnest('vc')
     regular_col_vc_df = temp_df.select(pl.all().exclude('counts').alias('key'), pl.col('counts'))
     length = regular_col_vc_df['counts'].sum()
@@ -163,7 +164,20 @@ def categorical_histogram_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
     return categorical_histogram
 
 
-
+def categorical_histogram_from_cd(cd):
+    histogram = []
+    longtail_obs = {'name': 'longtail'}
+    for k,v in cd.items():
+        if k in ["longtail", "unique"]:
+            longtail_obs[k] = np.round((v)*100,0)
+            continue
+        histogram.append({'name':k, 'cat_pop': np.round((v)*100,0) })
+    if len(longtail_obs) > 1:
+        histogram.append(longtail_obs)
+    # nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
+    # if nan_per > 0.0:
+    #     histogram.append(nan_observation)
+    return histogram
 
 class HistogramAnalysis(PolarsAnalysis):
 
@@ -171,11 +185,27 @@ class HistogramAnalysis(PolarsAnalysis):
         'histogram_args': (NUMERIC_POLARS_DTYPES, normalize_polars_histogram_ser)}
 
     requires_summary = ['value_counts', 'length', 'unique_count']
-    provides_summary = ['categorical_histogram']
+    provides_summary = ['categorical_histogram', 'histogram']
+
     @staticmethod
     def computed_summary(summary_dict):
-        ch = categorical_histogram_from_vc(summary_dict['value_counts'])
-        return dict(categorical_histogram=ch)
+        cd = categorical_dict_from_vc(summary_dict['value_counts'])
+        #         is_numeric = summary_dict['is_numeric']
+        # value_counts = summary_dict['value_counts']
+        # nan_per = summary_dict['nan_per']
+        # if is_numeric and len(value_counts) > 5:
+        #     histogram_args = summary_dict['histogram_args']
+        #     min_, max_ = summary_dict['min'], summary_dict['max']
+        #     temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
+        #     if len(temp_histo) > 5:
+        #         #if we had basically a categorical variable encoded into an integer.. don't return it
+        #         return {'histogram': temp_histo}
+        # length = summary_dict['length']
+
+        return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd)}
+        
+
+
 
 
 class PlColDisplayHints(PolarsAnalysis):
