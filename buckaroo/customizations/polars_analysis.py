@@ -164,7 +164,7 @@ def categorical_dict_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
     return categorical_histogram
 
 
-def categorical_histogram_from_cd(cd):
+def categorical_histogram_from_cd(cd, nan_per):
     histogram = []
     longtail_obs = {'name': 'longtail'}
     unique_obs = {'name': 'unique'}
@@ -176,11 +176,13 @@ def categorical_histogram_from_cd(cd):
             unique_obs['unique'] = np.round((v)*100,0)
             continue
         histogram.append({'name':k, 'cat_pop': np.round((v)*100,0) })
-    if len(longtail_obs) > 1:
+    if longtail_obs['longtail'] > 0:
         histogram.append(longtail_obs)
-    # nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
-    # if nan_per > 0.0:
-    #     histogram.append(nan_observation)
+    if unique_obs['unique'] > 0:
+        histogram.append(unique_obs)
+    nan_observation = {'name':'NA', 'NA':np.round(nan_per*100, 0)}
+    if nan_per > 0.0:
+        histogram.append(nan_observation)
     return histogram
 
 class HistogramAnalysis(PolarsAnalysis):
@@ -196,8 +198,7 @@ class HistogramAnalysis(PolarsAnalysis):
         vc = summary_dict['value_counts']
         cd = categorical_dict_from_vc(vc)
         is_numeric = summary_dict['is_numeric']
-        # value_counts = summary_dict['value_counts']
-        # nan_per = summary_dict['nan_per']
+        nan_per = summary_dict['nan_per']
         if is_numeric and len(vc.explode()) > 5:
             #histogram_args = summary_dict['histogram_args']
             histogram_args = summary_dict['histogram_args']
@@ -206,7 +207,7 @@ class HistogramAnalysis(PolarsAnalysis):
             if len(temp_histo) > 5:
                 #if we had basically a categorical variable encoded into an integer.. don't return it
                 return {'histogram': temp_histo}
-        return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd)}
+        return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd, nan_per)}
 
 class PlColDisplayHints(PolarsAnalysis):
     requires_summary = ['min', 'max', '_type', 'is_numeric']

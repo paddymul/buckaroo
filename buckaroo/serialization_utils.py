@@ -41,14 +41,6 @@ def dict_repr(dct):
     ret_str += "}"    
     return ret_str
 
-def pd_py_serialize(dct):
-    """
-    This is used to output an exact string that is valid python code.
-    """
-    cleaned_dct = val_replace(dct,
-                       {pd.NA: UnquotedString("pd.NA"),
-                        np.nan: UnquotedString("np.nan")})
-    return dict_repr(cleaned_dct)
 
 
 EMPTY_DF_OBJ = {'schema': {'fields': [{'name': 'index', 'type': 'string'}],
