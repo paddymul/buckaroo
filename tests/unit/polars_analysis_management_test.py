@@ -80,12 +80,14 @@ def test_histogram_analysis():
     cats += [chr(x) for x in range(103,113)]
     cats += ['foo']*30 + ['bar'] * 50
 
-    df = pl.DataFrame({'categorical': cats})
+    df = pl.DataFrame({'categories': cats, 'numerical_categories': [3]*30 + [7] * 70})
     HA_CLASSES = [VCAnalysis, BasicAnalysis, HistogramAnalysis]
     summary_df, _unused, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
-    assert summary_df["categorical"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
+    assert summary_df["categories"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
+    assert summary_df["numerical_categories"]["categorical_histogram"] == {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
     
-    #.5 bar, .3 foo , 10% longtail, 10% unique
+    
+
 
 def test_extract_table_hint():
 

@@ -114,9 +114,14 @@ def normalize_polars_histogram_ser(ser):
     C = pl.col('named_col')
     small_q, large_q = C.quantile(.01).alias('small'), C.quantile(.99).alias('large')
     smallest, largest =  df.select(small_q, large_q).to_numpy()[0]
-    raw_hist = df.lazy().filter(
+
+    meat_df = df.lazy().filter(
         (small_q < C) & (C < large_q)
-    ).select(C).collect()['named_col'].hist(bin_count=10)
+    ).select(C).collect()['named_col']
+    if len(meat_df) == 0:
+        return { 'low_tail': smallest, 'high_tail':largest,
+                 'meat_histogram': [[],[]], 'normalized_populations': []}
+    raw_hist = meat_df.hist(bin_count=10)
     hist_df = raw_hist.select(pl.col("break_point"), pl.selectors.ends_with("count").alias("count"))
     edges = hist_df['break_point'].to_list()
     edges[0], edges[-1] = smallest, largest
@@ -162,10 +167,7 @@ class HistogramAnalysis(PolarsAnalysis):
     provides_summary = ['categorical_histogram']
     @staticmethod
     def computed_summary(summary_dict):
-        unique_count = summary_dict['unique_count']
-        length = summary_dict['length']
-        vc_ser = summary_dict['value_counts']
-        ch = categorical_histogram_from_vc(vc_ser)
+        ch = categorical_histogram_from_vc(summary_dict['value_counts'])
         return dict(categorical_histogram=ch)
 
 
