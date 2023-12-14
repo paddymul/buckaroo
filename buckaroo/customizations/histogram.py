@@ -105,6 +105,9 @@ class Histogram(ColAnalysis):
         high_pass = ser < high_tail
         meat = vals[low_pass & high_pass]
 
+        if len(meat) == 0:
+            return dict(histogram_args={})
+   
         meat_histogram=np.histogram(meat, 10)
         populations, _ = meat_histogram
         return dict(
