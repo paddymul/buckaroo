@@ -171,15 +171,71 @@ class TestAnalysisPipeline(unittest.TestCase):
         #self.assertEqual(len(sdf2['tripduration']), 18)
         #Create an updated Foo that returns 9
 
-    def xtest_summary_stats_display(self):
-        """I don't remember what this test does, and I can't get it
-        to work after the series_summary refactor
+    def test_summary_stats_display(self):
+        class AlwaysFoo(ColAnalysis):
+            provides_summary = ['foo']
+            summary_stats_display = ['foo']
+
+            @staticmethod
+            def computed_summary(summary_dict):
+                return dict(foo=3)
+
+        class AlwaysBar(ColAnalysis):
+            provides_summary = ['bar']
+            summary_stats_display = ['bar']
+
+            @staticmethod
+            def computed_summary(summary_dict):
+                return dict(bar=3)
+
+        ap = AnalysisPipeline([AlwaysFoo])
+        self.assertEqual(ap.summary_stats_display, ["foo"])
+        ap.add_analysis(AlwaysBar)
+        assert ap.summary_stats_display == ["bar"]
+
+        ap2 = AnalysisPipeline([AlwaysFoo, AlwaysBar])
+        assert ap2.ordered_a_objs == [AlwaysFoo, AlwaysBar]
+        assert ap2.summary_stats_display == ["bar"]
+
+    def test_summary_stats_display2(self):
         """
-        ap = AnalysisPipeline([TypingStats])
-        self.assertEqual(ap.summary_stats_display, "all")
-        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
-        print(ap.summary_stats_display)
-        self.assertTrue("dtype" in ap.summary_stats_display)
+        defines vagaries of dependent analysis and sumary stats
+        """
+        class AlwaysFoo(ColAnalysis):
+            provides_summary = ['foo']
+            summary_stats_display = ['foo']
+
+            @staticmethod
+            def computed_summary(summary_dict):
+                return dict(foo=3)
+        class DependsFoo(ColAnalysis):
+            provides_summary = ['xoq']
+            requires_summary = ['foo']
+            summary_stats_display = ['xoq']
+
+            @staticmethod
+            def computed_summary(summary_dict):
+                return dict(xoq=3)
+
+
+        class AlwaysBar(ColAnalysis):
+            provides_summary = ['bar']
+            summary_stats_display = ['bar']
+
+            @staticmethod
+            def computed_summary(summary_dict):
+                return dict(bar=3)
+
+        ap2 = AnalysisPipeline([AlwaysFoo, AlwaysBar])
+        self.assertEqual(ap2.summary_stats_display, ["bar"])
+        ap2.add_analysis(DependsFoo)
+        self.assertEqual(ap2.summary_stats_display, ["xoq"])
+
+        ap = AnalysisPipeline([DependsFoo, AlwaysFoo])
+        self.assertEqual(ap.summary_stats_display, ["xoq"])
+        ap2.add_analysis(AlwaysBar)
+        #Always Bar doesn't depend on anything so it doesn't replace xoq in summary_stats_display
+        assert ap.summary_stats_display == ["xoq"]
 
     def test_add_summary_stats_display(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
