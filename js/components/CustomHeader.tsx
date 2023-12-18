@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import { createPortal } from 'react-dom';
+
 import {
   BarChart,
   Bar,
@@ -9,6 +10,7 @@ import {
   //Cell, XAxis, YAxis, CartesianGrid, , ResponsiveContainer,
 } from 'recharts';
 import { Tooltip } from './RechartTooltip';
+
 import { isNumOrStr, ValueType } from './RechartExtra';
 
 function defaultFormatter<TValue extends ValueType>(value: TValue) {
@@ -52,7 +54,7 @@ export const makeData = (histogram: number[]) => {
   return accum;
 };
 
-const formatter = (value: any, name: any, props: any) => {
+export const formatter = (value: any, name: any, props: any) => {
   if (props.payload.name === 'longtail') {
     return [value, name];
   } else {
@@ -128,10 +130,17 @@ export const ToolTipAdapter = (args: any) => {
 
 //export const HistogramCell   = ({histogram}: {histogram:any}) => {
 export const HistogramCell = (props: any) => {
+  //debugger;
   if (props === undefined || props.value === undefined) {
     return <span></span>;
   }
-  const histogram = props.value.histogram;
+  const histogram = props.value;
+  //for key "index", the value is "histogram"
+  // this causes ReChart to blow up, so we check to see if it's an array
+  if (histogram === undefined || !_.isArray(histogram)) {
+    return <span></span>
+  }
+
   return (
     <div className="histogram-component">
       <BarChart width={100} height={24} barGap={1} data={histogram}>
@@ -235,4 +244,5 @@ export const HistogramCell = (props: any) => {
       </BarChart>
     </div>
   );
+
 };

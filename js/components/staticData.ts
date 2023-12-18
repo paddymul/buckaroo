@@ -240,7 +240,10 @@ export const tableDf: DFWhole = {
       {col_name:"start station name", displayer_args: {displayer:"obj"}},
       {col_name:"floatCol", displayer_args: {displayer:"float"}},
     ],
-    pinned_rows: []
+    pinned_rows: [
+      {primary_key_val:'dtype', displayer_args: {displayer:'obj'}},
+      {primary_key_val:'histogram', displayer_args: {displayer:'histogram'}}
+    ]
   },
   data: [
     {
@@ -317,13 +320,13 @@ export const summaryDfForTableDf:DFData = [
           { name: 'long_tail', cat_pop: 0.938 },
           { name: 'NA', cat_pop: 0.0 }]},
   {'index': 'dtype', 
-          'end station name': 'String',
-          'tripduration': 'Int64',
+          'end station name': 'String6666',
+          'tripduration': 'object',
           'start station name':  'object',
-           'nanNumeric': 'float64',
-           'nanFloat': 'flot64',
-           'nanObject': 'object',
-           'floatCol': 'float',}
+          'nanNumeric': 'float64',
+          'nanFloat': 'flot64',
+          'nanObject': 'object',
+          'floatCol': 'float',}
         ]
 
 //histograms for tableDf
