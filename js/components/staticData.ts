@@ -1,7 +1,7 @@
 import { OperationDefaultArgs, Operation } from './OperationUtils';
 import { sym } from './utils';
 import { symDf, CommandConfigT, bakedArgSpecs } from './CommandUtils';
-import { DFWhole } from './DFWhole';
+import { DFData, DFWhole } from './DFWhole';
 
 export const bakedOperationDefaults: OperationDefaultArgs = {
   dropcol: [sym('dropcol'), symDf, 'col'],
@@ -297,6 +297,35 @@ export const tableDf: DFWhole = {
   ],
 };
 
+export const summaryDfForTableDf:DFData = [
+  {'index': 'histogram', 
+       'end station name':  histograms.categorical_histo_lt,
+       'tripduration': histograms.num_histo,
+       'start station name':  histograms.bool_histo,
+        'nanNumeric': histograms.num_histo,
+        'nanFloat': histograms.num_histo,
+        'nanObject': histograms.num_histo,
+        'floatCol': [
+          { name: 521, cat_pop: 0.0103 },
+          { name: 358, cat_pop: 0.0096 },
+          { name: 519, cat_pop: 0.009 },
+          { name: 497, cat_pop: 0.0087 },
+          { name: 293, cat_pop: 0.0082 },
+          { name: 285, cat_pop: 0.0081 },
+          { name: 435, cat_pop: 0.008 },
+          { name: 'unique', cat_pop: 0.0001 },
+          { name: 'long_tail', cat_pop: 0.938 },
+          { name: 'NA', cat_pop: 0.0 }]},
+  {'index': 'dtype', 
+          'end station name': 'String',
+          'tripduration': 'Int64',
+          'start station name':  'object',
+           'nanNumeric': 'float64',
+           'nanFloat': 'flot64',
+           'nanObject': 'object',
+           'floatCol': 'float',}
+        ]
+
 //histograms for tableDf
   /*
   table_hints: {
@@ -345,7 +374,7 @@ export const tableDf: DFWhole = {
       type: 'obj',
     },
   }, */
-
+ 
 
 /*
 export const stringIndexDf: DFWhole = {

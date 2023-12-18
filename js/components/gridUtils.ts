@@ -13,7 +13,9 @@ import {
   FloatDisplayerA,
   IntegerDisplayerA,
   DatetimeLocaleDisplayerA,
-  ColumnConfig
+  ColumnConfig,
+  DFData,
+  PinnedRowConfig
 } from './DFWhole';
 import _ from 'lodash';
 import { HistogramCell } from './CustomHeader';
@@ -194,14 +196,14 @@ function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
 }
 
 
-function getCellRenderer(crArgs: CellRendererArgs) {
+export function getCellRenderer(crArgs: CellRendererArgs) {
   if (crArgs.displayer == 'histogram') {
     return HistogramCell;
   }
   return undefined;
 }
 
-function addToColDef(dispArgs: DisplayerArgs) {
+export function addToColDef(dispArgs: DisplayerArgs) {
   if (_.includes(cellRendererDisplayers, dispArgs.displayer)) {
     const crArgs: CellRendererArgs = dispArgs as CellRendererArgs;
     return {
@@ -211,6 +213,18 @@ function addToColDef(dispArgs: DisplayerArgs) {
   const fArgs = dispArgs as FormatterArgs;
   const colDefExtras: ColDef = { valueFormatter: getFormatter(fArgs) }
   return colDefExtras;
+}
+
+export function extractPinnedRows(sdf:DFData, prc:PinnedRowConfig[]) {
+  /*
+  const pks: string[] = _.map(prc, 'primary_key_val');
+  _.map(pks, (pk) -> {
+    return _.filter(sdf, {'index': pk})[0];
+  })
+  */
+  return _.map(
+    _.map(prc, 'primary_key_val'), 
+    (x) => _.find(sdf, {'index':x}))
 }
 
 export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {

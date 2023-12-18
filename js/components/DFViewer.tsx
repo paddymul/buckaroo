@@ -1,23 +1,25 @@
 import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
-import { DFWhole, EmptyDf } from './DFWhole';
+import { CellRendererArgs, DFData, DFWhole, EmptyDf } from './DFWhole';
 
-import { updateAtMatch, dfToAgrid } from './gridUtils';
+import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
 
-import { HistogramCell } from './CustomHeader';
+//import { HistogramCell } from './CustomHeader';
 
 export type setColumFunc = (newCol: string) => void;
 
 export function DFViewer(
   {
     df,
+    summaryStatsDf,
     style,
     activeCol,
     setActiveCol,
   }: {
     df: DFWhole;
+    summaryStatsDf?: DFData;
     style?: CSSProperties;
     activeCol?: string;
     setActiveCol?: setColumFunc;
@@ -48,12 +50,27 @@ export function DFViewer(
       type: 'rightAligned',
       cellRendererSelector: (params) => {
         if (params.node.rowPinned) {
+          const pk = _.get(params.node.data, 'index');
+          if (pk === undefined) {
+            return undefined; // default renderer
+          }
+          const prc = _.find(df.dfviewer_config.pinned_rows, {'primary_key_val': pk});
+          if (prc === undefined) {
+            return undefined;
+          }
+          const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
+          if (possibCellRenderer === undefined) {
+            return undefined
+          }
+          return { component: possibCellRenderer}
+/*
           return {
             component: HistogramCell,
             params: {
               style: { fontStyle: 'italic' },
             },
           };
+          */
         } else {
           // rows that are not pinned don't use any cell renderer
           return undefined;
@@ -61,6 +78,7 @@ export function DFViewer(
       },
     },
 
+    
     onCellClicked: (event) => {
       const colName = event.column.getColId();
       if (setActiveCol === undefined || colName === undefined) {
@@ -157,6 +175,7 @@ export function DFViewer(
           ref={gridRef}
           gridOptions={gridOptions}
           rowData={agData}
+          pinnedTopRowData={summaryStatsDf? extractPinnedRows(summaryStatsDf, df.dfviewer_config.pinned_rows) : []}
           columnDefs={styledColumns}
         ></AgGridReact>
       </div>
