@@ -134,7 +134,15 @@ export const foo: DFWhole = {
     column_config :[
       {col_name:"index", displayer_args: {displayer:"obj"}},
       {col_name:"tripduration", displayer_args: {displayer:"obj"}},
-      {col_name:"tripduration", displayer_args: {displayer:"obj"}},
+      {col_name:"starttime", displayer_args: {displayer:"obj"}},
+      {col_name:"stoptime", displayer_args: {displayer:"obj"}},
+      {col_name:"start station id", displayer_args: {displayer:"obj"}},
+      {col_name:"start station name", displayer_args: {displayer:"obj"}},
+      {col_name:"start station lattitude", displayer_args: {displayer:"obj"}},
+      {col_name:"bikeid", displayer_args: {displayer:"obj"}},
+      {col_name:"birth year", displayer_args: {displayer:"obj"}},
+      {col_name:"gender", displayer_args: {displayer:"obj"}},
+
       ],
       pinned_rows: []
     },
@@ -216,6 +224,7 @@ export const foo: DFWhole = {
 };
 export const stringIndexDf = foo;
 export const tableDf = foo;
+
 
 
 /*
