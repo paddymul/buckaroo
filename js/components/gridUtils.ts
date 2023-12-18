@@ -3,14 +3,18 @@ import {
   ValueFormatterFunc,
   ValueFormatterParams,
 } from 'ag-grid-community';
+
 import {
   DFWhole,
   DFColumn,
-  ColumnHint,
-  ColumnIntegertHint,
-  ColumnFloatHint,
-  ColumnDatetimeHint,
-} from './staticData';
+  CellRendererArgs,
+  DisplayerArgs,
+  cellRendererDisplayers,
+  FormatterArgs,
+  FloatDisplayerA,
+  IntegerDisplayerA,
+  DatetimeLocaleDisplayerA
+} from './DFWhole';
 import _ from 'lodash';
 import { HistogramCell } from './CustomHeader';
 export const updateAtMatch = (
@@ -189,35 +193,7 @@ function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
   return stringFormatter;
 }
 
-// I'm not sure about adding underlying types too
-// they are implied, just not sure
-export interface ObjDisplayerA             { displayer: 'obj';     }
-export interface BooleanDisplayerA         { displayer: 'boolean'; }
-export interface StringDisplayerA          { displayer: 'string';  } //max_length?: number; 
-export interface FloatDisplayerA           { displayer: 'float';   }
-export interface HistogramDisplayerA       { displayer: 'histogram';   }
-export interface DatetimeDefaultDisplayerA { displayer: 'datetimeDefault'; }
-export interface IntegerDisplayerA {
-  displayer: 'integer';
-  min_digits: number;
-  max_digits: number;
-}
 
-export interface DatetimeLocaleDisplayerA {
-  displayer: 'datetimeLocaleString';
-  locale: 'en-US' | 'en-GB' | 'en-CA' | 'fr-FR' | 'es-ES' | 'de-DE' | 'ja-JP';
-  args: Intl.DateTimeFormatOptions;
-}
-
-// Used DisplayerA instead of FormatterArgs,  Displayer makes sense from the python side
-// python doesn't care that histogram requires a cellRenderer and Integer only changes the formatter
-export type FormatterArgs = ObjDisplayerA | BooleanDisplayerA | StringDisplayerA
-  | FloatDisplayerA | DatetimeDefaultDisplayerA | DatetimeLocaleDisplayerA
-  | IntegerDisplayerA;
-export type CellRendererArgs = HistogramDisplayerA;
-export type DisplayerArgs = FormatterArgs | CellRendererArgs;
-
-export const cellRendererDisplayers = ['histogram'];
 function getCellRenderer(crArgs: CellRendererArgs) {
   if (crArgs.displayer == 'histogram') {
     return HistogramCell;

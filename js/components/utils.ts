@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { DFWhole } from './staticData';
+import { DFWhole } from './DFWhole';
 
 export type setDFFunc = (newDf: DFWhole) => void;
 

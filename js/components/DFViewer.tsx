@@ -1,6 +1,6 @@
 import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
-import { DFWhole, EmptyDf } from './staticData';
+import { DFWhole, EmptyDf } from './DFWhole';
 
 import { updateAtMatch, dfToAgrid } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component

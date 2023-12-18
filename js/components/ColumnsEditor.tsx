@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { DFWhole, EmptyDf, bakedOperations } from './staticData';
+import { bakedOperations } from './staticData';
+import { DFWhole, EmptyDf } from './DFWhole';
 import { OperationViewer } from './Operations';
 import { Operation } from './OperationUtils';
 import { CommandConfigT } from './CommandUtils';

@@ -1,6 +1,7 @@
 import { OperationDefaultArgs, Operation } from './OperationUtils';
 import { sym } from './utils';
 import { symDf, CommandConfigT, bakedArgSpecs } from './CommandUtils';
+import { DFWhole } from './DFWhole';
 
 export const bakedOperationDefaults: OperationDefaultArgs = {
   dropcol: [sym('dropcol'), symDf, 'col'],
@@ -18,85 +19,6 @@ export const bakedOperations: Operation[] = [
   [sym('fillna'), symDf, 'col2', 5],
   [sym('resample'), symDf, 'month', 'monthly', {}],
 ];
-
-export interface DFColumn {
-  name: string;
-  type: string;
-}
-export type DFDataRow = Record<
-  string,
-  string | number | boolean | any[] | Record<string, any> | null
->;
-
-export type DFData = DFDataRow[];
-
-export interface ColumnObjHint {
-  type: 'obj';
-  histogram?: any[];
-}
-
-export interface ColumnDatetimeDefaultHint {
-  type: 'datetime';
-  formatter: 'default';
-  histogram?: any[];
-}
-
-export interface ColumnDatetimeFormatHint {
-  type: 'datetime';
-  formatter: 'toLocaleString';
-  locale: 'en-US' | 'en-GB' | 'en-CA' | 'fr-FR' | 'es-ES' | 'de-DE' | 'ja-JP';
-  args: Intl.DateTimeFormatOptions;
-  histogram?: any[];
-}
-export type ColumnDatetimeHint =
-  | ColumnDatetimeDefaultHint
-  | ColumnDatetimeFormatHint;
-
-export interface ColumnStringHint {
-  type: 'string';
-  histogram?: any[];
-}
-
-export interface ColumnBooleanHint {
-  type: 'boolean';
-  histogram?: any[];
-}
-
-export interface ColumnIntegertHint {
-  type: 'integer';
-  min_digits: number;
-  max_digits: number;
-  histogram: any[];
-}
-
-export interface ColumnFloatHint {
-  type: 'float';
-  histogram: any[];
-}
-
-export type ColumnHint =
-  | ColumnObjHint
-  | ColumnIntegertHint
-  | ColumnDatetimeHint
-  | ColumnFloatHint
-  | ColumnStringHint
-  | ColumnBooleanHint;
-
-export interface DFWhole {
-  schema: {
-    fields: DFColumn[];
-    primaryKey: string[]; //['index']
-    pandas_version: string; //'1.4.0',
-  };
-  table_hints: Record<string, ColumnHint>;
-  data: DFData;
-}
-
-export const EmptyDf: DFWhole = {
-  schema: { fields: [], primaryKey: [], pandas_version: '' },
-  table_hints: {},
-  data: [],
-};
 
 //print(sdf.to_json(orient='table', indent=2))
 
