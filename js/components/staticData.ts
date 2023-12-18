@@ -223,25 +223,24 @@ export const foo: DFWhole = {
   ],
 };
 export const stringIndexDf = foo;
-export const tableDf = foo;
+//export const tableDf = foo;
 
 
 
-/*
+
 export const tableDf: DFWhole = {
-  schema: {
-    fields: [
-      { name: 'index', type: 'integer' },
-      { name: 'nanNumeric', type: 'int' },
-      { name: 'nanObject', type: 'int' },
-      { name: 'nanFloat', type: 'float' },
-      { name: 'end station name', type: 'string' },
-      { name: 'tripduration', type: 'integer' },
-      { name: 'start station name', type: 'string' },
-      { name: 'floatCol', type: 'float' },
+  dfviewer_config : {
+    column_config: [
+      {col_name:"index", displayer_args: {displayer:"integer", min_digits:3, max_digits:5 }},
+      {col_name:"nanNumeric", displayer_args: {displayer:"integer", min_digits:3, max_digits:5 }},
+      {col_name:"nanObject", displayer_args: {displayer:"integer", min_digits:3, max_digits:5 }},
+      {col_name:"nanFloat", displayer_args: {displayer:"float"}},
+      {col_name:"end station name", displayer_args: {displayer:"obj"}},
+      {col_name: 'tripduration', displayer_args: {displayer:"integer", min_digits:1, max_digits:5 }},
+      {col_name:"start station name", displayer_args: {displayer:"obj"}},
+      {col_name:"floatCol", displayer_args: {displayer:"float"}},
     ],
-    primaryKey: ['index'],
-    pandas_version: '1.4.0',
+    pinned_rows: []
   },
   data: [
     {
@@ -296,6 +295,10 @@ export const tableDf: DFWhole = {
       nanFloat: null,
     },
   ],
+};
+
+//histograms for tableDf
+  /*
   table_hints: {
     'end station name': {
       histogram: histograms.categorical_histo_lt,
@@ -341,9 +344,10 @@ export const tableDf: DFWhole = {
     nanObject: {
       type: 'obj',
     },
-  },
-};
+  }, */
 
+
+/*
 export const stringIndexDf: DFWhole = {
   schema: {
     fields: [
