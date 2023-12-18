@@ -30,7 +30,7 @@ export function ColumnsEditor({
   commandConfig: CommandConfigT;
   widgetConfig: WidgetConfig;
 }) {
-  const allColumns = df.schema.fields.map((field) => field.name);
+  const allColumns = df.dfviewer_config.column_config.map((field) => field.col_name);
   return (
     <div className="columns-editor" style={{ width: '100%' }}>
       {widgetConfig.showCommands ? (

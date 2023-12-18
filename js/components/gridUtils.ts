@@ -6,7 +6,6 @@ import {
 
 import {
   DFWhole,
-  DFColumn,
   CellRendererArgs,
   DisplayerArgs,
   cellRendererDisplayers,
