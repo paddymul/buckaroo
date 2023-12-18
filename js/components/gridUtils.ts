@@ -13,7 +13,8 @@ import {
   FormatterArgs,
   FloatDisplayerA,
   IntegerDisplayerA,
-  DatetimeLocaleDisplayerA
+  DatetimeLocaleDisplayerA,
+  ColumnConfig
 } from './DFWhole';
 import _ from 'lodash';
 import { HistogramCell } from './CustomHeader';
@@ -201,7 +202,7 @@ function getCellRenderer(crArgs: CellRendererArgs) {
   return undefined;
 }
 
-function addToColDef(dispArgs: DisplayerArgs, fieldName: string) {
+function addToColDef(dispArgs: DisplayerArgs) {
   if (_.includes(cellRendererDisplayers, dispArgs.displayer)) {
     const crArgs: CellRendererArgs = dispArgs as CellRendererArgs;
     return {
@@ -214,14 +215,14 @@ function addToColDef(dispArgs: DisplayerArgs, fieldName: string) {
 }
 
 export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
-  const fields = tdf.schema.fields;
-  const retColumns: ColDef[] = fields.map((f: DFColumn) => {
+  const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
+    (f: ColumnConfig) => {
     const colDef: ColDef = {
-      field: f.name,
-      headerName: f.name,
-      //...addToColDef()
+      field: f.col_name,
+      headerName: f.col_name,
+      ...addToColDef(f.displayer_args)
     };
-    if (f.name === 'index') {
+    if (f.col_name === 'index') {
       colDef.pinned = 'left';
     }
     return colDef;

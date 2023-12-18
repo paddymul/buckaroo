@@ -129,26 +129,19 @@ export const histograms = {
 
 //export const tableDf2:DFWhole = {
 export const foo: DFWhole = {
-  schema: {
-    fields: [
-      { name: 'index', type: 'integer' },
-      { name: 'tripduration', type: 'integer' },
-      { name: 'starttime', type: 'string' },
-      { name: 'stoptime', type: 'string' },
-      { name: 'start station id', type: 'integer' },
-      { name: 'start station name', type: 'string' },
-      { name: 'start station latitude', type: 'number' },
-      { name: 'bikeid', type: 'integer' },
-      { name: 'birth year', type: 'string' },
-      { name: 'gender', type: 'integer' },
-    ],
 
-    primaryKey: ['index'],
-    pandas_version: '1.4.0',
-  },
-  table_hints: {
-    index: { type: 'obj' },
-    tripduration: { histogram: histograms.num_histo, type: 'obj' },
+  dfviewer_config: {
+    column_config :[
+      {col_name:"index", displayer_args: {displayer:"obj"}},
+      {col_name:"tripduration", displayer_args: {displayer:"obj"}},
+      {col_name:"tripduration", displayer_args: {displayer:"obj"}},
+      ],
+      pinned_rows: []
+    },
+        
+//    index: { type: 'obj' },
+//    tripduration: { histogram: histograms.num_histo, type: 'obj' },
+/*
     starttime: { type: 'obj' },
     stoptime: { type: 'obj' },
     'start station id': { type: 'obj' },
@@ -157,7 +150,7 @@ export const foo: DFWhole = {
     bikeid: { type: 'obj' },
     'birth year': { type: 'obj' },
     gender: { type: 'obj' },
-  },
+    */
   data: [
     {
       index: 0,
@@ -221,7 +214,11 @@ export const foo: DFWhole = {
     },
   ],
 };
+export const stringIndexDf = foo;
+export const tableDf = foo;
 
+
+/*
 export const tableDf: DFWhole = {
   schema: {
     fields: [
@@ -418,3 +415,4 @@ export const stringIndexDf: DFWhole = {
     },
   },
 };
+*/

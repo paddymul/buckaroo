@@ -27,6 +27,7 @@ export function DFViewer(
     setActiveCol: () => null,
   }
 ) {
+  // DFViewer is responsible for populating pinnedTopRows from 
   const [agColsPure, agData] = dfToAgrid(df);
   // console.log('dfviewer agData', agData);
 
@@ -143,7 +144,8 @@ export function DFViewer(
   };
 
   makeCondtionalAutosize(50, 350);
-  const pinnedTopRowData = [df.table_hints];
+  //const pinnedTopRowData = [df.table_hints];
+  //pinnedTopRowData={pinnedTopRowData}
 
   return (
     <div className="df-viewer">
@@ -155,7 +157,6 @@ export function DFViewer(
           ref={gridRef}
           gridOptions={gridOptions}
           rowData={agData}
-          pinnedTopRowData={pinnedTopRowData}
           columnDefs={styledColumns}
         ></AgGridReact>
       </div>
