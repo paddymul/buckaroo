@@ -72,30 +72,10 @@ const DEFAULT_DATE_FORMAT: Intl.DateTimeFormatOptions = {
 export const dateDisplayerDefault = (d: Date): string => {
   const fullStr = d.toLocaleDateString('en-CA', DEFAULT_DATE_FORMAT);
   const [dateStr, timeStr] = fullStr.split(',');
-  //const retVal = `${dateStr} ${timeStr.padStart(12)}`;
   const retVal = `${dateStr} ${timeStr}`;
   return retVal;
 };
 
-export const getDatetimeFormatter = (colHint: ColumnDatetimeHint) => {
-  return (params: ValueFormatterParams): string => {
-    // console.log("params", params)
-    const val = params.value;
-    if (val === null || val === undefined) {
-      return '';
-    }
-    const d = new Date(val);
-    if (!isValidDate(d)) {
-      return '';
-    }
-    if (colHint.formatter === 'default') {
-      return dateDisplayerDefault(d);
-    } else if (colHint.formatter === 'toLocaleString') {
-      return d.toLocaleDateString(colHint.locale, colHint.args);
-    }
-    throw new Error('unreachable code in getDatetimeFormatter');
-  };
-};
 
 const objDisplayer = (val: any | any[]): string => {
   if (val === undefined || val === null) {
@@ -131,7 +111,7 @@ export const booleanFormatter = (params: ValueFormatterParams): string => {
   return boolDisplayer(val);
 };
 
-const getIntegerFormatter = (hint: ColumnIntegertHint) => {
+const getIntegerFormatter = (hint: IntegerDisplayerA) => {
   const commas = Math.floor(hint.max_digits / 3);
   const totalWidth = commas + hint.max_digits;
 
@@ -146,7 +126,7 @@ const getIntegerFormatter = (hint: ColumnIntegertHint) => {
   return numericFormatter;
 };
 
-const getFloatFormatter = (hint: ColumnFloatHint) => {
+const getFloatFormatter = (hint: FloatDisplayerA) => {
   const floatFormatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3,
@@ -159,38 +139,106 @@ const getFloatFormatter = (hint: ColumnFloatHint) => {
   };
 };
 
-function getFormatter(hint: ColumnHint): ValueFormatterFunc<unknown> {
-  if (hint === undefined) {
+export const getDatetimeFormatter = (colHint: DatetimeLocaleDisplayerA) => {
+  return (params: ValueFormatterParams): string => {
+    const val = params.value;
+    if (val === null || val === undefined) {
+      return '';
+    }
+    const d = new Date(val);
+    if (!isValidDate(d)) {
+      return '';
+    }
+    return d.toLocaleDateString(colHint.locale, colHint.args);
+  };
+};
+
+export const defaultDatetimeFormatter = (params: ValueFormatterParams): string => {
+    const val = params.value;
+    if (val === null || val === undefined) {
+      return '';
+    }
+    const d = new Date(val);
+    if (!isValidDate(d)) {
+      return '';
+    }
+    return dateDisplayerDefault(d);
+};
+
+
+function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
+  if (fArgs === undefined) {
     return stringFormatter;
   }
-  if (hint.type === 'integer') {
-    return getIntegerFormatter(hint);
-  } else if (hint.type === 'string') {
+  if (fArgs.displayer === 'integer') {
+    return getIntegerFormatter(fArgs);
+  } else if (fArgs.displayer === 'string') {
     return stringFormatter;
-  } else if (hint.type === 'datetime') {
-    return getDatetimeFormatter(hint);
-  } else if (hint.type === 'float') {
-    return getFloatFormatter(hint);
-  } else if (hint.type === 'boolean') {
+  } else if (fArgs.displayer === 'datetimeDefault') {
+    return defaultDatetimeFormatter;
+  } else if (fArgs.displayer === 'datetimeLocaleString') {
+    return getDatetimeFormatter(fArgs);
+  } else if (fArgs.displayer === 'float') {
+    return getFloatFormatter(fArgs);
+  } else if (fArgs.displayer === 'boolean') {
     return booleanFormatter;
-  } else if (hint.type === 'obj') {
+  } else if (fArgs.displayer === 'obj') {
     return objFormatter;
   }
   return stringFormatter;
 }
 
+function addToColDef(formatterArgs:FormatterArgs, fieldName:string)  {
+  //  cellRenderer
+  const colDefExtras:ColDef = {
+    valueFormatter: getFormatter(
+      _.get(tdf.table_hints, f.name, { is_numeric: false, type: 'obj' })
+    ),
+  
+    }
+    return colDefExtras;
+  }
+  
+
+
+// I'm not sure about adding underlying types too
+// they are implied, just not sure
+export interface ObjDisplayerA             { displayer: 'obj';     }
+export interface BooleanDisplayerA         { displayer: 'boolean'; }
+export interface StringDisplayerA          { displayer: 'string';  } //max_length?: number; 
+export interface FloatDisplayerA           { displayer: 'float';   }
+export interface HistogramDisplayerA       { displayer: 'histogram';   }
+export interface DatetimeDefaultDisplayerA { displayer: 'datetimeDefault'; }
+export interface IntegerDisplayerA {
+  displayer: 'integer';
+  min_digits: number;
+  max_digits: number;
+}
+
+export interface DatetimeLocaleDisplayerA {
+  displayer: 'datetimeLocaleString';
+  locale: 'en-US' | 'en-GB' | 'en-CA' | 'fr-FR' | 'es-ES' | 'de-DE' | 'ja-JP';
+  args: Intl.DateTimeFormatOptions;
+}
+
+
+// Used DisplayerA instead of FormatterArgs,  Displayer makes sense from the python side
+// python doesn't care that histogram requires a cellRenderer and Integer only changes the formatter
+export type FormatterArgs = ObjDisplayerA | BooleanDisplayerA | StringDisplayerA
+  | FloatDisplayerA | DatetimeDefaultDisplayerA | DatetimeLocaleDisplayerA
+  | IntegerDisplayerA;
+
+export type DisplayerArgs = FormatterArgs | HistogramDisplayerA;
+
+
+
 export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
   const fields = tdf.schema.fields;
-  //console.log("tdf", tdf);
-  //console.log("hints", tdf.table_hints);
   const retColumns: ColDef[] = fields.map((f: DFColumn) => {
-    //console.log(f.name, tdf.table_hints[f.name])
     const colDef: ColDef = {
       field: f.name,
       headerName: f.name,
-      valueFormatter: getFormatter(
-        _.get(tdf.table_hints, f.name, { is_numeric: false, type: 'obj' })
-      ),
+      //...addToColDef()
     };
     if (f.name === 'index') {
       colDef.pinned = 'left';
