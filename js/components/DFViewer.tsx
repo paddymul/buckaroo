@@ -1,11 +1,11 @@
 import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
-import { CellRendererArgs, DFData, DFWhole, EmptyDf } from './DFWhole';
+import { CellRendererArgs, DFData, DFWhole, EmptyDf, FormatterArgs, PinnedRowConfig } from './DFWhole';
 
-import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer, objFormatter } from './gridUtils';
+import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer, objFormatter, getFormatter } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import { CellRendererSelectorResult, GridOptions } from 'ag-grid-community';
-import { TextCellRenderer } from './CustomHeader';
+import { CellRendererSelectorResult, GridOptions, ICellRendererParams } from 'ag-grid-community';
+import { getTextCellRenderer } from './CustomHeader';
 
 //import { HistogramCell } from './CustomHeader';
 
@@ -49,27 +49,26 @@ export function DFViewer(
     defaultColDef: {
       sortable: true,
       type: 'rightAligned',
-      cellRendererSelector: (params) => {
+      cellRendererSelector: (params:ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
         if (params.node.rowPinned) {
-//          const ab:cellRendererParams
-            const default2: CellRendererSelectorResult = {
-              params: { valueFormatted: 9,
-                //value: 3,
-              foo:objFormatter
-              },
-              component: TextCellRenderer
-            };
 
+          const default1: CellRendererSelectorResult = {
+            component: getTextCellRenderer(objFormatter)
+          };
           const pk = _.get(params.node.data, 'index');
           if (pk === undefined) {
-            return default2; // default renderer
+            return default1; // default renderer
           }
-          const prc = _.find(df.dfviewer_config.pinned_rows, {'primary_key_val': pk});
-          if (prc === undefined) {
-            return default2
+          const maybePrc: PinnedRowConfig|undefined = _.find(df.dfviewer_config.pinned_rows, {'primary_key_val': pk});
+          if (maybePrc === undefined) {
+            return default1;
           }
+          const prc:PinnedRowConfig = maybePrc;
           const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
           if (possibCellRenderer === undefined) {
+            const default2: CellRendererSelectorResult = {
+              component: getTextCellRenderer(  getFormatter(prc.displayer_args as FormatterArgs))
+            };
             return default2;
           }
           return { component: possibCellRenderer,          }

@@ -173,7 +173,7 @@ export const defaultDatetimeFormatter = (params: ValueFormatterParams): string =
 };
 
 
-function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
+export function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
   if (fArgs === undefined) {
     return stringFormatter;
   }
@@ -203,25 +203,32 @@ export function getCellRenderer(crArgs: CellRendererArgs) {
   return undefined;
 }
 
+export function getFormatterFromArgs(dispArgs: DisplayerArgs) {
+  if (_.includes(cellRendererDisplayers, dispArgs.displayer)) {
+    return undefined;
+  }
+  const fArgs = dispArgs as FormatterArgs;
+  return getFormatter(fArgs);
+}
+
+
 export function addToColDef(dispArgs: DisplayerArgs) {
+  const formatter = getFormatterFromArgs(dispArgs);
+  if (formatter!== undefined) {
+    const colDefExtras: ColDef = { valueFormatter: formatter};
+    return colDefExtras
+  }
+
   if (_.includes(cellRendererDisplayers, dispArgs.displayer)) {
     const crArgs: CellRendererArgs = dispArgs as CellRendererArgs;
     return {
       cellRenderer: getCellRenderer(crArgs)
     }
   }
-  const fArgs = dispArgs as FormatterArgs;
-  const colDefExtras: ColDef = { valueFormatter: getFormatter(fArgs) }
-  return colDefExtras;
+  return undefined;
 }
 
 export function extractPinnedRows(sdf:DFData, prc:PinnedRowConfig[]) {
-  /*
-  const pks: string[] = _.map(prc, 'primary_key_val');
-  _.map(pks, (pk) -> {
-    return _.filter(sdf, {'index': pk})[0];
-  })
-  */
   return _.map(
     _.map(prc, 'primary_key_val'), 
     (x) => _.find(sdf, {'index':x}))

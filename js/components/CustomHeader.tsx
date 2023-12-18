@@ -12,6 +12,7 @@ import {
 import { Tooltip } from './RechartTooltip';
 
 import { isNumOrStr, ValueType } from './RechartExtra';
+import { ValueFormatterFunc } from 'ag-grid-community';
 
 function defaultFormatter<TValue extends ValueType>(value: TValue) {
   return _.isArray(value) && isNumOrStr(value[0]) && isNumOrStr(value[1])
@@ -128,12 +129,12 @@ export const ToolTipAdapter = (args: any) => {
   return null;
 };
 
-export const TextCellRenderer =  (props: any) => {
-
-  const val= props.value;
-  return <span>{val}</span>;
+export const getTextCellRenderer = (formatter:ValueFormatterFunc<any>) => {
+  const TextCellRenderer =  (props: any) => {
+    return <span>{formatter(props)}</span>;
+  }
+  return TextCellRenderer;
 }
-
 //export const HistogramCell   = ({histogram}: {histogram:any}) => {
 export const HistogramCell = (props: any) => {
   //debugger;
