@@ -12,6 +12,7 @@ import {
   ColumnDatetimeHint,
 } from './staticData';
 import _ from 'lodash';
+import { HistogramCell } from './CustomHeader';
 export const updateAtMatch = (
   cols: ColDef[],
   key: string,
@@ -188,19 +189,6 @@ function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
   return stringFormatter;
 }
 
-function addToColDef(formatterArgs:FormatterArgs, fieldName:string)  {
-  //  cellRenderer
-  const colDefExtras:ColDef = {
-    valueFormatter: getFormatter(
-      _.get(tdf.table_hints, f.name, { is_numeric: false, type: 'obj' })
-    ),
-  
-    }
-    return colDefExtras;
-  }
-  
-
-
 // I'm not sure about adding underlying types too
 // they are implied, just not sure
 export interface ObjDisplayerA             { displayer: 'obj';     }
@@ -221,16 +209,33 @@ export interface DatetimeLocaleDisplayerA {
   args: Intl.DateTimeFormatOptions;
 }
 
-
 // Used DisplayerA instead of FormatterArgs,  Displayer makes sense from the python side
 // python doesn't care that histogram requires a cellRenderer and Integer only changes the formatter
 export type FormatterArgs = ObjDisplayerA | BooleanDisplayerA | StringDisplayerA
   | FloatDisplayerA | DatetimeDefaultDisplayerA | DatetimeLocaleDisplayerA
   | IntegerDisplayerA;
+export type CellRendererArgs = HistogramDisplayerA;
+export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
-export type DisplayerArgs = FormatterArgs | HistogramDisplayerA;
+export const cellRendererDisplayers = ['histogram'];
+function getCellRenderer(crArgs: CellRendererArgs) {
+  if (crArgs.displayer == 'histogram') {
+    return HistogramCell;
+  }
+  return undefined;
+}
 
-
+function addToColDef(dispArgs: DisplayerArgs, fieldName: string) {
+  if (_.includes(cellRendererDisplayers, dispArgs.displayer)) {
+    const crArgs: CellRendererArgs = dispArgs as CellRendererArgs;
+    return {
+      cellRenderer: getCellRenderer(crArgs)
+    }
+  }
+  const fArgs = dispArgs as FormatterArgs;
+  const colDefExtras: ColDef = { valueFormatter: getFormatter(fArgs) }
+  return colDefExtras;
+}
 
 export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
   const fields = tdf.schema.fields;
