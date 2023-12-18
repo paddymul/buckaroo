@@ -2,9 +2,10 @@ import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
 import { CellRendererArgs, DFData, DFWhole, EmptyDf } from './DFWhole';
 
-import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer } from './gridUtils';
+import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer, objFormatter } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import { GridOptions } from 'ag-grid-community';
+import { CellRendererSelectorResult, GridOptions } from 'ag-grid-community';
+import { TextCellRenderer } from './CustomHeader';
 
 //import { HistogramCell } from './CustomHeader';
 
@@ -50,27 +51,29 @@ export function DFViewer(
       type: 'rightAligned',
       cellRendererSelector: (params) => {
         if (params.node.rowPinned) {
+//          const ab:cellRendererParams
+            const default2: CellRendererSelectorResult = {
+              params: { valueFormatted: 9,
+                //value: 3,
+              foo:objFormatter
+              },
+              component: TextCellRenderer
+            };
+
           const pk = _.get(params.node.data, 'index');
           if (pk === undefined) {
-            return undefined; // default renderer
+            return default2; // default renderer
           }
           const prc = _.find(df.dfviewer_config.pinned_rows, {'primary_key_val': pk});
           if (prc === undefined) {
-            return undefined;
+            return default2
           }
           const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
           if (possibCellRenderer === undefined) {
-            return undefined
+            return default2;
           }
-          return { component: possibCellRenderer}
-/*
-          return {
-            component: HistogramCell,
-            params: {
-              style: { fontStyle: 'italic' },
-            },
-          };
-          */
+          return { component: possibCellRenderer,          }
+
         } else {
           // rows that are not pinned don't use any cell renderer
           return undefined;

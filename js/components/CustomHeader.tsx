@@ -128,6 +128,12 @@ export const ToolTipAdapter = (args: any) => {
   return null;
 };
 
+export const TextCellRenderer =  (props: any) => {
+
+  const val= props.value;
+  return <span>{val}</span>;
+}
+
 //export const HistogramCell   = ({histogram}: {histogram:any}) => {
 export const HistogramCell = (props: any) => {
   //debugger;

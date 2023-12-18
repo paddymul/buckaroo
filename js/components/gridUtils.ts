@@ -99,7 +99,7 @@ const objDisplayer = (val: any | any[]): string => {
   return val;
 };
 
-const objFormatter = (params: ValueFormatterParams): string => {
+export const objFormatter = (params: ValueFormatterParams): string => {
   const val = params.value;
   return objDisplayer(val);
 };
