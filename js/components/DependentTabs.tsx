@@ -5,7 +5,7 @@ import React, {
   SetStateAction,
 } from 'react';
 import { DFWhole, EmptyDf } from './DFWhole';
-import { DFViewer } from './DFViewer';
+import { DFViewer } from './DFViewer.1';
 import _ from 'lodash';
 import { Operation } from './OperationUtils';
 

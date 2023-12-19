@@ -1,15 +1,90 @@
 import React, { useRef, CSSProperties } from 'react';
-import _ from 'lodash';
-import { CellRendererArgs, DFData, DFWhole, EmptyDf, FormatterArgs, PinnedRowConfig } from './DFWhole';
+import _, { zipObject } from 'lodash';
+import { CellRendererArgs, DFData, DFWhole, EmptyDf, FormatterArgs, PinnedRowConfig, SDFMeasure, SDFT } from './DFWhole';
 
 import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer, objFormatter, getFormatter } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { CellRendererSelectorResult, GridOptions, ICellRendererParams } from 'ag-grid-community';
 import { getTextCellRenderer } from './CustomHeader';
 
-//import { HistogramCell } from './CustomHeader';
 
 export type setColumFunc = (newCol: string) => void;
+
+  /*
+  // I want a function that goes from
+  const foo = {'a':2, 'b':3} 
+  const bar = {'a':'500', 'b':'1000'} 
+  const baz = {'a':77,               'c':100}
+  // to this 
+  const result = {'a': {'foo': 2,    'bar': "500",  'baz':  77}, 
+                  "b": {'foo': 3,    'bar': "1000", 'baz': null},
+                  "c": {'foo': null, 'bar':   null, 'baz': 100}
+                } 
+  */
+
+export function extractSDFT(summaryStatsDf:DFData) : SDFT  {
+  const maybeHistogramBins =  _.find(summaryStatsDf, {'index': 'histogram_bins'}) || {};
+  const maybeHistogramLogBins = _.find(summaryStatsDf, {'index': 'histogram_logbins'}) || {};
+  const allColumns: string[] = _.without(_.union(_.keys(maybeHistogramBins), _.keys(maybeHistogramLogBins)), 'index')
+  const vals:SDFMeasure[] = _.map(allColumns, (colName) => {
+    return {
+      'histogram_bins': _.get(maybeHistogramBins, colName, []) as number[],
+      'histogram_log_bins': _.get(maybeHistogramLogBins, colName, []) as number[]}})
+  return zipObject(allColumns, vals) as SDFT;
+
+}
+/*
+const foo = { 'a': 2, 'b': 3 };
+const bar = { 'a': '500', 'b': '1000' };
+const baz = { 'a': 77, 'c': 100 };
+
+// Combine all keys from foo, bar, and baz
+const allKeys = _.union(_.keys(foo), _.keys(bar), _.keys(baz));
+
+
+// Define a function to create the result object
+transformObjects = (...objects) => {
+  return _.mapValues(_.zipObject(allKeys, objects), (values, key) => {
+    return _.mapValues(_.zipObject(['foo', 'bar', 'baz'], values), (v) => (_.isNil(v) ? null : v));
+  });
+};
+
+transformObjects(foo, bar, baz);
+
+
+  return {};
+}
+*/
+
+export function getCellRendererSelector(pinned_rows:PinnedRowConfig[]) {
+  const anyRenderer: CellRendererSelectorResult = {
+    component: getTextCellRenderer(objFormatter)
+  };
+  return (params:ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
+    if (params.node.rowPinned) {
+      const pk = _.get(params.node.data, 'index');
+      if (pk === undefined) {
+        return anyRenderer; // default renderer
+      }
+      const maybePrc: PinnedRowConfig|undefined = _.find(pinned_rows, {'primary_key_val': pk});
+      if (maybePrc === undefined) {
+        return anyRenderer;
+      }
+      const prc:PinnedRowConfig = maybePrc;
+      const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
+      if (possibCellRenderer === undefined) {
+        const formattedRenderer: CellRendererSelectorResult = {
+          component: getTextCellRenderer(  getFormatter(prc.displayer_args as FormatterArgs))
+        };
+        return formattedRenderer
+      }
+      return { component: possibCellRenderer }
+    } else {
+      return undefined; // rows that are not pinned don't use a row level cell renderer
+    }
+  }
+}
+
 
 export function DFViewer(
   {
@@ -31,7 +106,7 @@ export function DFViewer(
   }
 ) {
   // DFViewer is responsible for populating pinnedTopRows from 
-  const [agColsPure, agData] = dfToAgrid(df);
+  const [agColsPure, agData] = dfToAgrid(df,extractSDFT(summaryStatsDf||[]) );
   // console.log('dfviewer agData', agData);
 
   const styledColumns = updateAtMatch(
@@ -49,37 +124,8 @@ export function DFViewer(
     defaultColDef: {
       sortable: true,
       type: 'rightAligned',
-      cellRendererSelector: (params:ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
-        if (params.node.rowPinned) {
-
-          const default1: CellRendererSelectorResult = {
-            component: getTextCellRenderer(objFormatter)
-          };
-          const pk = _.get(params.node.data, 'index');
-          if (pk === undefined) {
-            return default1; // default renderer
-          }
-          const maybePrc: PinnedRowConfig|undefined = _.find(df.dfviewer_config.pinned_rows, {'primary_key_val': pk});
-          if (maybePrc === undefined) {
-            return default1;
-          }
-          const prc:PinnedRowConfig = maybePrc;
-          const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
-          if (possibCellRenderer === undefined) {
-            const default2: CellRendererSelectorResult = {
-              component: getTextCellRenderer(  getFormatter(prc.displayer_args as FormatterArgs))
-            };
-            return default2;
-          }
-          return { component: possibCellRenderer,          }
-
-        } else {
-          // rows that are not pinned don't use any cell renderer
-          return undefined;
-        }
-      },
+      cellRendererSelector: getCellRendererSelector(df.dfviewer_config.pinned_rows),
     },
-
     
     onCellClicked: (event) => {
       const colName = event.column.getColId();

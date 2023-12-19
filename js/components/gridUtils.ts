@@ -1,4 +1,5 @@
 import {
+  CellClassParams,
   ColDef,
   ValueFormatterFunc,
   ValueFormatterParams,
@@ -19,6 +20,7 @@ import {
 } from './DFWhole';
 import _ from 'lodash';
 import { HistogramCell } from './CustomHeader';
+import { SDFMeasure, SDFT } from './DFWhole';
 export const updateAtMatch = (
   cols: ColDef[],
   key: string,
@@ -212,7 +214,7 @@ export function getFormatterFromArgs(dispArgs: DisplayerArgs) {
 }
 
 
-export function addToColDef(dispArgs: DisplayerArgs) {
+export function addToColDef(dispArgs: DisplayerArgs, summary_stats_column: SDFMeasure) {
   const formatter = getFormatterFromArgs(dispArgs);
   if (formatter!== undefined) {
     const colDefExtras: ColDef = { valueFormatter: formatter};
@@ -228,19 +230,50 @@ export function addToColDef(dispArgs: DisplayerArgs) {
   return undefined;
 }
 
+export function colorMap(mapName:string, histogram:number[]) {
+   // https://colorcet.com/gallery.html#isoluminant
+   // https://github.com/holoviz/colorcet/tree/main/assets/CET
+   // https://github.com/bokeh/bokeh/blob/ed285b11ab196e72336b47bf12f44e1bef5abed3/src/bokeh/models/mappers.py#L304
+  function numberToColor(val: number) {
+    if (val === 0) {
+      return "#ffaaaa";
+    } else if (val == 1) {
+      return "#aaaaff";
+    } else {
+      return "#aaffaa";
+    }
+  }
+
+  function cellStyle(params: CellClassParams) {
+    const color = numberToColor(params.value);
+    return {
+      backgroundColor: color,
+    };
+  }
+
+  const retProps = {
+    cellStyle: cellStyle,
+  };
+  return retProps
+};
+
+
+
+
 export function extractPinnedRows(sdf:DFData, prc:PinnedRowConfig[]) {
   return _.map(
     _.map(prc, 'primary_key_val'), 
     (x) => _.find(sdf, {'index':x}))
 }
 
-export function dfToAgrid(tdf: DFWhole): [ColDef[], unknown[]] {
+
+export function dfToAgrid(tdf: DFWhole, summary_stats_df:SDFT): [ColDef[], unknown[]] {
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
     const colDef: ColDef = {
       field: f.col_name,
       headerName: f.col_name,
-      ...addToColDef(f.displayer_args)
+      ...addToColDef(f.displayer_args, summary_stats_df[f.col_name])
     };
     if (f.col_name === 'index') {
       colDef.pinned = 'left';
