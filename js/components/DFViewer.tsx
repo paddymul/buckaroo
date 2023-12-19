@@ -35,6 +35,9 @@ export function DFViewer(
 ) {
   const [agColsPure, agData] = dfToAgrid(df,extractSDFT(summaryStatsDf||[]) );
 
+  console.log(updateAtMatch);
+  const styledColumns =   _.clone(agColsPure);
+/*
   const styledColumns = updateAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
@@ -43,7 +46,7 @@ export function DFViewer(
     },
     { cellStyle: {} }
   );
-
+*/
   const gridOptions: GridOptions = {
     rowSelection: 'single',
     onRowClicked: (event) => console.log('A row was clicked'),

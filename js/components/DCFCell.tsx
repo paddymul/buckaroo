@@ -4,7 +4,7 @@ import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
 import { tableDf } from './staticData';
 import { DFWhole } from './DFWhole';
-import { DFViewer } from './DFViewer.1';
+import { DFViewer } from './DFViewer';
 import { StatusBar, DfConfig } from './StatusBar';
 import { CommandConfigT } from './CommandUtils';
 import { bakedCommandConfig } from './bakedOperationDefaults';

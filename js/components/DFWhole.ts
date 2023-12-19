@@ -29,7 +29,7 @@ export interface IntegerDisplayerA {
 
 export interface ColorMapRules {
   color_rule: 'color_map';
-  map_name: 'seaborn';
+  map_name: "BLUE_TO_YELLOW" | 'DIVERGING_RED_WHITE_BLUE';
 }
 
 //if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
@@ -38,6 +38,9 @@ export interface ErrorMapRules {
   conditional_color: 'red';
   exist_column: string;
 }
+
+export type ColorMappingRules =
+ColorMapRules| ErrorMapRules;
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';
@@ -95,6 +98,7 @@ export type SDFT = Record<string, SDFMeasure>;
 export type ColumnConfig = {
   col_name: string;
   displayer_args: DisplayerArgs;
+  highlight_rules?: ColorMapRules;
   //extra column info ???
 };
 
