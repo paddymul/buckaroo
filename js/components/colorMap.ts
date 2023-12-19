@@ -4,7 +4,7 @@
 // Reversed from the colorcet default because that had Blue to the left
 // colorcet.CET_D9[::-1]
 
-const DIVERGING_RED_WHITE_BLUE = [
+export const DIVERGING_RED_WHITE_BLUE = [
   '#e65036', '#e65138', '#e75339', '#e7553a', '#e8563c', '#e8583d', '#e9593f',
   '#e95b40', '#e95c41', '#ea5e43', '#ea5f44', '#eb6046', '#eb6247', '#ec6349',
   '#ec654a', '#ec664b', '#ed684d', '#ed694e', '#ee6a50', '#ee6c51', '#ee6d52',
@@ -44,7 +44,7 @@ const DIVERGING_RED_WHITE_BLUE = [
   '#3282fe', '#2e81fe', '#2980fe', '#247ffe']
 
 //colorcet.CET_CBD2
-const BLUE_TO_YELLOW = [
+export const BLUE_TO_YELLOW = [
   '#0488fc', '#1089fb', '#1789fb', '#1d89fa', '#228afa', '#268af9', '#2a8af9',
   '#2e8af8', '#318bf7', '#348bf7', '#378bf6', '#3a8cf6', '#3c8cf5', '#3f8cf5',
   '#418df4', '#438df4', '#458df3', '#488df2', '#4a8ef2', '#4c8ef1', '#4d8ef1',

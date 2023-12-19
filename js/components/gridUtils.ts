@@ -1,10 +1,12 @@
 import {
+  CellClassParams,
   CellRendererSelectorResult,
   ColDef,
   ICellRendererParams,
   ValueFormatterFunc,
   ValueFormatterParams,
 } from 'ag-grid-community';
+import {BLUE_TO_YELLOW, DIVERGING_RED_WHITE_BLUE} from './colorMap'
 
 import {
   DFWhole,
@@ -245,6 +247,44 @@ this means that 8 values are between 1 and 100.8  and 2 values are between 200.6
   }
   return histogram_edges.length;
 }
+
+
+export function colorMap(mapName: string, histogram_edges: number[]) {
+  // https://colorcet.com/gallery.html#isoluminant
+  // https://github.com/holoviz/colorcet/tree/main/assets/CET
+  // https://github.com/bokeh/bokeh/blob/ed285b11ab196e72336b47bf12f44e1bef5abed3/src/bokeh/models/mappers.py#L304
+  const maps = {
+    'BLUE_TO_YELLOW': DIVERGING_RED_WHITE_BLUE,
+    'DIVERGING_RED_WHITE_BLUE': BLUE_TO_YELLOW
+  }
+  const map = maps[mapName];
+
+  function numberToColor(val: number) {
+    const histoIndex = getHistoIndex(val, histogram_edges)
+
+    const scaledIndex = (histoIndex / histogram_edges.length) * 
+    if (val === 0) {
+      return '#ffaaaa';
+    } else if (val === 1) {
+      return '#aaaaff';
+    } else {
+      return '#aaffaa';
+    }
+  }
+
+  function cellStyle(params: CellClassParams) {
+    const color = numberToColor(params.value);
+    return {
+      backgroundColor: color,
+    };
+  }
+
+  const retProps = {
+    cellStyle: cellStyle,
+  };
+  return retProps;
+}
+
 
 export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
   return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
