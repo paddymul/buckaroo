@@ -41,6 +41,22 @@ export const updateAtMatch = (
   return retColumns;
 };
 
+export const replaceAtMatch = (
+  cols: ColDef[],
+  key: string,
+  subst: Partial<ColDef>,
+) => {
+  const retColumns = cols.map((x) => {
+    if (x.field === key) {
+      return { ...x, ...subst };
+    } else {
+      return { ...x  };
+    }
+  });
+  return retColumns;
+};
+
+
 /*
   this code should all be unit tested and in examples. Examples will
   show potential developers how this behaves. Examples should be made
@@ -266,13 +282,10 @@ export function colorMap(mapName: string, histogram_edges: number[]) {
     const histoIndex = getHistoIndex(val, histogram_edges)
     const scaledIndex = Math.round((histoIndex / histogram_edges.length) * cmap.length);
     return cmap[scaledIndex];
-    
   }
 
   function cellStyle(params: CellClassParams) {
-    debugger;
     const color = numberToColor(params.value);
-    console.log("params.value", params.value, "color", color);
     return {
       backgroundColor: color,
     };
@@ -302,25 +315,12 @@ export function dfToAgrid(
   summary_stats_df: SDFT
 ): [ColDef[], unknown[]] {
 
-  function cellStyle(params: CellClassParams) {
-//    debugger;
-    const color = "red";
-    console.log("params.value", params.value, "color", color);
-    return {
-      backgroundColor: color,
-    };
-  }
-  console.log(cellStyle)
-
-  //const retProps = {    cellStyle: cellStyle,  };
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
       const colDef: ColDef = {
         field: f.col_name,
         headerName: f.col_name,
-//        'cellStyle': cellStyle, 
-//        'cellStyle': {color: 'red'},
-
+        cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, summary_stats_df[f.col_name]),
         ...(f.highlight_rules ? getStyler(f.highlight_rules, summary_stats_df[f.col_name]) : {})
       };

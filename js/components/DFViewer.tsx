@@ -2,7 +2,7 @@ import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
 import { DFData, DFWhole, EmptyDf } from './DFWhole';
 
-import { updateAtMatch, dfToAgrid, extractPinnedRows } from './gridUtils';
+import { dfToAgrid, extractPinnedRows, replaceAtMatch } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
 import { extractSDFT } from './gridUtils';
@@ -35,18 +35,14 @@ export function DFViewer(
 ) {
   const [agColsPure, agData] = dfToAgrid(df,extractSDFT(summaryStatsDf||[]) );
 
-  console.log(updateAtMatch);
-  const styledColumns =   _.clone(agColsPure);
-/*
-  const styledColumns = updateAtMatch(
+  const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
     {
       cellStyle: { background: 'var(--ag-range-selection-background-color-3)' },
-    },
-    { cellStyle: {} }
+    }
   );
-*/
+
   const gridOptions: GridOptions = {
     rowSelection: 'single',
     onRowClicked: (event) => console.log('A row was clicked'),
