@@ -50,7 +50,7 @@ export function TransformViewer({
 }) {
   return (
     <div className="transform-viewer">
-      <DFViewer style={style} df={transformedDf} />
+      <DFViewer df={transformedDf} />
     </div>
   );
 }

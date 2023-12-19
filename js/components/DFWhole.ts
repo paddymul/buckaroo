@@ -29,8 +29,11 @@ export interface IntegerDisplayerA {
 
 export interface ColorMapRules {
   color_rule: 'color_map';
-  map_name: "BLUE_TO_YELLOW" | 'DIVERGING_RED_WHITE_BLUE';
+  map_name: 'BLUE_TO_YELLOW' | 'DIVERGING_RED_WHITE_BLUE';
+  //optional, the column to base the ranges on.  the proper histogram_bins must still be sent in for that column
+  val_column?: string;
 }
+
 
 //if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
 export interface ErrorMapRules {
@@ -39,8 +42,13 @@ export interface ErrorMapRules {
   exist_column: string;
 }
 
-export type ColorMappingRules =
-ColorMapRules| ErrorMapRules;
+export interface ColorFromColumn {
+color_rule: 'color_from_column';
+col_name: string;
+}
+
+
+export type ColorMappingRules = ColorMapRules | ErrorMapRules | ColorFromColumn;
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';

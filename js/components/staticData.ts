@@ -239,13 +239,21 @@ export const tableDf: DFWhole = {
       {
         col_name: 'nanObject',
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
+        highlight_rules: {
+          color_rule: 'color_map',
+          map_name: 'DIVERGING_RED_WHITE_BLUE',
+          val_column: 'tripduration',
+        },
       },
       { col_name: 'nanFloat', displayer_args: { displayer: 'float' } },
       { col_name: 'end station name', displayer_args: { displayer: 'obj' } },
       {
         col_name: 'tripduration',
         displayer_args: { displayer: 'integer', min_digits: 1, max_digits: 5 },
-        highlight_rules: {'color_rule':'color_map', 'map_name': 'BLUE_TO_YELLOW'}
+        highlight_rules: {
+          color_rule: 'color_map',
+          map_name: 'BLUE_TO_YELLOW',
+        },
       },
       { col_name: 'start station name', displayer_args: { displayer: 'obj' } },
       { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
@@ -313,6 +321,8 @@ export const tableDf: DFWhole = {
   ],
 };
 
+const tripDurationBins = [0, 300, 500, 1000, 1500];
+
 export const summaryDfForTableDf: DFData = [
   {
     index: 'histogram',
@@ -335,7 +345,11 @@ export const summaryDfForTableDf: DFData = [
       { name: 'NA', cat_pop: 0.0 },
     ],
   },
-  { index: 'histogram_bins', 'tripduration': [0, 300, 500, 1000, 1500 ]},
+  {
+    index: 'histogram_bins',
+    tripduration: tripDurationBins,
+    nanObject: tripDurationBins,
+  },
   {
     index: 'dtype',
     'end station name': 'String6666',

@@ -6,7 +6,7 @@ import {
   ValueFormatterFunc,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import {BLUE_TO_YELLOW, DIVERGING_RED_WHITE_BLUE} from './colorMap'
+import { BLUE_TO_YELLOW, DIVERGING_RED_WHITE_BLUE } from './colorMap';
 
 import {
   DFWhole,
@@ -17,6 +17,7 @@ import {
   DatetimeLocaleDisplayerA,
   ColumnConfig,
   ColorMappingRules,
+  ColorMapRules,
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
 import { HistogramCell, getTextCellRenderer } from './CustomHeader';
@@ -44,18 +45,17 @@ export const updateAtMatch = (
 export const replaceAtMatch = (
   cols: ColDef[],
   key: string,
-  subst: Partial<ColDef>,
+  subst: Partial<ColDef>
 ) => {
   const retColumns = cols.map((x) => {
     if (x.field === key) {
       return { ...x, ...subst };
     } else {
-      return { ...x  };
+      return { ...x };
     }
   });
   return retColumns;
 };
-
 
 /*
   this code should all be unit tested and in examples. Examples will
@@ -195,21 +195,26 @@ export const defaultDatetimeFormatter = (
   return dateDisplayerDefault(d);
 };
 
-
-
 export function getFormatter(
   fArgs: FormatterArgs
 ): ValueFormatterFunc<unknown> {
-
-  switch  (fArgs.displayer) {
-    case 'integer':              return getIntegerFormatter(fArgs);
-    case 'string':               return stringFormatter;
-    case 'datetimeDefault':      return defaultDatetimeFormatter;
-    case 'datetimeLocaleString': return getDatetimeFormatter(fArgs);
-    case 'float':                return getFloatFormatter(fArgs);
-    case 'boolean':              return booleanFormatter;
-    case 'obj':                  return objFormatter;
-    default:                     return stringFormatter;
+  switch (fArgs.displayer) {
+    case 'integer':
+      return getIntegerFormatter(fArgs);
+    case 'string':
+      return stringFormatter;
+    case 'datetimeDefault':
+      return defaultDatetimeFormatter;
+    case 'datetimeLocaleString':
+      return getDatetimeFormatter(fArgs);
+    case 'float':
+      return getFloatFormatter(fArgs);
+    case 'boolean':
+      return booleanFormatter;
+    case 'obj':
+      return objFormatter;
+    default:
+      return stringFormatter;
   }
 }
 
@@ -247,7 +252,7 @@ export function addToColDef(
   return undefined;
 }
 
-export function getHistoIndex(val:number, histogram_edges:number[]): number {
+export function getHistoIndex(val: number, histogram_edges: number[]): number {
   /*
 np.histogram([1, 2, 3, 4,  10, 20, 30, 40, 300, 300, 400, 500], bins=5)
 ( [  8,       0,     2,     1,     1], 
@@ -259,7 +264,7 @@ this means that 8 values are between 1 and 100.8  and 2 values are between 200.6
   if (histogram_edges.length == 0) {
     return 0;
   }
-  for(let i=0; i<histogram_edges.length; i++) {
+  for (let i = 0; i < histogram_edges.length; i++) {
     if (val <= histogram_edges[i]) {
       return i;
     }
@@ -267,25 +272,27 @@ this means that 8 values are between 1 and 100.8  and 2 values are between 200.6
   return histogram_edges.length;
 }
 
-export function colorMap(mapName: string, histogram_edges: number[]) {
+export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
   // https://colorcet.com/gallery.html#isoluminant
   // https://github.com/holoviz/colorcet/tree/main/assets/CET
   // https://github.com/bokeh/bokeh/blob/ed285b11ab196e72336b47bf12f44e1bef5abed3/src/bokeh/models/mappers.py#L304
-  const maps:Record<string, string[]> = {
-    'BLUE_TO_YELLOW': BLUE_TO_YELLOW,
-    'DIVERGING_RED_WHITE_BLUE':  DIVERGING_RED_WHITE_BLUE
-  }
-  const cmap = maps[mapName];
-
+  const maps: Record<string, string[]> = {
+    BLUE_TO_YELLOW: BLUE_TO_YELLOW,
+    DIVERGING_RED_WHITE_BLUE: DIVERGING_RED_WHITE_BLUE,
+  };
+  const cmap = maps[cmr.map_name];
 
   function numberToColor(val: number) {
-    const histoIndex = getHistoIndex(val, histogram_edges)
-    const scaledIndex = Math.round((histoIndex / histogram_edges.length) * cmap.length);
+    const histoIndex = getHistoIndex(val, histogram_edges);
+    const scaledIndex = Math.round(
+      (histoIndex / histogram_edges.length) * cmap.length
+    );
     return cmap[scaledIndex];
   }
 
   function cellStyle(params: CellClassParams) {
-    const color = numberToColor(params.value);
+    const val = cmr.val_column ? params.data[cmr.val_column] : params.value;
+    const color = numberToColor(val);
     return {
       backgroundColor: color,
     };
@@ -297,24 +304,21 @@ export function colorMap(mapName: string, histogram_edges: number[]) {
   return retProps;
 }
 
-
 export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
   return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
 }
 
-
-export function getStyler(cmr:ColorMappingRules, foo:SDFMeasure) {
-  switch(cmr.color_rule) {
-    case 'color_map': return colorMap(cmr.map_name, foo.histogram_bins);
+export function getStyler(cmr: ColorMappingRules, foo: SDFMeasure) {
+  switch (cmr.color_rule) {
+    case 'color_map':
+      return colorMap(cmr, foo.histogram_bins);
   }
 }
-
 
 export function dfToAgrid(
   tdf: DFWhole,
   summary_stats_df: SDFT
 ): [ColDef[], unknown[]] {
-
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
       const colDef: ColDef = {
@@ -322,7 +326,9 @@ export function dfToAgrid(
         headerName: f.col_name,
         cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, summary_stats_df[f.col_name]),
-        ...(f.highlight_rules ? getStyler(f.highlight_rules, summary_stats_df[f.col_name]) : {})
+        ...(f.highlight_rules
+          ? getStyler(f.highlight_rules, summary_stats_df[f.col_name])
+          : {}),
       };
       if (f.col_name === 'index') {
         colDef.pinned = 'left';

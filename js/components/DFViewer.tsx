@@ -8,10 +8,7 @@ import { GridOptions } from 'ag-grid-community';
 import { extractSDFT } from './gridUtils';
 import { getCellRendererSelector } from './gridUtils';
 
-
 export type setColumFunc = (newCol: string) => void;
-
-
 
 export function DFViewer(
   {
@@ -33,7 +30,7 @@ export function DFViewer(
     setActiveCol: () => null,
   }
 ) {
-  const [agColsPure, agData] = dfToAgrid(df,extractSDFT(summaryStatsDf||[]) );
+  const [agColsPure, agData] = dfToAgrid(df, extractSDFT(summaryStatsDf || []));
 
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
@@ -49,9 +46,11 @@ export function DFViewer(
     defaultColDef: {
       sortable: true,
       type: 'rightAligned',
-      cellRendererSelector: getCellRendererSelector(df.dfviewer_config.pinned_rows),
+      cellRendererSelector: getCellRendererSelector(
+        df.dfviewer_config.pinned_rows
+      ),
     },
-    
+
     onCellClicked: (event) => {
       const colName = event.column.getColId();
       if (setActiveCol === undefined || colName === undefined) {
@@ -148,7 +147,14 @@ export function DFViewer(
           ref={gridRef}
           gridOptions={gridOptions}
           rowData={agData}
-          pinnedTopRowData={summaryStatsDf? extractPinnedRows(summaryStatsDf, df.dfviewer_config.pinned_rows) : []}
+          pinnedTopRowData={
+            summaryStatsDf
+              ? extractPinnedRows(
+                  summaryStatsDf,
+                  df.dfviewer_config.pinned_rows
+                )
+              : []
+          }
           columnDefs={styledColumns}
         ></AgGridReact>
       </div>
