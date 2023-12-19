@@ -129,27 +129,28 @@ export const histograms = {
 
 //export const tableDf2:DFWhole = {
 export const foo: DFWhole = {
-
   dfviewer_config: {
-    column_config :[
-      {col_name:"index", displayer_args: {displayer:"obj"}},
-      {col_name:"tripduration", displayer_args: {displayer:"obj"}},
-      {col_name:"starttime", displayer_args: {displayer:"obj"}},
-      {col_name:"stoptime", displayer_args: {displayer:"obj"}},
-      {col_name:"start station id", displayer_args: {displayer:"obj"}},
-      {col_name:"start station name", displayer_args: {displayer:"obj"}},
-      {col_name:"start station lattitude", displayer_args: {displayer:"obj"}},
-      {col_name:"bikeid", displayer_args: {displayer:"obj"}},
-      {col_name:"birth year", displayer_args: {displayer:"obj"}},
-      {col_name:"gender", displayer_args: {displayer:"obj"}},
+    column_config: [
+      { col_name: 'index', displayer_args: { displayer: 'obj' } },
+      { col_name: 'tripduration', displayer_args: { displayer: 'obj' } },
+      { col_name: 'starttime', displayer_args: { displayer: 'obj' } },
+      { col_name: 'stoptime', displayer_args: { displayer: 'obj' } },
+      { col_name: 'start station id', displayer_args: { displayer: 'obj' } },
+      { col_name: 'start station name', displayer_args: { displayer: 'obj' } },
+      {
+        col_name: 'start station lattitude',
+        displayer_args: { displayer: 'obj' },
+      },
+      { col_name: 'bikeid', displayer_args: { displayer: 'obj' } },
+      { col_name: 'birth year', displayer_args: { displayer: 'obj' } },
+      { col_name: 'gender', displayer_args: { displayer: 'obj' } },
+    ],
+    pinned_rows: [],
+  },
 
-      ],
-      pinned_rows: []
-    },
-        
-//    index: { type: 'obj' },
-//    tripduration: { histogram: histograms.num_histo, type: 'obj' },
-/*
+  //    index: { type: 'obj' },
+  //    tripduration: { histogram: histograms.num_histo, type: 'obj' },
+  /*
     starttime: { type: 'obj' },
     stoptime: { type: 'obj' },
     'start station id': { type: 'obj' },
@@ -225,25 +226,37 @@ export const foo: DFWhole = {
 export const stringIndexDf = foo;
 //export const tableDf = foo;
 
-
-
-
 export const tableDf: DFWhole = {
-  dfviewer_config : {
+  dfviewer_config: {
     column_config: [
-      {col_name:"index", displayer_args: {displayer:"integer", min_digits:3, max_digits:5 }},
-      {col_name:"nanNumeric", displayer_args: {displayer:"integer", min_digits:3, max_digits:5 }},
-      {col_name:"nanObject", displayer_args: {displayer:"integer", min_digits:3, max_digits:5 }},
-      {col_name:"nanFloat", displayer_args: {displayer:"float"}},
-      {col_name:"end station name", displayer_args: {displayer:"obj"}},
-      {col_name: 'tripduration', displayer_args: {displayer:"integer", min_digits:1, max_digits:5 }},
-      {col_name:"start station name", displayer_args: {displayer:"obj"}},
-      {col_name:"floatCol", displayer_args: {displayer:"float"}},
+      {
+        col_name: 'index',
+        displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
+      },
+      {
+        col_name: 'nanNumeric',
+        displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
+      },
+      {
+        col_name: 'nanObject',
+        displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
+      },
+      { col_name: 'nanFloat', displayer_args: { displayer: 'float' } },
+      { col_name: 'end station name', displayer_args: { displayer: 'obj' } },
+      {
+        col_name: 'tripduration',
+        displayer_args: { displayer: 'integer', min_digits: 1, max_digits: 5 },
+      },
+      { col_name: 'start station name', displayer_args: { displayer: 'obj' } },
+      { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
     ],
     pinned_rows: [
-      {primary_key_val:'dtype', displayer_args: {displayer:'obj'}},
-      {primary_key_val:'histogram', displayer_args: {displayer:'histogram'}}
-    ]
+      { primary_key_val: 'dtype', displayer_args: { displayer: 'obj' } },
+      {
+        primary_key_val: 'histogram',
+        displayer_args: { displayer: 'histogram' },
+      },
+    ],
   },
   data: [
     {
@@ -300,37 +313,42 @@ export const tableDf: DFWhole = {
   ],
 };
 
-export const summaryDfForTableDf:DFData = [
-  {'index': 'histogram', 
-       'end station name':  histograms.categorical_histo_lt,
-       'tripduration': histograms.num_histo,
-       'start station name':  histograms.bool_histo,
-        'nanNumeric': histograms.num_histo,
-        'nanFloat': histograms.num_histo,
-        'nanObject': histograms.num_histo,
-        'floatCol': [
-          { name: 521, cat_pop: 0.0103 },
-          { name: 358, cat_pop: 0.0096 },
-          { name: 519, cat_pop: 0.009 },
-          { name: 497, cat_pop: 0.0087 },
-          { name: 293, cat_pop: 0.0082 },
-          { name: 285, cat_pop: 0.0081 },
-          { name: 435, cat_pop: 0.008 },
-          { name: 'unique', cat_pop: 0.0001 },
-          { name: 'long_tail', cat_pop: 0.938 },
-          { name: 'NA', cat_pop: 0.0 }]},
-  {'index': 'dtype', 
-          'end station name': 'String6666',
-          'tripduration': 'object',
-          'start station name':  'object',
-          'nanNumeric': 'float64',
-          'nanFloat': 'flot64',
-          'nanObject': 'object',
-          'floatCol': 'float',}
-        ]
+export const summaryDfForTableDf: DFData = [
+  {
+    index: 'histogram',
+    'end station name': histograms.categorical_histo_lt,
+    tripduration: histograms.num_histo,
+    'start station name': histograms.bool_histo,
+    nanNumeric: histograms.num_histo,
+    nanFloat: histograms.num_histo,
+    nanObject: histograms.num_histo,
+    floatCol: [
+      { name: 521, cat_pop: 0.0103 },
+      { name: 358, cat_pop: 0.0096 },
+      { name: 519, cat_pop: 0.009 },
+      { name: 497, cat_pop: 0.0087 },
+      { name: 293, cat_pop: 0.0082 },
+      { name: 285, cat_pop: 0.0081 },
+      { name: 435, cat_pop: 0.008 },
+      { name: 'unique', cat_pop: 0.0001 },
+      { name: 'long_tail', cat_pop: 0.938 },
+      { name: 'NA', cat_pop: 0.0 },
+    ],
+  },
+  {
+    index: 'dtype',
+    'end station name': 'String6666',
+    tripduration: 'object',
+    'start station name': 'object',
+    nanNumeric: 'float64',
+    nanFloat: 'flot64',
+    nanObject: 'object',
+    floatCol: 'float',
+  },
+];
 
 //histograms for tableDf
-  /*
+/*
   table_hints: {
     'end station name': {
       histogram: histograms.categorical_histo_lt,
@@ -377,7 +395,6 @@ export const summaryDfForTableDf:DFData = [
       type: 'obj',
     },
   }, */
- 
 
 /*
 export const stringIndexDf: DFWhole = {

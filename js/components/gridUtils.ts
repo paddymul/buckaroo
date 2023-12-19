@@ -15,14 +15,13 @@ import {
   IntegerDisplayerA,
   DatetimeLocaleDisplayerA,
   ColumnConfig,
-
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
 import { HistogramCell, getTextCellRenderer } from './CustomHeader';
 
-import { DFData, SDFMeasure, SDFT } from "./DFWhole";
+import { DFData, SDFMeasure, SDFT } from './DFWhole';
 
-import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from "./DFWhole";
+import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from './DFWhole';
 
 export const updateAtMatch = (
   cols: ColDef[],
@@ -87,7 +86,6 @@ export const dateDisplayerDefault = (d: Date): string => {
   const retVal = `${dateStr} ${timeStr}`;
   return retVal;
 };
-
 
 const objDisplayer = (val: any | any[]): string => {
   if (val === undefined || val === null) {
@@ -165,20 +163,23 @@ export const getDatetimeFormatter = (colHint: DatetimeLocaleDisplayerA) => {
   };
 };
 
-export const defaultDatetimeFormatter = (params: ValueFormatterParams): string => {
-    const val = params.value;
-    if (val === null || val === undefined) {
-      return '';
-    }
-    const d = new Date(val);
-    if (!isValidDate(d)) {
-      return '';
-    }
-    return dateDisplayerDefault(d);
+export const defaultDatetimeFormatter = (
+  params: ValueFormatterParams
+): string => {
+  const val = params.value;
+  if (val === null || val === undefined) {
+    return '';
+  }
+  const d = new Date(val);
+  if (!isValidDate(d)) {
+    return '';
+  }
+  return dateDisplayerDefault(d);
 };
 
-
-export function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> {
+export function getFormatter(
+  fArgs: FormatterArgs
+): ValueFormatterFunc<unknown> {
   if (fArgs === undefined) {
     return stringFormatter;
   }
@@ -200,9 +201,8 @@ export function getFormatter(fArgs: FormatterArgs): ValueFormatterFunc<unknown> 
   return stringFormatter;
 }
 
-
 export function getCellRenderer(crArgs: CellRendererArgs) {
-  if (crArgs.displayer == 'histogram') {
+  if (crArgs.displayer === 'histogram') {
     return HistogramCell;
   }
   return undefined;
@@ -216,34 +216,36 @@ export function getFormatterFromArgs(dispArgs: DisplayerArgs) {
   return getFormatter(fArgs);
 }
 
-
-export function addToColDef(dispArgs: DisplayerArgs, summary_stats_column: SDFMeasure) {
+export function addToColDef(
+  dispArgs: DisplayerArgs,
+  summary_stats_column: SDFMeasure
+) {
   const formatter = getFormatterFromArgs(dispArgs);
-  if (formatter!== undefined) {
-    const colDefExtras: ColDef = { valueFormatter: formatter};
-    return colDefExtras
+  if (formatter !== undefined) {
+    const colDefExtras: ColDef = { valueFormatter: formatter };
+    return colDefExtras;
   }
 
   if (_.includes(cellRendererDisplayers, dispArgs.displayer)) {
     const crArgs: CellRendererArgs = dispArgs as CellRendererArgs;
     return {
-      cellRenderer: getCellRenderer(crArgs)
-    }
+      cellRenderer: getCellRenderer(crArgs),
+    };
   }
   return undefined;
 }
 
-export function colorMap(mapName:string, histogram:number[]) {
-   // https://colorcet.com/gallery.html#isoluminant
-   // https://github.com/holoviz/colorcet/tree/main/assets/CET
-   // https://github.com/bokeh/bokeh/blob/ed285b11ab196e72336b47bf12f44e1bef5abed3/src/bokeh/models/mappers.py#L304
+export function colorMap(mapName: string, histogram: number[]) {
+  // https://colorcet.com/gallery.html#isoluminant
+  // https://github.com/holoviz/colorcet/tree/main/assets/CET
+  // https://github.com/bokeh/bokeh/blob/ed285b11ab196e72336b47bf12f44e1bef5abed3/src/bokeh/models/mappers.py#L304
   function numberToColor(val: number) {
     if (val === 0) {
-      return "#ffaaaa";
-    } else if (val == 1) {
-      return "#aaaaff";
+      return '#ffaaaa';
+    } else if (val === 1) {
+      return '#aaaaff';
     } else {
-      return "#aaffaa";
+      return '#aaffaa';
     }
   }
 
@@ -257,52 +259,61 @@ export function colorMap(mapName:string, histogram:number[]) {
   const retProps = {
     cellStyle: cellStyle,
   };
-  return retProps
-};
-
-
-export function extractPinnedRows(sdf:DFData, prc:PinnedRowConfig[]) {
-  return _.map(
-    _.map(prc, 'primary_key_val'), 
-    (x) => _.find(sdf, {'index':x}))
+  return retProps;
 }
 
-export function dfToAgrid(tdf: DFWhole, summary_stats_df:SDFT): [ColDef[], unknown[]] {
+export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
+  return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
+}
+
+export function dfToAgrid(
+  tdf: DFWhole,
+  summary_stats_df: SDFT
+): [ColDef[], unknown[]] {
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
-    const colDef: ColDef = {
-      field: f.col_name,
-      headerName: f.col_name,
-      ...addToColDef(f.displayer_args, summary_stats_df[f.col_name])
-    };
-    if (f.col_name === 'index') {
-      colDef.pinned = 'left';
+      const colDef: ColDef = {
+        field: f.col_name,
+        headerName: f.col_name,
+        ...addToColDef(f.displayer_args, summary_stats_df[f.col_name]),
+      };
+      if (f.col_name === 'index') {
+        colDef.pinned = 'left';
+      }
+      return colDef;
     }
-    return colDef;
-  });
+  );
   return [retColumns, tdf.data];
 }
 
 // this is very similar to the colDef parts of dfToAgrid
 export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
   const anyRenderer: CellRendererSelectorResult = {
-    component: getTextCellRenderer(objFormatter)
+    component: getTextCellRenderer(objFormatter),
   };
-  return (params: ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
+  return (
+    params: ICellRendererParams<any, any, any>
+  ): CellRendererSelectorResult | undefined => {
     if (params.node.rowPinned) {
       const pk = _.get(params.node.data, 'index');
       if (pk === undefined) {
         return anyRenderer; // default renderer
       }
-      const maybePrc: PinnedRowConfig | undefined = _.find(pinned_rows, { 'primary_key_val': pk });
+      const maybePrc: PinnedRowConfig | undefined = _.find(pinned_rows, {
+        primary_key_val: pk,
+      });
       if (maybePrc === undefined) {
         return anyRenderer;
       }
       const prc: PinnedRowConfig = maybePrc;
-      const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
+      const possibCellRenderer = getCellRenderer(
+        prc.displayer_args as CellRendererArgs
+      );
       if (possibCellRenderer === undefined) {
         const formattedRenderer: CellRendererSelectorResult = {
-          component: getTextCellRenderer(getFormatter(prc.displayer_args as FormatterArgs))
+          component: getTextCellRenderer(
+            getFormatter(prc.displayer_args as FormatterArgs)
+          ),
         };
         return formattedRenderer;
       }
@@ -313,22 +324,23 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
   };
 }
 
-
-
 export function extractSDFT(summaryStatsDf: DFData): SDFT {
-  const maybeHistogramBins = _.find(summaryStatsDf, { 'index': 'histogram_bins' }) || {};
-  const maybeHistogramLogBins = _.find(summaryStatsDf, { 'index': 'histogram_log_bins' }) || {};
-  const allColumns: string[] = _.without(_.union(_.keys(maybeHistogramBins), _.keys(maybeHistogramLogBins)), 'index');
+  const maybeHistogramBins =
+    _.find(summaryStatsDf, { index: 'histogram_bins' }) || {};
+  const maybeHistogramLogBins =
+    _.find(summaryStatsDf, { index: 'histogram_log_bins' }) || {};
+  const allColumns: string[] = _.without(
+    _.union(_.keys(maybeHistogramBins), _.keys(maybeHistogramLogBins)),
+    'index'
+  );
   const vals: SDFMeasure[] = _.map(allColumns, (colName) => {
     return {
-      'histogram_bins': _.get(maybeHistogramBins, colName, []) as number[],
-      'histogram_log_bins': _.get(maybeHistogramLogBins, colName, []) as number[]
+      histogram_bins: _.get(maybeHistogramBins, colName, []) as number[],
+      histogram_log_bins: _.get(maybeHistogramLogBins, colName, []) as number[],
     };
   });
   return zipObject(allColumns, vals) as SDFT;
 }
-
-
 
 /*
 I would love for extractSDF to be more elegant like the following function.  I just can't quite get it to work
@@ -351,5 +363,3 @@ export function extractSDFT2(summaryStatsDf:DFData) : SDFT  {
   return zipObject(allColumns, vals) as SDFT;
 }
 */
-
-

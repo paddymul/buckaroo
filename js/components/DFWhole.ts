@@ -1,29 +1,43 @@
-
 // I'm not sure about adding underlying types too
 
-import _ from "lodash";
-
-
+import _ from 'lodash';
 
 // they are implied, just not sure
-export interface ObjDisplayerA             { displayer: 'obj';     }
-export interface BooleanDisplayerA         { displayer: 'boolean'; }
-export interface StringDisplayerA          { displayer: 'string';  } //max_length?: number; 
-export interface FloatDisplayerA           { displayer: 'float';   }
-export interface HistogramDisplayerA       { displayer: 'histogram';   }
-export interface DatetimeDefaultDisplayerA { displayer: 'datetimeDefault'; }
+export interface ObjDisplayerA {
+  displayer: 'obj';
+}
+export interface BooleanDisplayerA {
+  displayer: 'boolean';
+}
+export interface StringDisplayerA {
+  displayer: 'string';
+} //max_length?: number;
+export interface FloatDisplayerA {
+  displayer: 'float';
+}
+export interface HistogramDisplayerA {
+  displayer: 'histogram';
+}
+export interface DatetimeDefaultDisplayerA {
+  displayer: 'datetimeDefault';
+}
 export interface IntegerDisplayerA {
   displayer: 'integer';
   min_digits: number;
   max_digits: number;
 }
 
-export interface ColorMapRules { color_rule: 'color_map'; map_name: 'seaborn' }
+export interface ColorMapRules {
+  color_rule: 'color_map';
+  map_name: 'seaborn';
+}
 
 //if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
-export interface ErrorMapRules { color_rule: 'error_map'; conditional_color: 'red', exist_column:string}
-
-
+export interface ErrorMapRules {
+  color_rule: 'error_map';
+  conditional_color: 'red';
+  exist_column: string;
+}
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';
@@ -33,8 +47,13 @@ export interface DatetimeLocaleDisplayerA {
 
 // Used DisplayerA instead of FormatterArgs,  Displayer makes sense from the python side
 // python doesn't care that histogram requires a cellRenderer and Integer only changes the formatter
-export type FormatterArgs = ObjDisplayerA | BooleanDisplayerA | StringDisplayerA
-  | FloatDisplayerA | DatetimeDefaultDisplayerA | DatetimeLocaleDisplayerA
+export type FormatterArgs =
+  | ObjDisplayerA
+  | BooleanDisplayerA
+  | StringDisplayerA
+  | FloatDisplayerA
+  | DatetimeDefaultDisplayerA
+  | DatetimeLocaleDisplayerA
   | IntegerDisplayerA;
 export type CellRendererArgs = HistogramDisplayerA;
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
@@ -46,11 +65,9 @@ export interface DFColumn {
 }
 
 export type DFDataRow = Record<
-  string, string | number | boolean | any[] | Record<string, any> | null
+  string,
+  string | number | boolean | any[] | Record<string, any> | null
 >;
-
-
-
 
 export type DFData = DFDataRow[];
 
@@ -68,7 +85,6 @@ export interface DFData {
 // SDFT really only needs histogramBins and histogramLogBins and...? at this point
 //type SDFT = any;
 
-
 export interface SDFMeasure {
   histogram_bins: number[];
   histogram_log_bins: number[];
@@ -76,13 +92,11 @@ export interface SDFMeasure {
 
 export type SDFT = Record<string, SDFMeasure>;
 
-
 export type ColumnConfig = {
   col_name: string;
   displayer_args: DisplayerArgs;
   //extra column info ???
 };
-
 
 export type PinnedRowConfig = {
   primary_key_val: string;
@@ -98,15 +112,14 @@ export interface DFViewerConfig {
 }
 
 export interface DFWhole {
-  dfviewer_config:DFViewerConfig;
+  dfviewer_config: DFViewerConfig;
   data: DFData;
 }
 
 export const EmptyDf: DFWhole = {
   dfviewer_config: {
-    pinned_rows:[],
-    column_config:[]
+    pinned_rows: [],
+    column_config: [],
   },
   data: [],
 };
-

@@ -129,12 +129,12 @@ export const ToolTipAdapter = (args: any) => {
   return null;
 };
 
-export const getTextCellRenderer = (formatter:ValueFormatterFunc<any>) => {
-  const TextCellRenderer =  (props: any) => {
+export const getTextCellRenderer = (formatter: ValueFormatterFunc<any>) => {
+  const TextCellRenderer = (props: any) => {
     return <span>{formatter(props)}</span>;
-  }
+  };
   return TextCellRenderer;
-}
+};
 //export const HistogramCell   = ({histogram}: {histogram:any}) => {
 export const HistogramCell = (props: any) => {
   //debugger;
@@ -145,7 +145,7 @@ export const HistogramCell = (props: any) => {
   //for key "index", the value is "histogram"
   // this causes ReChart to blow up, so we check to see if it's an array
   if (histogram === undefined || !_.isArray(histogram)) {
-    return <span></span>
+    return <span></span>;
   }
 
   return (
@@ -251,5 +251,4 @@ export const HistogramCell = (props: any) => {
       </BarChart>
     </div>
   );
-
 };
