@@ -1,26 +1,29 @@
 import {
   CellClassParams,
+  CellRendererSelectorResult,
   ColDef,
+  ICellRendererParams,
   ValueFormatterFunc,
   ValueFormatterParams,
 } from 'ag-grid-community';
 
 import {
   DFWhole,
-  CellRendererArgs,
   DisplayerArgs,
   cellRendererDisplayers,
-  FormatterArgs,
   FloatDisplayerA,
   IntegerDisplayerA,
   DatetimeLocaleDisplayerA,
   ColumnConfig,
-  DFData,
-  PinnedRowConfig
+
 } from './DFWhole';
-import _ from 'lodash';
-import { HistogramCell } from './CustomHeader';
-import { SDFMeasure, SDFT } from './DFWhole';
+import _, { zipObject } from 'lodash';
+import { HistogramCell, getTextCellRenderer } from './CustomHeader';
+
+import { DFData, SDFMeasure, SDFT } from "./DFWhole";
+
+import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from "./DFWhole";
+
 export const updateAtMatch = (
   cols: ColDef[],
   key: string,
@@ -258,14 +261,11 @@ export function colorMap(mapName:string, histogram:number[]) {
 };
 
 
-
-
 export function extractPinnedRows(sdf:DFData, prc:PinnedRowConfig[]) {
   return _.map(
     _.map(prc, 'primary_key_val'), 
     (x) => _.find(sdf, {'index':x}))
 }
-
 
 export function dfToAgrid(tdf: DFWhole, summary_stats_df:SDFT): [ColDef[], unknown[]] {
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
@@ -282,3 +282,74 @@ export function dfToAgrid(tdf: DFWhole, summary_stats_df:SDFT): [ColDef[], unkno
   });
   return [retColumns, tdf.data];
 }
+
+// this is very similar to the colDef parts of dfToAgrid
+export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
+  const anyRenderer: CellRendererSelectorResult = {
+    component: getTextCellRenderer(objFormatter)
+  };
+  return (params: ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
+    if (params.node.rowPinned) {
+      const pk = _.get(params.node.data, 'index');
+      if (pk === undefined) {
+        return anyRenderer; // default renderer
+      }
+      const maybePrc: PinnedRowConfig | undefined = _.find(pinned_rows, { 'primary_key_val': pk });
+      if (maybePrc === undefined) {
+        return anyRenderer;
+      }
+      const prc: PinnedRowConfig = maybePrc;
+      const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
+      if (possibCellRenderer === undefined) {
+        const formattedRenderer: CellRendererSelectorResult = {
+          component: getTextCellRenderer(getFormatter(prc.displayer_args as FormatterArgs))
+        };
+        return formattedRenderer;
+      }
+      return { component: possibCellRenderer };
+    } else {
+      return undefined; // rows that are not pinned don't use a row level cell renderer
+    }
+  };
+}
+
+
+
+export function extractSDFT(summaryStatsDf: DFData): SDFT {
+  const maybeHistogramBins = _.find(summaryStatsDf, { 'index': 'histogram_bins' }) || {};
+  const maybeHistogramLogBins = _.find(summaryStatsDf, { 'index': 'histogram_log_bins' }) || {};
+  const allColumns: string[] = _.without(_.union(_.keys(maybeHistogramBins), _.keys(maybeHistogramLogBins)), 'index');
+  const vals: SDFMeasure[] = _.map(allColumns, (colName) => {
+    return {
+      'histogram_bins': _.get(maybeHistogramBins, colName, []) as number[],
+      'histogram_log_bins': _.get(maybeHistogramLogBins, colName, []) as number[]
+    };
+  });
+  return zipObject(allColumns, vals) as SDFT;
+}
+
+
+
+/*
+I would love for extractSDF to be more elegant like the following function.  I just can't quite get it to work
+time to move on
+
+export function extractSDFT2(summaryStatsDf:DFData) : SDFT  {
+  const rows = ['histogram_bins', 'histogram_log_bins']
+
+  const extracted = _.map(rows, (pk) => {
+    return _.find(summaryStatsDf,  {'index': pk}) || {}
+  })
+  const dupKeys: string[][] = _.map(extracted, _.keys);
+  const allColumns: string[] = _.without(_.union(...dupKeys), 'index');
+  const vals:SDFMeasure[] = _.map(allColumns, (colName) => {
+    const pairs = _.map(_.zip(rows, extracted), (rname, row) => {
+      return [rname, (_.get(row, colName, []) as number[])];
+    })
+    return _.fromPairs(pairs) as SDFMeasure;
+  });
+  return zipObject(allColumns, vals) as SDFT;
+}
+*/
+
+

@@ -1,6 +1,6 @@
 //import { add, multiply } from "../src/math";
 
-import { extractSDFT } from "../../js/components/DFViewer";
+import { extractSDFT } from '../../js/components/gridUtils';
 import { DFData } from "../../js/components/DFWhole";
 
 describe("Math functions", () => {
@@ -17,8 +17,6 @@ describe("Math functions", () => {
     };
     const result = extractSDFT(basicSDF);
     expect(result).toEqual(expected);
-
-
   });
 });
 

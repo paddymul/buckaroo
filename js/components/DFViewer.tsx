@@ -1,77 +1,16 @@
 import React, { useRef, CSSProperties } from 'react';
-import _, { zipObject } from 'lodash';
-import { CellRendererArgs, DFData, DFWhole, EmptyDf, FormatterArgs, PinnedRowConfig, SDFMeasure, SDFT } from './DFWhole';
+import _ from 'lodash';
+import { DFData, DFWhole, EmptyDf } from './DFWhole';
 
-import { updateAtMatch, dfToAgrid, extractPinnedRows, getCellRenderer, objFormatter, getFormatter } from './gridUtils';
+import { updateAtMatch, dfToAgrid, extractPinnedRows } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import { CellRendererSelectorResult, GridOptions, ICellRendererParams } from 'ag-grid-community';
-import { getTextCellRenderer } from './CustomHeader';
+import { GridOptions } from 'ag-grid-community';
+import { extractSDFT } from './gridUtils';
+import { getCellRendererSelector } from './gridUtils';
 
 
 export type setColumFunc = (newCol: string) => void;
 
-
-export function extractSDFT(summaryStatsDf:DFData) : SDFT  {
-  const maybeHistogramBins =  _.find(summaryStatsDf,   {'index': 'histogram_bins'}) || {};
-  const maybeHistogramLogBins = _.find(summaryStatsDf, {'index': 'histogram_log_bins'}) || {};
-  const allColumns: string[] = _.without(_.union(_.keys(maybeHistogramBins), _.keys(maybeHistogramLogBins)), 'index')
-  const vals:SDFMeasure[] = _.map(allColumns, (colName) => {
-    return {
-      'histogram_bins': _.get(maybeHistogramBins, colName, []) as number[],
-      'histogram_log_bins': _.get(maybeHistogramLogBins, colName, []) as number[]}})
-  return zipObject(allColumns, vals) as SDFT;
-}
-
-/*
-I would love for extractSDF to be more elegant like the following function.  I just can't quite get it to work
-time to move on
-
-export function extractSDFT2(summaryStatsDf:DFData) : SDFT  {
-  const rows = ['histogram_bins', 'histogram_log_bins']
-
-  const extracted = _.map(rows, (pk) => {
-    return _.find(summaryStatsDf,  {'index': pk}) || {}
-  })
-  const dupKeys: string[][] = _.map(extracted, _.keys);
-  const allColumns: string[] = _.without(_.union(...dupKeys), 'index');
-  const vals:SDFMeasure[] = _.map(allColumns, (colName) => {
-    const pairs = _.map(_.zip(rows, extracted), (rname, row) => {
-      return [rname, (_.get(row, colName, []) as number[])];
-    })
-    return _.fromPairs(pairs) as SDFMeasure;
-  });
-  return zipObject(allColumns, vals) as SDFT;
-}
-*/
-
-export function getCellRendererSelector(pinned_rows:PinnedRowConfig[]) {
-  const anyRenderer: CellRendererSelectorResult = {
-    component: getTextCellRenderer(objFormatter)
-  };
-  return (params:ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
-    if (params.node.rowPinned) {
-      const pk = _.get(params.node.data, 'index');
-      if (pk === undefined) {
-        return anyRenderer; // default renderer
-      }
-      const maybePrc: PinnedRowConfig|undefined = _.find(pinned_rows, {'primary_key_val': pk});
-      if (maybePrc === undefined) {
-        return anyRenderer;
-      }
-      const prc:PinnedRowConfig = maybePrc;
-      const possibCellRenderer = getCellRenderer(prc.displayer_args as CellRendererArgs);
-      if (possibCellRenderer === undefined) {
-        const formattedRenderer: CellRendererSelectorResult = {
-          component: getTextCellRenderer(  getFormatter(prc.displayer_args as FormatterArgs))
-        };
-        return formattedRenderer
-      }
-      return { component: possibCellRenderer }
-    } else {
-      return undefined; // rows that are not pinned don't use a row level cell renderer
-    }
-  }
-}
 
 
 export function DFViewer(
@@ -89,13 +28,12 @@ export function DFViewer(
     setActiveCol?: setColumFunc;
   } = {
     df: EmptyDf,
+    summaryStatsDf: [],
     style: { height: '300px' },
     setActiveCol: () => null,
   }
 ) {
-  // DFViewer is responsible for populating pinnedTopRows from 
   const [agColsPure, agData] = dfToAgrid(df,extractSDFT(summaryStatsDf||[]) );
-  // console.log('dfviewer agData', agData);
 
   const styledColumns = updateAtMatch(
     _.clone(agColsPure),
