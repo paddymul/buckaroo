@@ -10,17 +10,6 @@ import { getTextCellRenderer } from './CustomHeader';
 
 export type setColumFunc = (newCol: string) => void;
 
-  /*
-  // I want a function that goes from
-  const foo = {'a':2, 'b':3} 
-  const bar = {'a':'500', 'b':'1000'} 
-  const baz = {'a':77,               'c':100}
-  // to this 
-  const result = {'a': {'foo': 2,    'bar': "500",  'baz':  77}, 
-                  "b": {'foo': 3,    'bar': "1000", 'baz': null},
-                  "c": {'foo': null, 'bar':   null, 'baz': 100}
-                } 
-  */
 
 export function extractSDFT(summaryStatsDf:DFData) : SDFT  {
   const maybeHistogramBins =  _.find(summaryStatsDf,   {'index': 'histogram_bins'}) || {};
@@ -31,28 +20,27 @@ export function extractSDFT(summaryStatsDf:DFData) : SDFT  {
       'histogram_bins': _.get(maybeHistogramBins, colName, []) as number[],
       'histogram_log_bins': _.get(maybeHistogramLogBins, colName, []) as number[]}})
   return zipObject(allColumns, vals) as SDFT;
-
 }
+
 /*
-const foo = { 'a': 2, 'b': 3 };
-const bar = { 'a': '500', 'b': '1000' };
-const baz = { 'a': 77, 'c': 100 };
+I would love for extractSDF to be more elegant like the following function.  I just can't quite get it to work
+time to move on
 
-// Combine all keys from foo, bar, and baz
-const allKeys = _.union(_.keys(foo), _.keys(bar), _.keys(baz));
+export function extractSDFT2(summaryStatsDf:DFData) : SDFT  {
+  const rows = ['histogram_bins', 'histogram_log_bins']
 
-
-// Define a function to create the result object
-transformObjects = (...objects) => {
-  return _.mapValues(_.zipObject(allKeys, objects), (values, key) => {
-    return _.mapValues(_.zipObject(['foo', 'bar', 'baz'], values), (v) => (_.isNil(v) ? null : v));
+  const extracted = _.map(rows, (pk) => {
+    return _.find(summaryStatsDf,  {'index': pk}) || {}
+  })
+  const dupKeys: string[][] = _.map(extracted, _.keys);
+  const allColumns: string[] = _.without(_.union(...dupKeys), 'index');
+  const vals:SDFMeasure[] = _.map(allColumns, (colName) => {
+    const pairs = _.map(_.zip(rows, extracted), (rname, row) => {
+      return [rname, (_.get(row, colName, []) as number[])];
+    })
+    return _.fromPairs(pairs) as SDFMeasure;
   });
-};
-
-transformObjects(foo, bar, baz);
-
-
-  return {};
+  return zipObject(allColumns, vals) as SDFT;
 }
 */
 
