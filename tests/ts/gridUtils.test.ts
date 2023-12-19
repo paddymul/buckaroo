@@ -1,10 +1,17 @@
 //import { add, multiply } from "../src/math";
 
-import { extractSDFT, getHistoIndex } from '../../js/components/gridUtils';
+import { extractSDFT, getFormatter, getHistoIndex, objFormatter, stringFormatter } from '../../js/components/gridUtils';
 import { DFData } from "../../js/components/DFWhole";
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
+
+it("should test getFormater", () => {
+  expect(getFormatter({displayer: 'string'})).toBe(stringFormatter)
+  expect(getFormatter({displayer: 'obj'})).toBe(objFormatter);
+
+
+});
 
   it("should convert to expected format", () => {
     const basicSDF:DFData = [

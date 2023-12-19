@@ -180,25 +180,17 @@ export const defaultDatetimeFormatter = (
 export function getFormatter(
   fArgs: FormatterArgs
 ): ValueFormatterFunc<unknown> {
-  if (fArgs === undefined) {
-    return stringFormatter;
+
+  switch  (fArgs.displayer) {
+    case 'integer':              return getIntegerFormatter(fArgs);
+    case 'string':               return stringFormatter;
+    case 'datetimeDefault':      return defaultDatetimeFormatter;
+    case 'datetimeLocaleString': return getDatetimeFormatter(fArgs);
+    case 'float':                return getFloatFormatter(fArgs);
+    case 'boolean':              return booleanFormatter;
+    case 'obj':                  return objFormatter;
+    default:                     return stringFormatter;
   }
-  if (fArgs.displayer === 'integer') {
-    return getIntegerFormatter(fArgs);
-  } else if (fArgs.displayer === 'string') {
-    return stringFormatter;
-  } else if (fArgs.displayer === 'datetimeDefault') {
-    return defaultDatetimeFormatter;
-  } else if (fArgs.displayer === 'datetimeLocaleString') {
-    return getDatetimeFormatter(fArgs);
-  } else if (fArgs.displayer === 'float') {
-    return getFloatFormatter(fArgs);
-  } else if (fArgs.displayer === 'boolean') {
-    return booleanFormatter;
-  } else if (fArgs.displayer === 'obj') {
-    return objFormatter;
-  }
-  return stringFormatter;
 }
 
 export function getCellRenderer(crArgs: CellRendererArgs) {
