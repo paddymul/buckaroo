@@ -23,8 +23,8 @@ export type setColumFunc = (newCol: string) => void;
   */
 
 export function extractSDFT(summaryStatsDf:DFData) : SDFT  {
-  const maybeHistogramBins =  _.find(summaryStatsDf, {'index': 'histogram_bins'}) || {};
-  const maybeHistogramLogBins = _.find(summaryStatsDf, {'index': 'histogram_logbins'}) || {};
+  const maybeHistogramBins =  _.find(summaryStatsDf,   {'index': 'histogram_bins'}) || {};
+  const maybeHistogramLogBins = _.find(summaryStatsDf, {'index': 'histogram_log_bins'}) || {};
   const allColumns: string[] = _.without(_.union(_.keys(maybeHistogramBins), _.keys(maybeHistogramLogBins)), 'index')
   const vals:SDFMeasure[] = _.map(allColumns, (colName) => {
     return {
