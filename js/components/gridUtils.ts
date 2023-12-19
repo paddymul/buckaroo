@@ -1,5 +1,4 @@
 import {
-  CellClassParams,
   CellRendererSelectorResult,
   ColDef,
   ICellRendererParams,
@@ -245,33 +244,6 @@ this means that 8 values are between 1 and 100.8  and 2 values are between 200.6
     }
   }
   return histogram_edges.length;
-}
-
-export function colorMap(mapName: string, histogram: number[]) {
-  // https://colorcet.com/gallery.html#isoluminant
-  // https://github.com/holoviz/colorcet/tree/main/assets/CET
-  // https://github.com/bokeh/bokeh/blob/ed285b11ab196e72336b47bf12f44e1bef5abed3/src/bokeh/models/mappers.py#L304
-  function numberToColor(val: number) {
-    if (val === 0) {
-      return '#ffaaaa';
-    } else if (val === 1) {
-      return '#aaaaff';
-    } else {
-      return '#aaffaa';
-    }
-  }
-
-  function cellStyle(params: CellClassParams) {
-    const color = numberToColor(params.value);
-    return {
-      backgroundColor: color,
-    };
-  }
-
-  const retProps = {
-    cellStyle: cellStyle,
-  };
-  return retProps;
 }
 
 export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
