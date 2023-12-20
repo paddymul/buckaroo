@@ -5,7 +5,6 @@ import { DFData, DFWhole, EmptyDf } from './DFWhole';
 import { dfToAgrid, extractPinnedRows, replaceAtMatch } from './gridUtils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
-import { extractSDFT } from './gridUtils';
 import { getCellRendererSelector } from './gridUtils';
 
 export type setColumFunc = (newCol: string) => void;
@@ -30,15 +29,12 @@ export function DFViewer(
     setActiveCol: () => null,
   }
 ) {
-  const [agColsPure, agData] = dfToAgrid(df, extractSDFT(summaryStatsDf || []));
+  const [agColsPure, agData] = dfToAgrid(df, summaryStatsDf|| []);
 
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
-    {
-      cellStyle: { background: 'var(--ag-range-selection-background-color-3)' },
-    }
-  );
+    { cellStyle: { background: 'var(--ag-range-selection-background-color-3)' }});
 
   const gridOptions: GridOptions = {
     rowSelection: 'single',

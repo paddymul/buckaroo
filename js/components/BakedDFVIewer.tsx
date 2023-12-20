@@ -1,13 +1,14 @@
 import React from 'react';
 import { DFViewer } from "./DFViewer";
-import { EmptyDf } from "./DFWhole";
+import { DFWhole } from "./DFWhole";
 import { ITooltipParams } from "ag-grid-community";
 
-export function getBakedDFViewer() {
+export function getBakedDFViewer(seriesDf:DFWhole) {
+ 
     const retFunc = (props: ITooltipParams ) => {
      return (<div> 
-            <h1>paddy asdf</h1>
-                <DFViewer df={EmptyDf} summaryStatsDf={[]}></DFViewer>
+            <h1> series_summary </h1>
+                <DFViewer df={seriesDf} summaryStatsDf={[]}></DFViewer>
              </div>);
     }
     return retFunc

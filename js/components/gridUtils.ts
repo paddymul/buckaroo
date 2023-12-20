@@ -319,35 +319,51 @@ export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
 }
 
 
-export function getTooltip(ttc: TooltipConfig): Partial<ColDef> {
-  console.log(getBakedDFViewer)
+export function getTooltip(ttc: TooltipConfig, single_series_summary_df:DFWhole): Partial<ColDef> {
+  console.log(single_series_summary_df)
   switch (ttc.tooltip_type) {
     case 'simple':
       return {tooltipField: ttc.val_column}
 
     case 'summary_series':
-      return {tooltipComponent: getBakedDFViewer(), tooltipField:'index', tooltipComponentParams: { }    };
-//  return {tooltipComponent: simpleTooltipRender, tooltipField:'index', tooltipComponentParams: { }    };
-      //return {tooltipField: 'index'}
+      return {tooltipComponent: getBakedDFViewer(single_series_summary_df), 
+        tooltipField:'index', tooltipComponentParams: { }    };
+  }
+}
 
+export function extractSingleSeriesSummary(full_summary_stats_df:DFData, col_name:string):DFWhole {
+
+  return {
+    dfviewer_config : { 
+      column_config: [
+        {col_name:'index', displayer_args: { displayer: 'obj' }},
+        {col_name:col_name, displayer_args: { displayer: 'obj' }}],
+      pinned_rows:[],
+    },
+    data: _.map(full_summary_stats_df, (row) => _.pick(row, ['index', col_name]))
   }
 }
 
 export function dfToAgrid(
   tdf: DFWhole,
-  summary_stats_df: SDFT
+  full_summary_stats_df: DFData
 ): [ColDef[], unknown[]] {
+  //more convienient df format for some formatters
+
+  const histogram_bin_summary_df = extractSDFT(full_summary_stats_df || [])
+
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
+      const single_series_summary_df = extractSingleSeriesSummary(full_summary_stats_df, f.col_name);
       const colDef: ColDef = {
         field: f.col_name,
         headerName: f.col_name,
         cellStyle: {}, // necessary for colormapped columns to have a default
-        ...addToColDef(f.displayer_args, summary_stats_df[f.col_name]),
+        ...addToColDef(f.displayer_args, histogram_bin_summary_df[f.col_name]),
         ...(f.color_map_config
-          ? getStyler(f.color_map_config, summary_stats_df[f.col_name])
+          ? getStyler(f.color_map_config, histogram_bin_summary_df[f.col_name])
           : {}),
-        ...(f.tooltip_config? getTooltip(f.tooltip_config) : {}  )
+        ...(f.tooltip_config? getTooltip(f.tooltip_config, single_series_summary_df) : {}  )
       };
       if (f.col_name === 'index') {
         colDef.pinned = 'left';
