@@ -320,7 +320,6 @@ export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
 
 
 export function getTooltip(ttc: TooltipConfig, single_series_summary_df:DFWhole): Partial<ColDef> {
-  console.log(single_series_summary_df)
   switch (ttc.tooltip_type) {
     case 'simple':
       return {tooltipField: ttc.val_column}
@@ -338,9 +337,12 @@ export function extractSingleSeriesSummary(full_summary_stats_df:DFData, col_nam
       column_config: [
         {col_name:'index', displayer_args: { displayer: 'obj' }},
         {col_name:col_name, displayer_args: { displayer: 'obj' }}],
-      pinned_rows:[],
+      pinned_rows:[
+      ],
     },
-    data: _.map(full_summary_stats_df, (row) => _.pick(row, ['index', col_name]))
+    data: _.filter(
+      _.map(full_summary_stats_df, (row) => _.pick(row, ['index', col_name])),
+      {'index': 'dtype'})
   }
 }
 
