@@ -16,7 +16,7 @@ import {
   IntegerDisplayerA,
   DatetimeLocaleDisplayerA,
   ColumnConfig,
-  ColorMappingRules,
+  ColorMappingConfig,
   ColorMapRules,
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
@@ -308,7 +308,7 @@ export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
   return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
 }
 
-export function getStyler(cmr: ColorMappingRules, foo: SDFMeasure) {
+export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
   switch (cmr.color_rule) {
     case 'color_map':
       return colorMap(cmr, foo.histogram_bins);
@@ -326,8 +326,8 @@ export function dfToAgrid(
         headerName: f.col_name,
         cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, summary_stats_df[f.col_name]),
-        ...(f.highlight_rules
-          ? getStyler(f.highlight_rules, summary_stats_df[f.col_name])
+        ...(f.color_map_config
+          ? getStyler(f.color_map_config, summary_stats_df[f.col_name])
           : {}),
       };
       if (f.col_name === 'index') {

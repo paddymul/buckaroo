@@ -235,11 +235,12 @@ export const tableDf: DFWhole = {
       {
         col_name: 'nanNumeric',
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
+        tooltip_config: { tooltip_type:"simple", val_column:"start station name"},
       },
       {
         col_name: 'nanObject',
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
-        highlight_rules: {
+        color_map_config: {
           color_rule: 'color_map',
           map_name: 'DIVERGING_RED_WHITE_BLUE',
           val_column: 'tripduration',
@@ -250,10 +251,11 @@ export const tableDf: DFWhole = {
       {
         col_name: 'tripduration',
         displayer_args: { displayer: 'integer', min_digits: 1, max_digits: 5 },
-        highlight_rules: {
+        color_map_config: {
           color_rule: 'color_map',
           map_name: 'BLUE_TO_YELLOW',
         },
+        
       },
       { col_name: 'start station name', displayer_args: { displayer: 'obj' } },
       { col_name: 'floatCol', displayer_args: { displayer: 'float' } },

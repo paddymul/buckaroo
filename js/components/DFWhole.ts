@@ -43,12 +43,18 @@ export interface ErrorMapRules {
 }
 
 export interface ColorFromColumn {
-color_rule: 'color_from_column';
-col_name: string;
+  color_rule: 'color_from_column',
+  col_name: string;
 }
 
+export type ColorMappingConfig = ColorMapRules | ErrorMapRules | ColorFromColumn;
 
-export type ColorMappingRules = ColorMapRules | ErrorMapRules | ColorFromColumn;
+export interface SimpleTooltip {
+  tooltip_type: "simple";
+  val_column: string;
+}
+
+export type TooltipConfig = SimpleTooltip; //more to be added
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';
@@ -103,18 +109,19 @@ export interface SDFMeasure {
 
 export type SDFT = Record<string, SDFMeasure>;
 
+
+
 export type ColumnConfig = {
   col_name: string;
   displayer_args: DisplayerArgs;
-  highlight_rules?: ColorMapRules;
+  color_map_config?: ColorMappingConfig;
+  tooltip_config?: TooltipConfig;
   //extra column info ???
 };
 
 export type PinnedRowConfig = {
   primary_key_val: string;
   displayer_args: DisplayerArgs;
-  highlight_rules?: any;
-  tooltip_rules?: any;
 };
 
 export interface DFViewerConfig {
