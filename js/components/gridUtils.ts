@@ -16,7 +16,7 @@ import {
   TooltipConfig,
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
-import { getTextCellRenderer } from './CustomHeader';
+import { getTextCellRenderer } from './HistogramCell';
 
 import { DFData, SDFMeasure, SDFT } from './DFWhole';
 

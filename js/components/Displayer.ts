@@ -10,7 +10,7 @@ import {
   DatetimeLocaleDisplayerA
 } from './DFWhole';
 import _ from 'lodash';
-import { HistogramCell } from './CustomHeader';
+import { HistogramCell } from './HistogramCell';
 import { CellRendererArgs, FormatterArgs } from './DFWhole';
 
 /*
