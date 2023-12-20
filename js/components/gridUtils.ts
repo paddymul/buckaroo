@@ -18,6 +18,7 @@ import {
   ColumnConfig,
   ColorMappingConfig,
   ColorMapRules,
+  TooltipConfig,
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
 import { HistogramCell, getTextCellRenderer } from './CustomHeader';
@@ -315,6 +316,13 @@ export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
   }
 }
 
+export function getTooltip(ttc: TooltipConfig) {
+  switch (ttc.tooltip_type) {
+    case 'simple':
+      return {tooltipField: ttc.val_column}
+  }
+}
+
 export function dfToAgrid(
   tdf: DFWhole,
   summary_stats_df: SDFT
@@ -329,6 +337,7 @@ export function dfToAgrid(
         ...(f.color_map_config
           ? getStyler(f.color_map_config, summary_stats_df[f.col_name])
           : {}),
+        ...(f.tooltip_config? getTooltip(f.tooltip_config) : {}  )
       };
       if (f.col_name === 'index') {
         colDef.pinned = 'left';
