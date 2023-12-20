@@ -12,7 +12,7 @@ import { bakedCommandConfig } from './bakedOperationDefaults';
 import { OperationDetail } from './OperationDetail';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { ColDef, GridOptions } from 'ag-grid-community';
-import { updateAtMatch } from './gridUtils';
+import { updateAtMatch } from './utils';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { bakedOperations } from './staticData';

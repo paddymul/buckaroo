@@ -147,10 +147,12 @@ export const HistogramCell = (props: any) => {
   if (histogram === undefined || !_.isArray(histogram)) {
     return <span></span>;
   }
-
+const dumbClickHandler = (...args:any) => {
+  console.log('dumbClickHandler', args);
+}
   return (
     <div className="histogram-component">
-      <BarChart width={100} height={24} barGap={1} data={histogram}>
+      <BarChart width={100} height={24} barGap={1} data={histogram} onClick={dumbClickHandler}>
         <defs>
           <pattern
             id="star"
