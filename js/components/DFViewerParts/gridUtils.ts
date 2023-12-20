@@ -15,6 +15,7 @@ import {
   ColorMappingConfig,
   ColorMapRules,
   TooltipConfig,
+  ColorWhenNotNullRules,
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
 import { getTextCellRenderer } from './HistogramCell';
@@ -100,15 +101,35 @@ export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
   return retProps;
 }
 
-export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
-  return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
+export function colorNotNull(cmr: ColorWhenNotNullRules) {
+  function cellStyle(params: CellClassParams) {
+
+    const val = params.data[cmr.exist_column];
+    const valPresent = val && val !== null;
+    const isPinned = params.node.rowPinned;
+    const color = (valPresent && !isPinned) ? cmr.conditional_color : 'inherit';
+    return {
+      backgroundColor: color,
+    };
+  }
+
+  const retProps = {
+    cellStyle: cellStyle,
+  };
+  return retProps;
 }
 
 export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
   switch (cmr.color_rule) {
     case 'color_map':
       return colorMap(cmr, foo.histogram_bins);
+    case 'color_not_null':
+      return colorNotNull(cmr);
   }
+}
+
+export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
+  return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
 }
 
 
@@ -144,8 +165,7 @@ export function dfToAgrid(
   full_summary_stats_df: DFData
 ): [ColDef[], unknown[]] {
   //more convienient df format for some formatters
-
-  const histogram_bin_summary_df = extractSDFT(full_summary_stats_df || [])
+  const hdf = extractSDFT(full_summary_stats_df || [])
 
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
@@ -154,11 +174,9 @@ export function dfToAgrid(
         field: f.col_name,
         headerName: f.col_name,
         cellStyle: {}, // necessary for colormapped columns to have a default
-        ...addToColDef(f.displayer_args, histogram_bin_summary_df[f.col_name]),
-        ...(f.color_map_config
-          ? getStyler(f.color_map_config, histogram_bin_summary_df[f.col_name])
-          : {}),
-        ...(f.tooltip_config? getTooltip(f.tooltip_config, single_series_summary_df) : {}  )
+        ...addToColDef(f.displayer_args, hdf[f.col_name]),
+        ...(f.color_map_config ? getStyler(f.color_map_config, hdf[f.col_name]) : {}),
+        ...(f.tooltip_config ? getTooltip(f.tooltip_config, single_series_summary_df) : {})
       };
       if (f.col_name === 'index') {
         colDef.pinned = 'left';

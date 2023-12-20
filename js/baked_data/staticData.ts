@@ -259,7 +259,9 @@ export const tableDf: DFWhole = {
         },
 
       },
-      { col_name: 'start station name', displayer_args: { displayer: 'obj' } },
+      { col_name: 'start station name', displayer_args: { displayer: 'obj' },
+        color_map_config: {'color_rule':'color_not_null', 'conditional_color':'red', 'exist_column':'nanFloat'}
+    },
       { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
     ],
     pinned_rows: [
@@ -366,54 +368,6 @@ export const summaryDfForTableDf: DFData = [
   },
 ];
 
-//histograms for tableDf
-/*
-  table_hints: {
-    'end station name': {
-      histogram: histograms.categorical_histo_lt,
-      type: 'obj',
-    },
-
-    tripduration: {
-      type: 'integer',
-      min_digits: 3,
-      max_digits: 4,
-      histogram: histograms.num_histo,
-    },
-    'start station name': {
-      histogram: histograms.bool_histo,
-      type: 'string',
-    },
-    floatCol: {
-      type: 'float',
-
-      histogram: [
-        { name: 521, cat_pop: 0.0103 },
-        { name: 358, cat_pop: 0.0096 },
-        { name: 519, cat_pop: 0.009 },
-        { name: 497, cat_pop: 0.0087 },
-        { name: 293, cat_pop: 0.0082 },
-        { name: 285, cat_pop: 0.0081 },
-        { name: 435, cat_pop: 0.008 },
-        { name: 'unique', cat_pop: 0.0001 },
-        { name: 'long_tail', cat_pop: 0.938 },
-        { name: 'NA', cat_pop: 0.0 },
-      ],
-    },
-    nanNumeric: {
-      type: 'integer',
-      min_digits: 1,
-      max_digits: 3,
-      histogram: histograms.num_histo,
-    },
-    nanFloat: {
-      type: 'float',
-      histogram: histograms.num_histo,
-    },
-    nanObject: {
-      type: 'obj',
-    },
-  }, */
 
 /*
 export const stringIndexDf: DFWhole = {

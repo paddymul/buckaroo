@@ -36,9 +36,9 @@ export interface ColorMapRules {
 
 
 //if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
-export interface ErrorMapRules {
-  color_rule: 'error_map';
-  conditional_color: 'red';
+export interface ColorWhenNotNullRules {
+  color_rule: 'color_not_null';
+  conditional_color: string| 'red';
   exist_column: string;
 }
 
@@ -47,7 +47,7 @@ export interface ColorFromColumn {
   col_name: string;
 }
 
-export type ColorMappingConfig = ColorMapRules | ErrorMapRules | ColorFromColumn;
+export type ColorMappingConfig = ColorMapRules | ColorWhenNotNullRules | ColorFromColumn;
 
 export interface SimpleTooltip {
   tooltip_type: "simple";
