@@ -1,7 +1,7 @@
-import { OperationDefaultArgs, Operation } from './OperationUtils';
-import { sym } from './utils';
-import { symDf, CommandConfigT, bakedArgSpecs } from './CommandUtils';
-import { DFData, DFWhole } from './DFWhole';
+import { OperationDefaultArgs, Operation } from '../components/OperationUtils';
+import { sym } from '../components/utils';
+import { symDf, CommandConfigT, bakedArgSpecs } from '../components/CommandUtils';
+import { DFData, DFWhole } from '../components/DFViewerParts/DFWhole';
 
 export const bakedOperationDefaults: OperationDefaultArgs = {
   dropcol: [sym('dropcol'), symDf, 'col'],

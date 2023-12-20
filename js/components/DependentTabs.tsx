@@ -4,8 +4,8 @@ import React, {
   Dispatch,
   SetStateAction,
 } from 'react';
-import { DFWhole, EmptyDf } from './DFWhole';
-import { DFViewer } from './DFViewer';
+import { DFWhole, EmptyDf } from './DFViewerParts/DFWhole';
+import { DFViewer } from './DFViewerParts/DFViewer';
 import _ from 'lodash';
 import { Operation } from './OperationUtils';
 

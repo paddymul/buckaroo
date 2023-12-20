@@ -4,7 +4,8 @@ import {
   ColDef,
   ICellRendererParams,
 } from 'ag-grid-community';
-import { BLUE_TO_YELLOW, DIVERGING_RED_WHITE_BLUE } from './colorMap';
+import { BLUE_TO_YELLOW, DIVERGING_RED_WHITE_BLUE } from '../../baked_data/colorMap';
+
 
 import {
   DFWhole,
@@ -21,7 +22,7 @@ import { getTextCellRenderer } from './HistogramCell';
 import { DFData, SDFMeasure, SDFT } from './DFWhole';
 
 import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from './DFWhole';
-import { getBakedDFViewer } from './BakedDFVIewer';
+import { getBakedDFViewer } from './SeriesSummaryTooltip';
 import { getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter } from './Displayer';
 
 // for now colDef stuff with less than 3 implementantions should stay in this file

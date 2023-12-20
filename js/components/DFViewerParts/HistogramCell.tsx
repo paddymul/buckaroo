@@ -9,9 +9,9 @@ import {
   //Legend,
   //Cell, XAxis, YAxis, CartesianGrid, , ResponsiveContainer,
 } from 'recharts';
-import { Tooltip } from './RechartTooltip';
+import { Tooltip } from '../../vendor/RechartTooltip';
 
-import { isNumOrStr, ValueType } from './RechartExtra';
+import { isNumOrStr, ValueType } from '../../vendor/RechartExtra';
 import { ValueFormatterFunc } from 'ag-grid-community';
 
 function defaultFormatter<TValue extends ValueType>(value: TValue) {
@@ -135,7 +135,7 @@ export const getTextCellRenderer = (formatter: ValueFormatterFunc<any>) => {
   };
   return TextCellRenderer;
 };
-//export const HistogramCell   = ({histogram}: {histogram:any}) => {
+
 export const HistogramCell = (props: any) => {
   //debugger;
   if (props === undefined || props.value === undefined) {
@@ -147,9 +147,14 @@ export const HistogramCell = (props: any) => {
   if (histogram === undefined || !_.isArray(histogram)) {
     return <span></span>;
   }
-const dumbClickHandler = (...args:any) => {
-  console.log('dumbClickHandler', args);
-}
+  const dumbClickHandler = (rechartsArgs:any, _unused_react:any) => {
+    // I can't find the type for rechartsArgs
+    // these are probably the keys we care about
+    // activeTooltipIndex
+    // activeLabel
+    console.log('dumbClickHandler', rechartsArgs);
+  }
+  
   return (
     <div className="histogram-component">
       <BarChart width={100} height={24} barGap={1} data={histogram} onClick={dumbClickHandler}>

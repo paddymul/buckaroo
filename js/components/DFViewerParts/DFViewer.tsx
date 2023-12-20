@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { DFData, DFWhole, EmptyDf } from './DFWhole';
 
 import { dfToAgrid, extractPinnedRows } from './gridUtils';
-import { replaceAtMatch } from './utils';
+import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
 import { getCellRendererSelector } from './gridUtils';

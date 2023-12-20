@@ -1,5 +1,5 @@
-import {DFViewer} from '../../js/components/DFViewer';
-import {summaryDfForTableDf, tableDf } from '../../js/components/staticData';
+import {DFViewer} from '../../js/components/DFViewerParts/DFViewer';
+import {summaryDfForTableDf, tableDf } from '../../js/baked_data/staticData';
 import React, { useState} from 'react';
 
 

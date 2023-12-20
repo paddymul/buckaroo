@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { bakedOperations } from './staticData';
-import { DFWhole, EmptyDf } from './DFWhole';
+import { bakedOperations } from '../baked_data/staticData';
+import { DFWhole, EmptyDf } from './DFViewerParts/DFWhole';
 import { OperationViewer } from './Operations';
 import { Operation } from './OperationUtils';
 import { CommandConfigT } from './CommandUtils';
 //import {bakedCommandConfig} from './bakedOperationDefaults';
 import { DependentTabs, OperationResult } from './DependentTabs';
-import { tableDf, bakedCommandConfig } from './staticData';
+import { tableDf, bakedCommandConfig } from '../baked_data/staticData';
 
 export type OperationSetter = (ops: Operation[]) => void;
 export interface WidgetConfig {

@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import _ from 'lodash';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { ColDef, GridOptions } from 'ag-grid-community';
-import { basicIntFormatter } from './Displayer';
+import { basicIntFormatter } from './DFViewerParts/Displayer';
 export type setColumFunc = (newCol: string) => void;
 
 export interface DfConfig {
