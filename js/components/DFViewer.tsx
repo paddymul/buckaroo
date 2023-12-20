@@ -43,6 +43,8 @@ export function DFViewer(
   const gridOptions: GridOptions = {
     rowSelection: 'single',
     onRowClicked: (event) => console.log('A row was clicked'),
+    tooltipShowDelay: 0,
+
     defaultColDef: {
       sortable: true,
       type: 'rightAligned',

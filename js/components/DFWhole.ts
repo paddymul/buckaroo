@@ -54,7 +54,14 @@ export interface SimpleTooltip {
   val_column: string;
 }
 
-export type TooltipConfig = SimpleTooltip; //more to be added
+export interface SummarySeriesTooltip {
+  tooltip_type: "summary_series";
+  //single_series_summary_df: DFWhole;
+  //val_column: string;
+}
+
+
+export type TooltipConfig = SimpleTooltip| SummarySeriesTooltip; //more to be added
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';

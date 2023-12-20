@@ -26,6 +26,8 @@ import { HistogramCell, getTextCellRenderer } from './CustomHeader';
 import { DFData, SDFMeasure, SDFT } from './DFWhole';
 
 import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from './DFWhole';
+import { getBakedDFViewer } from './BakedDFVIewer';
+
 
 export const updateAtMatch = (
   cols: ColDef[],
@@ -316,10 +318,18 @@ export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
   }
 }
 
-export function getTooltip(ttc: TooltipConfig) {
+
+export function getTooltip(ttc: TooltipConfig): Partial<ColDef> {
+  console.log(getBakedDFViewer)
   switch (ttc.tooltip_type) {
     case 'simple':
       return {tooltipField: ttc.val_column}
+
+    case 'summary_series':
+      return {tooltipComponent: getBakedDFViewer(), tooltipField:'index', tooltipComponentParams: { }    };
+//  return {tooltipComponent: simpleTooltipRender, tooltipField:'index', tooltipComponentParams: { }    };
+      //return {tooltipField: 'index'}
+
   }
 }
 
@@ -403,6 +413,7 @@ export function extractSDFT(summaryStatsDf: DFData): SDFT {
   });
   return zipObject(allColumns, vals) as SDFT;
 }
+
 
 /*
 I would love for extractSDF to be more elegant like the following function.  I just can't quite get it to work

@@ -246,7 +246,9 @@ export const tableDf: DFWhole = {
           val_column: 'tripduration',
         },
       },
-      { col_name: 'nanFloat', displayer_args: { displayer: 'float' } },
+      { col_name: 'nanFloat', displayer_args: { displayer: 'float' },
+        tooltip_config: {tooltip_type:"summary_series" }
+    },
       { col_name: 'end station name', displayer_args: { displayer: 'obj' } },
       {
         col_name: 'tripduration',
@@ -255,7 +257,7 @@ export const tableDf: DFWhole = {
           color_rule: 'color_map',
           map_name: 'BLUE_TO_YELLOW',
         },
-        
+
       },
       { col_name: 'start station name', displayer_args: { displayer: 'obj' } },
       { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
@@ -297,7 +299,7 @@ export const tableDf: DFWhole = {
       floatCol: '9.999',
       nanNumeric: null,
       nanObject: null,
-      nanFloat: null,
+      nanFloat: 10,
     },
     {
       index: 3,
@@ -318,7 +320,7 @@ export const tableDf: DFWhole = {
       floatCol: '10.99',
       nanNumeric: null,
       nanObject: null,
-      nanFloat: null,
+      nanFloat: 3,
     },
   ],
 };
