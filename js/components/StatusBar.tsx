@@ -14,6 +14,14 @@ const columnDefs: ColDef[] = [
     headerTooltip: 'Summary Stats',
     width: 120,
   },
+  {
+    field: 'auto_clean',
+    //headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
+    headerName: 'auto cleaning',
+    headerTooltip: 'Auto Cleaning config',
+    width: 120,
+  },
+
   //   { field: 'reorderdColumns',
   //   headerName: "Θ",
   //   headerTooltip:"Reorder Columns",
@@ -101,7 +109,7 @@ export function StatusBarEx() {
   }
 
   const [bState, setBState] = useState<BuckarooState>({
-    'auto_clean': 'aggressive',
+    'auto_clean': 'conservative',
     'reorderd_columns': false,
     'sampled' : false,
     'show_commands' : false,
@@ -143,13 +151,12 @@ export function StatusBar2({
       rowsShown: basicIntFormatter.format(dfMeta.rowsShown),
       sampleSize: basicIntFormatter.format(dfMeta.sampleSize),
       sampled: buckarooState.sampled ||  '0',
+      auto_clean: buckarooState.auto_clean || '0',  
       summary_stats: buckarooState.summary_stats ||  '0',
       show_commands: buckarooState.show_commands  || '0',
     },
   ];
 
-
-  _.map({'a':10, 'b':20}, (v, k) => {console.log("k", k, v)}) 
   const optionCycles =  _.fromPairs(_.map(buckarooOptions, (v:any, k) => [k, _.concat([false], v)]));
   //@ts-ignore
   const idxs = _.fromPairs(_.map(_.keys(optionCycles), (k) => [k, _.indexOf(optionCycles[k], buckarooState[k])]))
@@ -162,12 +169,12 @@ export function StatusBar2({
   }
 
   const newBuckarooState = (k:BKeys) => {
-    const arr = buckarooOptions[k];
-    console.log("k", k, "arr", arr)
+    const arr = optionCycles[k];
     const curIdx = idxs[k];
     const nextIdx = nextIndex(curIdx, arr);
     const newVal = arr[nextIdx];
     const newState = _.clone(buckarooState);
+    //console.log("k", k, "arr", arr, 'curIdx', curIdx, 'nextIdx', nextIdx, 'newVal', newVal);
     newState[k] = newVal;
     return newState;
   }
@@ -182,7 +189,7 @@ export function StatusBar2({
 
   const gridRef = useRef<AgGridReact<unknown>>(null);
   const defaultColDef = {
-    type: 'left-aligned',
+//    type: 'left-aligned',
     cellStyle: { textAlign: 'left' },
   };
   return (
@@ -252,7 +259,7 @@ export function StatusBar({
 
   const gridRef = useRef<AgGridReact<unknown>>(null);
   const defaultColDef = {
-    type: 'left-aligned',
+//    type: 'left-aligned',
     cellStyle: { textAlign: 'left' },
   };
   return (
