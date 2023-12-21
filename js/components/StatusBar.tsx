@@ -60,19 +60,6 @@ const columnDefs: ColDef[] = [
 ];
 
 
-export interface DfConfig {
-  totalRows: number;
-  columns: number;
-  rowsShown: number;
-  sampleSize: number;
-  sampled: boolean;
-  summaryStats: boolean;
-  showCommands: boolean;
-  //reorderedColumns is currently disabled as a function, but it will be added back soon
-  //reorderdColumns: boolean;
-}
-
-
 export interface DFMeta { // static, 
   totalRows: number;
   columns: number;
@@ -125,14 +112,14 @@ export function StatusBarEx() {
   }
 
 
-  return <StatusBar2 
+  return <StatusBar 
                       dfMeta={dfm}
                       buckarooState={bState}
                       setBuckarooState={setBState}
                       buckarooOptions={bOptions}
                       />
 }
-export function StatusBar2({
+export function StatusBar({
   dfMeta,
   buckarooState,
   setBuckarooState,
@@ -183,76 +170,6 @@ export function StatusBar2({
     setBuckarooState(newBuckarooState( colName as BKeys));
   };
 
-  const gridOptions: GridOptions = {
-    rowSelection: 'single',
-  };
-
-  const gridRef = useRef<AgGridReact<unknown>>(null);
-  const defaultColDef = {
-//    type: 'left-aligned',
-    cellStyle: { textAlign: 'left' },
-  };
-  return (
-    <div className="statusBar">
-      <div style={{ height: 50 }} className="theme-hanger ag-theme-alpine-dark">
-        <AgGridReact
-          ref={gridRef}
-          onCellClicked={updateDict}
-          gridOptions={gridOptions}
-          defaultColDef={defaultColDef}
-          rowData={rowData}
-          columnDefs={columnDefs}
-        ></AgGridReact>
-      </div>
-    </div>
-  );
-}
-
-
-
-export function StatusBar({
-  config,
-  setConfig,
-}: {
-  config: any;
-  setConfig: any;
-}) {
-  const {
-    totalRows,
-    columns,
-    rowsShown,
-    sampleSize,
-    sampled,
-    summaryStats,
-    showCommands,
-    //reorderdColumns
-  } = config;
-
-  const rowData = [
-    {
-      totalRows: basicIntFormatter.format(totalRows),
-      columns,
-      rowsShown: basicIntFormatter.format(rowsShown),
-      sampleSize: basicIntFormatter.format(sampleSize),
-      sampled: sampled ? '1' : '0',
-      summaryStats: summaryStats ? '1' : '0',
-      // reorderdColumns: reorderdColumns ? "1" : "ό",
-      showCommands: showCommands ? '1' : '0',
-    },
-  ];
-
-  const updateDict = (event: any) => {
-    const colName = event.column.getColId();
-    if (colName === 'summaryStats') {
-      setConfig({ ...config, summaryStats: !config.summaryStats });
-    } else if (colName === 'sampled') {
-      setConfig({ ...config, sampled: !config.sampled });
-    } else if (colName === 'showCommands') {
-      setConfig({ ...config, showCommands: !config.showCommands });
-    }
-    // } else if (colName === 'reorderdColumns') {
-    //   setConfig({ ...config, reorderdColumns: !config.reorderdColumns });
-  };
   const gridOptions: GridOptions = {
     rowSelection: 'single',
   };

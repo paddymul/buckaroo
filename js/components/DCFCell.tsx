@@ -5,7 +5,7 @@ import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
 import { tableDf } from '../baked_data/staticData';
 import { DFWhole } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
-import { StatusBar, DfConfig } from './StatusBar';
+import { StatusBar, DFMeta, BuckarooOptions,BuckarooState } from './StatusBar';
 import { CommandConfigT } from './CommandUtils';
 import { bakedCommandConfig } from './bakedOperationDefaults';
 import { Operation, bakedOperations } from './OperationUtils';
@@ -20,30 +20,35 @@ export type CommandConfigSetterT = (
   TODO:add height settings to dfConfig rather than hardcoded.
  */
 export function WidgetDCFCell({
-  df_json: json_serialized_df,
+  df_dict,
+  df_meta,
   operations,
   on_operations,
   operation_results,
   commandConfig,
-  dfConfig,
-  on_dfConfig,
-  summary_df_json: summaryDf,
+  buckaroo_state,
+  on_buckaroo_state,
+  buckaroo_options
 }: {
-  df_json: DFWhole;
+  df_dict: Record<string, DFWhole>;
+  df_meta:DFMeta;
   operations: Operation[];
   on_operations: (ops: Operation[]) => void;
   operation_results: OperationResult;
   commandConfig: CommandConfigT;
-  dfConfig: DfConfig;
-  on_dfConfig: unknown;
-  summary_df_json: DFWhole;
+  buckaroo_state:BuckarooState,
+  on_buckaroo_state:React.Dispatch<React.SetStateAction<BuckarooState>>,
+  buckaroo_options:BuckarooOptions
+
 }) {
   const [activeCol, setActiveCol] = useState('stoptime');
-  const widgetConfig: WidgetConfig = { showCommands: dfConfig.showCommands };
-  const localDfConfig = {
-    ...dfConfig,
-    rowsShown: json_serialized_df.data.length || 0,
-  };
+  const widgetConfig: WidgetConfig = { showCommands: (buckaroo_state.show_commands ? true : false)};
+
+
+  const dfToDisplay = df_dict[(buckaroo_state.summary_stats || 'main')];
+  const summaryStatsData = df_dict['all'].data;
+
+
   return (
     <div
       className="dcf-root flex flex-col"
@@ -53,16 +58,19 @@ export function WidgetDCFCell({
         className="orig-df flex flex-row"
         style={{ height: '450px', overflow: 'hidden' }}
       >
-        <StatusBar config={localDfConfig} setConfig={on_dfConfig} />
+        <StatusBar  dfMeta={df_meta} buckarooState={buckaroo_state} setBuckarooState={on_buckaroo_state}
+                    buckarooOptions={buckaroo_options}
+        />
         <DFViewer
-          df={dfConfig.summaryStats ? summaryDf : json_serialized_df}
+          df={dfToDisplay}
+          summaryStatsDf={summaryStatsData}
           activeCol={activeCol}
           setActiveCol={setActiveCol}
         />
       </div>
       {widgetConfig.showCommands ? (
         <ColumnsEditor
-          df={json_serialized_df}
+          df={df_dict['main']}
           activeColumn={activeCol}
           operations={operations}
           setOperations={on_operations}
