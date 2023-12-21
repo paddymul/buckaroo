@@ -2,7 +2,7 @@ import React, { useState, Dispatch, SetStateAction } from 'react';
 import _ from 'lodash';
 import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
-import { tableDf } from '../baked_data/staticData';
+import { summaryDfForTableDf, tableDf } from '../baked_data/staticData';
 import { DFWhole } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
 import { StatusBar, DFMeta, BuckarooOptions,BuckarooState } from './StatusBar';
@@ -86,27 +86,53 @@ export function WidgetDCFCell({
 }
 
 export function WidgetDCFCellExample() {
-  const [sampleConfig, setConfig] = useState<DfConfig>({
-    totalRows: 1309,
-    columns: 30,
-    rowsShown: 500,
-    sampleSize: 10_000,
-    sampled: true,
-    summaryStats: false,
-    showCommands: true,
-    //reorderdColumns: false,
-  });
+
+  const dfm: DFMeta = {
+    'columns': 5,
+    'rowsShown' : 20,
+    'sampleSize' : 10_000,
+    'totalRows' : 877
+  }
+
+  const [bState, setBState] = useState<BuckarooState>({
+    'auto_clean': 'conservative',
+    'reorderd_columns': false,
+    'sampled' : false,
+    'show_commands' : false,
+    'summary_stats' : false
+  })
+
+  const bOptions: BuckarooOptions = {
+    'auto_clean': ['aggressive', 'conservative'],
+    'reorderd_columns': [],
+    'sampled' : ['random'],
+    'show_commands' : ['on'],
+//    'summary_stats' : ['full', 'all', 'typing_stats']
+    'summary_stats' : [ 'all']
+
+  }
+  const wholeAllSummaryDF:DFWhole = {
+    data:summaryDfForTableDf,
+    dfviewer_config: {
+      column_config: [], // pull in all columns
+      pinned_rows: []
+    }
+  }
+
   const [operations, setOperations] = useState<Operation[]>(bakedOperations);
   return (
     <WidgetDCFCell
-      df_json={tableDf}
+      df_dict={{'main': tableDf, 'all':wholeAllSummaryDF}}
       operations={operations}
       on_operations={setOperations}
       operation_results={baseOperationResults}
+      df_meta={dfm}
+      buckaroo_options={bOptions}
+      buckaroo_state={bState}
+      on_buckaroo_state={setBState}
+
+
       commandConfig={bakedCommandConfig}
-      dfConfig={sampleConfig}
-      on_dfConfig={setConfig}
-      summary_df_json={tableDf}
     />
   );
 }
