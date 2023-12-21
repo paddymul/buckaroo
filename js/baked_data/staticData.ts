@@ -20,8 +20,6 @@ export const bakedOperations: Operation[] = [
   [sym('resample'), symDf, 'month', 'monthly', {}],
 ];
 
-//print(sdf.to_json(orient='table', indent=2))
-
 export const histograms = {
   num_histo: [
     { name: '-406 - -332', population: 1 },

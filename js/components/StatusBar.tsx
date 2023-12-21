@@ -6,7 +6,7 @@ import { ColDef, GridOptions } from 'ag-grid-community';
 import { basicIntFormatter } from './DFViewerParts/Displayer';
 export type setColumFunc = (newCol: string) => void;
 
-const getSearchForm = (setSearchVal:any) => {
+const getSearchForm = (initialVal:string, setSearchVal:any) => {
   return function MyForm() {
   function handleSubmit(e:any) {
     // Prevent the browser from reloading the page
@@ -20,17 +20,14 @@ const getSearchForm = (setSearchVal:any) => {
     //@ts-ignore
     const formDict: Record<string, string> = _.fromPairs(entries);
 
-//    console.log("form", form);
-//    console.log("formData", formData);
     console.log("formDict", formDict)
     setSearchVal(formDict['search'])
-//    debugger;
   }
 
   return (
     <form method="post" onSubmit={handleSubmit}>
       <label>
-         <input name="search" defaultValue="" />
+         <input name="search" defaultValue={initialVal} />
       </label>
     </form>
   );
@@ -51,10 +48,9 @@ const helpCell = function (params: any) {
 
 
 export interface DFMeta { // static, 
-  totalRows: number;
+  total_rows: number;
   columns: number;
-  rowsShown: number;
-  sampleSize: number;
+  rows_shown: number;
 }
 
 export interface BuckarooState {
@@ -63,6 +59,7 @@ export interface BuckarooState {
   show_commands: string | false;
   auto_clean: string | false;
   reorderd_columns: string | false;
+  search_string: string;
 }
 
 export interface BuckarooOptions {
@@ -80,9 +77,8 @@ export function StatusBarEx() {
 
   const dfm: DFMeta = {
     'columns': 5,
-    'rowsShown' : 20,
-    'sampleSize' : 10_000,
-    'totalRows' : 8_777_444
+    'rows_shown' : 20,
+    'total_rows' : 8_777_444
   }
 
   const [bState, setBState] = useState<BuckarooState>({
@@ -90,7 +86,8 @@ export function StatusBarEx() {
     'reorderd_columns': false,
     'sampled' : false,
     'show_commands' : false,
-    'summary_stats' : 'typing_stats'
+    'summary_stats' : 'typing_stats',
+    'search_string' : ''
   })
 
   const bOptions: BuckarooOptions = {
@@ -101,6 +98,8 @@ export function StatusBarEx() {
     'summary_stats' : ['full', 'all', 'typing_stats']
   }
 
+
+  
 
   return <StatusBar 
                       dfMeta={dfm}
@@ -120,22 +119,55 @@ export function StatusBar({
   setBuckarooState:React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckarooOptions:BuckarooOptions;
 }) {
+  const optionCycles =  _.fromPairs(_.map(buckarooOptions, (v:any, k) => [k, _.concat([false], v)]));
+  //@ts-ignore
+  const idxs = _.fromPairs(_.map(_.keys(optionCycles), (k) => [k, _.indexOf(optionCycles[k], buckarooState[k])]))
 
-  const dummySetSearchVal = (foo:string) => {
-    console.log("setSearchVal called with", foo);
+  const nextIndex = (curIdx:number, arr:any[]) => {
+    if (curIdx == (arr.length - 1)) {
+      return 0;
+    }
+    return curIdx + 1;
+  }
+
+  const newBuckarooState = (k:BKeys) => {
+    const arr = optionCycles[k];
+    const curIdx = idxs[k];
+    const nextIdx = nextIndex(curIdx, arr);
+    const newVal = arr[nextIdx];
+    const newState = _.clone(buckarooState);
+    //console.log("k", k, "arr", arr, 'curIdx', curIdx, 'nextIdx', nextIdx, 'newVal', newVal);
+    newState[k] = newVal;
+    return newState;
+  }
+  const updateDict = (event: any) => {
+    const colName = event.column.getColId();
+    if(colName == 'search') {
+      return;
+    }
+    if ( _.includes(_.keys(buckarooState), colName)){
+      setBuckarooState(newBuckarooState( colName as BKeys));
+    }
+  };
+  
+  const localSetSearchString = (search_query:string) => {
+    setBuckarooState({...buckarooState,
+      search_string:search_query
+    })
+
   }
 
 const columnDefs: ColDef[] = [
   {
     field: 'search',
     width: 200,
-    cellRenderer: getSearchForm(dummySetSearchVal)
+    cellRenderer: getSearchForm( buckarooState.search_string, localSetSearchString)
   },
   {
     field: 'summary_stats',
     headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
     headerTooltip: 'Summary Stats',
-    width: 120,
+    width: 120
   },
   {
     field: 'auto_clean',
@@ -164,17 +196,16 @@ const columnDefs: ColDef[] = [
     width: 30,
     cellRenderer: helpCell
   },
-  { field: 'totalRows', width: 100 },
-  { field: 'rowsShown', headerName: 'displayed', width: 85 },
+  { field: 'total_rows', width: 100 },
+  { field: 'rows_shown', headerName: 'displayed', width: 85 },
   { field: 'columns', width: 75 },
 ];
 
   const rowData = [
     {
-      totalRows: basicIntFormatter.format(dfMeta.totalRows),
+      total_rows: basicIntFormatter.format(dfMeta.total_rows),
       'columns': dfMeta.columns,
-      rowsShown: basicIntFormatter.format(dfMeta.rowsShown),
-      sampleSize: basicIntFormatter.format(dfMeta.sampleSize),
+      rows_shown: basicIntFormatter.format(dfMeta.rows_shown),
       sampled: buckarooState.sampled ||  '0',
       auto_clean: buckarooState.auto_clean || '0',  
       summary_stats: buckarooState.summary_stats ||  '0',
@@ -182,37 +213,9 @@ const columnDefs: ColDef[] = [
     },
   ];
 
-  const optionCycles =  _.fromPairs(_.map(buckarooOptions, (v:any, k) => [k, _.concat([false], v)]));
-  //@ts-ignore
-  const idxs = _.fromPairs(_.map(_.keys(optionCycles), (k) => [k, _.indexOf(optionCycles[k], buckarooState[k])]))
-
-  const nextIndex = (curIdx:number, arr:any[]) => {
-    if (curIdx == (arr.length - 1)) {
-      return 0;
-    }
-    return curIdx + 1;
-  }
-
-  const newBuckarooState = (k:BKeys) => {
-    const arr = optionCycles[k];
-    const curIdx = idxs[k];
-    const nextIdx = nextIndex(curIdx, arr);
-    const newVal = arr[nextIdx];
-    const newState = _.clone(buckarooState);
-    //console.log("k", k, "arr", arr, 'curIdx', curIdx, 'nextIdx', nextIdx, 'newVal', newVal);
-    newState[k] = newVal;
-    return newState;
-  }
-  const updateDict = (event: any) => {
-    const colName = event.column.getColId();
-    if(colName == 'search') {
-      return;
-    }
-    setBuckarooState(newBuckarooState( colName as BKeys));
-  };
 
   const gridOptions: GridOptions = {
-    rowSelection: 'single',
+    suppressRowClickSelection: true,
   };
 
   const gridRef = useRef<AgGridReact<unknown>>(null);

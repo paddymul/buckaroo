@@ -49,6 +49,7 @@ export function WidgetDCFCell({
   const summaryStatsData = df_dict['all'].data;
 
 
+  
   return (
     <div
       className="dcf-root flex flex-col"
@@ -89,9 +90,8 @@ export function WidgetDCFCellExample() {
 
   const dfm: DFMeta = {
     'columns': 5,
-    'rowsShown' : 20,
-    'sampleSize' : 10_000,
-    'totalRows' : 877
+    'rows_shown' : 20,
+    'total_rows' : 877
   }
 
   const [bState, setBState] = useState<BuckarooState>({
@@ -99,7 +99,8 @@ export function WidgetDCFCellExample() {
     'reorderd_columns': false,
     'sampled' : false,
     'show_commands' : false,
-    'summary_stats' : false
+    'summary_stats' : false,
+    'search_string': ''
   })
 
   const bOptions: BuckarooOptions = {
