@@ -6,58 +6,48 @@ import { ColDef, GridOptions } from 'ag-grid-community';
 import { basicIntFormatter } from './DFViewerParts/Displayer';
 export type setColumFunc = (newCol: string) => void;
 
+const getSearchForm = (setSearchVal:any) => {
+  return function MyForm() {
+  function handleSubmit(e:any) {
+    // Prevent the browser from reloading the page
+    e.preventDefault();
+    // Read the form data
+    const form = e.target;
+    const formData = new FormData(form);
 
-const columnDefs: ColDef[] = [
-  {
-    field: 'summary_stats',
-    headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
-    headerTooltip: 'Summary Stats',
-    width: 120,
-  },
-  {
-    field: 'auto_clean',
-    //headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
-    headerName: 'auto cleaning',
-    headerTooltip: 'Auto Cleaning config',
-    width: 120,
-  },
+    //@ts-ignore
+    const entries = Array.from(formData.entries()) 
+    //@ts-ignore
+    const formDict: Record<string, string> = _.fromPairs(entries);
 
-  //   { field: 'reorderdColumns',
-  //   headerName: "Θ",
-  //   headerTooltip:"Reorder Columns",
-  //   width:30
-  // },
-  {
-    field: 'show_commands',
-    headerName: 'λ',
-    headerTooltip: 'Show Commands',
-    width: 30,
-  },
+//    console.log("form", form);
+//    console.log("formData", formData);
+    console.log("formDict", formDict)
+    setSearchVal(formDict['search'])
+//    debugger;
+  }
 
-  { field: 'sampled', headerName: 'Ξ', headerTooltip: 'Sampled', width: 30 },
-  {
-    field: 'help',
-    headerName: '?',
-    headerTooltip: 'Help',
-    width: 30,
-    cellRenderer: function (params: any) {
-      return (
-        <a
-          href="https://buckaroo-data.readthedocs.io/en/latest/feature_reference.html"
-          target="_blank"
-          rel="noopener"
-        >
-          ?
-        </a>
-      );
-    },
-  },
+  return (
+    <form method="post" onSubmit={handleSubmit}>
+      <label>
+         <input name="search" defaultValue="" />
+      </label>
+    </form>
+  );
+}
+}
 
-  { field: 'totalRows', width: 100 },
-  { field: 'columns', width: 100 },
-  { field: 'rowsShown', width: 120 },
-  { field: 'sampleSize', width: 120 },
-];
+const helpCell = function (params: any) {
+  return (
+    <a
+      href="https://buckaroo-data.readthedocs.io/en/latest/feature_reference.html"
+      target="_blank"
+      rel="noopener"
+    >
+      ?
+    </a>
+  );
+}
 
 
 export interface DFMeta { // static, 
@@ -92,7 +82,7 @@ export function StatusBarEx() {
     'columns': 5,
     'rowsShown' : 20,
     'sampleSize' : 10_000,
-    'totalRows' : 877
+    'totalRows' : 8_777_444
   }
 
   const [bState, setBState] = useState<BuckarooState>({
@@ -131,6 +121,54 @@ export function StatusBar({
   buckarooOptions:BuckarooOptions;
 }) {
 
+  const dummySetSearchVal = (foo:string) => {
+    console.log("setSearchVal called with", foo);
+  }
+
+const columnDefs: ColDef[] = [
+  {
+    field: 'search',
+    width: 200,
+    cellRenderer: getSearchForm(dummySetSearchVal)
+  },
+  {
+    field: 'summary_stats',
+    headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
+    headerTooltip: 'Summary Stats',
+    width: 120,
+  },
+  {
+    field: 'auto_clean',
+    //headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
+    headerName: 'auto cleaning',
+    headerTooltip: 'Auto Cleaning config',
+    width: 120,
+  },
+  //   { field: 'reorderdColumns',
+  //   headerName: "Θ",
+  //   headerTooltip:"Reorder Columns",
+  //   width:30
+  // },
+  {
+    field: 'show_commands',
+    headerName: 'λ',
+    headerTooltip: 'Show Commands',
+    width: 30,
+  },
+
+  { field: 'sampled', headerName: 'Ξ', headerTooltip: 'Sampled', width: 30 },
+  {
+    field: 'help',
+    headerName: '?',
+    headerTooltip: 'Help',
+    width: 30,
+    cellRenderer: helpCell
+  },
+  { field: 'totalRows', width: 100 },
+  { field: 'rowsShown', headerName: 'displayed', width: 85 },
+  { field: 'columns', width: 75 },
+];
+
   const rowData = [
     {
       totalRows: basicIntFormatter.format(dfMeta.totalRows),
@@ -167,6 +205,9 @@ export function StatusBar({
   }
   const updateDict = (event: any) => {
     const colName = event.column.getColId();
+    if(colName == 'search') {
+      return;
+    }
     setBuckarooState(newBuckarooState( colName as BKeys));
   };
 
@@ -194,3 +235,7 @@ export function StatusBar({
     </div>
   );
 }
+
+
+
+ 
