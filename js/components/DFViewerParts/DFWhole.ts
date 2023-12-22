@@ -34,34 +34,35 @@ export interface ColorMapRules {
   val_column?: string;
 }
 
-
 //if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
 export interface ColorWhenNotNullRules {
   color_rule: 'color_not_null';
-  conditional_color: string| 'red';
+  conditional_color: string | 'red';
   exist_column: string;
 }
 
 export interface ColorFromColumn {
-  color_rule: 'color_from_column',
+  color_rule: 'color_from_column';
   col_name: string;
 }
 
-export type ColorMappingConfig = ColorMapRules | ColorWhenNotNullRules | ColorFromColumn;
+export type ColorMappingConfig =
+  | ColorMapRules
+  | ColorWhenNotNullRules
+  | ColorFromColumn;
 
 export interface SimpleTooltip {
-  tooltip_type: "simple";
+  tooltip_type: 'simple';
   val_column: string;
 }
 
 export interface SummarySeriesTooltip {
-  tooltip_type: "summary_series";
+  tooltip_type: 'summary_series';
   //single_series_summary_df: DFWhole;
   //val_column: string;
 }
 
-
-export type TooltipConfig = SimpleTooltip| SummarySeriesTooltip; //more to be added
+export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';
@@ -115,8 +116,6 @@ export interface SDFMeasure {
 }
 
 export type SDFT = Record<string, SDFMeasure>;
-
-
 
 export type ColumnConfig = {
   col_name: string;

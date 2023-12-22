@@ -30,12 +30,15 @@ export function DFViewer(
     setActiveCol: () => null,
   }
 ) {
-  const [agColsPure, agData] = dfToAgrid(df, summaryStatsDf|| []);
+  const [agColsPure, agData] = dfToAgrid(df, summaryStatsDf || []);
 
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
-    { cellStyle: { background: 'var(--ag-range-selection-background-color-3)' }});
+    {
+      cellStyle: { background: 'var(--ag-range-selection-background-color-3)' },
+    }
+  );
 
   const gridOptions: GridOptions = {
     rowSelection: 'single',

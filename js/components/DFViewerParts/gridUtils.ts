@@ -4,8 +4,10 @@ import {
   ColDef,
   ICellRendererParams,
 } from 'ag-grid-community';
-import { BLUE_TO_YELLOW, DIVERGING_RED_WHITE_BLUE } from '../../baked_data/colorMap';
-
+import {
+  BLUE_TO_YELLOW,
+  DIVERGING_RED_WHITE_BLUE,
+} from '../../baked_data/colorMap';
 
 import {
   DFWhole,
@@ -24,7 +26,12 @@ import { DFData, SDFMeasure, SDFT } from './DFWhole';
 
 import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from './DFWhole';
 import { getBakedDFViewer } from './SeriesSummaryTooltip';
-import { getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter } from './Displayer';
+import {
+  getFormatterFromArgs,
+  getCellRenderer,
+  objFormatter,
+  getFormatter,
+} from './Displayer';
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
 // as implementations grow large or with many implmentations, they should move to separate files
@@ -58,7 +65,7 @@ The bottom matters for us, those are the endge
 
 this means that 8 values are between 1 and 100.8  and 2 values are between 200.6 and 300.4
   */
-  if (histogram_edges.length == 0) {
+  if (histogram_edges.length === 0) {
     return 0;
   }
   for (let i = 0; i < histogram_edges.length; i++) {
@@ -103,11 +110,10 @@ export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
 
 export function colorNotNull(cmr: ColorWhenNotNullRules) {
   function cellStyle(params: CellClassParams) {
-
     const val = params.data[cmr.exist_column];
     const valPresent = val && val !== null;
     const isPinned = params.node.rowPinned;
-    const color = (valPresent && !isPinned) ? cmr.conditional_color : 'inherit';
+    const color = valPresent && !isPinned ? cmr.conditional_color : 'inherit';
     return {
       backgroundColor: color,
     };
@@ -132,32 +138,40 @@ export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
   return _.map(_.map(prc, 'primary_key_val'), (x) => _.find(sdf, { index: x }));
 }
 
-
-export function getTooltip(ttc: TooltipConfig, single_series_summary_df:DFWhole): Partial<ColDef> {
+export function getTooltip(
+  ttc: TooltipConfig,
+  single_series_summary_df: DFWhole
+): Partial<ColDef> {
   switch (ttc.tooltip_type) {
     case 'simple':
-      return {tooltipField: ttc.val_column}
+      return { tooltipField: ttc.val_column };
 
     case 'summary_series':
-      return {tooltipComponent: getBakedDFViewer(single_series_summary_df), 
-        tooltipField:'index', tooltipComponentParams: { }    };
+      return {
+        tooltipComponent: getBakedDFViewer(single_series_summary_df),
+        tooltipField: 'index',
+        tooltipComponentParams: {},
+      };
   }
 }
 
-export function extractSingleSeriesSummary(full_summary_stats_df:DFData, col_name:string):DFWhole {
-
+export function extractSingleSeriesSummary(
+  full_summary_stats_df: DFData,
+  col_name: string
+): DFWhole {
   return {
-    dfviewer_config : { 
+    dfviewer_config: {
       column_config: [
-        {col_name:'index', displayer_args: { displayer: 'obj' }},
-        {col_name:col_name, displayer_args: { displayer: 'obj' }}],
-      pinned_rows:[
+        { col_name: 'index', displayer_args: { displayer: 'obj' } },
+        { col_name: col_name, displayer_args: { displayer: 'obj' } },
       ],
+      pinned_rows: [],
     },
     data: _.filter(
       _.map(full_summary_stats_df, (row) => _.pick(row, ['index', col_name])),
-      {'index': 'dtype'})
-  }
+      { index: 'dtype' }
+    ),
+  };
 }
 
 export function dfToAgrid(
@@ -165,18 +179,25 @@ export function dfToAgrid(
   full_summary_stats_df: DFData
 ): [ColDef[], unknown[]] {
   //more convienient df format for some formatters
-  const hdf = extractSDFT(full_summary_stats_df || [])
+  const hdf = extractSDFT(full_summary_stats_df || []);
 
   const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
-      const single_series_summary_df = extractSingleSeriesSummary(full_summary_stats_df, f.col_name);
+      const single_series_summary_df = extractSingleSeriesSummary(
+        full_summary_stats_df,
+        f.col_name
+      );
       const colDef: ColDef = {
         field: f.col_name,
         headerName: f.col_name,
         cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, hdf[f.col_name]),
-        ...(f.color_map_config ? getStyler(f.color_map_config, hdf[f.col_name]) : {}),
-        ...(f.tooltip_config ? getTooltip(f.tooltip_config, single_series_summary_df) : {})
+        ...(f.color_map_config
+          ? getStyler(f.color_map_config, hdf[f.col_name])
+          : {}),
+        ...(f.tooltip_config
+          ? getTooltip(f.tooltip_config, single_series_summary_df)
+          : {}),
       };
       if (f.col_name === 'index') {
         colDef.pinned = 'left';
@@ -242,7 +263,6 @@ export function extractSDFT(summaryStatsDf: DFData): SDFT {
   });
   return zipObject(allColumns, vals) as SDFT;
 }
-
 
 /*
 I would love for extractSDF to be more elegant like the following function.  I just can't quite get it to work

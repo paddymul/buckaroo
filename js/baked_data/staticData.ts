@@ -1,6 +1,10 @@
 import { OperationDefaultArgs, Operation } from '../components/OperationUtils';
 import { sym } from '../components/utils';
-import { symDf, CommandConfigT, bakedArgSpecs } from '../components/CommandUtils';
+import {
+  symDf,
+  CommandConfigT,
+  bakedArgSpecs,
+} from '../components/CommandUtils';
 import { DFData, DFWhole } from '../components/DFViewerParts/DFWhole';
 
 export const bakedOperationDefaults: OperationDefaultArgs = {
@@ -233,7 +237,10 @@ export const tableDf: DFWhole = {
       {
         col_name: 'nanNumeric',
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
-        tooltip_config: { tooltip_type:"simple", val_column:"start station name"},
+        tooltip_config: {
+          tooltip_type: 'simple',
+          val_column: 'start station name',
+        },
       },
       {
         col_name: 'nanObject',
@@ -244,9 +251,11 @@ export const tableDf: DFWhole = {
           val_column: 'tripduration',
         },
       },
-      { col_name: 'nanFloat', displayer_args: { displayer: 'float' },
-        tooltip_config: {tooltip_type:"summary_series" }
-    },
+      {
+        col_name: 'nanFloat',
+        displayer_args: { displayer: 'float' },
+        tooltip_config: { tooltip_type: 'summary_series' },
+      },
       { col_name: 'end station name', displayer_args: { displayer: 'obj' } },
       {
         col_name: 'tripduration',
@@ -255,11 +264,16 @@ export const tableDf: DFWhole = {
           color_rule: 'color_map',
           map_name: 'BLUE_TO_YELLOW',
         },
-
       },
-      { col_name: 'start station name', displayer_args: { displayer: 'obj' },
-        color_map_config: {'color_rule':'color_not_null', 'conditional_color':'red', 'exist_column':'nanFloat'}
-    },
+      {
+        col_name: 'start station name',
+        displayer_args: { displayer: 'obj' },
+        color_map_config: {
+          color_rule: 'color_not_null',
+          conditional_color: 'red',
+          exist_column: 'nanFloat',
+        },
+      },
       { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
     ],
     pinned_rows: [
@@ -365,7 +379,6 @@ export const summaryDfForTableDf: DFData = [
     floatCol: 'float',
   },
 ];
-
 
 /*
 export const stringIndexDf: DFWhole = {

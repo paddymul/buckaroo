@@ -1,13 +1,10 @@
-import {
-  ValueFormatterFunc,
-  ValueFormatterParams
-} from 'ag-grid-community';
+import { ValueFormatterFunc, ValueFormatterParams } from 'ag-grid-community';
 import {
   DisplayerArgs,
   cellRendererDisplayers,
   FloatDisplayerA,
   IntegerDisplayerA,
-  DatetimeLocaleDisplayerA
+  DatetimeLocaleDisplayerA,
 } from './DFWhole';
 import _ from 'lodash';
 import { HistogramCell } from './HistogramCell';

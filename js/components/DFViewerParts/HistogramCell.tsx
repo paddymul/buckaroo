@@ -147,17 +147,23 @@ export const HistogramCell = (props: any) => {
   if (histogram === undefined || !_.isArray(histogram)) {
     return <span></span>;
   }
-  const dumbClickHandler = (rechartsArgs:any, _unused_react:any) => {
+  const dumbClickHandler = (rechartsArgs: any, _unused_react: any) => {
     // I can't find the type for rechartsArgs
     // these are probably the keys we care about
     // activeTooltipIndex
     // activeLabel
     console.log('dumbClickHandler', rechartsArgs);
-  }
-  
+  };
+
   return (
     <div className="histogram-component">
-      <BarChart width={100} height={24} barGap={1} data={histogram} onClick={dumbClickHandler}>
+      <BarChart
+        width={100}
+        height={24}
+        barGap={1}
+        data={histogram}
+        onClick={dumbClickHandler}
+      >
         <defs>
           <pattern
             id="star"

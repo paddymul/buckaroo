@@ -5,7 +5,7 @@ import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
 import { summaryDfForTableDf, tableDf } from '../baked_data/staticData';
 import { DFWhole } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
-import { StatusBar, DFMeta, BuckarooOptions,BuckarooState } from './StatusBar';
+import { StatusBar, DFMeta, BuckarooOptions, BuckarooState } from './StatusBar';
 import { CommandConfigT } from './CommandUtils';
 import { bakedCommandConfig } from './bakedOperationDefaults';
 import { Operation, bakedOperations } from './OperationUtils';
@@ -28,28 +28,26 @@ export function WidgetDCFCell({
   commandConfig,
   buckaroo_state,
   on_buckaroo_state,
-  buckaroo_options
+  buckaroo_options,
 }: {
   df_dict: Record<string, DFWhole>;
-  df_meta:DFMeta;
+  df_meta: DFMeta;
   operations: Operation[];
   on_operations: (ops: Operation[]) => void;
   operation_results: OperationResult;
   commandConfig: CommandConfigT;
-  buckaroo_state:BuckarooState,
-  on_buckaroo_state:React.Dispatch<React.SetStateAction<BuckarooState>>,
-  buckaroo_options:BuckarooOptions
-
+  buckaroo_state: BuckarooState;
+  on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
+  buckaroo_options: BuckarooOptions;
 }) {
   const [activeCol, setActiveCol] = useState('stoptime');
-  const widgetConfig: WidgetConfig = { showCommands: (buckaroo_state.show_commands ? true : false)};
+  const widgetConfig: WidgetConfig = {
+    showCommands: buckaroo_state.show_commands ? true : false,
+  };
 
-
-  const dfToDisplay = df_dict[(buckaroo_state.summary_stats || 'main')];
+  const dfToDisplay = df_dict[buckaroo_state.summary_stats || 'main'];
   const summaryStatsData = df_dict['all'].data;
 
-
-  
   return (
     <div
       className="dcf-root flex flex-col"
@@ -59,8 +57,11 @@ export function WidgetDCFCell({
         className="orig-df flex flex-row"
         style={{ height: '450px', overflow: 'hidden' }}
       >
-        <StatusBar  dfMeta={df_meta} buckarooState={buckaroo_state} setBuckarooState={on_buckaroo_state}
-                    buckarooOptions={buckaroo_options}
+        <StatusBar
+          dfMeta={df_meta}
+          buckarooState={buckaroo_state}
+          setBuckarooState={on_buckaroo_state}
+          buckarooOptions={buckaroo_options}
         />
         <DFViewer
           df={dfToDisplay}
@@ -87,43 +88,41 @@ export function WidgetDCFCell({
 }
 
 export function WidgetDCFCellExample() {
-
   const dfm: DFMeta = {
-    'columns': 5,
-    'rows_shown' : 20,
-    'total_rows' : 877
-  }
+    columns: 5,
+    rows_shown: 20,
+    total_rows: 877,
+  };
 
   const [bState, setBState] = useState<BuckarooState>({
-    'auto_clean': 'conservative',
-    'reorderd_columns': false,
-    'sampled' : false,
-    'show_commands' : false,
-    'summary_stats' : false,
-    'search_string': ''
-  })
+    auto_clean: 'conservative',
+    reorderd_columns: false,
+    sampled: false,
+    show_commands: false,
+    summary_stats: false,
+    search_string: '',
+  });
 
   const bOptions: BuckarooOptions = {
-    'auto_clean': ['aggressive', 'conservative'],
-    'reorderd_columns': [],
-    'sampled' : ['random'],
-    'show_commands' : ['on'],
-//    'summary_stats' : ['full', 'all', 'typing_stats']
-    'summary_stats' : [ 'all']
-
-  }
-  const wholeAllSummaryDF:DFWhole = {
-    data:summaryDfForTableDf,
+    auto_clean: ['aggressive', 'conservative'],
+    reorderd_columns: [],
+    sampled: ['random'],
+    show_commands: ['on'],
+    //    'summary_stats' : ['full', 'all', 'typing_stats']
+    summary_stats: ['all'],
+  };
+  const wholeAllSummaryDF: DFWhole = {
+    data: summaryDfForTableDf,
     dfviewer_config: {
       column_config: [], // pull in all columns
-      pinned_rows: []
-    }
-  }
+      pinned_rows: [],
+    },
+  };
 
   const [operations, setOperations] = useState<Operation[]>(bakedOperations);
   return (
     <WidgetDCFCell
-      df_dict={{'main': tableDf, 'all':wholeAllSummaryDF}}
+      df_dict={{ main: tableDf, all: wholeAllSummaryDF }}
       operations={operations}
       on_operations={setOperations}
       operation_results={baseOperationResults}
@@ -131,8 +130,6 @@ export function WidgetDCFCellExample() {
       buckaroo_options={bOptions}
       buckaroo_state={bState}
       on_buckaroo_state={setBState}
-
-
       commandConfig={bakedCommandConfig}
     />
   );
