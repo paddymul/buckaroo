@@ -42,11 +42,11 @@ class DFViewerConfig(pydantic.BaseModel):
     pinned_rows: List[PinnedRowConfig]
     column_config: List[ColumnConfig]
 
-    //extra_config: Dict[str, Any] #height, width
+    #//extra_config: Dict[str, Any] #height, width
 
 class DfViewer(pydantic.BaseModel):
-    df:DataFrame
-    summary_stats_df: DataFrame
+    df:pd.DataFrame
+    summary_stats_df: pd.DataFrame
     dfviewer_config: DFViewerConfig
 
 
