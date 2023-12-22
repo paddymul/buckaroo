@@ -1,5 +1,5 @@
 //diverging
-//white around the ClientRequest, red to the left, blue to the right
+//
 // Reversed from the colorcet default because that had Blue to the left
 // colorcet.CET_D9[::-1]
 
