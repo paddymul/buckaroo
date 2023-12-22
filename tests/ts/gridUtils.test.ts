@@ -1,7 +1,8 @@
 //import { add, multiply } from "../src/math";
 
-import { extractSDFT, getFormatter, getHistoIndex, objFormatter, stringFormatter } from '../../js/components/gridUtils';
-import { DFData } from "../../js/components/DFWhole";
+import { extractSDFT,  getHistoIndex, } from '../../js/components/DFViewerParts/gridUtils';
+import { DFData } from "../../js/components/DFViewerParts/DFWhole";
+import { getFormatter, objFormatter, stringFormatter } from '../../js/components/DFViewerParts/Displayer';
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
