@@ -134,6 +134,7 @@ export const foo: DFWhole = {
   dfviewer_config: {
     column_config: [
       { col_name: 'index', displayer_args: { displayer: 'obj' } },
+
       { col_name: 'tripduration', displayer_args: { displayer: 'obj' } },
       { col_name: 'starttime', displayer_args: { displayer: 'obj' } },
       { col_name: 'stoptime', displayer_args: { displayer: 'obj' } },
@@ -235,12 +236,8 @@ export const tableDf: DFWhole = {
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
       },
       {
-        col_name: 'nanNumeric',
-        displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
-        tooltip_config: {
-          tooltip_type: 'simple',
-          val_column: 'start station name',
-        },
+        col_name: 'link_column',
+        displayer_args: { displayer: 'linkify' },
       },
       {
         col_name: 'nanObject',
@@ -275,6 +272,14 @@ export const tableDf: DFWhole = {
         },
       },
       { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
+      {
+        col_name: 'nanNumeric',
+        displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
+        tooltip_config: {
+          tooltip_type: 'simple',
+          val_column: 'start station name',
+        },
+      },
     ],
     pinned_rows: [
       { primary_key_val: 'dtype', displayer_args: { displayer: 'obj' } },
@@ -294,6 +299,7 @@ export const tableDf: DFWhole = {
       nanNumeric: null,
       nanObject: null,
       nanFloat: null,
+      link_column: 'https://buckaroo.dev',
     },
     {
       index: 1,
@@ -304,6 +310,7 @@ export const tableDf: DFWhole = {
       nanNumeric: null,
       nanObject: null,
       nanFloat: null,
+      link_column: 'https://pola.rs/',
     },
     {
       index: 2,

@@ -15,9 +15,7 @@ export interface StringDisplayerA {
 export interface FloatDisplayerA {
   displayer: 'float';
 }
-export interface HistogramDisplayerA {
-  displayer: 'histogram';
-}
+
 export interface DatetimeDefaultDisplayerA {
   displayer: 'datetimeDefault';
 }
@@ -80,10 +78,19 @@ export type FormatterArgs =
   | DatetimeDefaultDisplayerA
   | DatetimeLocaleDisplayerA
   | IntegerDisplayerA;
-export type CellRendererArgs = HistogramDisplayerA;
+
+export interface HistogramDisplayerA {
+  displayer: 'histogram';
+}
+
+export interface LinkifyDisplayerA {
+  displayer: 'linkify';
+}
+
+export type CellRendererArgs = HistogramDisplayerA | LinkifyDisplayerA;
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
-export const cellRendererDisplayers = ['histogram'];
+export const cellRendererDisplayers = ['histogram', 'linkify'];
 export interface DFColumn {
   name: string;
   type: string;

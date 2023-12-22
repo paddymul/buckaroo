@@ -7,7 +7,7 @@ import {
   DatetimeLocaleDisplayerA,
 } from './DFWhole';
 import _ from 'lodash';
-import { HistogramCell } from './HistogramCell';
+import { HistogramCell, LinkCellRenderer } from './HistogramCell';
 import { CellRendererArgs, FormatterArgs } from './DFWhole';
 
 /*
@@ -167,10 +167,12 @@ export function getFormatter(
 }
 
 export function getCellRenderer(crArgs: CellRendererArgs) {
-  if (crArgs.displayer === 'histogram') {
-    return HistogramCell;
+  switch (crArgs.displayer) {
+    case 'histogram':
+      return HistogramCell;
+    case 'linkify':
+      return LinkCellRenderer;
   }
-  return undefined;
 }
 
 export function getFormatterFromArgs(dispArgs: DisplayerArgs) {

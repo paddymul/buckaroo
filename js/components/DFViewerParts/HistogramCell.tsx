@@ -136,6 +136,10 @@ export const getTextCellRenderer = (formatter: ValueFormatterFunc<any>) => {
   return TextCellRenderer;
 };
 
+export const LinkCellRenderer = (props: any) => {
+  return <a href={props.value}>{props.value}</a>;
+};
+
 export const HistogramCell = (props: any) => {
   //debugger;
   if (props === undefined || props.value === undefined) {
