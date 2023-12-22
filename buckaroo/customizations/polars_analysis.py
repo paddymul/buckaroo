@@ -129,7 +129,7 @@ def normalize_polars_histogram_ser(ser):
     if len(meat_df) == 0:
         return { 'low_tail': smallest, 'high_tail':largest,
                  'meat_histogram': [[],[]], 'normalized_populations': []}
-    raw_hist = meat_df.hist(bin_count=10)
+    raw_hist = meat_df.hist(bin_count=10, include_breakpoint=True)
     hist_df = raw_hist.select(pl.col("break_point"), pl.selectors.ends_with("count").alias("count"))
     edges = hist_df['break_point'].to_list()
     edges[0], edges[-1] = smallest, largest
@@ -142,9 +142,9 @@ def normalize_polars_histogram_ser(ser):
 
 def categorical_dict_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
     temp_df = pl.DataFrame({'vc': vc_ser.explode()}).unnest('vc')
-    regular_col_vc_df = temp_df.select(pl.all().exclude('counts').alias('key'), pl.col('counts'))
-    length = regular_col_vc_df['counts'].sum()
-    normalized_counts = regular_col_vc_df['counts'] / length
+    regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
+    length = regular_col_vc_df['count'].sum()
+    normalized_counts = regular_col_vc_df['count'] / length
     nml_df = pl.DataFrame({'key':regular_col_vc_df['key'], 'normalized_count':normalized_counts})
 
     #filter out small categories
@@ -153,8 +153,8 @@ def categorical_dict_from_vc(vc_ser, top_n_positions=7) -> Dict[str, int]:
     cat_df = significant_categories_df[:relevant_length]
 
     #everything that isn't a named category.  relevant_length still applies
-    full_long_tail = regular_col_vc_df['counts'][relevant_length:].sum()
-    unique_count = regular_col_vc_df['counts'].eq(1).cum_sum()[-1]
+    full_long_tail = regular_col_vc_df['count'][relevant_length:].sum()
+    unique_count = regular_col_vc_df['count'].eq(1).cum_sum()[-1]
 
     actual_long_tail = full_long_tail - unique_count
 
