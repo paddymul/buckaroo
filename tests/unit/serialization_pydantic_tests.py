@@ -16,16 +16,6 @@ from typing import Optional, List, Literal, Union, Dict
 
 
 
-# class BaseFormField(pydantic.BaseModel, ABC, defer_build=True):
-#     name: str
-#     title: str | list[str]
-#     required: bool = False
-#     error: str | None = None
-#     locked: bool = False
-#     description: str | None = None
-#     class_name: _class_name.ClassName = None
-
-
 class HistogramModel(pydantic.BaseModel):
     name: str
     population: float
@@ -33,68 +23,107 @@ class HistogramModel(pydantic.BaseModel):
 HT = Optional[List[HistogramModel]]
 
 
-# export interface ColumnStringHint {
-#   type: 'string';
-#   histogram?: any[];
-# }
+class ObjDisplayerA(pydantic.BaseModel):
+    displayer: Literal["obj"]
 
-class ColumnStringHint(pydantic.BaseModel):
-    type: Literal["string"]
-    histogram: HT
+class BooleanDisplayerA(pydantic.BaseModel):
+    displayer: Literal["boolean"]
 
-class ColumnObjHint(pydantic.BaseModel):
-    type: Literal["obj"]
-    histogram: HT
+class StringDisplayerA(pydantic.BaseModel):
+    displayer: Literal["string"]
+    #max_length: int
 
-# export interface ColumnBooleanHint {
-#   type: 'boolean';
-#   histogram?: any[];
-# }
+class FloatDisplayerA(pydantic.BaseModel):
+    displayer: Literal["float"]
 
-class ColumnBooleanHint(pydantic.BaseModel):
-    type: Literal["boolean"]
-    histogram: HT
+class DatetimeDefaultDisplayerA(pydantic.BaseModel):
+    displayer: Literal["datetimeDefault"]
 
-# export interface ColumnIntegertHint {
-#   type: 'integer';
-#   min_digits: number;
-#   max_digits: number;
-#   histogram: any[];
-# }
+class IntegerDisplayerA(pydantic.BaseModel):
+    displayer: Literal["integer"]
+    min_digits: int
+    max_digits: int
 
-class ColumnIntegerHint(pydantic.BaseModel):
-    type: Literal["integer"]
-    min_digits:int
-    max_digits:int
-    histogram: HT
+class DatetimeLocaleDisplayerA(pydantic.BaseModel):
+    displayer: Literal["datetimeLocaleString"]
+    locale: Union[
+        *map(lambda x: Literal[x],
+             ['en-US', 'en-GB', 'en-CA', 'fr-FR', 'es-ES', 'de-DE', 'ja-JP'])]
+    args: str # start with a dictionary, not sure of full typing
+    #args: Intl.DateTimeFormatOptions;
 
-class DFColumn(pydantic.BaseModel):
-    name: str
-    type: str #should be a union
+#End FormatterArgs
 
-ColumnHint = Union[ColumnStringHint, ColumnObjHint, ColumnBooleanHint, ColumnIntegerHint]
+# Begin CellRenderArgs
+class HistogramDisplayerA(pydantic.BaseModel):
+    displayer: Literal["histogram"]
 
-class DFSchema(pydantic.BaseModel):
-    fields: List[DFColumn]
-    primaryKey: list[str]  #; //['index']
-    pandas_version: str #; //'1.4.0',
+class LinkifyDisplayerA(pydantic.BaseModel):
+    displayer: Literal["linkify"]
 
 
-# export type DFDataRow = Record<
-#   string,
-#   string | number | boolean | any[] | Record<string, any> | null
-# >;
+# Internally DfViewer distinguishes between FormatterArgs and
+# CellRendererArgs because they are sent to different functions, but to
+# the python side, that is just an implmentation detail
 
-# export type DFData = DFDataRow[];
+DisplayerArgs = Union[
+    #formatters
+    ObjDisplayerA, BooleanDisplayerA, StringDisplayerA, FloatDisplayerA, DatetimeDefaultDisplayerA,
+    IntegerDisplayerA, DatetimeLocaleDisplayerA,
+    #Cell Renderers
+    HistogramDisplayerA, LinkifyDisplayerA]
+
+class ColorMapRules(pydantic.BaseModel):
+    color_rule: 'color_map'
+    map_name: Union[Literal['BLUE_TO_YELLOW'], Literal['DIVERGING_RED_WHITE_BLUE']]
+    val_column: Optional[str]
+
+class ColorWhenNotNullRules(pydantic.BaseModel):
+    color_rule: 'color_not_null'
+    conditional_color: Union[str, 'red']
+    exist_column: str
+
+class ColorFromColumn(pydantic.BaseModel):
+    color_rule: 'color_from_column'
+    col_name: str
+
+ColorMappingConfig = Union[ColorMapRules, ColorWhenNotNullRules, ColorFromColumn]
+
+class SimpleToolTip(pydantic.BaseModel):
+    tooltipe_type: 'simple'
+    val_column: str
+
+class SummarySeriesTooltip(pydantic.BaseModel):
+    tooltipe_type: 'summary_series'
+
+TooltipConfig = Union[SimpleToolTip, SummarySeriesTooltip]
+
+
+class ColumnConfig(pydantic.BaseModel):
+    col_name: str
+    displayer_args: DisplayerArgs
+    color_map_config: Optional[ColorMappingConfig]
+    tooltip_config: Optional[TooltipConfig]
+
+
+
+class PinnedRowConfig(pydantic.BaseModel):
+    primary_key_val: str
+    displayer_args: DisplayerArgs
+
+
+class DFViewerConfig(pydantic.BaseModel):
+    pinned_rows: List[PinnedRowConfig]
+    column_config: List[ColumnConfig]
 
 DFData = List[Dict[str, Union[str, int, float, None]]]
 
-
-
 class DFWhole(pydantic.BaseModel):
-    schema__ :DFSchema = pydantic.Field(alias='schema')
-    table_hints: Dict[str, ColumnHint]
+    dfviewer_config: DFViewerConfig
     data: DFData
+
+
+
 
 # class DfViewer(pydantic.BaseModel):
 #     type: 'DFViewer'

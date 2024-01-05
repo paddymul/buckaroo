@@ -2,7 +2,6 @@
 
 import _ from 'lodash';
 
-// they are implied, just not sure
 export interface ObjDisplayerA {
   displayer: 'obj';
 }
@@ -25,42 +24,6 @@ export interface IntegerDisplayerA {
   max_digits: number;
 }
 
-export interface ColorMapRules {
-  color_rule: 'color_map';
-  map_name: 'BLUE_TO_YELLOW' | 'DIVERGING_RED_WHITE_BLUE';
-  //optional, the column to base the ranges on.  the proper histogram_bins must still be sent in for that column
-  val_column?: string;
-}
-
-//if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
-export interface ColorWhenNotNullRules {
-  color_rule: 'color_not_null';
-  conditional_color: string | 'red';
-  exist_column: string;
-}
-
-export interface ColorFromColumn {
-  color_rule: 'color_from_column';
-  col_name: string;
-}
-
-export type ColorMappingConfig =
-  | ColorMapRules
-  | ColorWhenNotNullRules
-  | ColorFromColumn;
-
-export interface SimpleTooltip {
-  tooltip_type: 'simple';
-  val_column: string;
-}
-
-export interface SummarySeriesTooltip {
-  tooltip_type: 'summary_series';
-  //single_series_summary_df: DFWhole;
-  //val_column: string;
-}
-
-export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
 
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';
@@ -91,10 +54,53 @@ export type CellRendererArgs = HistogramDisplayerA | LinkifyDisplayerA;
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
 export const cellRendererDisplayers = ['histogram', 'linkify'];
-export interface DFColumn {
-  name: string;
-  type: string;
+
+//ColorMapRules
+export interface ColorMapRules {
+  color_rule: 'color_map';
+  map_name: 'BLUE_TO_YELLOW' | 'DIVERGING_RED_WHITE_BLUE';
+  //optional, the column to base the ranges on.  the proper histogram_bins must still be sent in for that column
+  val_column?: string;
 }
+
+//if exist_column is not null,  set cell style to condtional_color... used for highlighting changed values or errored_rows
+export interface ColorWhenNotNullRules {
+  color_rule: 'color_not_null';
+  conditional_color: string | 'red';
+  exist_column: string;
+}
+
+export interface ColorFromColumn {
+  color_rule: 'color_from_column';
+  col_name: string;
+}
+
+export type ColorMappingConfig =
+  | ColorMapRules
+  | ColorWhenNotNullRules
+  | ColorFromColumn;
+
+
+//TooltipRules
+export interface SimpleTooltip {
+  tooltip_type: 'simple';
+  val_column: string;
+}
+
+export interface SummarySeriesTooltip {
+  tooltip_type: 'summary_series';
+  //single_series_summary_df: DFWhole;
+  //val_column: string;
+}
+
+export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
+
+// export interface DFColumn {
+//   name: string;
+//   type: string;
+// }
+
+
 
 export type DFDataRow = Record<
   string,
@@ -112,17 +118,6 @@ export interface DFData {
 };
 */
 
-//actually SDFT is summary stats transposed to be useful
-// SDFT[col][stat_name]
-// SDFT really only needs histogramBins and histogramLogBins and...? at this point
-//type SDFT = any;
-
-export interface SDFMeasure {
-  histogram_bins: number[];
-  histogram_log_bins: number[];
-}
-
-export type SDFT = Record<string, SDFMeasure>;
 
 export type ColumnConfig = {
   col_name: string;
@@ -155,3 +150,17 @@ export const EmptyDf: DFWhole = {
   },
   data: [],
 };
+
+
+//actually SDFT is summary stats transposed to be useful
+// SDFT[col][stat_name]
+// SDFT really only needs histogramBins and histogramLogBins and...? at this point
+//type SDFT = any;
+
+export interface SDFMeasure {
+  histogram_bins: number[];
+  histogram_log_bins: number[];
+}
+
+export type SDFT = Record<string, SDFMeasure>;
+
