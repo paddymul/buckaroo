@@ -7,8 +7,6 @@ from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 from .pluggable_analysis_framework import ColAnalysis
 from .analysis_management import (produce_summary_df, AnalysisPipeline, DfStats)
-from .utils import (BASE_COL_HINT)
-from buckaroo.serialization_utils import pick, d_update
 from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
 from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
 
@@ -59,14 +57,6 @@ def produce_series_df(df:pl.DataFrame,
                 pass
     return summary_dict, errs
 
-def extract_table_hint(summary_dict, columns):
-    table_hint_col_dict = {}
-    for ser_name in columns:
-        table_hint_col_dict[ser_name] = pick(
-            d_update(BASE_COL_HINT, summary_dict[ser_name]),
-            BASE_COL_HINT.keys())
-    return table_hint_col_dict
-    
 def full_produce_summary_df(
         df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
         df_name:str='test_df', debug:bool=False):
@@ -74,8 +64,7 @@ def full_produce_summary_df(
     summary_dict, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
     series_errs.update(summary_errs)
-    table_hint_col_dict = extract_table_hint(summary_dict, df.columns)
-    return summary_dict, table_hint_col_dict, series_errs
+    return summary_dict, series_errs
 
 
 

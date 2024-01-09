@@ -5,10 +5,9 @@ import warnings
 import numpy as np
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble, safe_summary_df
 
-from buckaroo.pluggable_analysis_framework.utils import BASE_COL_HINT, FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException
+from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
-from buckaroo.serialization_utils import pick, d_update
 
 def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """ just executes the series methods
@@ -73,19 +72,14 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
 
 def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
     if len(df) == 0:
-        return {}, {}, {}
+        return {}, {}
 
     series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
     summary_df, summary_errs = produce_summary_df(
         df, series_stat_dict, ordered_objs, df_name, debug)
     series_errs.update(summary_errs)
-    table_hint_col_dict = {}
-    for ser_name in df.columns:
-        table_hint_col_dict[ser_name] = pick(
-            d_update(BASE_COL_HINT, summary_df[ser_name]),
-            BASE_COL_HINT.keys())
 
-    return summary_df, table_hint_col_dict, series_errs
+    return summary_df, series_errs
 
 #TODO Figure out how to do proper typing with AnalysisPipeline and the polars subclasses
 # We want a TypeVar for DFType and AT.  But the main function, process_df whild still return 3 dicts
@@ -104,6 +98,7 @@ class AnalysisPipeline(object):
     full_produce_func = [full_produce_summary_df]
     
     def __init__(self, analysis_objects, unit_test_objs=True):
+        self.produce_func = self.full_produce_func[0]
         self.summary_stats_display = "all"
         self.unit_test_objs = unit_test_objs
         self.verify_analysis_objects(analysis_objects)
@@ -138,7 +133,7 @@ class AnalysisPipeline(object):
 
         """
         try:
-            output_df, table_hint_dict, errs = self.full_produce_func[0](PERVERSE_DF, self.ordered_a_objs)
+            output_df, errs = self.produce_func(PERVERSE_DF, self.ordered_a_objs)
             if len(errs) == 0:
                 return True, []
             else:
@@ -148,8 +143,8 @@ class AnalysisPipeline(object):
 
 
     def process_df(self, input_df, debug=False):
-        output_df, table_hint_dict, errs = self.full_produce_func[0](input_df, self.ordered_a_objs, debug=debug)
-        return output_df, table_hint_dict, errs
+        output_df, errs = self.produce_func(input_df, self.ordered_a_objs, debug=debug)
+        return output_df, errs
 
     def add_analysis(self, new_aobj):
         new_cname = new_aobj.cname()
@@ -180,7 +175,7 @@ class DfStats(object):
         self.operating_df_name = operating_df_name
         self.debug = debug
 
-        self.sdf, self.table_hints, errs = self.ap.process_df(self.df, self.debug)
+        self.sdf, errs = self.ap.process_df(self.df, self.debug)
         if errs:
             output_full_reproduce(errs, self.sdf, operating_df_name)
         
@@ -213,7 +208,7 @@ class DfStats(object):
             output_reproduce_preamble()
         if ut_errs:
             # setting debug=False here because we're already printing reproduce instructions, let the users produce their own stacktrace.. I think
-            ut_summary_df, _unused_table_hint_dict, ut_errs2 = produce_summary_df(
+            ut_summary_df, ut_errs2 = produce_summary_df(
                 PERVERSE_DF, self.ap.ordered_a_objs, debug=False)
             output_full_reproduce(ut_errs, ut_summary_df, "PERVERSE_DF")
         if errs:

@@ -57,28 +57,28 @@ class TestAnalysisPipeline(unittest.TestCase):
 
     def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
-        sdf, th, errs = full_produce_summary_df(
+        sdf, errs = full_produce_summary_df(
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_full_produce_summary_df_empy(self):
         """just make sure this doesn't fail"""
         
-        sdf, th, errs = full_produce_summary_df(
+        sdf, errs = full_produce_summary_df(
             empty_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_full_produce_summary_df_empy2(self):
         """just make sure this doesn't fail"""
         
-        sdf, th, errs = full_produce_summary_df(
+        sdf, errs = full_produce_summary_df(
             empty_df_with_columns, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_full_produce_summary_df_errs(self):
         """just make sure this doesn't fail"""
         single_col_df = test_df[['empty_na_ser']]
-        sdf, th, errs = full_produce_summary_df(
+        sdf, errs = full_produce_summary_df(
             single_col_df, [AlwaysErr], 'test_df', debug=False)
 
         err_key = list(errs.keys())[0]
@@ -94,21 +94,6 @@ class TestAnalysisPipeline(unittest.TestCase):
             ('empty_na_ser', 'computed_summary'): (ZeroDivisionError('division by zero'), AlwaysErr)}
         output_full_reproduce(errs, {'bar':8}, 'testing_df')
         
-    def test_produce_summary_df_hints(self):
-        #this test should be ported over to the full basic_widget test with actaul verificaiton of values
-        
-        summary_df, hints, errs = full_produce_summary_df(
-            test_df, [DumbTableHints], 'test_df')
-
-        for col, hint_obj in hints.items():
-            #hacky replication of typescript types, just basically testing that hints are constructed properly
-            if hint_obj['is_numeric'] is False:
-                assert 'histogram' in hint_obj.keys()
-            else:
-                expected_set = set(
-                    ['is_numeric', 'is_integer', 'min_digits', 'max_digits', 'type', 'formatter', 'histogram'])
-                assert expected_set == set(hint_obj.keys())
-
     def test_pipeline_base(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         #just verify that there are no errors
@@ -124,7 +109,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             def computed_summary(summary):
                 return dict(foo=8)
         assert ap.add_analysis(Foo) == (True, []) #verify no errors thrown
-        sdf, _unused, _unused_errs = ap.process_df(df)
+        sdf, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf['tripduration']['foo'], 8)
 
     def test_add_buggy_aobj(self):
@@ -151,7 +136,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             def computed_summary(bar):
                 return dict(foo=8)
         ap.add_analysis(Foo)
-        sdf, _unused, _unused_errs = ap.process_df(df)
+        sdf, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf['tripduration']['foo'], 8)
         #18 facts returned about tripduration
         #FIXME
@@ -165,7 +150,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             def computed_summary(bar):
                 return dict(foo=9)
         ap.add_analysis(Foo)
-        sdf2, _unused, _unused_errs = ap.process_df(df)
+        sdf2, _unused_errs = ap.process_df(df)
         self.assertEqual(sdf2['tripduration']['foo'], 9)
         #still 18 facts returned about tripduration
         #self.assertEqual(len(sdf2['tripduration']), 18)

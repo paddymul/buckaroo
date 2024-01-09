@@ -37,6 +37,10 @@ class ColAnalysis(object):
     def column_order(sampled_ser, summary_ser):
         pass
 
+    @staticmethod
+    def column_config(summary_dict): # -> ColumnConfig partial without col_name
+        pass
+
     @classmethod
     def cname(kls):
         #print(dir(kls))

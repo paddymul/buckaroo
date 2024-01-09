@@ -149,9 +149,9 @@ class BuckarooWidget(DOMWidget):
                 #ideally this won't require a reserialization.  All
                 #possible col_orders shoudl be serialized once, and the
                 #frontend should just toggle from them
-              self.df_json = df_to_obj(self.typed_df, self.stats.col_order, table_hints=self.stats.table_hints)
+              self.df_json = df_to_obj(self.typed_df, self.stats.col_order)
             else:
-                self.df_json = df_to_obj(self.typed_df, self.typed_df.columns, table_hints=self.stats.table_hints)
+                self.df_json = df_to_obj(self.typed_df, self.typed_df.columns)
 
     @observe('operations')
     def handle_operations(self, change):

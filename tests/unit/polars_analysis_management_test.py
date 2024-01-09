@@ -1,4 +1,3 @@
-from unittest import TestCase
 
 import polars as pl
 import numpy as np
@@ -11,7 +10,7 @@ from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_i
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     full_produce_summary_df,
-    produce_series_df, PolarsAnalysis, extract_table_hint)
+    produce_series_df, PolarsAnalysis)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -83,7 +82,7 @@ def test_histogram_analysis():
     cats += ['foo']*30 + ['bar'] * 50
 
     df = pl.DataFrame({'categories': cats, 'numerical_categories': [3]*30 + [7] * 70})
-    summary_df, _unused, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
+    summary_df, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
     assert summary_df["categories"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
     assert summary_df["numerical_categories"]["categorical_histogram"] == {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
     
@@ -118,8 +117,8 @@ def test_numeric_histograms():
         'int_col': int_arr,
         'int_col2': int_arr2
     })
-                      
-    summary_df, _unused, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
+
+    summary_df, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
     print(summary_df['int_col']['histogram'])
 
     expected_float_histogram = [
@@ -144,25 +143,3 @@ def test_numeric_histograms():
 
 
 
-def test_extract_table_hint():
-
-    summary_dict = {'a': {'null_count': 0,
-                          'mean': 35.0,
-                          'max': 100,
-                          'min': 2,
-                          'is_numeric': True,
-                          '_type': 'integer',
-                          'type': 'integer'}
-                    }
-
-
-    expected =  {
-        'a': {
-            'type':'integer',
-            'is_numeric': True,
-            'is_integer': None,
-            'min_digits':None,
-            'max_digits':None,
-            'formatter':None,
-            'histogram': []}}
-    TestCase().assertDictEqual(expected, extract_table_hint(summary_dict, ['a']))
