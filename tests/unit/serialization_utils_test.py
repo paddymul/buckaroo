@@ -8,7 +8,7 @@ def test_df_to_obj():
         dict(names=['one', 'two', 'three'],
              values=[1, 2, 3])).set_index('names')
 
-    serialized_df = df_to_obj(named_index_df)
+    serialized_df = df_to_obj(named_index_df, {})
     assert serialized_df['data'][0]['names'] == 'one'
 
 def test_int_overflow_validation():

@@ -44,7 +44,7 @@ def test_interpreter():
 
     tdf = w.operation_results['transformed_df']
     assert w.operation_results['transform_error'] is False
-    field_names = [ f['name'] for f in tdf['schema']['fields'] ]
+    field_names = [ f['col_name'] for f in tdf['dfviewer_config']['column_config'] ]
     assert 'str_col' not in field_names
     assert w.operation_results['generated_py_code'] == """def clean(df):
     df['int_col'] = smart_to_int(df['int_col'])

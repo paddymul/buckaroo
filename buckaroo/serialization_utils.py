@@ -92,9 +92,7 @@ def pd_to_obj(df:pd.DataFrame):
         df.index = old_index
     else:
         obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
-
-
-    return obj
+    return obj['data']
 
 
 
