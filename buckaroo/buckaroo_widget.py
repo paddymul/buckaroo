@@ -25,7 +25,7 @@ from .customizations.histogram import (Histogram)
 from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.utils  import get_df_name
 
-from .serialization_utils import df_to_obj, EMPTY_DF_OBJ
+from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE
 
 
 FAST_SUMMARY_WHEN_GREATER = 1_000_000
@@ -56,7 +56,7 @@ class BuckarooWidget(DOMWidget):
     summary_df_json = Dict({}).tag(sync=True)
 
     operation_results = Dict(
-        {'transformed_df': EMPTY_DF_OBJ, 'generated_py_code':'# instantiation, unused'}
+        {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
     ).tag(sync=True)
 
     dfConfig = Dict(
@@ -145,13 +145,9 @@ class BuckarooWidget(DOMWidget):
     def update_based_on_df_config(self, change):
         #otherwise this is a call before typed_df has been completely setup
         if hasattr(self, 'typed_df'):
-            if self.dfConfig['reorderdColumns']:
-                #ideally this won't require a reserialization.  All
-                #possible col_orders shoudl be serialized once, and the
-                #frontend should just toggle from them
-              self.df_json = df_to_obj(self.typed_df, self.stats.col_order)
-            else:
-                self.df_json = df_to_obj(self.typed_df, self.typed_df.columns)
+            #FIXME insert call to generate table config here
+            self.df_json = df_to_obj(self.typed_df, self.stats.sdf)
+
 
     @observe('operations')
     def handle_operations(self, change):
@@ -178,7 +174,7 @@ class BuckarooWidget(DOMWidget):
             results['transform_error'] = False
             self.run_post_processing()            
         except Exception as e:
-            results['transformed_df'] = EMPTY_DF_OBJ
+            results['transformed_df'] = EMPTY_DF_WHOLE
             traceback.print_exc()
             results['transform_error'] = str(e)
         self.operation_results = results

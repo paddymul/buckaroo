@@ -40,6 +40,8 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
                 continue
     return series_stats, errs
 
+
+
 def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=False):
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
@@ -198,7 +200,7 @@ class DfStats(object):
     def add_analysis(self, a_obj):
         passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
         #if you're adding analysis interactively, of course you want debug info... I think
-        self.sdf, self.table_hints, errs = self.ap.process_df(self.df, debug=True)
+        self.sdf, errs = self.ap.process_df(self.df, debug=True)
         if passed_unit_tests is False:
             print("Unit tests failed")
         if errs:
