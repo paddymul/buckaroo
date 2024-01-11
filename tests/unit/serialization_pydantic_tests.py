@@ -123,7 +123,90 @@ class DFWhole(pydantic.BaseModel):
     data: DFData
 
 
+class DFMeta(pydantic.BaseModel):
+    """
+    stats as calculated about the underlying dataframe.
+    Static, these don't change regardless of modification to the dataframe via styling or cleaning
+    """
+    total_rows: int
+    columns: int
+    rows_shown: int
 
+class BuckarooOptions(pydantic.BaseModel):
+    """
+    Buckaroo is opinionated.  Each of these represent an opinion about an aspect of buckaroo.
+    The idea being that different opinions can be swapped through by the frontend
+    """
+    df_list: List[str]  #defaults to "base_df"
+    sampled: List[str]  # sampling strategies
+    #maybe add "base_df" as an always present option... but also maybe
+    #not. PL_Compare won't really use it
+    summary_stats: List[str] 
+    auto_clean: List[str]    # which cleaning strategy
+    #reorderd_columns: List[str]  #strategy for reordering cloumns
+    #styling: List[str]    # which column ordering strategy
+
+class BuckarooState(pydantic.BaseModel):
+    """
+    Given BuckarooOptions, the current state of the frontend. each str
+    will be one of the list from BuckarooOptions
+    """
+    displayed_df: Union[str, "base_df"]
+    sampled: Union[str, False]
+    summary_stats: Union[str, False]
+    show_commands: bool
+    auto_clean: Union[str, False]
+    #reorderd_columns: Union[str, False]
+    #styling: Union[str, False]
+
+class WidgetOptions(pydantic.BaseModel):
+
+
+    #How is summary_dict['all']  pulled out from df_dict.  DFViewer gets a dfwhole and a summary_df
+    df_dict: Dict[str, DFWhole]
+    df_meta: DFMeta
+    operations: List[any]    # don't think I have typing yet
+    operation_results: any   # don't have typing yet
+    commandConfig: any       # casing, fix.  not typing
+    buckaroo_state: BuckarooState
+    buckaroo_options: BuckarooOptions
+
+
+"""
+auto_clean, reorderd_columns and styling all poke at the same things, and I'm not sure the best way to pull it apart.
+
+The trickiest example is lat/long.
+
+imagine a dataframe with a lat column and a long column.
+
+This should be a 'location' tuple that combines the two columns and is displayed as a map or link to a map...
+But editting/combining columns is a whole dataframe operation.  Which currently slots it into auto_clean.
+
+For display only, this makes sense as a post processing step.
+
+For autocleaning, it makes sense as a 'foreign key recognition step'.  for citibike data, start_station name, start_station_id, start_station_latitude, start_station_longitude should be replaced with a categorical linking to a 'station enum'.  They should be displayed as either "start station name", a map, or a link to the map geo coordinates.
+
+For now, I will leave it ambiguous.  I will also consider a post_processing_step that has the same interface as auto_clean (df in, df out).
+
+This same attribute could be manipulated via styling like so.
+separate lat/long columns -> display separately
+tuple column tagged lat/long in summary stats -> display as link to map
+tuple column tagged lat/long in summary stats -> display as inline map
+categorical to 3 valued tuple (name, lat/long, id) -> display name
+categorical to 3 valued tuple (name, lat/long, id) -> display tuple inline nested
+categorical to 3 valued tuple (name, lat/long, id) -> display as link to map
+categorical to 3 valued tuple (name, lat/long, id) -> display as map
+
+
+Given the above data processing should go
+raw -> auto_clean (pre-processing) -> summary_stats -> post_processing -> styling -> overrides
+
+I would also like to be able to write partial processing classes that can be combined.  So you could just write the lat/long combination into tuple, without having to rewrite a whole auto cleaning command.  These could be composed by programmers (not end users initially).
+
+
+"""
+    
+    
 
 # class DfViewer(pydantic.BaseModel):
 #     type: 'DFViewer'
@@ -131,6 +214,8 @@ class DFWhole(pydantic.BaseModel):
 
 #     #Ilike the serialization_alias... but luckily I avoid the need
 #     #because I don't have any snake cased fields
+
+
 
 
 def test_column_hints():

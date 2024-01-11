@@ -28,6 +28,20 @@ from .pluggable_analysis_framework.utils  import get_df_name
 from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE
 
 
+"""
+
+I have dfstats to manage the production of actual summary stats
+
+I now need to manage the styles (column config)
+
+I also want to manage the multipel summary stats presentations
+
+summary stats presentations are just different pinned row configs that read from the same summary stats dictionary
+
+
+"""
+
+
 FAST_SUMMARY_WHEN_GREATER = 1_000_000
 class BuckarooWidget(DOMWidget):
     """TODO: Add docstring here
@@ -41,23 +55,14 @@ class BuckarooWidget(DOMWidget):
 
     commandConfig = Dict({}).tag(sync=True)
     operations = List().tag(sync=True)
-    machine_gen_operations = List().tag(sync=True)
-    command_classes = DefaultCommandKlsList
-    analysis_classes = [TypingStats, DefaultSummaryStats,
-                        Histogram,
-                        ComputedDefaultSummaryStats,
-                        ColDisplayHints]
-    DFStatsClass = DfStats
 
-    typing_metadata_f = staticmethod(get_typing_metadata)
-    typing_recommend_f = staticmethod(recommend_type)
+    #df_dict: Dict[str, DFWhole] = Dict({}).tag(sync=True)
+    df_dict = Dict({}).tag(sync=True)
 
-    df_json = Dict({}).tag(sync=True)
-    summary_df_json = Dict({}).tag(sync=True)
 
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
-    ).tag(sync=True)
+    ).tag(snnync=True)
 
     dfConfig = Dict(
         {
@@ -73,33 +78,41 @@ class BuckarooWidget(DOMWidget):
     }).tag(sync=True)
 
 
-    def should_sample(self, df, sampled, reorderdColumns):
-        rows = len(df)
-        cols = len(df.columns)
-        item_count = rows * cols
-        fast_mode = sampled or reorderdColumns
-        if item_count > FAST_SUMMARY_WHEN_GREATER:
-            fast_mode = True
-        if fast_mode:
+    #widget config.  Change these via inheritance to alter core behaviors of buckaroo
+    command_classes = DefaultCommandKlsList
+    analysis_classes = [TypingStats, DefaultSummaryStats,
+                        Histogram,
+                        ComputedDefaultSummaryStats,
+                        ColDisplayHints]
+    DFStatsClass = DfStats
+    typing_metadata_f = staticmethod(get_typing_metadata)
+    typing_recommend_f = staticmethod(recommend_type)
+
+
+
+    #used by auto_cleaning
+    machine_gen_operations = List().tag(sync=True)
+
+    def should_sample(self, df, sampled):
+        item_count = len(df) * len(df.columns)
+        if (item_count > FAST_SUMMARY_WHEN_GREATER) or sampled:
             return True
         return False
 
-    def get_df_config(self, df, sampled, reorderdColumns, showCommands):
+    def get_df_config(self, df, sampled, showCommands):
         tempDfc = self.dfConfig.copy()
         tempDfc.update(dict(
             totalRows=len(df),
             columns=len(df.columns),
             showCommands=showCommands))
-        tempDfc['sampled'] = self.should_sample(df, sampled, reorderdColumns)
+        tempDfc['sampled'] = self.should_sample(df, sampled)
         return tempDfc
     
     def __init__(self, df,
                  sampled=True,
                  summaryStats=False,
-                 reorderdColumns=False,
                  showCommands=False,
                  auto_clean=False,
-                 postProcessingF=None,
                  debug=False
                  ):
 
@@ -108,14 +121,13 @@ class BuckarooWidget(DOMWidget):
             warnings.filterwarnings('ignore')
         #moving setup_from_command_kls_list early in the init because
         #it's relatively benign and not tied to other linked updates
-        self.postProcessingF = postProcessingF
         self.processed_result = None
         self.transformed_df = None
         self.debug = debug
         self.df_name = get_df_name(df)
 
         self.setup_from_command_kls_list()
-        self.dfConfig = self.get_df_config(df, sampled, reorderdColumns, showCommands)
+        self.dfConfig = self.get_df_config(df, sampled, showCommands)
         #we need dfConfig setup first before we get the proper working_df for auto_cleaning
         self.raw_df = df
         self.run_autoclean(auto_clean)
@@ -131,7 +143,7 @@ class BuckarooWidget(DOMWidget):
         else:
             self.set_typed_df(self.get_working_df())
             #need to run this for the no autoclean case
-            self.run_post_processing()
+            #self.run_post_processing()
         
     def set_metadata_f(self, new_f):
         self.typing_metadata_f = staticmethod(new_f)
@@ -141,12 +153,19 @@ class BuckarooWidget(DOMWidget):
         self.typing_recommend_f = staticmethod(new_f)
         self.run_autoclean()
 
-    @observe('dfConfig')
-    def update_based_on_df_config(self, change):
-        #otherwise this is a call before typed_df has been completely setup
-        if hasattr(self, 'typed_df'):
-            #FIXME insert call to generate table config here
-            self.df_json = df_to_obj(self.typed_df, self.stats.sdf)
+    def set_typed_df(self, new_df):
+        self.typed_df = new_df
+        # stats need to be rerun each time 
+        self.stats = self.DFStatsClass(
+            self.typed_df,
+            self.analysis_classes,
+            self.df_name, debug=self.debug)
+        # setting summary_df is removed here because summary_df_json is handled by df_dict
+        # summary_df can be accessed through self.stats.presentation_sdf
+        self.ensure_df_sync()
+
+    def ensure_df_sync(self):
+        self.df_dict = df_to_obj(self.typed_df, self.stats.sdf)
 
 
     @observe('operations')
@@ -172,23 +191,12 @@ class BuckarooWidget(DOMWidget):
             results['generated_py_code'] = self.generate_code(new_ops)
             results['transformed_df'] = df_to_obj(self.transformed_df, {})
             results['transform_error'] = False
-            self.run_post_processing()            
+            #self.run_post_processing()            
         except Exception as e:
             results['transformed_df'] = EMPTY_DF_WHOLE
             traceback.print_exc()
             results['transform_error'] = str(e)
         self.operation_results = results
-
-    def run_post_processing(self):
-        if self.postProcessingF:
-            try:
-                if self.transformed_df is None:
-                    working_df = self.get_working_df()
-                else:
-                    working_df = self.transformed_df
-                self.processed_result = self.postProcessingF(working_df)
-            except Exception:
-                traceback.print_exc()
 
     @observe('machine_gen_operations')
     def interpret_machine_gen_ops(self, change, force=False):
@@ -198,21 +206,12 @@ class BuckarooWidget(DOMWidget):
         self.set_typed_df(self.interpret_ops(new_ops, self.get_working_df()))
 
     def get_working_df(self):
-        #this won't listen to sampled changes proeprly
+        #this won't listen to sampled changes properly
         if self.dfConfig['sampled']:
             return sample(self.raw_df, self.dfConfig['sampleSize'])
         else:
             return self.raw_df        
         
-    def set_typed_df(self, new_df):
-        self.typed_df = new_df
-        # stats need to be rerun each time 
-        self.stats = self.DFStatsClass(
-            self.typed_df,
-            self.analysis_classes,
-            self.df_name, debug=self.debug)
-        self.summary_df_json = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
-        self.update_based_on_df_config(3)
 
     def generate_code(self, operations):
         if len(operations) == 0:
@@ -233,7 +232,6 @@ class BuckarooWidget(DOMWidget):
             self.command_classes)
         self.commandConfig = dict(argspecs=command_patterns, defaultArgs=command_defaults)
 
-
     def add_command(self, incomingCommandKls):
         without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
         without_incoming.append(incomingCommandKls)
@@ -242,7 +240,23 @@ class BuckarooWidget(DOMWidget):
 
     def add_analysis(self, analysis_obj):
         self.stats.add_analysis(analysis_obj)
-        self.summary_df_json = df_to_obj(self.stats.presentation_sdf, self.stats.col_order)
-        #just trigger redisplay
-        self.update_based_on_df_config(3)
+        self.ensure_df_sync()
 
+
+'''
+removed for later consideration
+
+    def run_post_processing(self):
+        if self.postProcessingF:
+            try:
+                if self.transformed_df is None:
+                    working_df = self.get_working_df()
+                else:
+                    working_df = self.transformed_df
+                self.processed_result = self.postProcessingF(working_df)
+            except Exception:
+                traceback.print_exc()
+
+
+
+'''

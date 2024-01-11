@@ -4,6 +4,9 @@ import _ from 'lodash';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { ColDef, GridOptions } from 'ag-grid-community';
 import { basicIntFormatter } from './DFViewerParts/Displayer';
+import { DFMeta } from './WidgetTypes';
+import { BuckarooOptions } from './WidgetTypes';
+import { BuckarooState, BKeys } from './WidgetTypes';
 export type setColumFunc = (newCol: string) => void;
 
 const getSearchForm = (initialVal: string, setSearchVal: any) => {
@@ -44,32 +47,6 @@ const helpCell = function (params: any) {
     </a>
   );
 };
-
-export interface DFMeta {
-  // static,
-  total_rows: number;
-  columns: number;
-  rows_shown: number;
-}
-
-export interface BuckarooState {
-  sampled: string | false;
-  summary_stats: string | false; // there could be multiple
-  show_commands: string | false;
-  auto_clean: string | false;
-  reorderd_columns: string | false;
-  search_string: string;
-}
-
-export interface BuckarooOptions {
-  sampled: string[];
-  summary_stats: string[];
-  show_commands: string[];
-  auto_clean: string[];
-  reorderd_columns: string[];
-}
-
-export type BKeys = keyof BuckarooOptions;
 
 export function StatusBarEx() {
   const dfm: DFMeta = {
