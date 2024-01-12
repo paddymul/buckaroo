@@ -65,6 +65,48 @@ user-specified_    are specified in the UI, and can be changed interactively
 #. ``column_config``        = `merged_sd` style-method_
 #. ``merged_column_config`` = `column_config`, ``column_config_override``
 #. ``widget``               = `processed_df`, `merged_sd`, `merged_column_config`, `generated_code`
-
+   
 
 existing_operations is an interint one.  It can be either user entered low_code ops, or the previous cleaning_operations.  merged_operations is responsible for first stripping all cleaning_operations from "existing_operations", then adding in the new "cleaning_operations".  This preserves any user netered operations
+
+
+----
+Rewritten so result tuples are referenced, not individual variables
+
+#. ``operating_df``         <> ``raw_df``, sample-method_
+#. ``cleaning_operations``  = `operating_df`, cleaning-method_
+#. ``merged_operations``    = `cleaning_operations`, existing-operations_
+#. ``operation_result``     = `operating_df`, `merged_operations`
+   ( ``transformed_df``  ``cleaned_sd``  ``generated_code`` )
+#. ``processed_result``     = `operation_result`df, post-processing-method_
+   ( ``processed_df``   ``processed_sd`` )
+#. ``summary_sd``           = `processed_result`df, ``analysis_klasses``
+#. ``merged_sd``            = `cleaned_sd`, `summary_sd`, `processed_result`sd
+#. ``column_config``        = `merged_sd` style-method_
+#. ``merged_column_config`` = `column_config`, ``column_config_override``
+#. ``widget``               = `processed_result`df, `merged_sd`, `merged_column_config`, operation_result`generated_code`
+
+
+----
+Rewritten so with getters for the result tuples.
+
+
+#. ``operating_df``         <> ``raw_df``, sample-method_
+#. ``cleaning_operations``  = `operating_df`, cleaning-method_
+#. ``merged_operations``    = `cleaning_operations`, existing-operations_
+#. ``operation_result``     = `operating_df`, `merged_operations`
+.   make_getter (`operation_result`, None, ``cleaned_sd``  ``generated_code`` )
+#. ``processed_result``     = `operation_result.df`, post-processing-method_
+.   make_getter  (`processed_result`, ``processed_df``,  ``processed_sd`` )
+#. ``summary_sd``           = `processed_result.df`, ``analysis_klasses``
+#. ``merged_sd``            = 'cleaned_sd', `summary_sd`, 'processed_sd'
+#. ``column_config``        = `merged_sd` style-method_
+#. ``merged_column_config`` = `column_config`, ``column_config_override``
+#. ``widget``               = 'processed_df', `merged_sd`, `merged_column_config`, 'generated_code'
+
+getters are specced in args surrounded in quotes
+
+The getters are important because they get a previously created value... but they don't set up a listener.
+without getters, unneeded recomps are triggered
+
+

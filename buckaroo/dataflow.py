@@ -31,7 +31,7 @@ class DataFlow(DOMWidget):
     widget_args_tuple = Any()
 
 
-    #kind of follows, it is not possible to disable sample_method
+    
     @data_observe('raw_df', 'sample_method')
     def _operating_df(self, raw_df, sample_method):
         return raw_df
@@ -46,37 +46,23 @@ class DataFlow(DOMWidget):
     
     @data_observe('operating_df', 'merged_operations')
     def _operation_result(self, operating_df, merged_operations):
-        return operating_df
+        return [operating_df, {}, ""]
 
-    @data_observe('operation_result')
-    def _transformed_df(self, operation_result):
-        return operation_result[0]
+    __cleaned_sd = make_getter(operation_result, 1)
+    __generated_code = make_getter(operation_result, 2)
 
-    @data_observe('operation_result')
-    def _cleaned_sd(self, operation_result):
-        return operation_result[1]
-
-    @data_observe('operation_result')
-    def _generated_code(self, operation_result):
-        return operation_result[2]
-
-    @data_observe('transformed_df', 'post_processing_method')
+    @data_observe('operation_result[0]', 'post_processing_method')
     def _processed_result(self, transformed_df, post_processing_method):
-        return []
+        return [transformed_df, {}]
 
-    @data_observe('processed_result')
-    def _processed_df(self, processed_result):
-        return processed_result[0]
-
-    @data_observe('processed_result')
-    def _processed_sd(self, processed_result):
-        return processed_result[1]
-
-    @data_observe('processed_df', 'analysis_klasses')
+    __processed_df = make_getter(processed_result, 0)
+    __processed_sd = make_getter(processed_result, 1)
+    
+    @data_observe('processed_result[0]', 'analysis_klasses')
     def _summary_sd(self, processed_df, analysis_klasses):
         return {}
 
-    @data_observe('cleaned_sd', 'summary_sd', 'processed_sd')
+    @data_observe(__cleaned_sd, 'summary_sd', __processed_sd)
     def _merged_sd(self, cleaned_sd, summary_sd, processed_sd):
         return {}
 
@@ -88,7 +74,7 @@ class DataFlow(DOMWidget):
     def _merged_column_config(self, column_config, column_config_override):
         return []
 
-    @data_observe('processed_df', 'merged_sd', 'merged_column_config', 'generated_code')
+    @data_observe(__processed_df, 'merged_sd', 'merged_column_config', __generated_code)
     def _widget_config(self, column_config, column_config_override):
         return []
     
@@ -103,6 +89,13 @@ def data_observer( *watch_traits):
     underscore, this is necessary so the function name doesn't colide
     with the property name
 
+    __getters are used when a function returns multiple values, and
+    only one of the values shoudl trigger further listeners
+
+
+    each function should only depend on a single data_flow observable.  other dataflow results can be accessed via properties
+    
+    
     """
     pass
 
