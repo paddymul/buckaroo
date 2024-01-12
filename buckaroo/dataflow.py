@@ -60,7 +60,7 @@ class DataFlow(DOMWidget):
     def _summary_sd(self, processed_df, analysis_klasses):
         return {}
 
-    @data_observe(__cleaned_sd, 'summary_sd', __processed_sd)
+    @data_observe('summary_sd', __cleaned_sd,  __processed_sd)
     def _merged_sd(self, cleaned_sd, summary_sd, processed_sd):
         return merge_sds(cleaned_sd, summary_sd, processed_sd)
 
@@ -68,7 +68,7 @@ class DataFlow(DOMWidget):
         base_column_config = style_method(sd)
         return merge_column_config(base_column_config, self.column_config_override)
 
-    @data_observe(__processed_df, 'merged_sd', 'style_method', __generated_code)
+    @data_observe('merged_sd', __processed_df, __generated_code,  'style_method')
     def _widget_config(self, processed_df, merged_sd, style_method, generated_code):
         column_config = self.get_column_config(merged_sd, style_method)
         return []
@@ -92,15 +92,19 @@ def data_observer( *watch_traits):
     
     
     """
-    pass
-
-
-"""
-Data observe is responsible for the following
-
-
-
-"""
-
     
-    
+    def constructed_decorator(wrapped_func):
+        target_name = wrapped_func.__name__[1:] #strip the leading underscore off the function name
+
+        trigger_watch_trait = watch_traits[0]
+        
+        if "[0]" in trigger_watch_trait:
+            target_name = target_name.replace("[0]", "")
+            
+        def decorated_function(self, *args):
+
+            change['new']
+            pass
+        return decorated_function
+    return constructed_decorator
+
