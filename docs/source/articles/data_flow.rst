@@ -110,3 +110,22 @@ The getters are important because they get a previously created value... but the
 without getters, unneeded recomps are triggered
 
 
+----
+Rewritten so each step only depends on a single generated property (but possibly two user props)
+
+
+#. ``operating_df``         = ``raw_df``, sample-method_
+#. ``operation_result``     = `operating_df`, cleaning-method_, existing-operations_ 
+.   make_getter (`operation_result`, None, ``cleaned_sd``  ``generated_code`` )
+#. ``processed_result``     = `operation_result.df`, post-processing-method_
+.   make_getter  (`processed_result`, ``processed_df``,  ``processed_sd`` )
+#. ``summary_sd``           = `processed_result.df`, ``analysis_klasses``
+#. ``merged_sd``            = 'cleaned_sd', `summary_sd`, 'processed_sd'
+#. ``widget``               = 'processed_df', `merged_sd`, style-method_, 'generated_code'
+
+getters are specced in args surrounded in quotes
+
+The getters are important because they get a previously created value... but they don't set up a listener.
+without getters, unneeded recomps are triggered
+
+

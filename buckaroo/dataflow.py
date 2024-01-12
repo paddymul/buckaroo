@@ -36,17 +36,15 @@ class DataFlow(DOMWidget):
     def _operating_df(self, raw_df, sample_method):
         return raw_df
 
-    @data_observe('operating_df', 'cleaning_method')
-    def _cleaning_operations(self, operating_df, cleaning_method):
-        return operating_df
-
-    @data_observe('cleaning_operations',' existing-operations')
-    def _merged_operations(self, cleaning_operations, existing_operations):
-        return cleaning_operations
-    
-    @data_observe('operating_df', 'merged_operations')
-    def _operation_result(self, operating_df, merged_operations):
-        return [operating_df, {}, ""]
+    @data_observe('operating_df', 'cleaning_method', 'existing_operations')
+    def _operation_result(self, operating_df, cleaning_method, existing_operations)
+        cleaning_operations = get_cleaning_operations(operating_df, cleaning_method)
+        cleaning_sd = get_cleaning_sd(operating_df, cleaning_method)
+        merged_operations = merge_ops(existing_operations, cleaning_operations)
+        cleaned_df = run_df_interpreter(operating_df, merged_operations)
+        generated_code = run_code_generator(merged_operations)
+        #there is a cycle with exisitng operations and merged_operations
+        return [cleaned_df, cleaning_sd, generated_code, merged_operations]
 
     __cleaned_sd = make_getter(operation_result, 1)
     __generated_code = make_getter(operation_result, 2)
@@ -64,18 +62,15 @@ class DataFlow(DOMWidget):
 
     @data_observe(__cleaned_sd, 'summary_sd', __processed_sd)
     def _merged_sd(self, cleaned_sd, summary_sd, processed_sd):
-        return {}
+        return merge_sds(cleaned_sd, summary_sd, processed_sd)
 
-    @data_observe('merged_sd', 'style_method')
-    def _column_config(self, merged_sd, style_method):
-        return []
+    def get_column_config(self, sd, style_method):
+        base_column_config = style_method(sd)
+        return merge_column_config(base_column_config, self.column_config_override)
 
-    @data_observe('column_config', 'column_config_override')
-    def _merged_column_config(self, column_config, column_config_override):
-        return []
-
-    @data_observe(__processed_df, 'merged_sd', 'merged_column_config', __generated_code)
-    def _widget_config(self, column_config, column_config_override):
+    @data_observe(__processed_df, 'merged_sd', 'style_method', __generated_code)
+    def _widget_config(self, processed_df, merged_sd, style_method, generated_code):
+        column_config = self.get_column_config(merged_sd, style_method)
         return []
     
 def data_observer( *watch_traits):
