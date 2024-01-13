@@ -6,8 +6,6 @@ Data Flow through Buckaroo
 
 Buckaroo is extensible.  The architecture of Buckaroo is crafted to allow specific points of composable extensibility in an opinionated manner.  It was designed this way based on experience from writing many adhoc analysis pipelines.  Previous "simpler" attempts at extensibility ran into bugs that couldn't be cleanly accomodated. The following will be addressed below:
 
-
-
 Buckaroo aims to allow highly opionated configurations to be toggled by users.  With buckaroo, you can add a cleaning_method of "interpret int as milliseconds from unix epoch", and it will look at a column of ints, and decide that values map to datetimes in the past year (as opposed to centered around 1970) and we should treat this column as a datetime.  That is a highly opinionated view of your data, the cost for that highly opinonated view is less when multiple opinions can be quickly cycled through.
 
 This approach is different than most tools which aim to be a generic tool that is customizable with bespoke configuration.  It would be a bad thing if a generic table tool displayed integers as dates because it assumes that those integers are milliseconds from the unix epoch.  Normally this would require custom code to be written and called based on manual inspection of the data.
@@ -24,6 +22,24 @@ This document describes the multiple ways of extending bucakroo to add your own 
 #. description of extension points
 
 
+Customization points of Buckaroo
+--------------------------------
+
+
+#. Sample_method
+   Used to specify conditions for downsampling dataframe and method of sampling.  Example alternatives include sampling in chunks,  only showing first and last row, random sampling, and limiting number of columns.  Returns  sampled df
+#. Cleaning_method
+   recieves sampled_dataframe Used to control how dataframes are cleaned before summary stats are run.  Examples include special parsing rules for unique date formats, removing strings from primarily numeric columns.  Returns cleaned_df and cleaned_summary_dict
+#. Post_processing_method
+   recieves entire cleaned dataframe. Used to perform multi-column operations, like adding a running_diff column, or combining a latitude and longitude column into a single lat/long column.  returns processed_df and processed_summary_dict
+#. Analysis_klasses
+   recieves individual columns from processed_df.  Individual column level analysis klasses used to fill out summary_stats.  examples include mean, median, min, max, and complex results like histograms.  Each class returns a summary_dict about a single column
+#. style-method
+   recieves col_name, col_summary_dict, default_config.  Takes a column_summary_dict and returns the column_config for that column.  Examples include formatting a datetime as time only if the min/max are within a single day, conditionally turning on tooltips and color_maps based on other info in summary_dict
+
+
+
+
 ignore
 '    make_getter (`operation_result`, None, ``cleaned_sd``  ``generated_code`` )
 '   make_getter  (`processed_result`, ``processed_df``,  ``processed_sd`` )
@@ -32,21 +48,45 @@ Full Flow
 ---------
 Use the following glyphs to understand the variables
 
-#. ``instantiation_`` are defined at class instantiation time, or through python
-#. `dependent_`       are the result of a previous step
-#. `user specified`_    are specified in the UI, and can be changed interactively
-
+#. ``instantiation_``        are defined at class instantiation time, or through python
+#. `dependent_`              are the result of a previous step, the data_flow variable that is watched
+#. `user specified`_         are specified in the UI, and can be changed interactively
+#. **named_tuple_variable**  Some results return as a tuple, the tuple is what is watched, the sub parts of the tuple can be referenced later
 
 Starting with ``raw_df`` data flows through buckaroo as follows.  If one of the values on the right side of equals changes, all steps below that are executed
 
 The final result of `widget` is what is displayed to the user.
 
-#. ``sampled_df``           = ``raw_df``, `sample_method`_
-#. ``operation_result``     = `sampled_df`, `cleaning_method`_, `existing_operations`_
-#. ``processed_result``     = `operation_result.df`, `post_processing_method`_
-#. ``summary_sd``           = `processed_result.df`, ``analysis_klasses``
-#. ``merged_sd``            = 'cleaned_sd', `summary_sd`, 'processed_sd'
-#. ``widget``               = 'processed_df', `merged_sd`, `style_method`_, 'generated_code'
+#. ``sampled_df``                                                   = ``raw_df``, `sample_method`_
+#. ``cleaned``   = **cleaned** (**_df**, **_sd**, **generated_code**) = `sampled_df`, `cleaning_method`_, `existing_operations`_
+#. ``processed`` = **processed** (**_df**, **_sd**)                 = `cleaned_.df`, `post_processing_method`_
+#. ``summary_sd``                                                   = `processed_result.df`, ``analysis_klasses``
+#. ``merged_sd``                                                    = ``cleaned_sd``, `summary_sd`, ``processed_sd``
+#. ``widget``                                                       = ``processed_df``, `merged_sd`, `style_method`_, ``generated_code``
+
+
++----------------+------------------------------------------------------------------+
+| Destination    |                               args                               |
++================+==================================================================+
+| ``sampled_df`` | ``raw_df``, `sample_method`                                      |
++----------------+------------------------------------------------------------------+
+| ``cleaned``    |     `sampled_df`, `cleaning_method`_, `existing_operations`_     |
++----------------+------------------------------------------------------------------+
+|                | cleaned_df, cleaned_sd, generated_code                           |
++----------------+------------------------------------------------------------------+
+| ``processed``  | `cleaned_.df`, `post_processing_method`_                         |
++----------------+------------------------------------------------------------------+
+|                | processed_df, processed_sd                                       |
++----------------+------------------------------------------------------------------+
+| ``summary_sd`` | `processed_result.df`, ``analysis_klasses``                      |
++----------------+------------------------------------------------------------------+
+| ``merged_sd``  | ``cleaned_sd``, `summary_sd`, ``processed_sd``                   |
++----------------+------------------------------------------------------------------+
+| ``widget``     | ``processed_df``, `merged_sd`, `style_method`_, ``cleaned_code`` |
+|                |                                                                  |
++----------------+------------------------------------------------------------------+
+
+
 
 Rewritten so each step only depends on a single generated property (but possibly two user props)
 getters are specced in args surrounded in quotes
@@ -151,22 +191,6 @@ What if we want to switch between red/green colors map and a color map based on 
 
 With this implementation, the frontend can cycle through three style_methods `volume_style_red_green`, `volume_style_color_map` and `default`
 
-
-
-Customization points of Buckaroo
---------------------------------
-
-
-#. Sample_method
-   Used to specify conditions for downsampling dataframe and method of sampling.  Example alternatives include sampling in chunks,  only showing first and last row, random sampling, and limiting number of columns.  Returns  sampled df
-#. Cleaning_method
-   recieves sampled_dataframe Used to control how dataframes are cleaned before summary stats are run.  Examples include special parsing rules for unique date formats, removing strings from primarily numeric columns.  Returns cleaned_df and cleaned_summary_dict
-#. Post_processing_method
-   recieves entire cleaned dataframe. Used to perform multi-column operations, like adding a running_diff column, or combining a latitude and longitude column into a single lat/long column.  returns processed_df and processed_summary_dict
-#. Analysis_klasses
-   recieves individual columns from processed_df.  Individual column level analysis klasses used to fill out summary_stats.  examples include mean, median, min, max, and complex results like histograms.  Each class returns a summary_dict about a single column
-#. style-method
-   recieves col_name, col_summary_dict, default_config.  Takes a column_summary_dict and returns the column_config for that column.  Examples include formatting a datetime as time only if the min/max are within a single day, conditionally turning on tooltips and color_maps based on other info in summary_dict
 
 
    
