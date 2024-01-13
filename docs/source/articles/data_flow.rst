@@ -46,6 +46,63 @@ ignore
    
 Full Flow
 ---------
+
+Starting with ``raw_df`` data flows through buckaroo as follows.  If one of the values on the right side of equals changes, all steps below that are executed
+
+The final result of `widget` is what is displayed to the user.
+
+
+.. raw:: html
+
+    <style> 
+            .dataflow-result {color:blue}
+            .dataflow-arg {color:purple}
+            .class-state {color:green}
+            .ui-variable {color:orange}
+            .tuple-result {color:red}
+            .tuple-param {color:#d4706e} /* a darker pink */
+    </style>
+
+
+.. role:: dataflow-result
+.. role:: dataflow-arg
+.. role:: class-state
+.. role:: ui-variable
+.. role:: tuple-param
+.. role:: tuple-result
+
+#. :dataflow-result:`dataflow-result`    are the result of a step. updates to this variable trigger steps that watch the variable as a dataflow arg
+#. :dataflow-arg:`dataflow-arg`          a dataflow-result used as a function argument. updates to this cause the current step to execute
+#. :ui-variable:`UI-Variable`            are specified in the UI, and can be changed interactively. updates to this cause the current step to execute
+#. :class-state:`class-state`            are defined at class instantiation time, these can be customized, but not interactively
+#. :tuple-result:`named-tuple-result`  Some results return as a tuple, the tuple is what is watched, the sub parts of the tuple can be referenced later
+#. :tuple-param:`tuple-param`            read this from the a named-tuple-result. do not watch this vriable (setting this named-tuple-result will not trigger this step)
+
+
+
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| Destination                                  |                                                            args                                                             |
++==============================================+=============================================================================================================================+
+| :dataflow-result:`sampled_df`                | :class-state:`raw_df`, :ui-variable:`sample_method`                                                                         |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| :dataflow-result:`cleaned`                   |    :dataflow-arg:`sampled_df`, :ui-variable:`sample_method`, :ui-variable:`cleaning_method`, :ui-variable:`lowcode_ops`     |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+|                                              | :tuple-result:`cleaned_df`, :tuple-result:`cleaned_sd`, :tuple-result:`cleaned_code`                                        |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+|         :dataflow-result:`processed`         | :dataflow-arg:`cleaned_df`, :ui-variable:`post_processing_method`                                                           |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+|                                              | :tuple-result:`processed_df`, :tuple-result:`processed_sd`                                                                  |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+|        :dataflow-result:`summary_sd`         | :dataflow-arg:`processed_df`, :class-state:`analysis_klasses`                                                               |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+|         :dataflow-result:`merged_sd`         | :tuple-param:`cleaned_sd`, :dataflow-arg:`summary_sd`, :tuple-param:`processed_sd`                                          |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| :dataflow-result:`widget`                    |      :tuple-param:`processed_df`, :dataflow-arg:`merged_sd`, :ui-variable:`style_method`, :tuple-param:`cleaned_code`       |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
 Use the following glyphs to understand the variables
 
 #. ``instantiation_``        are defined at class instantiation time, or through python
@@ -53,9 +110,7 @@ Use the following glyphs to understand the variables
 #. `user specified`_         are specified in the UI, and can be changed interactively
 #. **named_tuple_variable**  Some results return as a tuple, the tuple is what is watched, the sub parts of the tuple can be referenced later
 
-Starting with ``raw_df`` data flows through buckaroo as follows.  If one of the values on the right side of equals changes, all steps below that are executed
 
-The final result of `widget` is what is displayed to the user.
 
 #. ``sampled_df``                                                   = ``raw_df``, `sample_method`_
 #. ``cleaned``   = **cleaned** (**_df**, **_sd**, **generated_code**) = `sampled_df`, `cleaning_method`_, `existing_operations`_
@@ -65,12 +120,15 @@ The final result of `widget` is what is displayed to the user.
 #. ``widget``                                                       = ``processed_df``, `merged_sd`, `style_method`_, ``generated_code``
 
 
+
+
+
 +----------------+------------------------------------------------------------------+
 | Destination    |                               args                               |
 +================+==================================================================+
 | ``sampled_df`` | ``raw_df``, `sample_method`                                      |
 +----------------+------------------------------------------------------------------+
-| ``cleaned``    |     `sampled_df`, `cleaning_method`_, `existing_operations`_     |
+| ``cleaned``    |     `sampled_df`, `cleaning_method`_, `lowcode_operations`_      |
 +----------------+------------------------------------------------------------------+
 |                | cleaned_df, cleaned_sd, generated_code                           |
 +----------------+------------------------------------------------------------------+
