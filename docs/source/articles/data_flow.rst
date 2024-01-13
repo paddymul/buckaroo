@@ -4,9 +4,22 @@ Data Flow through Buckaroo
 ==========================
 
 
-Buckaroo is extensible.  The architecture of Buckaroo is crafted to allow specific points of composable extensibility in an opinionated manner.  It was designe dthis way based on experience from writing many adhoc anlsysis pipelines.  Previous "simpler" attempts at extensibility ran into bugs that couldn't be cleanly accomodated.
+Buckaroo is extensible.  The architecture of Buckaroo is crafted to allow specific points of composable extensibility in an opinionated manner.  It was designed this way based on experience from writing many adhoc analysis pipelines.  Previous "simpler" attempts at extensibility ran into bugs that couldn't be cleanly accomodated. The following will be addressed below:
 
-#. understand the dataflow through Buckaroo,
+
+
+Buckaroo aims to allow highly opionated configurations to be toggled by users.  With buckaroo, you can add a cleaning_method of "interpret int as milliseconds from unix epoch", and it will look at a column of ints, and decide that values map to datetimes in the past year (as opposed to centered around 1970) and we should treat this column as a datetime.  That is a highly opinionated view of your data, the cost for that highly opinonated view is less when multiple opinions can be quickly cycled through.
+
+This approach is different than most tools which aim to be a generic tool that is customizable with bespoke configuration.  It would be a bad thing if a generic table tool displayed integers as dates because it assumes that those integers are milliseconds from the unix epoch.  Normally this would require custom code to be written and called based on manual inspection of the data.
+
+This document describes the multiple ways of extending bucakroo to add your own toggable opinons.
+
+
+
+
+
+
+#. understand the dataflow through Buckaroo
 #. quick start to extending buckaroo
 #. description of extension points
 
@@ -24,7 +37,9 @@ Use the following glyphs to understand the variables
 #. `user specified`_    are specified in the UI, and can be changed interactively
 
 
-Starting with ``raw_df`` data flows through buckaroo as follows:
+Starting with ``raw_df`` data flows through buckaroo as follows.  If one of the values on the right side of equals changes, all steps below that are executed
+
+The final result of `widget` is what is displayed to the user.
 
 #. ``sampled_df``           = ``raw_df``, `sample_method`_
 #. ``operation_result``     = `sampled_df`, `cleaning_method`_, `existing_operations`_
