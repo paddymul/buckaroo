@@ -10,26 +10,30 @@ Buckaroo is extensible.  The architecture of Buckaroo is crafted to allow specif
 #. quick start to extending buckaroo
 #. description of extension points
 
+
+ignore
+'    make_getter (`operation_result`, None, ``cleaned_sd``  ``generated_code`` )
+'   make_getter  (`processed_result`, ``processed_df``,  ``processed_sd`` )
    
 Full Flow
 ---------
-``instantiation_`` are defined at class instantiation time, or through python
-`dependent_`       are the result of a previous step
-user-specified_    are specified in the UI, and can be changed interactively
+Use the following glyphs to understand the variables
 
-Rewritten so each step only depends on a single generated property (but possibly two user props)
+#. ``instantiation_`` are defined at class instantiation time, or through python
+#. `dependent_`       are the result of a previous step
+#. `user specified`_    are specified in the UI, and can be changed interactively
 
 
+Starting with ``raw_df`` data flows through buckaroo as follows:
 
-#. ``sampled_df``         = ``raw_df``, sample-method_
-#. ``operation_result``     = `sampled_df`, cleaning-method_, existing-operations_ 
-.   make_getter (`operation_result`, None, ``cleaned_sd``  ``generated_code`` )
-#. ``processed_result``     = `operation_result.df`, post-processing-method_
-.   make_getter  (`processed_result`, ``processed_df``,  ``processed_sd`` )
+#. ``sampled_df``           = ``raw_df``, `sample_method`_
+#. ``operation_result``     = `sampled_df`, `cleaning_method`_, `existing_operations`_
+#. ``processed_result``     = `operation_result.df`, `post_processing_method`_
 #. ``summary_sd``           = `processed_result.df`, ``analysis_klasses``
 #. ``merged_sd``            = 'cleaned_sd', `summary_sd`, 'processed_sd'
-#. ``widget``               = 'processed_df', `merged_sd`, style-method_, 'generated_code'
+#. ``widget``               = 'processed_df', `merged_sd`, `style_method`_, 'generated_code'
 
+Rewritten so each step only depends on a single generated property (but possibly two user props)
 getters are specced in args surrounded in quotes
 
 The getters are important because they get a previously created value... but they don't set up a listener.
@@ -47,10 +51,13 @@ In this exercise we are going add a custom coloring method to Buckaroo.  We will
 First we need to craft the column config that will enable this conditonal coloring.
 
 We want to use `ColorFromColumn`, we want the config for the volume column to look like
-.. code-block:: python
 
+.. code-block:: python
+    
     volume_config_override = {
-        'color_map_config' : {'color_rule': 'color_from_column', 'col_name': 'Volume_colors'}}
+        'color_map_config' : {
+	    'color_rule': 'color_from_column',
+            'col_name': 'Volume_colors'}}
 
 
 Using this in Buckaroo will look like this
@@ -78,9 +85,12 @@ First we want to use a `post_processing_function` to add the `volume_colors` col
 	extra_summary_dict = {
             'Volume' : {
 	        'column_config_override': {
-	            'color_map_config' : {'color_rule': 'color_from_column', 'col_name': 'Volume_colors'}}},
+	            'color_map_config' :
+		        {'color_rule': 'color_from_column',
+			 'col_name': 'Volume_colors'}}},
             'Volume_colors' : {
-	        'column_config_override': { 'displayer': 'hidden'}}}
+	        'column_config_override': {
+		    'displayer': 'hidden'}}}
 	return [df, extra_summary_dict]
     
      class OHLVCBuckarooWidget(BuckarooWidget):
