@@ -65,7 +65,7 @@ class DataFlow(DOMWidget):
     def _operation_result(self, change):
         cleaning_operations = get_cleaning_operations(self.operating_df, self.cleaning_method)
         cleaning_sd = get_cleaning_sd(self.operating_df, self.cleaning_method)
-        merged_operations = merge_ops(self.existing_operations, self.cleaning_operations)
+        merged_operations = merge_ops(self.existing_operations, cleaning_operations)
         cleaned_df = run_df_interpreter(self.operating_df, self.merged_operations)
         generated_code = run_code_generator(self.merged_operations)
         self.operation_result = [cleaned_df, cleaning_sd, generated_code, merged_operations]
@@ -77,8 +77,8 @@ class DataFlow(DOMWidget):
 
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
-        processed_df = self.processed_result[0]
-        analysis_klasses
+        #processed_df = self.processed_result[0]
+        #analysis_klasses
         #call dfstats stuff here
         self.summary_sd = {}
 
@@ -90,7 +90,7 @@ class DataFlow(DOMWidget):
         #and should supersede summary_sd.
         cleaned_sd = self.operation_result[1]
         processed_sd = self.processed_result[1]
-        self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
+        self.merged_sd = merge_sds(cleaned_sd, self.summary_sd, processed_sd)
 
     def get_column_config(self, sd, style_method):
         base_column_config = style_method(sd)
@@ -98,7 +98,7 @@ class DataFlow(DOMWidget):
 
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
-        generated_code = operation_result[2]
-        processed_df = processed_result[0]
+        # generated_code = operation_result[2]
+        # processed_df = processed_result[0]
         column_config = self.get_column_config(self.merged_sd, self.style_method)
         return [column_config]
