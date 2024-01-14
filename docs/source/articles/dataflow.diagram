@@ -1,0 +1,271 @@
+digraph prof {
+	ratio = fill;
+	node [style=filled];
+	start -> main [color="0.002 0.999 0.999"];
+	start -> on_exit [color="0.649 0.701 0.701"];
+	main -> sort [color="0.348 0.839 0.839"];
+	main -> merge [color="0.515 0.762 0.762"];
+	main -> term [color="0.647 0.702 0.702"];
+	sort -> msort [color="0.619 0.714 0.714"];
+	sort -> filbuf [color="0.650 0.700 0.700"];
+	sort -> newfile [color="0.650 0.700 0.700"];
+	sort -> fclose [color="0.650 0.700 0.700"];
+	sort -> setbuf [color="0.650 0.700 0.700"];
+	sort -> setfil [color="0.650 0.700 0.700"];
+	msort -> qsort [color="0.650 0.700 0.700"];
+	msort -> insert [color="0.650 0.700 0.700"];
+	msort -> wline [color="0.650 0.700 0.700"];
+	msort -> div [color="0.650 0.700 0.700"];
+	msort -> cmpsave [color="0.650 0.700 0.700"];
+	merge -> insert [color="0.650 0.700 0.700"];
+	merge -> rline [color="0.650 0.700 0.700"];
+	merge -> wline [color="0.650 0.700 0.700"];
+cmpa [color="0.000 1.000 1.000"];
+wline [color="0.201 0.753 1.000"];
+insert [color="0.305 0.625 1.000"];
+rline [color="0.355 0.563 1.000"];
+sort [color="0.408 0.498 1.000"];
+qsort [color="0.449 0.447 1.000"];
+write [color="0.499 0.386 1.000"];
+read [color="0.578 0.289 1.000"];
+msort [color="0.590 0.273 1.000"];
+merge [color="0.603 0.258 1.000"];
+}
+
+digraph prof {
+	ratio = fill;
+	node [style=filled];
+	raw_df -> sampled_df [color="0.002 0.999 0.999"];
+	sample_method -> sampled_df [color="0.649 0.701 0.701"];
+	sampled_df -> cleaned;
+	cleaning_method -> cleaned;
+	lowcode_ops -> cleaned;
+
+
+"node8" [
+label = "<f0> (nil)| | |-1"
+shape = "record"
+];	
+cmpa [color="0.000 1.000 1.000"];
+wline [color="0.201 0.753 1.000"];
+insert [color="0.305 0.625 1.000"];
+rline [color="0.355 0.563 1.000"];
+sort [color="0.408 0.498 1.000"];
+qsort [color="0.449 0.447 1.000"];
+write [color="0.499 0.386 1.000"];
+read [color="0.578 0.289 1.000"];
+msort [color="0.590 0.273 1.000"];
+merge [color="0.603 0.258 1.000"];
+}
+
+
+
+digraph prof {
+        compound=true;
+	ratio = fill;
+	node [style=filled];
+	raw_df -> sampled_df [color="0.002 0.999 0.999"];
+	sample_method -> sampled_df [color="0.649 0.701 0.701"];
+	sampled_df -> cleaned;
+	cleaning_method -> cleaned;
+	lowcode_ops -> cleaned;
+raw_df [color="0.000 1.000 1.000"];
+sample_method [color="0.201 0.753 1.000"];
+sampled_df [color="0.305 0.625 1.000"];
+cleaning_method [color="0.355 0.563 1.000"];
+  subgraph cluster0 {
+    a -> b;
+    b -> d;
+  }
+
+
+cleaned [color="0.408 0.498 1.000"];
+lowcode_ops [color="0.449 0.447 1.000"];
+
+"node8" [
+label = "<f0> (nil)| | |-1"
+shape = "record"
+];
+}
+
+
+
+digraph G {
+  compound=true;
+  subgraph cluster0 {
+    a -> b;
+    b -> d;
+  }
+  subgraph cluster1 {
+    label = "Subgraph 1"; 
+    e -> g;
+  }
+  b -> f [lhead=cluster1];
+  d -> e [lhead=cluster1]
+  c -> g [ltail=cluster0,lhead=cluster1];
+
+}
+
+
+
+
+digraph g {
+    compound=true;
+	ratio = fill;
+	node [style=filled];
+	raw_df -> sampled_df [color="0.002 0.999 0.999"];
+	sample_method -> sampled_df [color="0.649 0.701 0.701"];
+	sampled_df -> cleaned_df [lhead=cluster_cleaned]
+	cleaning_method -> cleaned_df [lhead=cluster_cleaned]
+	lowcode_ops -> cleaned_df [lhead=cluster_cleaned]
+	subgraph cluster_cleaned {
+	    label="cleaned"
+        cleaned_df;
+        cleaned_sd;
+        generated_code;
+  }
+  c -> cleaned_df [lhead=cluster_cleaned]
+raw_df [color="0.000 1.000 1.000"];
+sample_method [color="0.201 0.753 1.000"];
+sampled_df [color="0.305 0.625 1.000"];
+cleaning_method [color="0.355 0.563 1.000"];
+cleaned [color="0.408 0.498 1.000"];
+lowcode_ops [color="0.449 0.447 1.000"];
+
+}
+
+
+
+
+digraph g {
+    compound=true;
+	ratio = fill;
+	node [style=filled];
+	raw_df -> sampled_df [color="0.002 0.999 0.999"];
+	sample_method -> sampled_df [color="0.649 0.701 0.701"];
+	sampled_df -> cleaned_df [lhead=cluster_cleaned]
+	cleaning_method -> cleaned_df [lhead=cluster_cleaned]
+	lowcode_ops -> cleaned_df [lhead=cluster_cleaned]
+	subgraph cluster_cleaned {
+	    label="cleaned"
+	    color="0.408 0.498 1.000"
+        cleaned_df;
+        cleaned_sd;
+        generated_code;
+  }
+raw_df [color="0.000 1.000 1.000"];
+sample_method [color="0.201 0.753 1.000"];
+sampled_df [color="0.305 0.625 1.000"];
+cleaning_method [color="0.355 0.563 1.000"];
+lowcode_ops [color="0.449 0.447 1.000"];
+
+}
+
+
+
+
+
+digraph g {
+    compound=true;
+	ratio = fill;
+	node [style=filled];
+	raw_df -> sampled_df [color="0.002 0.999 0.999"];
+	sample_method -> sampled_df [color="0.649 0.701 0.701"];
+	sampled_df -> cleaned_df [lhead=cluster_cleaned]
+	cleaning_method -> cleaned_df [lhead=cluster_cleaned]
+	lowcode_ops -> cleaned_df [lhead=cluster_cleaned]
+	subgraph cluster_cleaned {
+	    label="cleaned";
+	    fillcolor="0.408 0.498 1.000";
+	    style=filled;
+        cleaned_df;
+        cleaned_sd;
+        generated_code;
+  }
+raw_df [color="green"]
+sample_method [color="orange"];
+sampled_df [color="blue"];
+cleaning_method [color="0.355 0.563 1.000"];
+lowcode_ops [color="0.449 0.447 1.000"];
+}
+
+
+
+
+digraph g {
+    compound=true;
+	ratio = fill;
+	node [style=filled];
+	raw_df -> sampled_df;
+	sample_method -> sampled_df;
+	sampled_df -> cleaned_df [lhead=cluster_cleaned]
+	cleaning_method -> cleaned_df [lhead=cluster_cleaned]
+	lowcode_ops -> cleaned_df [lhead=cluster_cleaned]
+	subgraph cluster_cleaned {
+	    label="cleaned";
+	    fillcolor="red";
+	    style=filled;
+        cleaned_df;
+        cleaned_sd;
+        generated_code;
+  }
+raw_df [color="green"]
+sample_method [color="orange"];
+sampled_df [color="blue"];
+cleaning_method [color="orange"];
+lowcode_ops [color="orange"];
+}
+
+
+
+digraph g {
+    compound=true;
+	ratio = fill;
+	node [style=filled];
+raw_df -> sampled_df;
+sample_method -> sampled_df;
+
+subgraph cluster_cleaned {
+    label="cleaned";
+    fillcolor="red";
+    style=filled;
+    cleaned_df;
+    cleaned_sd;
+    generated_code;
+}
+
+sampled_df -> cleaned_df [lhead=cluster_cleaned]
+cleaning_method -> cleaned_df [lhead=cluster_cleaned]
+lowcode_ops -> cleaned_df [lhead=cluster_cleaned]
+  
+raw_df [color="green"]
+sample_method [color="orange"];
+sampled_df [color="lightblue"];
+cleaning_method [color="orange"];
+lowcode_ops [color="orange"];
+
+	subgraph cluster_processed {
+	    label="processed";
+	    fillcolor="red";
+	    style=filled;
+        processed_df;
+        processed_sd;
+  }
+cleaned_df -> processed_df[lhead=cluster_processed];
+post_processing_method -> processed_df[lhead=cluster_processed];
+post_processing_method [color="orange"];
+
+processed_df -> summary_sd;
+analysis_klasses -> summary_sd;
+
+summary_sd [color="lightblue"];
+analysis_klasses [color="green"];
+
+cleaned_sd -> merged_sd;
+summary_sd -> merged_sd;
+processed_sd -> merged_sd;
+
+merged_sd [color="lightblue"];
+
+}
+
