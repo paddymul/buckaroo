@@ -1,7 +1,7 @@
-.. _using:
+.. _data_flow:
 
 Data Flow through Buckaroo
-==========================
+===========================
 
 
 Buckaroo is extensible.  The architecture of Buckaroo is crafted to allow specific points of composable extensibility in an opinionated manner.  It was designed this way based on experience from writing many adhoc analysis pipelines.  Previous "simpler" attempts at extensibility ran into bugs that couldn't be cleanly accomodated. The following will be addressed below:
