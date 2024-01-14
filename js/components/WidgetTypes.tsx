@@ -24,7 +24,7 @@ export type BKeys = keyof BuckarooOptions;
 
   // df_dict: Record<string, DFWhole>;
   // df_meta: DFMeta;
-
+/*
 
   df_dict: Record<string, DFWhole>;
   df_meta: DFMeta;
@@ -35,3 +35,4 @@ export type BKeys = keyof BuckarooOptions;
   buckaroo_state: BuckarooState;
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
+*/
