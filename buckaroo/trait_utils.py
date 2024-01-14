@@ -1,6 +1,5 @@
 import typing as t
-from traitlets import Sentinel, EventHandler, All
-
+from traitlets import Sentinel, EventHandler, All, ObserveHandler, HasTraits, Int, Unicode
 
 def my_observe(*names: t.Union[Sentinel, str], type: str = "change") -> "ObserveHandler":
     """A decorator which can be used to observe Traits on a class.
@@ -38,6 +37,7 @@ class MyObserveHandler(EventHandler):
 
     def instance_init(self, inst):
         print("instance init called", inst)
+        
         inst.observe(self, self.trait_names, type=self.type)
         
 class Foo(HasTraits):
