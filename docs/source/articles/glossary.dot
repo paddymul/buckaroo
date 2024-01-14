@@ -40,13 +40,18 @@ subgraph cluster_edges {
     c -> d  [penwidth = 5;     color="blueviolet";
         label="  data-flow changes trigger recomputation" ];
 
-    e -> f [ fconstraint=false 
+    e -> f [ constraint=false 
         label="  changes to ui-variables trigger recomputation too" ]
 
-    a -> b  [ style="dashed" penwidth=2.5
+    a -> b  [ style="dashed" penwidth=2.5 weight=10
         label="  read-only,\n   does not trigger recompute"];
+
+    function -> widget [
+                         style="dotted" penwidth=3 color="red" 
+			 label="error-flow \n data-flow steps skipped" ]
     e [color="orange"];
     c [color="lightblue"]
     }
 
 }
+

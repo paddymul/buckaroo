@@ -54,10 +54,17 @@ merged_sd [color="lightblue"; shape="invtrapezium" height=1 width=.5]
 widget [color="lightblue"];
         processed_df -> widget [style="dashed" weight=2.8 penwidth=2.5];
         merged_sd -> widget [color="blueviolet"; penwidth = 5];
-	style_method -> widget [style="dotted" penwidth=3];
+	style_method -> widget ;
 	generated_code -> widget [style="dashed" weight=2 penwidth=2.5];
 
 style_method [color="orange"];
+
+sampled_df -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
+cleaned_df -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ltail=cluster_cleaned ]
+processed_df -> widget [ style="dotted" penwidth=3 color="red" constraint=false ltail=cluster_processed ]
+summary_sd -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
+merged_sd -> widget    [ style="dotted" penwidth=3 color="red" constraint=false ]
+
 
 }
 
