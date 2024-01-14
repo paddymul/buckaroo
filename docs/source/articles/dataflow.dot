@@ -59,11 +59,11 @@ widget [color="lightblue"];
 
 style_method [color="orange"];
 
-sampled_df -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
-cleaned_df -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ltail=cluster_cleaned ]
-processed_df -> widget [ style="dotted" penwidth=3 color="red" constraint=false ltail=cluster_processed ]
-summary_sd -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
-merged_sd -> widget    [ style="dotted" penwidth=3 color="red" constraint=false ]
+sampled_df   -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
+cleaned_df   -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ltail=cluster_cleaned ]
+processed_df -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ltail=cluster_processed ]
+summary_sd   -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
+merged_sd    -> widget   [ style="dotted" penwidth=3 color="red" constraint=false ]
 
 
 }

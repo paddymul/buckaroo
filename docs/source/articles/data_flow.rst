@@ -39,19 +39,6 @@ Customization points of Buckaroo
 
 
 
-
-ignore
-'    make_getter (`operation_result`, None, ``cleaned_sd``  ``generated_code`` )
-'   make_getter  (`processed_result`, ``processed_df``,  ``processed_sd`` )
-   
-Full Flow
----------
-
-Starting with ``raw_df`` data flows through buckaroo as follows.  If one of the values on the right side of equals changes, all steps below that are executed
-
-The final result of `widget` is what is displayed to the user.
-
-
 .. raw:: html
 
     <style> 
@@ -72,13 +59,14 @@ The final result of `widget` is what is displayed to the user.
 .. role:: tuple-param
 .. role:: tuple-result
 
+   
+Full Flow
+---------
 
-#. :dataflow-result:`dataflow-result`    are the result of a step. updates to this variable trigger steps that watch the variable as a dataflow arg
-#. :dataflow-arg:`dataflow-arg`          a dataflow-result used as a function argument. updates to this cause the current step to execute
-#. :ui-variable:`UI-Variable`            are specified in the UI, and can be changed interactively. updates to this cause the current step to execute
-#. :class-state:`class-state`            are defined at class instantiation time, these can be customized, but not interactively
-#. :tuple-result:`named-tuple-result`    Some results return as a tuple, the tuple is what is watched, the sub parts of the tuple can be referenced later
-#. :tuple-param:`tuple-param`            read this from the a named-tuple-result. do not watch this vriable (setting this named-tuple-result will not trigger this step)
+Starting with ``raw_df`` data flows through buckaroo as follows.  If one of the values on the right side of equals changes, all steps below that are executed
+
+The final result of `widget` is what is displayed to the user.
+
 
 
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
@@ -105,59 +93,18 @@ The final result of `widget` is what is displayed to the user.
 
 
 
+Glossary
+........
+
+#. :dataflow-result:`dataflow-result`    are the result of a step. updates to this variable trigger steps that watch the variable as a dataflow arg
+#. :dataflow-arg:`dataflow-arg`          a dataflow-result used as a function argument. updates to this cause the current step to execute
+#. :ui-variable:`UI-Variable`            are specified in the UI, and can be changed interactively. updates to this cause the current step to execute
+#. :class-state:`class-state`            are defined at class instantiation time, these can be customized, but not interactively
+#. :tuple-result:`named-tuple-result`    Some results return as a tuple, the tuple is what is watched, the sub parts of the tuple can be referenced later
+#. :tuple-param:`tuple-param`            read this from the a named-tuple-result. do not watch this vriable (setting this named-tuple-result will not trigger this step)
+
+
 .. graphviz:: glossary.dot
-
-Use the following glyphs to understand the variables
-
-#. ``instantiation_``        are defined at class instantiation time, or through python
-#. `dependent_`              are the result of a previous step, the data_flow variable that is watched
-#. `user specified`_         are specified in the UI, and can be changed interactively
-#. **named_tuple_variable**  Some results return as a tuple, the tuple is what is watched, the sub parts of the tuple can be referenced later
-
-
-
-#. ``sampled_df``                                                   = ``raw_df``, `sample_method`_
-#. ``cleaned``   = **cleaned** (**_df**, **_sd**, **generated_code**) = `sampled_df`, `cleaning_method`_, `existing_operations`_
-#. ``processed`` = **processed** (**_df**, **_sd**)                 = `cleaned_.df`, `post_processing_method`_
-#. ``summary_sd``                                                   = `processed_result.df`, ``analysis_klasses``
-#. ``merged_sd``                                                    = ``cleaned_sd``, `summary_sd`, ``processed_sd``
-#. ``widget``                                                       = ``processed_df``, `merged_sd`, `style_method`_, ``generated_code``
-
-
-
-
-
-+----------------+------------------------------------------------------------------+
-| Destination    |                               args                               |
-+================+==================================================================+
-| ``sampled_df`` | ``raw_df``, `sample_method`                                      |
-+----------------+------------------------------------------------------------------+
-| ``cleaned``    |     `sampled_df`, `cleaning_method`_, `lowcode_operations`_      |
-+----------------+------------------------------------------------------------------+
-|                | cleaned_df, cleaned_sd, generated_code                           |
-+----------------+------------------------------------------------------------------+
-| ``processed``  | `cleaned_.df`, `post_processing_method`_                         |
-+----------------+------------------------------------------------------------------+
-|                | processed_df, processed_sd                                       |
-+----------------+------------------------------------------------------------------+
-| ``summary_sd`` | `processed.df`, ``analysis_klasses``                             |
-+----------------+------------------------------------------------------------------+
-| ``merged_sd``  | ``cleaned_sd``, `summary_sd`, ``processed_sd``                   |
-+----------------+------------------------------------------------------------------+
-| ``widget``     | ``processed_df``, `merged_sd`, `style_method`_, ``cleaned_code`` |
-|                |                                                                  |
-+----------------+------------------------------------------------------------------+
-
-
-
-Rewritten so each step only depends on a single generated property (but possibly two user props)
-getters are specced in args surrounded in quotes
-
-The getters are important because they get a previously created value... but they don't set up a listener.
-without getters, unneeded recomps are triggered
-
-
-existing_operations is an interint one.  It can be either user entered low_code ops, or the previous cleaning_operations.  merged_operations is responsible for first stripping all cleaning_operations from "existing_operations", then adding in the new "cleaning_operations".  This preserves any user netered operations
 
 
 Quick Start to extending Buckaroo

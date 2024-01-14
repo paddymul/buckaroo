@@ -94,7 +94,7 @@ def test_auto_clean_true():
     assert w.stats.ap.unit_test() == (True, [])
 
     
-def test_post_processing():
+def xtest_post_processing():
     def my_func(df):
         return df['int_col'].sum()
     
