@@ -1,14 +1,12 @@
-from unittest import TestCase
 
 import polars as pl
 import numpy as np
 from polars import functions as F
-from buckaroo.customizations.polars_analysis import HistogramAnalysis
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    produce_series_df, PolarsAnalysis, extract_table_hint)
+    produce_series_df, PolarsAnalysis)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
