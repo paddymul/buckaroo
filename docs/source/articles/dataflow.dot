@@ -22,7 +22,7 @@ subgraph cluster_cleaned {
     generated_code [shape="component"];
 }
 
-	sampled_df -> cleaned_df [lhead=cluster_cleaned; penwidth = 5;]
+	sampled_df -> cleaned_df [lhead=cluster_cleaned; color="blueviolet"; penwidth = 5;]
 	cleaning_method -> cleaned_df [lhead=cluster_cleaned]
 	lowcode_ops -> cleaned_df [lhead=cluster_cleaned]
   
@@ -35,25 +35,25 @@ subgraph cluster_processed {
 	 processed_sd  [shape="invtrapezium" height=1 width=.5];
 }
 
-	cleaned_df -> processed_df[lhead=cluster_processed; penwidth = 5; weight=3 ];
+	cleaned_df -> processed_df[lhead=cluster_processed; color="blueviolet"; penwidth = 5; weight=3 ];
 	post_processing_method -> processed_df[lhead=cluster_processed];
 post_processing_method [color="orange"];
 
-    processed_df -> summary_sd [ penwidth = 5; sametail="asdf" weight=5] ;
+    processed_df -> summary_sd [ color="blueviolet"; penwidth = 5; sametail="asdf" weight=5] ;
 	analysis_klasses -> summary_sd [weight=4];
 
 summary_sd [color="lightblue" shape="invtrapezium" height=1 width=.5];
 analysis_klasses [color="green"];
 
 	cleaned_sd -> merged_sd [style="dashed" weight=2.5 penwidth=2.5];
-	summary_sd -> merged_sd  [penwidth = 5];
+	summary_sd -> merged_sd  [color="blueviolet"; penwidth = 5];
 	processed_sd -> merged_sd [style="dashed" penwidth=2.5];
 
 merged_sd [color="lightblue"; shape="invtrapezium" height=1 width=.5]
 
 widget [color="lightblue"];
         processed_df -> widget [style="dashed" weight=2.8 penwidth=2.5];
-        merged_sd -> widget [penwidth = 5];
+        merged_sd -> widget [color="blueviolet"; penwidth = 5];
 	style_method -> widget [style="dotted" penwidth=3];
 	generated_code -> widget [style="dashed" weight=2 penwidth=2.5];
 

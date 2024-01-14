@@ -105,6 +105,9 @@ The final result of `widget` is what is displayed to the user.
 .. graphviz:: dataflow.dot
 
 
+
+.. graphviz:: glossary.dot
+
 Use the following glyphs to understand the variables
 
 #. ``instantiation_``        are defined at class instantiation time, or through python

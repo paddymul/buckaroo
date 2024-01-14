@@ -37,7 +37,7 @@ subgraph cluster_edges {
     landscape=true
     packmode=10
     label="Edges";
-    c -> d  [penwidth = 5; 
+    c -> d  [penwidth = 5;     color="blueviolet";
         label="  data-flow changes trigger recomputation" ];
 
     e -> f [ fconstraint=false 
