@@ -58,6 +58,7 @@ jobs:
       - name: Check docs can be build + links
         if: ${{ matrix.os == 'ubuntu-latest' }}
         working-directory: docs
+        uses: ts-graphviz/setup-graphviz@v1
         run: |
           sudo apt install -y pandoc graphviz
           pip install pytest-check-links graphviz
