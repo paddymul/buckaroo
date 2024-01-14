@@ -24,7 +24,6 @@ export interface IntegerDisplayerA {
   max_digits: number;
 }
 
-
 export interface DatetimeLocaleDisplayerA {
   displayer: 'datetimeLocaleString';
   locale: 'en-US' | 'en-GB' | 'en-CA' | 'fr-FR' | 'es-ES' | 'de-DE' | 'ja-JP';
@@ -80,7 +79,6 @@ export type ColorMappingConfig =
   | ColorWhenNotNullRules
   | ColorFromColumn;
 
-
 //TooltipRules
 export interface SimpleTooltip {
   tooltip_type: 'simple';
@@ -100,8 +98,6 @@ export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be a
 //   type: string;
 // }
 
-
-
 export type DFDataRow = Record<
   string,
   string | number | boolean | any[] | Record<string, any> | null
@@ -117,7 +113,6 @@ export interface DFData {
   // typing,  sorting, null handling I'm not sure about it
 };
 */
-
 
 export type ColumnConfig = {
   col_name: string;
@@ -151,7 +146,6 @@ export const EmptyDf: DFWhole = {
   data: [],
 };
 
-
 //actually SDFT is summary stats transposed to be useful
 // SDFT[col][stat_name]
 // SDFT really only needs histogramBins and histogramLogBins and...? at this point
@@ -163,4 +157,3 @@ export interface SDFMeasure {
 }
 
 export type SDFT = Record<string, SDFMeasure>;
-

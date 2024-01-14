@@ -1,10 +1,10 @@
-
 export interface DFMeta {
   // static,
   total_rows: number;
   columns: number;
   rows_shown: number;
-}export interface BuckarooOptions {
+}
+export interface BuckarooOptions {
   sampled: string[];
   summary_stats: string[];
   show_commands: string[];
@@ -22,8 +22,8 @@ export interface BuckarooState {
 
 export type BKeys = keyof BuckarooOptions;
 
-  // df_dict: Record<string, DFWhole>;
-  // df_meta: DFMeta;
+// df_dict: Record<string, DFWhole>;
+// df_meta: DFMeta;
 /*
 
   df_dict: Record<string, DFWhole>;
