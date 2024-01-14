@@ -34,20 +34,19 @@ subgraph cluster_blah {
 
 
 subgraph cluster_edges {
+    landscape=true
+    packmode=10
     label="Edges";
     c -> d  [penwidth = 5; 
         label="  data-flow changes trigger recomputation" ];
 
-    e -> f [ constraint=false 
+    e -> f [ fconstraint=false 
         label="  changes to ui-variables trigger recomputation too" ]
 
     a -> b  [ style="dashed" penwidth=2.5
-        label="  read-only, does not trigger recompute"];
+        label="  read-only,\n   does not trigger recompute"];
     e [color="orange"];
     c [color="lightblue"]
     }
 
 }
-
-
-

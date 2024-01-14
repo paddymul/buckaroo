@@ -61,6 +61,7 @@ The final result of `widget` is what is displayed to the user.
             .ui-variable {color:orange}
             .tuple-result {color:red}
             .tuple-param {color:#d4706e} /* a darker pink */
+            .tuple-param {color:gray} /* a darker pink */
     </style>
 
 
@@ -88,7 +89,7 @@ The final result of `widget` is what is displayed to the user.
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 | :dataflow-result:`cleaned`                   |    :dataflow-arg:`sampled_df`, :ui-variable:`sample_method`, :ui-variable:`cleaning_method`, :ui-variable:`lowcode_ops`     |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
-|                                              | :tuple-result:`cleaned_df`, :tuple-result:`cleaned_sd`, :tuple-result:`cleaned_code`                                        |
+|                                              | :tuple-result:`cleaned_df`, :tuple-result:`cleaned_sd`, :tuple-result:`generated_code`                                      |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 |         :dataflow-result:`processed`         | :dataflow-arg:`cleaned_df`, :ui-variable:`post_processing_method`                                                           |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
@@ -98,10 +99,10 @@ The final result of `widget` is what is displayed to the user.
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 |         :dataflow-result:`merged_sd`         | :tuple-param:`cleaned_sd`, :dataflow-arg:`summary_sd`, :tuple-param:`processed_sd`                                          |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
-| :dataflow-result:`widget`                    |      :tuple-param:`processed_df`, :dataflow-arg:`merged_sd`, :ui-variable:`style_method`, :tuple-param:`cleaned_code`       |
+| :dataflow-result:`widget`                    |     :tuple-param:`processed_df`, :dataflow-arg:`merged_sd`, :ui-variable:`style_method`, :tuple-param:`generated_code`      |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 
-
+.. graphviz:: dataflow.dot
 
 
 Use the following glyphs to understand the variables
@@ -137,7 +138,7 @@ Use the following glyphs to understand the variables
 +----------------+------------------------------------------------------------------+
 |                | processed_df, processed_sd                                       |
 +----------------+------------------------------------------------------------------+
-| ``summary_sd`` | `processed_result.df`, ``analysis_klasses``                      |
+| ``summary_sd`` | `processed.df`, ``analysis_klasses``                             |
 +----------------+------------------------------------------------------------------+
 | ``merged_sd``  | ``cleaned_sd``, `summary_sd`, ``processed_sd``                   |
 +----------------+------------------------------------------------------------------+

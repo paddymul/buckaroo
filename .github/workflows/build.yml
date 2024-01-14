@@ -28,6 +28,10 @@ jobs:
         run: |
           python -m pip install -U codecov
           npm install -g codecov
+
+      - name: Set up Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
+
       - name: Test the extension
         run: |
           python -m pip install --upgrade -v -e ".[test, examples, docs]"
