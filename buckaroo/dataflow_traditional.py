@@ -73,6 +73,9 @@ def compute_sampled_df(raw_df, sample_method):
 
 class DataFlow(DOMWidget):
 
+    def __init__(self):
+        self.summary_sd = {}
+        self.existing_operations = []
 
     
     raw_df = Any('')

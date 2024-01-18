@@ -52,3 +52,8 @@ def test_dataflow_processed():
     d_flow.raw_df = simple_df
 
     assert d_flow.processed_df is simple_df
+    #processed is currently a no-op, so I'm skipping actual tests for now
+
+def test_summary_sd():
+    
+    pass
