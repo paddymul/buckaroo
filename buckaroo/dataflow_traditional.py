@@ -40,8 +40,6 @@ def run_code_generator(ops):
         return "codegen 2"
     return ""
 
-def make_getter():
-    pass
 
 def merge_sds(*sds):
     """merge sds with later args taking precedence
@@ -55,6 +53,14 @@ def merge_sds(*sds):
 
 SENTINEL_COLUMN_CONFIG_1 = "ASDF"
 SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
+
+
+def get_summary_sd(df, analysis_klasses):
+    if analysis_klasses == "foo":
+        return {'foo':8}
+    if analysis_klasses == "bar":
+        return {'bar':10}
+    return {}
 
 
 def style_columns(style_method:str, sd):
@@ -73,9 +79,10 @@ def compute_sampled_df(raw_df, sample_method):
 
 class DataFlow(DOMWidget):
 
-    def __init__(self):
+    def __init__(self, raw_df):
         self.summary_sd = {}
         self.existing_operations = []
+        self.raw_df = raw_df
 
     
     raw_df = Any('')
@@ -97,8 +104,7 @@ class DataFlow(DOMWidget):
 
     processed_result = Any(default=None)
 
-    transformed_df = Any()
-
+    analysis_klasses = None
     summary_sd = Any()
 
     merged_sd = Any()
@@ -172,10 +178,9 @@ class DataFlow(DOMWidget):
 
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
-        #processed_df = self.processed_result[0]
-        #analysis_klasses
         #call dfstats stuff here
-        self.summary_sd = {}
+        self.summary_sd = get_summary_sd(
+            self.processed_df, self.analysis_klasses)
 
     @observe('summary_sd')
     def _merged_sd(self, change):
@@ -194,4 +199,4 @@ class DataFlow(DOMWidget):
         # generated_code = operation_result[2]
         # processed_df = processed_result[0]
         column_config = self.get_column_config(self.merged_sd, self.style_method)
-        return [column_config]
+        return [self.processed_df, self.merged_sd, column_config]
