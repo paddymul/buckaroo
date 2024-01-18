@@ -53,6 +53,16 @@ def merge_sds(*sds):
         base_sd.update(sd)
     return base_sd
 
+SENTINEL_COLUMN_CONFIG_1 = "ASDF"
+SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
+
+
+def style_columns(style_method:str, sd):
+    if style_method == "foo":
+        return sentinel_column_config_2
+    else:
+        return SENTINEL_COLUMN_CONFIG_1
+
 def merge_column_config(*column_configs):
     pass
 
@@ -64,6 +74,7 @@ def compute_sampled_df(raw_df, sample_method):
 class DataFlow(DOMWidget):
 
 
+    
     raw_df = Any('')
     sample_method = Unicode('default')
     sampled_df = Any('')
@@ -91,6 +102,8 @@ class DataFlow(DOMWidget):
 
     style_method = Unicode('')
     column_config = Any()
+
+    column_config_overrides = {}
 
     merged_column_config = Any()
 
@@ -142,9 +155,15 @@ class DataFlow(DOMWidget):
         self.processed_result = [self.cleaned_df, {}]
 
     @property
+    def processed_df(self):
+        if self.processed_result is not None:
+            return self.processed_result[0]
+        return None
+
+    @property
     def processed_sd(self):
         if self.processed_result is not None:
-            return self.cleaned[1]
+            return self.processed_result[1]
         return {}
 
 
@@ -164,8 +183,8 @@ class DataFlow(DOMWidget):
         self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
 
     def get_column_config(self, sd, style_method):
-        base_column_config = style_method(sd)
-        return merge_column_config(base_column_config, self.column_config_override)
+        base_column_config = style_columns(style_method, sd)
+        return merge_column_config(base_column_config, self.column_config_overrides)
 
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):

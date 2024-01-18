@@ -10,7 +10,9 @@ simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 
 def test_dataflow_operating_df():
     d_flow = DataFlow()
+    d_flow.summary_sd = {}
     d_flow.existing_operations = []
+
     assert d_flow.sampled_df is not simple_df
     d_flow.raw_df = simple_df
     print("operating_df", d_flow.sampled_df)
@@ -26,10 +28,11 @@ def test_dataflow_operating_df():
 def test_dataflow_cleaned():
 
     d_flow = DataFlow()
+    d_flow.summary_sd = {}
     d_flow.existing_operations = []
     #these two should be None to start
     assert d_flow.cleaned_df is None
-    assert d_flow.cleaned_sd is None
+    assert d_flow.cleaned_sd == {}
     d_flow.raw_df = simple_df
     assert d_flow.cleaned_df is simple_df
     d_flow.existing_operations = ["one"]
@@ -41,6 +44,11 @@ def test_dataflow_cleaned():
 def test_dataflow_processed():
 
     d_flow = DataFlow()
+    d_flow.summary_sd = {}
     d_flow.existing_operations = []
 
-    assert d_flow.processed_result is None
+    assert d_flow.processed_df is None
+    
+    d_flow.raw_df = simple_df
+
+    assert d_flow.processed_df is simple_df
