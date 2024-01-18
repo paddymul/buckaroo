@@ -7,6 +7,11 @@ from ipywidgets import DOMWidget
 def get_cleaning_sd(df, cleaning_method):
     return {}
 
+SENTINEL_DF_1 = 9
+SENTINEL_DF_2 = 80
+SENTINEL_DF_3 = 90
+SENTINEL_DF_4 = 90
+
 
 def merge_ops(existing_ops, cleaning_ops):
     """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
@@ -23,9 +28,9 @@ def get_cleaning_operations(df, cleaning_method):
 
 def run_df_interpreter(df, ops):
     if len(ops) == 1:
-        return "len 1"
+        return SENTINEL_DF_1
     if len(ops) == 2:
-        return "len 2"
+        return SENTINEL_DF_2
     return df
 
 def run_code_generator(ops):
@@ -76,6 +81,8 @@ class DataFlow(DOMWidget):
     
     lowcode_operations = Any()
 
+    processed_result = Any(default=None)
+
     transformed_df = Any()
 
     summary_sd = Any()
@@ -100,8 +107,9 @@ class DataFlow(DOMWidget):
             return
         cleaning_operations = get_cleaning_operations(self.sampled_df, self.cleaning_method)
         cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
-        print("cleaning_operations", cleaning_operations)
+        print("existing_operations", self.existing_operations, change)
         merged_operations = merge_ops(self.existing_operations, cleaning_operations)
+        print("merged_operations", merged_operations)
         cleaned_df = run_df_interpreter(self.sampled_df, merged_operations)
         print("_cleaned_df", self.merged_operations)
         generated_code = run_code_generator(merged_operations)
@@ -116,6 +124,7 @@ class DataFlow(DOMWidget):
     def cleaned_sd(self):
         if self.cleaned is not None:
             return self.cleaned[1]
+        return {}
 
     @property
     def generated_code(self):
@@ -127,10 +136,17 @@ class DataFlow(DOMWidget):
         if self.cleaned is not None:
             return self.cleaned[3]
 
-    @observe('operation_result', 'post_processing_method')
+    @observe('cleaned', 'post_processing_method')
     def _processed_result(self, change):
         #for now this is a no-op because I don't have a post_processing_function or mechanism
-        self.processed_result = [self.operation_result[0], {}]
+        self.processed_result = [self.cleaned_df, {}]
+
+    @property
+    def processed_sd(self):
+        if self.processed_result is not None:
+            return self.cleaned[1]
+        return {}
+
 
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
@@ -145,9 +161,7 @@ class DataFlow(DOMWidget):
         #summary_sd, given that processed_df is computed first. My
         #thinking was that processed_sd has greater total knowledge
         #and should supersede summary_sd.
-        cleaned_sd = self.operation_result[1]
-        processed_sd = self.processed_result[1]
-        self.merged_sd = merge_sds(cleaned_sd, self.summary_sd, processed_sd)
+        self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
 
     def get_column_config(self, sd, style_method):
         base_column_config = style_method(sd)
