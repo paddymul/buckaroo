@@ -88,11 +88,11 @@ class ColorFromColumn(pydantic.BaseModel):
 ColorMappingConfig = Union[ColorMapRules, ColorWhenNotNullRules, ColorFromColumn]
 
 class SimpleToolTip(pydantic.BaseModel):
-    tooltipe_type: Literal['simple']
+    tooltip_type: Literal['simple']
     val_column: str
 
 class SummarySeriesTooltip(pydantic.BaseModel):
-    tooltipe_type: Literal['summary_series']
+    tooltip_type: Literal['summary_series']
 
 TooltipConfig = Union[SimpleToolTip, SummarySeriesTooltip]
 
@@ -103,6 +103,13 @@ class ColumnConfig(pydantic.BaseModel):
     color_map_config: Optional[ColorMappingConfig]
     tooltip_config: Optional[TooltipConfig]
 
+class ColorMapRules(pydantic.BaseModel):
+    color_rule: Literal['color_map']
+    map_name: Union[Literal['BLUE_TO_YELLOW'], Literal['DIVERGING_RED_WHITE_BLUE']]
+    val_column: Optional[str]
+
+class LinkifyDisplayerA(pydantic.BaseModel):
+    displayer: Literal["linkify"]
 
 
 class PinnedRowConfig(pydantic.BaseModel):

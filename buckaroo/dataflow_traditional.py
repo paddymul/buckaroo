@@ -41,6 +41,20 @@ def run_code_generator(ops):
     return ""
 
 
+def merge_column(base, new):
+    ret = base.copy()
+    ret.update(new)
+
+    base_override = base.get('column_config_override', {}).copy()
+    new_override = new.get('column_config_override', {}).copy()
+    base_override.update(new_override)
+
+    if len(base_override) > 0:
+        ret['column_config_override'] = base_override
+    return ret
+
+        
+
 def merge_sds(*sds):
     """merge sds with later args taking precedence
 
@@ -48,7 +62,8 @@ def merge_sds(*sds):
     """
     base_sd = {}
     for sd in sds:
-        base_sd.update(sd)
+        for column in sd.keys():
+            base_sd[column] = merge_column(base_sd.get(column, {}), sd[column])
     return base_sd
 
 SENTINEL_COLUMN_CONFIG_1 = "ASDF"

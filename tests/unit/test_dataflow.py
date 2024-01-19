@@ -67,3 +67,46 @@ def test_widget():
     d_flow.cleaning_method = "one op"
     assert d_flow.summary_sd == {'foo':8}
     assert d_flow.merged_sd == {'foo':8}
+
+def test_merge_sds():
+
+    sd_base = {
+        'Volume' : {
+            'a':10,
+	    'column_config_override': {
+                'color_map_config' : {'color_rule': 'color_from_column',
+	                              'col_name': 'Volume_colors'}}},
+        'Volume_colors' : {
+            'a': 30,
+	    'column_config_override': { 'displayer': 'hidden'}},
+        'only_in_base': {'f':77}}
+
+    sd_second = {
+        'Volume' : {
+            'a': 999,
+            'b': "foo",
+	    'column_config_override': {
+                'tooltip_config': {'tooltip_type' : 'summary_series'}}},
+        'Volume_colors' : {
+            'd':111,
+	    'column_config_override': { 'displayer': 'string'}},
+        'completely_new_column': {'k':90}}
+
+    expected = {
+        'Volume' : {
+            'a': 999,
+            'b': "foo",
+	    'column_config_override': {
+                'color_map_config' : {'color_rule': 'color_from_column',
+	                              'col_name': 'Volume_colors'},
+                #note that column_config_override is merged, not just overwritten
+                'tooltip_config': {'tooltip_type' : 'summary_series'}}},
+        'Volume_colors' : {
+            'a': 30,
+            'd': 111,
+	    'column_config_override': { 'displayer': 'string'}},
+        'only_in_base': {'f':77},
+        'completely_new_column': {'k':90}}
+
+    result = dft.merge_sds(sd_base, sd_second)
+    assert result == expected
