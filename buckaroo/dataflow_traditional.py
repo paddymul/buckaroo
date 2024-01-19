@@ -42,6 +42,9 @@ def run_code_generator(ops):
 
 
 def merge_column(base, new):
+    """
+    merge individual column dictionaries, with special handling for column_config_override
+    """
     ret = base.copy()
     ret.update(new)
 
@@ -52,8 +55,6 @@ def merge_column(base, new):
     if len(base_override) > 0:
         ret['column_config_override'] = base_override
     return ret
-
-        
 
 def merge_sds(*sds):
     """merge sds with later args taking precedence

@@ -104,8 +104,11 @@ def test_merge_sds():
         'Volume_colors' : {
             'a': 30,
             'd': 111,
+            #sd_second has a different value for 'displayer then sd_base
 	    'column_config_override': { 'displayer': 'string'}},
+        #only in base, needs to be present
         'only_in_base': {'f':77},
+        #only found in second should show up here
         'completely_new_column': {'k':90}}
 
     result = dft.merge_sds(sd_base, sd_second)
