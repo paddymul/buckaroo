@@ -62,6 +62,7 @@ def merge_sds(*sds):
     """
     base_sd = {}
     for sd in sds:
+        print("sd", sd)
         for column in sd.keys():
             base_sd[column] = merge_column(base_sd.get(column, {}), sd[column])
     return base_sd
@@ -72,9 +73,9 @@ SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
 
 def get_summary_sd(df, analysis_klasses):
     if analysis_klasses == "foo":
-        return {'foo':8}
+        return {'some-col': {'foo':8}}
     if analysis_klasses == "bar":
-        return {'bar':10}
+        return {'other-col': {'bar':10}}
     return {}
 
 
@@ -144,11 +145,8 @@ class DataFlow(DOMWidget):
             return
         cleaning_operations = get_cleaning_operations(self.sampled_df, self.cleaning_method)
         cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
-        print("existing_operations", self.existing_operations, change)
         merged_operations = merge_ops(self.existing_operations, cleaning_operations)
-        print("merged_operations", merged_operations)
         cleaned_df = run_df_interpreter(self.sampled_df, merged_operations)
-        print("_cleaned_df", self.merged_operations)
         generated_code = run_code_generator(merged_operations)
         self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
 
