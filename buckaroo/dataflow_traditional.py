@@ -210,7 +210,6 @@ class DataFlow(DOMWidget):
 
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
-        # generated_code = operation_result[2]
-        # processed_df = processed_result[0]
+        #how to control ordering of column_config???
         column_config = self.get_column_config(self.merged_sd, self.style_method)
         return [self.processed_df, self.merged_sd, column_config]

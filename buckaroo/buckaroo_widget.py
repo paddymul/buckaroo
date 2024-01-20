@@ -62,20 +62,38 @@ class BuckarooWidget(DOMWidget):
 
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
-    ).tag(snnync=True)
+    ).tag(sync=True)
 
-    dfConfig = Dict(
-        {
-        'totalRows': 1234569,
-        'columns': 30,
-        'rowsShown': 0,
-        'sampleSize': 10_000,
-        'sampled':False,
-        'summaryStats': False,
-        'reorderdColumns': False,
-        'showCommands': True,
-        'auto_clean': False,
+
+    df_meta = Dict({
+        'columns': 5,
+        'rows_shown': 20,
+        'total_rows': 877}).tag(sync=True)
+
+
+    buckaroo_options = Dict({
+        'auto_clean': ['aggressive', 'conservative'],
+        'reorderd_columns': [],
+        'sampled': ['random'],
+        'show_commands': ['on'],
+        #//    'summary_stats' : ['full', 'all', 'typing_stats']
+        'summary_stats': ['all'],
     }).tag(sync=True)
+        
+
+    
+    # dfConfig = Dict(
+    #     {
+    #     'totalRows': 1234569,
+    #     'columns': 30,
+    #     'rowsShown': 0,
+    #     'sampleSize': 10_000,
+    #     'sampled':False,
+    #     'summaryStats': False,
+    #     'reorderdColumns': False,
+    #     'showCommands': True,
+    #     'auto_clean': False,
+    # }).tag(sync=True)
 
 
     #widget config.  Change these via inheritance to alter core behaviors of buckaroo
@@ -98,21 +116,8 @@ class BuckarooWidget(DOMWidget):
         if (item_count > FAST_SUMMARY_WHEN_GREATER) or sampled:
             return True
         return False
-
-    def get_df_config(self, df, sampled, showCommands):
-        tempDfc = self.dfConfig.copy()
-        tempDfc.update(dict(
-            totalRows=len(df),
-            columns=len(df.columns),
-            showCommands=showCommands))
-        tempDfc['sampled'] = self.should_sample(df, sampled)
-        return tempDfc
     
     def __init__(self, df,
-                 sampled=True,
-                 summaryStats=False,
-                 showCommands=False,
-                 auto_clean=False,
                  debug=False
                  ):
 
@@ -126,11 +131,14 @@ class BuckarooWidget(DOMWidget):
         self.debug = debug
         self.df_name = get_df_name(df)
 
-        self.setup_from_command_kls_list()
-        self.dfConfig = self.get_df_config(df, sampled, showCommands)
-        #we need dfConfig setup first before we get the proper working_df for auto_cleaning
-        self.raw_df = df
-        self.run_autoclean(auto_clean)
+        # self.setup_from_command_kls_list()
+        # self.dfConfig = self.get_df_config(df, sampled, showCommands)
+        # #we need dfConfig setup first before we get the proper working_df for auto_cleaning
+        # self.raw_df = df
+        # self.run_autoclean(auto_clean)
+        self.df_dict = {'main':
+                        df_to_obj(df, {})}
+        
         warnings.filterwarnings('default')
 
 
