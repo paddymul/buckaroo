@@ -10,32 +10,21 @@ simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 
 def test_dataflow_operating_df():
     d_flow = DataFlow(simple_df)
-
-    # assert d_flow.sampled_df is not simple_df
     d_flow.raw_df = simple_df
-    print("operating_df", d_flow.sampled_df)
     assert d_flow.sampled_df is simple_df
-
     d_flow.sample_method = "first"
     assert len(d_flow.sampled_df) == 1
-    
     d_flow.sample_method = "default"
     assert d_flow.sampled_df is simple_df
 
     
 def test_dataflow_cleaned():
-
     d_flow = DataFlow(simple_df)
-    #these two should be None to start
-    # assert d_flow.cleaned_df is None
-    # assert d_flow.cleaned_sd == {}
-    # d_flow.raw_df = simple_df
     assert d_flow.cleaned_df is simple_df
     d_flow.existing_operations = ["one"]
     assert d_flow.cleaned_df is dft.SENTINEL_DF_1
     d_flow.cleaning_method = "one op"
     assert d_flow.cleaned_df is dft.SENTINEL_DF_2
-
 
 def test_dataflow_processed():
 
@@ -44,21 +33,37 @@ def test_dataflow_processed():
     #processed is currently a no-op, so I'm skipping actual tests for now
 
 def test_summary_sd():
-
     d_flow = DataFlow(simple_df)
-
-    assert d_flow.summary_sd == {}
+    assert d_flow.summary_sd == {'index': {}, 'int_col': {}, 'str_col': {}}
     d_flow.analysis_klasses = "foo"
     d_flow.cleaning_method = "one op"
     assert d_flow.summary_sd == {'some-col': {'foo':8}}
 
 def test_merged_sd():
     d_flow = DataFlow(simple_df)
-    assert d_flow.merged_sd == {}
+    assert d_flow.merged_sd == {'index': {}, 'int_col': {}, 'str_col': {}}
     d_flow.analysis_klasses = "foo"
     d_flow.cleaning_method = "one op"
     assert d_flow.summary_sd == {'some-col': {'foo':8}}
     assert d_flow.merged_sd == {'some-col': {'foo':8}}
+
+
+
+
+def test_column_config():
+    basic_df = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
+    d_flow = DataFlow(basic_df)
+    df, merged_sd, dfviewer_config = d_flow.widget_args_tuple
+
+    assert merged_sd == {'index' : {}, 'a': {}, 'b': {}}
+    assert dfviewer_config['pinned_rows'] == []
+    assert dfviewer_config['column_config'] == [
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
+    
+            
+
 
 # def test_widget():
 #     d_flow = DataFlow(simple_df)
@@ -112,4 +117,30 @@ def test_merge_sds():
         'completely_new_column': {'k':90}}
 
     result = dft.merge_sds(sd_base, sd_second)
+    
     assert result == expected
+    
+
+def test_merge_column_config():
+    overrides = {
+        'bar' : {'displayer_args':  {'displayer': 'int'}},
+        'foo' : {'color_map_config' : {'color_rule': 'color_from_column',
+	                               'col_name': 'Volume_colors'}}}
+
+    computed_column_config =     [
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'foo', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'bar', 'displayer_args': {'displayer': 'obj'}}]
+
+    merged = dft.merge_column_config(
+        computed_column_config, overrides)
+
+    expected = [
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'foo', 'displayer_args': {'displayer': 'obj'},
+             'color_map_config' : {'color_rule': 'color_from_column',
+	                               'col_name': 'Volume_colors'}},
+            {'col_name':'bar', 'displayer_args': {'displayer': 'int'}}]
+    assert expected == merged
+        
+         

@@ -1,3 +1,4 @@
+import pandas as pd
 from traitlets import Unicode, Any, observe
 from ipywidgets import DOMWidget
 
@@ -7,10 +8,11 @@ from ipywidgets import DOMWidget
 def get_cleaning_sd(df, cleaning_method):
     return {}
 
-SENTINEL_DF_1 = 9
-SENTINEL_DF_2 = 80
-SENTINEL_DF_3 = 90
-SENTINEL_DF_4 = 90
+SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
+SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
+SENTINEL_DF_3 = pd.DataFrame({'pp'   :[99, 33], 'ee':   [     6,     9]})
+SENTINEL_DF_4 = pd.DataFrame({'vvv'  :[12, 49], 'oo':   [ 'ccc', 'www']})
+
 
 
 def merge_ops(existing_ops, cleaning_ops):
@@ -77,17 +79,34 @@ def get_summary_sd(df, analysis_klasses):
         return {'some-col': {'foo':8}}
     if analysis_klasses == "bar":
         return {'other-col': {'bar':10}}
-    return {}
+    index_name = df.index.name or "index"
+    ret_summary = {index_name: {}}
+
+    for col in df.columns:
+        ret_summary[col] = {}
+    return ret_summary
 
 
 def style_columns(style_method:str, sd):
     if style_method == "foo":
         return sentinel_column_config_2
     else:
-        return SENTINEL_COLUMN_CONFIG_1
+        ret_col_config = []
+        for col in sd.keys():
+            ret_col_config.append(
+                {'col_name':col, 'displayer_args': {'displayer': 'obj'}})
+        return {
+            'pinned_rows':   [],
+            'column_config': ret_col_config}
 
-def merge_column_config(*column_configs):
-    pass
+def merge_column_config(styled_column_config, overide_column_configs):
+    ret_column_config = styled_column_config.copy()
+    for row in ret_column_config:
+        col = row['col_name']
+        if col in overide_column_configs:
+            row.update(overide_column_configs[col])
+    return ret_column_config
+                       
 
 def compute_sampled_df(raw_df, sample_method):
     if sample_method == "first":
@@ -189,7 +208,6 @@ class DataFlow(DOMWidget):
             return self.processed_result[1]
         return {}
 
-
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
         #call dfstats stuff here
@@ -205,11 +223,14 @@ class DataFlow(DOMWidget):
         self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
 
     def get_column_config(self, sd, style_method):
-        base_column_config = style_columns(style_method, sd)
-        return merge_column_config(base_column_config, self.column_config_overrides)
+        dfviewer_config = style_columns(style_method, sd)
+        base_column_config = dfviewer_config['column_config']
+        dfviewer_config['column_config'] =  merge_column_config(
+            base_column_config, self.column_config_overrides)
+        return dfviewer_config
 
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
         #how to control ordering of column_config???
         column_config = self.get_column_config(self.merged_sd, self.style_method)
-        return [self.processed_df, self.merged_sd, column_config]
+        self.widget_args_tuple =  [self.processed_df, self.merged_sd, column_config]
