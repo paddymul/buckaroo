@@ -81,6 +81,15 @@ class BuckarooWidget(DOMWidget):
     }).tag(sync=True)
         
 
+    buckaroo_state = Dict({
+        'auto_clean': 'conservative',
+        'reorderd_columns': False,
+        'sampled': False,
+        'show_commands': False,
+        'summary_stats': False,
+        'search_string': '',
+    }).tag(sync=True)
+
     
     # dfConfig = Dict(
     #     {
@@ -136,8 +145,19 @@ class BuckarooWidget(DOMWidget):
         # #we need dfConfig setup first before we get the proper working_df for auto_cleaning
         # self.raw_df = df
         # self.run_autoclean(auto_clean)
+
+        empty_df = {
+            'dfviewer_config': {
+                'pinned_rows': [],
+                'column_config': [],
+            },
+            'data': [],
+        }
+
         self.df_dict = {'main':
-                        df_to_obj(df, {})}
+                        df_to_obj(df, {}),
+                        'all': empty_df
+                        }
         
         warnings.filterwarnings('default')
 

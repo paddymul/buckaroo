@@ -64,9 +64,9 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
 def generate_column_config(df:pd.DataFrame, summary_dict):
     ret_conf = []
     index_name = df.index.name or "index"
-    ret_conf.append({'col_name':index_name, 'displayer':'obj'})
+    ret_conf.append({'col_name':index_name, 'displayer_args' : { 'displayer':'obj'}})
     for col in df.columns:
-        ret_conf.append({'col_name': col, 'displayer':'obj'})
+        ret_conf.append({'col_name': col, 'displayer_args' : { 'displayer':'obj'} })
     return ret_conf
         
 
