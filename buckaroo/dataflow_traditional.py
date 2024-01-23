@@ -335,8 +335,7 @@ class CustomizableDataflow(DataFlow):
             self.df_name, debug=self.debug)
         index_name = processed_df.index.name or "index"
         ret_summary = {index_name: {}}
-        ret_summary.update( stats.presentation_sdf)
-        #return  stats.presentation_sdf
+        ret_summary.update(stats.presentation_sdf)
         return ret_summary
 
         
