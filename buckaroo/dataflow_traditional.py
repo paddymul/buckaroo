@@ -246,8 +246,13 @@ class DataFlow(HasTraits):
         empty_df = {
             'dfviewer_config': {
                 'pinned_rows': [
-                    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}],
-                'column_config': [],
+                    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
+                ],
+                'column_config': [
+                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}
+                ],
             },
             'data': [{'index': 'dtype', 'a': 'int', 'b':'string'}],
         }
