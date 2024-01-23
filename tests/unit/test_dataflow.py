@@ -1,3 +1,4 @@
+import pytest
 import pandas as pd
 #from buckaroo.dataflow import DataFlow
 from buckaroo.dataflow_traditional import DataFlow
@@ -192,3 +193,7 @@ def test_custom_dataflow():
 
     cdfc.style_method = "int_styles"
     assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_INT
+
+
+    with pytest.raises(dft.UnknownStyleMethod):
+        cdfc.style_method = "non_existent_styling"
