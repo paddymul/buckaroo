@@ -132,41 +132,63 @@ def test_merge_column_config():
         
          
 from buckaroo.buckaroo_widget import BuckarooWidget
-
-def test_widget_instatiation():
-    basic_df = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
-    #ab = BuckarooWidget(basic_df)
-    ab = DataFlow(basic_df)
-    assert ab.processed_df is basic_df
-    assert ab.widget_args_tuple[0] is basic_df
-
-    
-    empty_df = {
+EMPTY_DF_JSON = {
             'dfviewer_config': {
                 'pinned_rows': [],
-                'column_config': [],
-            },
-            'data': [],
-        }
+                'column_config': []},
+            'data': []}
 
-    main_df = {'data': [{'index':0, 'a':10, 'b':'foo'},
+BASIC_DF = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
+BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
                         {'index':1, 'a':20, 'b':'bar'},
-                        {'index':2, 'a':30, 'b':'baz'}],
-               'dfviewer_config': {
+                        {'index':2, 'a':30, 'b':'baz'}]
+DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
                        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}}
+                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
 
+def test_widget_instatiation():
+    dfc = DataFlow(BASIC_DF)
+    assert dfc.widget_args_tuple[0] is BASIC_DF
 
-    assert ab.df_dict['all'] == empty_df
-    assert ab.df_dict['main'] == main_df
-  
-    assert ab.df_dict == {
+    main_df = {'data': BASIC_DF_JSON_DATA,
+               'dfviewer_config': DFVIEWER_CONFIG_DEFAULT}
+
+    expected_df_dict =  {
         'main': main_df,
-        'all': empty_df}
-    # bc = BuckarooWidget(basic_df)
-    # assert bc.df_dict == {
-    #     'main': main_df,
-    #     'all': empty_df}
+        'all': EMPTY_DF_JSON}
+
+    assert dfc.df_dict == expected_df_dict
+    bw = BuckarooWidget(BASIC_DF)
+    assert bw.df_dict == expected_df_dict
+
+from buckaroo.dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
+
+def test_custom_dataflow():
+
+    class IntStyling(SimpleStylingAnalysis):
+        @staticmethod
+        def sd_to_column_config(col, sd):
+            return {'col_name':col, 'displayer_args': {'displayer': 'int'}}
+
+        style_method = "int_styles"
+
+
+    class TwoStyleDFC(CustomizableDataflow):
+        analysis_klasses = [SimpleStylingAnalysis, IntStyling]
+        
+    cdfc = TwoStyleDFC(BASIC_DF)
+    assert cdfc.widget_args_tuple[0] is BASIC_DF
+    assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_DEFAULT
+
+    DFVIEWER_CONFIG_INT = {
+                   'pinned_rows': [],
+                   'column_config':  [
+                       {'col_name':'index', 'displayer_args': {'displayer': 'int'}},
+                       {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
+                       {'col_name':'b', 'displayer_args': {'displayer': 'int'}}]}
+
+    cdfc.style_method = "int_styles"
+    assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_INT
