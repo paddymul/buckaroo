@@ -1,18 +1,13 @@
 import pandas as pd
-from traitlets import Unicode, Any, observe
+from traitlets import Unicode, Any, observe, HasTraits, Dict, List
 from ipywidgets import DOMWidget
+from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE, pd_to_obj    
 
-
-    
-
-def get_cleaning_sd(df, cleaning_method):
-    return {}
 
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
 SENTINEL_DF_3 = pd.DataFrame({'pp'   :[99, 33], 'ee':   [     6,     9]})
 SENTINEL_DF_4 = pd.DataFrame({'vvv'  :[12, 49], 'oo':   [ 'ccc', 'www']})
-
 
 
 def merge_ops(existing_ops, cleaning_ops):
@@ -27,6 +22,9 @@ def get_cleaning_operations(df, cleaning_method):
     if cleaning_method == "two op":
         return ["", ""]
     return []
+
+def get_cleaning_sd(df, cleaning_method):
+    return {}
 
 def run_df_interpreter(df, ops):
     if len(ops) == 1:
@@ -113,14 +111,16 @@ def compute_sampled_df(raw_df, sample_method):
         return raw_df[:1]
     return raw_df
 
-class DataFlow(DOMWidget):
+from ._frontend import module_name, module_version
+class DataFlow(HasTraits):
 
     def __init__(self, raw_df):
+        super().__init__()
         self.summary_sd = {}
         self.existing_operations = []
         self.raw_df = raw_df
 
-    
+
     raw_df = Any('')
     sample_method = Unicode('default')
     sampled_df = Any('')
@@ -152,7 +152,7 @@ class DataFlow(DOMWidget):
 
     merged_column_config = Any()
 
-    widget_args_tuple = Any()
+    widget_args_tuple = Any().tag(sync=True)
 
 
     @observe('raw_df', 'sample_method')
@@ -232,5 +232,24 @@ class DataFlow(DOMWidget):
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
         #how to control ordering of column_config???
-        column_config = self.get_column_config(self.merged_sd, self.style_method)
-        self.widget_args_tuple =  [self.processed_df, self.merged_sd, column_config]
+        dfviewer_config = self.get_column_config(self.merged_sd, self.style_method)
+        self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
+
+    @observe('widget_args_tuple')
+    def _handle_widget_change(self, change):
+        processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
+        if processed_df is None:
+            return
+        main_df_whole = {'data': pd_to_obj(processed_df),
+                       'dfviewer_config': dfviewer_config} 
+        empty_df = {
+            'dfviewer_config': {
+                'pinned_rows': [],
+                'column_config': [],
+            },
+            'data': [],
+        }
+  
+        self.df_dict = {'main': main_df_whole,
+                        'all': empty_df}
+        

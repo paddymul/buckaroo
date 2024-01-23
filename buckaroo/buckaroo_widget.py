@@ -25,7 +25,7 @@ from .customizations.histogram import (Histogram)
 from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.utils  import get_df_name
 
-from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE
+from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE, pd_to_obj
 
 
 """
@@ -40,10 +40,10 @@ summary stats presentations are just different pinned row configs that read from
 
 
 """
-
+from .dataflow_traditional import DataFlow
 
 FAST_SUMMARY_WHEN_GREATER = 1_000_000
-class BuckarooWidget(DOMWidget):
+class BuckarooWidget(DataFlow, DOMWidget):
     """TODO: Add docstring here
     """
     _model_name = Unicode('DCEFWidgetModel').tag(sync=True)
@@ -90,21 +90,6 @@ class BuckarooWidget(DOMWidget):
         'search_string': '',
     }).tag(sync=True)
 
-    
-    # dfConfig = Dict(
-    #     {
-    #     'totalRows': 1234569,
-    #     'columns': 30,
-    #     'rowsShown': 0,
-    #     'sampleSize': 10_000,
-    #     'sampled':False,
-    #     'summaryStats': False,
-    #     'reorderdColumns': False,
-    #     'showCommands': True,
-    #     'auto_clean': False,
-    # }).tag(sync=True)
-
-
     #widget config.  Change these via inheritance to alter core behaviors of buckaroo
     command_classes = DefaultCommandKlsList
     analysis_classes = [TypingStats, DefaultSummaryStats,
@@ -126,53 +111,18 @@ class BuckarooWidget(DOMWidget):
             return True
         return False
     
-    def __init__(self, df,
-                 debug=False
-                 ):
+    def __init__(self, df, debug=False):
 
-        super().__init__()
+        # super().__init__()
+
+        super().__init__(df)
         if not debug:
             warnings.filterwarnings('ignore')
-        #moving setup_from_command_kls_list early in the init because
-        #it's relatively benign and not tied to other linked updates
-        self.processed_result = None
-        self.transformed_df = None
         self.debug = debug
         self.df_name = get_df_name(df)
-
-        # self.setup_from_command_kls_list()
-        # self.dfConfig = self.get_df_config(df, sampled, showCommands)
-        # #we need dfConfig setup first before we get the proper working_df for auto_cleaning
-        # self.raw_df = df
-        # self.run_autoclean(auto_clean)
-
-        empty_df = {
-            'dfviewer_config': {
-                'pinned_rows': [],
-                'column_config': [],
-            },
-            'data': [],
-        }
-
-        self.df_dict = {'main':
-                        df_to_obj(df, {}),
-                        'all': empty_df
-                        }
-        
+        self.raw_df = df
         warnings.filterwarnings('default')
 
-
-    def run_autoclean(self, auto_clean):
-        if auto_clean:
-            # this will trigger the setting of self.typed_df
-            self.operations = get_auto_type_operations(
-                self.raw_df, metadata_f=self.typing_metadata_f,
-                recommend_f=self.typing_recommend_f)
-        else:
-            self.set_typed_df(self.get_working_df())
-            #need to run this for the no autoclean case
-            #self.run_post_processing()
-        
     def set_metadata_f(self, new_f):
         self.typing_metadata_f = staticmethod(new_f)
         self.run_autoclean()
@@ -180,20 +130,6 @@ class BuckarooWidget(DOMWidget):
     def set_recommend_f(self, new_f):
         self.typing_recommend_f = staticmethod(new_f)
         self.run_autoclean()
-
-    def set_typed_df(self, new_df):
-        self.typed_df = new_df
-        # stats need to be rerun each time 
-        self.stats = self.DFStatsClass(
-            self.typed_df,
-            self.analysis_classes,
-            self.df_name, debug=self.debug)
-        # setting summary_df is removed here because summary_df_json is handled by df_dict
-        # summary_df can be accessed through self.stats.presentation_sdf
-        self.ensure_df_sync()
-
-    def ensure_df_sync(self):
-        self.df_dict = df_to_obj(self.typed_df, self.stats.sdf)
 
 
     @observe('operations')
@@ -232,14 +168,6 @@ class BuckarooWidget(DOMWidget):
             return # nothing changed, do no computations
         new_ops = change['new']
         self.set_typed_df(self.interpret_ops(new_ops, self.get_working_df()))
-
-    def get_working_df(self):
-        #this won't listen to sampled changes properly
-        if self.dfConfig['sampled']:
-            return sample(self.raw_df, self.dfConfig['sampleSize'])
-        else:
-            return self.raw_df        
-        
 
     def generate_code(self, operations):
         if len(operations) == 0:

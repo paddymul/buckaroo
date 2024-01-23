@@ -48,8 +48,6 @@ def test_merged_sd():
     assert d_flow.merged_sd == {'some-col': {'foo':8}}
 
 
-
-
 def test_column_config():
     basic_df = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
     d_flow = DataFlow(basic_df)
@@ -62,17 +60,6 @@ def test_column_config():
             {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
             {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
     
-            
-
-
-# def test_widget():
-#     d_flow = DataFlow(simple_df)
-#     assert d_flow.merged_sd == {}
-#     d_flow.analysis_klasses = "foo"
-#     d_flow.cleaning_method = "one op"
-#     assert d_flow.summary_sd == {'foo':8}
-#     assert d_flow.merged_sd == {'foo':8}
-
 def test_merge_sds():
 
     sd_base = {
@@ -144,3 +131,39 @@ def test_merge_column_config():
     assert expected == merged
         
          
+from buckaroo.buckaroo_widget import BuckarooWidget
+
+def test_widget_instatiation():
+    basic_df = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
+    #ab = BuckarooWidget(basic_df)
+    ab = DataFlow(basic_df)
+    assert ab.processed_df is basic_df
+    assert ab.widget_args_tuple[0] is basic_df
+
+    
+    empty_df = {
+            'dfviewer_config': {
+                'pinned_rows': [],
+                'column_config': [],
+            },
+            'data': [],
+        }
+
+    main_df = {'data': [{'index':0, 'a':10, 'b':'foo'},
+                        {'index':1, 'a':20, 'b':'bar'},
+                        {'index':2, 'a':30, 'b':'baz'}],
+               'dfviewer_config': {
+                   'pinned_rows': [],
+                   'column_config':  [
+                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}}
+
+  
+    assert ab.df_dict == {
+        'main': main_df,
+        'all': empty_df}
+    bc = BuckarooWidget(basic_df)
+    assert bc.df_dict == {
+        'main': main_df,
+        'all': empty_df}
