@@ -208,7 +208,7 @@ def test_custom_summary_stats():
 
     summary_sd = dc_dfc.widget_args_tuple[1]
 
-    assert summary_sd == {'index': {}, 
+    assert summary_sd == {'index': {'distinct_count': 3}, 
                           'a': {'distinct_count':2}, 'b': {'distinct_count':3}}
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
 

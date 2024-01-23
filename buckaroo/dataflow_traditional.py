@@ -333,11 +333,7 @@ class CustomizableDataflow(DataFlow):
             processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
-        index_name = processed_df.index.name or "index"
-        ret_summary = {index_name: {}}
-        ret_summary.update(stats.presentation_sdf)
-        return ret_summary
-
+        return stats.presentation_sdf
         
     def get_dfviewer_config(self, sd, style_method):
         if style_method not in self.styling_options:
