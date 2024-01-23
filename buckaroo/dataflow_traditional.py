@@ -221,7 +221,6 @@ class DataFlow(HasTraits):
             return {'other-col': {'bar':10}}
         index_name = df.index.name or "index"
         ret_summary = {index_name: {}}
-
         for col in df.columns:
             ret_summary[col] = {}
         return ret_summary
@@ -229,11 +228,7 @@ class DataFlow(HasTraits):
 
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
-
-
-        #call dfstats stuff here
-        self.summary_sd = self.get_summary_sd(
-            self.processed_df)
+        self.summary_sd = self.get_summary_sd(self.processed_df)
 
     @observe('summary_sd')
     def _merged_sd(self, change):
@@ -345,22 +340,3 @@ class CustomizableDataflow(DataFlow):
         dfviewer_config['column_config'] =  merge_column_config(
             base_column_config, self.column_config_overrides)
         return dfviewer_config
-
-    def hardcoded_df_dict(self):
-        empty_df = {
-            'dfviewer_config': {
-                'pinned_rows': [
-                    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
-                ],
-                'column_config': [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}
-                ],
-            },
-            'data': [{'index': 'dtype', 'a': 'int', 'b':'string'}],
-        }
-  
-        self.df_dict = {'main': main_df_whole,
-                        'all': empty_df}
-        
