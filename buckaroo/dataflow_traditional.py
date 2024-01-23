@@ -85,6 +85,23 @@ def get_summary_sd(df, analysis_klasses):
     return ret_summary
 
 
+
+class SimpleStylingAnalysis:
+    pinned_rows = []
+    @classmethod
+    def style_columns(kls, style_method:str, sd):
+        ret_col_config = []
+        for col in sd.keys():
+            ret_col_config.append(
+                {'col_name':col, 'displayer_args': {'displayer': 'obj'}})
+        return {
+            'pinned_rows': kls.pinned_rows
+            'column_config': ret_col_config}
+
+    #the analysis code always runs
+    analysis_stuff = None #functions that add dtype and na_per to sumary_sd
+
+
 def style_columns(style_method:str, sd):
     if style_method == "foo":
         return sentinel_column_config_2
