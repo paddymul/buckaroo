@@ -95,7 +95,7 @@ class SimpleStylingAnalysis:
             ret_col_config.append(
                 {'col_name':col, 'displayer_args': {'displayer': 'obj'}})
         return {
-            'pinned_rows': kls.pinned_rows
+            'pinned_rows': kls.pinned_rows,
             'column_config': ret_col_config}
 
     #the analysis code always runs
@@ -112,7 +112,9 @@ def style_columns(style_method:str, sd):
                 {'col_name':col, 'displayer_args': {'displayer': 'obj'}})
         return {
             'pinned_rows': [
-                {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}],
+            #    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
+
+            ],
             'column_config': ret_col_config}
 
 def merge_column_config(styled_column_config, overide_column_configs):
@@ -240,7 +242,7 @@ class DataFlow(HasTraits):
         #and should supersede summary_sd.
         self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
 
-    def get_column_config(self, sd, style_method):
+    def get_dfviewer_config(self, sd, style_method):
         dfviewer_config = style_columns(style_method, sd)
         base_column_config = dfviewer_config['column_config']
         dfviewer_config['column_config'] =  merge_column_config(
@@ -250,7 +252,7 @@ class DataFlow(HasTraits):
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
         #how to control ordering of column_config???
-        dfviewer_config = self.get_column_config(self.merged_sd, self.style_method)
+        dfviewer_config = self.get_dfviewer_config(self.merged_sd, self.style_method)
         self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
 
     @observe('widget_args_tuple')
@@ -262,16 +264,46 @@ class DataFlow(HasTraits):
                        'dfviewer_config': dfviewer_config} 
         empty_df = {
             'dfviewer_config': {
-                'pinned_rows': [
-                    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
-                ],
+                'pinned_rows': [],
                 'column_config': [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}
+                       # {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+                       # {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+                       # {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}
                 ],
             },
-            'data': [{'index': 'dtype', 'a': 'int', 'b':'string'}],
+            'data': []
+#                {'index': 'dtype', 'a': 'int', 'b':'string'}
+        }
+  
+        self.df_dict = {'main': main_df_whole,
+                        'all': empty_df}
+        
+
+class CustomizableDataflow(DataFlow):
+    """
+    This allows targetd extension and customization of DataFlow
+    """
+    
+    @observe('widget_args_tuple')
+    def _handle_widget_change(self, change):
+        processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
+        if processed_df is None:
+            return
+        main_df_whole = {'data': pd_to_obj(processed_df),
+                       'dfviewer_config': dfviewer_config} 
+        empty_df = {
+            'dfviewer_config': {
+                'pinned_rows': [
+#                    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
+                ],
+                'column_config': [
+                       # {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+                       # {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+                       # {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}
+                ],
+            },
+            # 'data': [{'index': 'dtype', 'a': 'int', 'b':'string'}],
+            'data': []
         }
   
         self.df_dict = {'main': main_df_whole,

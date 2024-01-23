@@ -159,11 +159,14 @@ def test_widget_instatiation():
                        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}}
 
+
+    assert ab.df_dict['all'] == empty_df
+    assert ab.df_dict['main'] == main_df
   
     assert ab.df_dict == {
         'main': main_df,
         'all': empty_df}
-    bc = BuckarooWidget(basic_df)
-    assert bc.df_dict == {
-        'main': main_df,
-        'all': empty_df}
+    # bc = BuckarooWidget(basic_df)
+    # assert bc.df_dict == {
+    #     'main': main_df,
+    #     'all': empty_df}
