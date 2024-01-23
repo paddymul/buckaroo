@@ -98,6 +98,7 @@ class AnalysisPipeline(object):
     #full_produce_func: List[Callable[[DFT, List[AT], str, bool], Any]] =
 
     full_produce_func = [full_produce_summary_df]
+    style_method = None
     
     def __init__(self, analysis_objects, unit_test_objs=True):
         self.produce_func = self.full_produce_func[0]

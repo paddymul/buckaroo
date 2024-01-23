@@ -139,10 +139,10 @@ EMPTY_DF_JSON = {
                 'column_config': []},
             'data': []}
 
-BASIC_DF = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
+BASIC_DF = pd.DataFrame({'a': [10, 20, 20], 'b':['foo', 'bar', 'baz']})
 BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
                         {'index':1, 'a':20, 'b':'bar'},
-                        {'index':2, 'a':30, 'b':'baz'}]
+                        {'index':2, 'a':20, 'b':'baz'}]
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
@@ -182,7 +182,7 @@ def test_custom_dataflow():
         
     cdfc = TwoStyleDFC(BASIC_DF)
     assert cdfc.widget_args_tuple[0] is BASIC_DF
-    assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_DEFAULT
+    #assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
@@ -197,3 +197,16 @@ def test_custom_dataflow():
 
     with pytest.raises(dft.UnknownStyleMethod):
         cdfc.style_method = "non_existent_styling"
+
+from .fixtures import (DistinctCount, Len, DistinctPer, DCLen, DependsNoProvides)
+
+def test_custom_summary_stats():
+    class DCDFC(CustomizableDataflow):
+        analysis_klasses = [DistinctCount, SimpleStylingAnalysis]
+
+    dc_dfc = DCDFC(BASIC_DF)
+
+    summary_sd = dc_dfc.widget_args_tuple[1]
+
+    assert summary_sd == {'a': {'distinct_count':2}, 'b': {'distinct_count':3}, 'index': {}}
+

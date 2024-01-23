@@ -2,6 +2,8 @@ import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict, List
 from ipywidgets import DOMWidget
 from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE, pd_to_obj    
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
+from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 
 
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
@@ -72,17 +74,6 @@ SENTINEL_COLUMN_CONFIG_1 = "ASDF"
 SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
 
 
-def get_summary_sd(df, analysis_klasses):
-    if analysis_klasses == "foo":
-        return {'some-col': {'foo':8}}
-    if analysis_klasses == "bar":
-        return {'other-col': {'bar':10}}
-    index_name = df.index.name or "index"
-    ret_summary = {index_name: {}}
-
-    for col in df.columns:
-        ret_summary[col] = {}
-    return ret_summary
 
 
 def style_columns(style_method:str, sd):
@@ -221,11 +212,28 @@ class DataFlow(HasTraits):
             return self.processed_result[1]
         return {}
 
+
+    def get_summary_sd(self, df):
+        analysis_klasses = self.analysis_klasses
+        if analysis_klasses == "foo":
+            return {'some-col': {'foo':8}}
+        if analysis_klasses == "bar":
+            return {'other-col': {'bar':10}}
+        index_name = df.index.name or "index"
+        ret_summary = {index_name: {}}
+
+        for col in df.columns:
+            ret_summary[col] = {}
+        return ret_summary
+
+
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
+
+
         #call dfstats stuff here
-        self.summary_sd = get_summary_sd(
-            self.processed_df, self.analysis_klasses)
+        self.summary_sd = self.get_summary_sd(
+            self.processed_df)
 
     @observe('summary_sd')
     def _merged_sd(self, change):
@@ -270,7 +278,7 @@ class DataFlow(HasTraits):
         self.df_dict = {'main': main_df_whole,
                         'all': empty_df}
 
-class SimpleStylingAnalysis:
+class SimpleStylingAnalysis(ColAnalysis):
     pinned_rows = []
 
     @staticmethod
@@ -314,7 +322,23 @@ class CustomizableDataflow(DataFlow):
 
     def __init__(self, *args, **kwargs):
         self.styling_options = filter_analysis(self.analysis_klasses,  "style_method")
+        self.df_name = "placeholder"
+        self.debug = True
         super().__init__(*args, **kwargs)
+
+    DFStatsClass = DfStats
+
+    def get_summary_sd(self, processed_df):
+        stats = self.DFStatsClass(
+            processed_df,
+            self.analysis_klasses,
+            self.df_name, debug=self.debug)
+        index_name = processed_df.index.name or "index"
+        ret_summary = {index_name: {}}
+        ret_summary.update( stats.presentation_sdf)
+        #return  stats.presentation_sdf
+        return ret_summary
+
         
     def get_dfviewer_config(self, sd, style_method):
         if style_method not in self.styling_options:
