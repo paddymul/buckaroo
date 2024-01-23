@@ -94,7 +94,8 @@ def style_columns(style_method:str, sd):
             ret_col_config.append(
                 {'col_name':col, 'displayer_args': {'displayer': 'obj'}})
         return {
-            'pinned_rows':   [],
+            'pinned_rows': [
+                {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}],
             'column_config': ret_col_config}
 
 def merge_column_config(styled_column_config, overide_column_configs):
@@ -113,7 +114,10 @@ def compute_sampled_df(raw_df, sample_method):
 
 from ._frontend import module_name, module_version
 class DataFlow(HasTraits):
+    """This class is meant to only represent the dataflow through
+    buckaroo with no accomodation for widget particulars
 
+    """
     def __init__(self, raw_df):
         super().__init__()
         self.summary_sd = {}
@@ -131,10 +135,7 @@ class DataFlow(HasTraits):
     existing_operations = Any([])
     merged_operations = Any()
 
-
     cleaned = Any(default=None)
-    # cleaned_df = Any()
-    # cleaned_sd = Any()
     
     lowcode_operations = Any()
 
@@ -244,10 +245,11 @@ class DataFlow(HasTraits):
                        'dfviewer_config': dfviewer_config} 
         empty_df = {
             'dfviewer_config': {
-                'pinned_rows': [],
+                'pinned_rows': [
+                    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}],
                 'column_config': [],
             },
-            'data': [],
+            'data': [{'index': 'dtype', 'a': 'int', 'b':'string'}],
         }
   
         self.df_dict = {'main': main_df_whole,
