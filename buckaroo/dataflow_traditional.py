@@ -18,17 +18,6 @@ def merge_ops(existing_ops, cleaning_ops):
     a.extend(cleaning_ops)
     return a
 
-def get_cleaning_operations(df, cleaning_method):
-    if cleaning_method == "one op":
-        return [""]
-    if cleaning_method == "two op":
-        return ["", ""]
-    return []
-
-def get_cleaning_sd(df, cleaning_method):
-    return {}
-
-
 def merge_column(base, new):
     """
     merge individual column dictionaries, with special handling for column_config_override
@@ -73,7 +62,6 @@ def style_columns(style_method:str, sd):
         return {
             'pinned_rows': [
             #    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
-
             ],
             'column_config': ret_col_config}
 
@@ -149,30 +137,37 @@ class DataFlow(HasTraits):
     def _sampled_df(self, change):
         self.sampled_df = compute_sampled_df(self.raw_df, self.sample_method)
 
-    def run_df_interpreter(self, df, ops):
+    def _run_df_interpreter(self, df, ops):
         if len(ops) == 1:
             return SENTINEL_DF_1
         if len(ops) == 2:
             return SENTINEL_DF_2
         return df
 
-    def run_code_generator(self, ops):
+    def _run_code_generator(self, ops):
         if len(ops) == 1:
             return "codegen 1"
         if len(ops) == 2:
             return "codegen 2"
         return ""
 
+    def _run_cleaning(self, df, cleaning_method):
+        cleaning_ops = []
+        if cleaning_method == "one op":
+            cleaning_ops =  [""]
+        if cleaning_method == "two op":
+            cleaning_ops = ["", ""]
+        cleaning_sd = {}
+        return cleaning_ops, cleaning_sd
 
     @observe('sampled_df', 'cleaning_method', 'existing_operations')
     def _operation_result(self, change):
         if self.sampled_df is None:
             return
-        cleaning_operations = get_cleaning_operations(self.sampled_df, self.cleaning_method)
-        cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
+        cleaning_operations, cleaning_sd = self._run_cleaning(self.sampled_df, self.cleaning_method)
         merged_operations = merge_ops(self.existing_operations, cleaning_operations)
-        cleaned_df = self.run_df_interpreter(self.sampled_df, merged_operations)
-        generated_code = self.run_code_generator(merged_operations)
+        cleaned_df = self._run_df_interpreter(self.sampled_df, merged_operations)
+        generated_code = self._run_code_generator(merged_operations)
         self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
 
     @property
@@ -214,7 +209,7 @@ class DataFlow(HasTraits):
         return {}
 
 
-    def get_summary_sd(self, df):
+    def _get_summary_sd(self, df):
         analysis_klasses = self.analysis_klasses
         if analysis_klasses == "foo":
             return {'some-col': {'foo':8}}
@@ -229,7 +224,7 @@ class DataFlow(HasTraits):
 
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
-        self.summary_sd = self.get_summary_sd(self.processed_df)
+        self.summary_sd = self._get_summary_sd(self.processed_df)
 
     @observe('summary_sd')
     def _merged_sd(self, change):
@@ -239,7 +234,7 @@ class DataFlow(HasTraits):
         #and should supersede summary_sd.
         self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
 
-    def get_dfviewer_config(self, sd, style_method):
+    def _get_dfviewer_config(self, sd, style_method):
         dfviewer_config = style_columns(style_method, sd)
         base_column_config = dfviewer_config['column_config']
         dfviewer_config['column_config'] =  merge_column_config(
@@ -249,7 +244,7 @@ class DataFlow(HasTraits):
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
         #how to control ordering of column_config???
-        dfviewer_config = self.get_dfviewer_config(self.merged_sd, self.style_method)
+        dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
         self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
 
     @observe('widget_args_tuple')
@@ -324,11 +319,13 @@ class CustomizableDataflow(DataFlow):
         self.styling_options = filter_analysis(self.analysis_klasses, "style_method")
         self.df_name = "placeholder"
         self.debug = True
-        self.setup_from_command_kls_list()
+        self._setup_from_command_kls_list()
         super().__init__(*args, **kwargs)
 
+    
+
     ### start code interpreter block
-    def setup_from_command_kls_list(self):
+    def _setup_from_command_kls_list(self):
         #used to initially setup the interpreter, and when a command
         #is added interactively
         c_klasses = self.command_klasses
@@ -342,7 +339,7 @@ class CustomizableDataflow(DataFlow):
         self.command_klasses = without_incoming
         self.setup_from_command_kls_list()
 
-    def run_df_interpreter(self, df, operations):
+    def _run_df_interpreter(self, df, operations):
         full_ops = [{'symbol': 'begin'}]
         full_ops.extend(operations)
         if len(full_ops) == 1:
@@ -353,23 +350,11 @@ class CustomizableDataflow(DataFlow):
         if len(operations) == 0:
             return 'no operations'
         return self.gencode_interpreter(operations)
-
-    @observe('sampled_df', 'cleaning_method', 'existing_operations')
-    def _operation_result(self, change):
-        """ probably unneeded because it's a copy of data-flow """
-        if self.sampled_df is None:
-            return
-        cleaning_operations = get_cleaning_operations(self.sampled_df, self.cleaning_method)
-        cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
-        merged_operations = merge_ops(self.existing_operations, cleaning_operations)
-        cleaned_df = self.run_df_interpreter(self.sampled_df, merged_operations)
-        generated_code = self.run_code_generator(merged_operations)
-        self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
     ### end code interpeter block
 
 
     ### start summary stats block
-    def get_summary_sd(self, processed_df):
+    def _get_summary_sd(self, processed_df):
         stats = self.DFStatsClass(
             processed_df,
             self.analysis_klasses,
@@ -389,7 +374,7 @@ class CustomizableDataflow(DataFlow):
     ### end summary stats block        
 
     ### style_method config
-    def get_dfviewer_config(self, sd, style_method):
+    def _get_dfviewer_config(self, sd, style_method):
         if style_method not in self.styling_options:
             raise UnknownStyleMethod(style_method, self.styling_options.keys(), self.analysis_klasses)
         
