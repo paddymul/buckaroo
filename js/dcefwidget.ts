@@ -46,10 +46,10 @@ export class DCEFWidgetModel extends DOMWidgetModel {
   static view_module = MODULE_NAME; // Set to null if no view
   static view_module_version = MODULE_VERSION;
 }
-console.log("dcefwidget.ts");
+console.log('dcefwidget.ts');
 export class DCEFWidgetView extends DOMWidgetView {
   render(): void {
-    console.log("DCEFWidgetView", this);
+    console.log('DCEFWidgetView', this);
     this.el.classList.add('custom-widget');
 
     const Component = () => {

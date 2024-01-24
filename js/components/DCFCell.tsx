@@ -43,8 +43,6 @@ export function WidgetDCFCell({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  console.log("df_dict", df_dict);
-  debugger;
   const [activeCol, setActiveCol] = useState('stoptime');
   const widgetConfig: WidgetConfig = {
     showCommands: buckaroo_state.show_commands ? true : false,
@@ -128,15 +126,10 @@ export function WidgetDCFCellExample() {
   return (
     <WidgetDCFCell
       df_meta={dfm}
-    
       df_dict={{ main: tableDf, all: wholeAllSummaryDF }}
-
-
       buckaroo_options={bOptions}
       buckaroo_state={bState}
       on_buckaroo_state={setBState}
-
-
       commandConfig={bakedCommandConfig}
       operations={operations}
       on_operations={setOperations}

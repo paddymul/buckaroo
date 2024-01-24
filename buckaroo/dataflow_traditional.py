@@ -41,7 +41,6 @@ def merge_sds(*sds):
     """
     base_sd = {}
     for sd in sds:
-        print("sd", sd)
         for column in sd.keys():
             base_sd[column] = merge_column(base_sd.get(column, {}), sd[column])
     return base_sd
@@ -246,27 +245,27 @@ class DataFlow(HasTraits):
         dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
         self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
 
-    @observe('widget_args_tuple')
-    def _handle_widget_change(self, change):
-        """
-        put together df_dict for consumption by the frontend
-        """
-
-        processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
-        if processed_df is None:
-            return
-        main_df_whole = {'data': pd_to_obj(processed_df),
-                       'dfviewer_config': json.loads(json.dumps(dfviewer_config))}
-        empty_df = {
-            'dfviewer_config': {
-                'pinned_rows': [],
-                'column_config': [],
-            },
-            'data': []
-        }
+    # @observe('widget_args_tuple')
+    # def _handle_widget_change(self, change):
+    #     """
+    #     put together df_dict for consumption by the frontend
+    #     """
+    #     print("dataflow _handle_widget_change")
+    #     processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
+    #     if processed_df is None:
+    #         return
+    #     main_df_whole = {'data': pd_to_obj(processed_df),
+    #                    'dfviewer_config': json.loads(json.dumps(dfviewer_config))}
+    #     empty_df = {
+    #         'dfviewer_config': {
+    #             'pinned_rows': [],
+    #             'column_config': [],
+    #         },
+    #         'data': []
+    #     }
   
-        self.df_dict = {'main': main_df_whole,
-                        'all': empty_df}
+    #     self.df_dict = {'main': main_df_whole,
+    #                     'all': empty_df}
 
 class SimpleStylingAnalysis(ColAnalysis):
     pinned_rows = []
@@ -309,7 +308,7 @@ class CustomizableDataflow(DataFlow):
     """
     This allows targetd extension and customization of DataFlow
     """
-    analysis_klasses = []
+    analysis_klasses = [SimpleStylingAnalysis]
     command_klasses = DefaultCommandKlsList
     commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
@@ -358,7 +357,9 @@ class CustomizableDataflow(DataFlow):
             processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
-        return stats.presentation_sdf
+        if type(stats.presentation_sdf) == dict:
+            return stats.presentation_sdf
+        return json.loads(stats.presentation_sdf.to_json())
 
     def add_analysis(self, analysis_klass):
         """
@@ -369,7 +370,9 @@ class CustomizableDataflow(DataFlow):
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         stats.add_analysis(analysis_klass)
-        self.summary_sd = stats.presentation_sdf
+        if type(stats.presentation_sdf) == dict:
+            return stats.presentation_sdf
+        self.summary_sd = json.loads(stats.presentation_sdf.to_json())
     ### end summary stats block        
 
     ### style_method config
@@ -383,3 +386,39 @@ class CustomizableDataflow(DataFlow):
         dfviewer_config['column_config'] =  merge_column_config(
             base_column_config, self.column_config_overrides)
         return dfviewer_config
+
+    @property
+    def all_stats_df_whole(self):
+        empty_df = {
+            'dfviewer_config': {
+                'pinned_rows': [],
+                'column_config': [
+                    # {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+                    # {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+                    # {'col_name':'b', 'displayer_args': {'displayer': 'obj'}},
+                ],
+            },
+
+        'data': []
+        }
+
+        if len(self.merged_sd.keys()) == 0:
+            return empty_df
+
+        #'data': pd_to_obj(pd.DataFrame(merged_sd))        
+
+    @observe('widget_args_tuple')
+    def _handle_widget_change(self, change):
+        """
+        put together df_dict for consumption by the frontend
+        """
+        print("customizable _handle_widget_change")
+        processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
+        if processed_df is None:
+            return
+        main_df_whole = {'data': pd_to_obj(processed_df),
+                         'dfviewer_config': json.loads(json.dumps(dfviewer_config))}
+  
+        self.df_dict = {'main': main_df_whole,
+                        'all': empty_df}
+

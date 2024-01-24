@@ -151,7 +151,7 @@ DFVIEWER_CONFIG_DEFAULT = {
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
 
 def test_widget_instatiation():
-    dfc = DataFlow(BASIC_DF)
+    dfc = CustomizableDataflow(BASIC_DF)
     assert dfc.widget_args_tuple[0] is BASIC_DF
 
     main_df = {'data': BASIC_DF_JSON_DATA,
