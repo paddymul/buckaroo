@@ -21,7 +21,7 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     #for ser_name in df.columns:
         if possib_ser_name == "index":
             ser_name = df.index.name or "index"
-            ser = df.index
+            ser = df.index.to_series()
         else:
             ser_name = possib_ser_name
             ser = df[ser_name]

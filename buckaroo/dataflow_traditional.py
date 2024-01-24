@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict, List
 from ipywidgets import DOMWidget
@@ -130,7 +131,7 @@ class DataFlow(HasTraits):
 
     merged_column_config = Any()
 
-    widget_args_tuple = Any().tag(sync=True)
+    widget_args_tuple = Any()
 
 
     @observe('raw_df', 'sample_method')
@@ -208,7 +209,6 @@ class DataFlow(HasTraits):
             return self.processed_result[1]
         return {}
 
-
     def _get_summary_sd(self, df):
         analysis_klasses = self.analysis_klasses
         if analysis_klasses == "foo":
@@ -220,7 +220,6 @@ class DataFlow(HasTraits):
         for col in df.columns:
             ret_summary[col] = {}
         return ret_summary
-
 
     @observe('processed_result', 'analysis_klasses')
     def _summary_sd(self, change):
@@ -257,7 +256,7 @@ class DataFlow(HasTraits):
         if processed_df is None:
             return
         main_df_whole = {'data': pd_to_obj(processed_df),
-                       'dfviewer_config': dfviewer_config} 
+                       'dfviewer_config': json.loads(json.dumps(dfviewer_config))}
         empty_df = {
             'dfviewer_config': {
                 'pinned_rows': [],

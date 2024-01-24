@@ -48,7 +48,7 @@ class TypingStats(ColAnalysis):
     @staticmethod
     def series_summary(sampled_ser, ser):
         return dict(
-            dtype=ser.dtype,
+            dtype=str(ser.dtype),
             is_numeric=pd.api.types.is_numeric_dtype(ser),
             is_integer=pd.api.types.is_integer_dtype(ser),
             is_datetime=probable_datetime(ser),
