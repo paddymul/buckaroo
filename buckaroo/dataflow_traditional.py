@@ -28,12 +28,6 @@ def get_cleaning_operations(df, cleaning_method):
 def get_cleaning_sd(df, cleaning_method):
     return {}
 
-def run_code_generator(ops):
-    if len(ops) == 1:
-        return "codegen 1"
-    if len(ops) == 2:
-        return "codegen 2"
-    return ""
 
 def merge_column(base, new):
     """
@@ -162,6 +156,14 @@ class DataFlow(HasTraits):
             return SENTINEL_DF_2
         return df
 
+    def run_code_generator(self, ops):
+        if len(ops) == 1:
+            return "codegen 1"
+        if len(ops) == 2:
+            return "codegen 2"
+        return ""
+
+
     @observe('sampled_df', 'cleaning_method', 'existing_operations')
     def _operation_result(self, change):
         if self.sampled_df is None:
@@ -170,7 +172,7 @@ class DataFlow(HasTraits):
         cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
         merged_operations = merge_ops(self.existing_operations, cleaning_operations)
         cleaned_df = self.run_df_interpreter(self.sampled_df, merged_operations)
-        generated_code = run_code_generator(merged_operations)
+        generated_code = self.run_code_generator(merged_operations)
         self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
 
     @property
@@ -347,6 +349,11 @@ class CustomizableDataflow(DataFlow):
             return df
         return self.buckaroo_transform(new_operations , df)
 
+    def run_code_generator(self, operations):
+        if len(operations) == 0:
+            return 'no operations'
+        return self.gencode_interpreter(operations)
+
     @observe('sampled_df', 'cleaning_method', 'existing_operations')
     def _operation_result(self, change):
         """ probably unneeded because it's a copy of data-flow """
@@ -356,7 +363,7 @@ class CustomizableDataflow(DataFlow):
         cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
         merged_operations = merge_ops(self.existing_operations, cleaning_operations)
         cleaned_df = self.run_df_interpreter(self.sampled_df, merged_operations)
-        generated_code = run_code_generator(merged_operations)
+        generated_code = self.run_code_generator(merged_operations)
         self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
     ### end code interpeter block
 
