@@ -28,20 +28,12 @@ def get_cleaning_operations(df, cleaning_method):
 def get_cleaning_sd(df, cleaning_method):
     return {}
 
-def run_df_interpreter(df, ops):
-    if len(ops) == 1:
-        return SENTINEL_DF_1
-    if len(ops) == 2:
-        return SENTINEL_DF_2
-    return df
-
 def run_code_generator(ops):
     if len(ops) == 1:
         return "codegen 1"
     if len(ops) == 2:
         return "codegen 2"
     return ""
-
 
 def merge_column(base, new):
     """
@@ -163,6 +155,13 @@ class DataFlow(HasTraits):
     def _sampled_df(self, change):
         self.sampled_df = compute_sampled_df(self.raw_df, self.sample_method)
 
+    def run_df_interpreter(self, df, ops):
+        if len(ops) == 1:
+            return SENTINEL_DF_1
+        if len(ops) == 2:
+            return SENTINEL_DF_2
+        return df
+
     @observe('sampled_df', 'cleaning_method', 'existing_operations')
     def _operation_result(self, change):
         if self.sampled_df is None:
@@ -170,7 +169,7 @@ class DataFlow(HasTraits):
         cleaning_operations = get_cleaning_operations(self.sampled_df, self.cleaning_method)
         cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
         merged_operations = merge_ops(self.existing_operations, cleaning_operations)
-        cleaned_df = run_df_interpreter(self.sampled_df, merged_operations)
+        cleaned_df = self.run_df_interpreter(self.sampled_df, merged_operations)
         generated_code = run_code_generator(merged_operations)
         self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
 
@@ -298,7 +297,8 @@ class UnknownStyleMethod(Exception):
     def __init__(self, style_method, available_methods, analysis_klasses):
         self.style_method = style_method
         self.available_methods = available_methods
-        self.msg = "style_method of '{self.style_method}' not found in '{available_methods}', all analysis_klasses is []'"
+        self.msg =\
+            "style_method of '{self.style_method}' not found in '{available_methods}', all analysis_klasses is []'"
 
 def filter_analysis(klasses, attr):
     ret_klses = {}
@@ -308,28 +308,80 @@ def filter_analysis(klasses, attr):
             ret_klses[attr_val] = k
     return ret_klses
             
-
+from .customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 class CustomizableDataflow(DataFlow):
     """
     This allows targetd extension and customization of DataFlow
     """
     analysis_klasses = []
-
-    def __init__(self, *args, **kwargs):
-        self.styling_options = filter_analysis(self.analysis_klasses,  "style_method")
-        self.df_name = "placeholder"
-        self.debug = True
-        super().__init__(*args, **kwargs)
-
+    command_klasses = DefaultCommandKlsList
+    commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
 
+    def __init__(self, *args, **kwargs):
+        self.styling_options = filter_analysis(self.analysis_klasses, "style_method")
+        self.df_name = "placeholder"
+        self.debug = True
+        self.setup_from_command_kls_list()
+        super().__init__(*args, **kwargs)
+
+    ### start code interpreter block
+    def setup_from_command_kls_list(self):
+        #used to initially setup the interpreter, and when a command
+        #is added interactively
+        c_klasses = self.command_klasses
+        c_defaults, c_patterns, df_interpreter, gencode_interpreter = configure_buckaroo(c_klasses)
+        self.df_interpreter, self.gencode_interpreter = df_interpreter, gencode_interpreter
+        self.commandConfig = dict(argspecs=c_patterns, defaultArgs=c_defaults)
+
+    def add_command(self, incomingCommandKls):
+        without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
+        without_incoming.append(incomingCommandKls)
+        self.command_klasses = without_incoming
+        self.setup_from_command_kls_list()
+
+    def run_df_interpreter(self, df, operations):
+        full_ops = [{'symbol': 'begin'}]
+        full_ops.extend(operations)
+        if len(full_ops) == 1:
+            return df
+        return self.buckaroo_transform(new_operations , df)
+
+    @observe('sampled_df', 'cleaning_method', 'existing_operations')
+    def _operation_result(self, change):
+        """ probably unneeded because it's a copy of data-flow """
+        if self.sampled_df is None:
+            return
+        cleaning_operations = get_cleaning_operations(self.sampled_df, self.cleaning_method)
+        cleaning_sd = get_cleaning_sd(self.sampled_df, self.cleaning_method)
+        merged_operations = merge_ops(self.existing_operations, cleaning_operations)
+        cleaned_df = self.run_df_interpreter(self.sampled_df, merged_operations)
+        generated_code = run_code_generator(merged_operations)
+        self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
+    ### end code interpeter block
+
+
+    ### start summary stats block
     def get_summary_sd(self, processed_df):
         stats = self.DFStatsClass(
             processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         return stats.presentation_sdf
-        
+
+    def add_analysis(self, analysis_klass):
+        """
+        same as get_summary_sd, call whatever to set summary_sd and trigger further comps
+        """
+        stats = self.DFStatsClass(
+            self.processed_df,
+            self.analysis_klasses,
+            self.df_name, debug=self.debug)
+        stats.add_analysis(analysis_klass)
+        self.summary_sd = stats.presentation_sdf
+    ### end summary stats block        
+
+    ### style_method config
     def get_dfviewer_config(self, sd, style_method):
         if style_method not in self.styling_options:
             raise UnknownStyleMethod(style_method, self.styling_options.keys(), self.analysis_klasses)
