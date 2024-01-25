@@ -22,14 +22,14 @@ export type CommandConfigSetterT = (
 
   TODO:add height settings to dfConfig rather than hardcoded.
  */
-export interface IDisplayConfig {
+export interface IDisplayArgs {
   data_key: string;
   df_viewer_config: DFViewerConfig;
   summary_stats_key: string;
 }
 export function WidgetDCFCell({
   df_data_dict,
-  df_display,
+  df_display_args,
   df_meta,
   operations,
   on_operations,
@@ -42,7 +42,7 @@ export function WidgetDCFCell({
   //  df_dict: Record<string, DFWhole>;
   df_meta: DFMeta;
   df_data_dict: Record<string, DFData>;
-  df_display: Record<string, IDisplayConfig>;
+  df_display_args: Record<string, IDisplayArgs>;
   operations: Operation[];
   on_operations: (ops: Operation[]) => void;
   operation_results: OperationResult;
@@ -56,7 +56,7 @@ export function WidgetDCFCell({
     showCommands: buckaroo_state.show_commands ? true : false,
   };
 
-  const cDisp = df_display[buckaroo_state.df_display];
+  const cDisp = df_display_args[buckaroo_state.df_display];
   if (cDisp === undefined) {
     console.log("cDisp undefined", buckaroo_state.df_display, buckaroo_options.df_display)
   } else {
@@ -133,7 +133,7 @@ export function WidgetDCFCellExample() {
 
   const [operations, setOperations] = useState<Operation[]>(bakedOperations);
 
-  const bakedDfDisplay: Record<string, IDisplayConfig> = {
+  const bakedDfDisplay: Record<string, IDisplayArgs> = {
     main: {
       data_key: 'main',
       df_viewer_config: tableDf.dfviewer_config,
@@ -155,7 +155,7 @@ export function WidgetDCFCellExample() {
   return (
     <WidgetDCFCell
       df_meta={dfm}
-      df_display={bakedDfDisplay}
+      df_display_args={bakedDfDisplay}
       df_data_dict={{ main: tableDf.data , 'all': summaryDfForTableDf}}
       buckaroo_options={bOptions}
       buckaroo_state={bState}
