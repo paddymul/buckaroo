@@ -172,13 +172,15 @@ export function DFViewer(
   );
 }
 
-
 export function DFViewerEx() {
   const [activeCol, setActiveCol] = useState('tripduration');
-  return <DFViewer df={tableDf.data} 
-  df_viewer_config={tableDf.dfviewer_config}
-  summary_stats_data={summaryDfForTableDf}
-
-  activeCol={activeCol} setActiveCol={setActiveCol} />;
+  return (
+    <DFViewer
+      df={tableDf.data}
+      df_viewer_config={tableDf.dfviewer_config}
+      summary_stats_data={summaryDfForTableDf}
+      activeCol={activeCol}
+      setActiveCol={setActiveCol}
+    />
+  );
 }
-

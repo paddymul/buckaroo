@@ -58,8 +58,8 @@ export function StatusBarEx() {
   const [bState, setBState] = useState<BuckarooState>({
     auto_clean: 'conservative',
     sampled: false,
-    df_display: "main",
-    post_processing:false,
+    df_display: 'main',
+    post_processing: false,
     show_commands: false,
     search_string: '',
   });
@@ -69,8 +69,7 @@ export function StatusBarEx() {
     post_processing: [],
     sampled: ['random'],
     show_commands: ['on'],
-    df_display: ['main']
-
+    df_display: ['main'],
   };
 
   return (

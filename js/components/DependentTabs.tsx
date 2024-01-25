@@ -47,11 +47,7 @@ export function TransformViewer({
   style: CSSProperties;
   transformedDf: DFWhole;
 }) {
-  return (
-    <div className="transform-viewer">
-      "transformed view"
-    </div>
-  );
+  return <div className="transform-viewer">"transformed view"</div>;
 }
 export type OperationResult = {
   transformed_df: DFWhole;
