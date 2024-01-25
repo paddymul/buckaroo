@@ -90,7 +90,7 @@ class DataFlow(HasTraits):
     sample_method
     cleaning_method
     existing_operations
-    style_method
+    style_method ... became df_display_args
 
     all of this results in values for df_dict being updated
     
@@ -131,6 +131,8 @@ class DataFlow(HasTraits):
     merged_column_config = Any()
 
     widget_args_tuple = Any()
+
+    
 
 
     @observe('raw_df', 'sample_method')
@@ -388,37 +390,34 @@ class CustomizableDataflow(DataFlow):
         return dfviewer_config
 
     @property
-    def all_stats_df_whole(self):
-        empty_df = {
-            'dfviewer_config': {
-                'pinned_rows': [],
-                'column_config': [
-                    # {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-                    # {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                    # {'col_name':'b', 'displayer_args': {'displayer': 'obj'}},
-                ],
-            },
+    def stats_df_viewer_config(self):
+        return {
+        'pinned_rows': [],
+        'column_config': [
+            {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
+    
 
-        'data': []
-        }
-
-        if len(self.merged_sd.keys()) == 0:
-            return empty_df
-
-        #'data': pd_to_obj(pd.DataFrame(merged_sd))        
+    df_display_args = Any()
+    df_data_dict = Any()
 
     @observe('widget_args_tuple')
     def _handle_widget_change(self, change):
         """
         put together df_dict for consumption by the frontend
         """
-        print("customizable _handle_widget_change")
-        processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
+        processed_df, merged_sd, df_viewer_config = self.widget_args_tuple
         if processed_df is None:
             return
-        main_df_whole = {'data': pd_to_obj(processed_df),
-                         'dfviewer_config': json.loads(json.dumps(dfviewer_config))}
-  
-        self.df_dict = {'main': main_df_whole,
-                        'all': empty_df}
+        self.df_display_args = {
+            'main': {'data_key': 'main', 'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
+                     'summary_stats_key': 'all_stats'},
+            'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
+                        'summary_stats_key': 'all_stats'},
+            #iterate over all analysis_klasses that provide styling, rename
+        }
+
+        self.df_data_dict = {'main': pd_to_obj(processed_df),
+                             'all_stats': pd_to_obj(pd.DataFrame(merged_sd)),
+                             'empty': []}
 

@@ -6,18 +6,18 @@ export interface DFMeta {
 }
 export interface BuckarooOptions {
   sampled: string[];
-  df_display: string[]; // keys into Into
-  show_commands: string[];
   auto_clean: string[];
   post_processing: string[];
+  df_display: string[]; // keys into Into df_display_args
+  show_commands: string[];
 }
 export interface BuckarooState {
   sampled: string | false;
+  auto_clean: string | false;
+  search_string: string;
+  post_processing: string | false;
   df_display: string; //at least one dataframe must always be displayed
   show_commands: string | false;
-  auto_clean: string | false;
-  post_processing: string | false;
-  search_string: string;
 }
 
 export type BKeys = keyof BuckarooOptions;

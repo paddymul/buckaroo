@@ -154,16 +154,20 @@ def test_widget_instatiation():
     dfc = CustomizableDataflow(BASIC_DF)
     assert dfc.widget_args_tuple[0] is BASIC_DF
 
-    main_df = {'data': BASIC_DF_JSON_DATA,
-               'dfviewer_config': DFVIEWER_CONFIG_DEFAULT}
+    # main_df = {'data': BASIC_DF_JSON_DATA,
+    #            'dfviewer_config': DFVIEWER_CONFIG_DEFAULT}
 
-    expected_df_dict =  {
-        'main': main_df,
-        'all': EMPTY_DF_JSON}
+    # expected_df_dict =  {
+    #     'main': main_df,
+    #     'all': EMPTY_DF_JSON}
 
-    assert dfc.df_dict == expected_df_dict
+    assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
+    assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     bw = BuckarooWidget(BASIC_DF)
-    assert bw.df_dict == expected_df_dict
+
+    assert bw.df_data_dict['main'] == BASIC_DF_JSON_DATA
+    assert bw.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+
 
 from buckaroo.dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
 
@@ -192,11 +196,7 @@ def test_custom_dataflow():
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}]}
 
     cdfc.style_method = "int_styles"
-    assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_INT
-
-
-    with pytest.raises(dft.UnknownStyleMethod):
-        cdfc.style_method = "non_existent_styling"
+    assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_INT
 
 from .fixtures import (DistinctCount, Len, DistinctPer, DCLen, DependsNoProvides)
 

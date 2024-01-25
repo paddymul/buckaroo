@@ -67,21 +67,21 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
         'total_rows': 877}).tag(sync=True)
 
     buckaroo_options = Dict({
-        'auto_clean': ['aggressive', 'conservative'],
-        'reorderd_columns': [],
         'sampled': ['random'],
+        'auto_clean': ['aggressive', 'conservative'],
+        'post_processing': [],
+        'df_display': ['main', 'summary'],
         'show_commands': ['on'],
-        #//    'summary_stats' : ['full', 'all', 'typing_stats']
         'summary_stats': ['all'],
     }).tag(sync=True)
         
 
     buckaroo_state = Dict({
         'auto_clean': 'conservative',
-        'reorderd_columns': False,
+        'post_processing': False,
         'sampled': False,
         'show_commands': False,
-        'summary_stats': False,
+        'df_display': 'main',
         'search_string': '',
     }).tag(sync=True)
 
