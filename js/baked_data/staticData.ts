@@ -5,7 +5,7 @@ import {
   CommandConfigT,
   bakedArgSpecs,
 } from '../components/CommandUtils';
-import { DFData, DFWhole } from '../components/DFViewerParts/DFWhole';
+import { DFData, DFViewerConfig, DFWhole } from '../components/DFViewerParts/DFWhole';
 
 export const bakedOperationDefaults: OperationDefaultArgs = {
   dropcol: [sym('dropcol'), symDf, 'col'],
@@ -228,6 +228,7 @@ export const foo: DFWhole = {
 };
 export const stringIndexDf = foo;
 
+
 export const tableDf: DFWhole = {
   dfviewer_config: {
     column_config: [
@@ -346,6 +347,10 @@ export const tableDf: DFWhole = {
   ],
 };
 
+export const dfviewer_config_no_pinned: DFViewerConfig = {
+  column_config: tableDf.dfviewer_config.column_config,
+  pinned_rows: [],
+}
 const tripDurationBins = [0, 300, 500, 1000, 1500];
 
 export const summaryDfForTableDf: DFData = [

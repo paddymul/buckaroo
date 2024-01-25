@@ -2,7 +2,7 @@ import React, { useState, Dispatch, SetStateAction } from 'react';
 import _ from 'lodash';
 import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
-import { summaryDfForTableDf, tableDf } from '../baked_data/staticData';
+import { dfviewer_config_no_pinned, summaryDfForTableDf, tableDf } from '../baked_data/staticData';
 import { DFData, DFViewerConfig } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
 import { StatusBar } from './StatusBar';
@@ -57,9 +57,12 @@ export function WidgetDCFCell({
   };
 
   const cDisp = df_display[buckaroo_state.df_display];
-  const dfData = df_data_dict[cDisp.data_key];
-
+  if (cDisp === undefined) {
+    console.log("cDisp undefined", buckaroo_state.df_display, buckaroo_options.df_display)
+  } else {
   console.log("cDisp", cDisp);
+  }
+  const dfData = df_data_dict[cDisp.data_key];
   console.log("dfData", dfData);
   const summaryStatsData = df_data_dict[cDisp.summary_stats_key];
 
@@ -121,7 +124,7 @@ export function WidgetDCFCellExample() {
 
   const bOptions: BuckarooOptions = {
     auto_clean: ['aggressive', 'conservative'],
-    df_display: ['main'],
+    df_display: ['main', 'no_pinned_nonexistent_summary', 'no_pinned'],
     sampled: ['random'],
     post_processing: [],
     show_commands: ['on'],
@@ -136,6 +139,17 @@ export function WidgetDCFCellExample() {
       df_viewer_config: tableDf.dfviewer_config,
       summary_stats_key: 'all',
     },
+    no_pinned: {
+      data_key: 'main',
+      df_viewer_config: dfviewer_config_no_pinned,
+      summary_stats_key: 'all',
+    },
+    no_pinned_nonexistent_summary: {
+      data_key: 'main',
+      df_viewer_config: dfviewer_config_no_pinned,
+      summary_stats_key: 'nonexistent-key',
+    }
+
   };
 
   return (

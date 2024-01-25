@@ -126,10 +126,15 @@ export function colorNotNull(cmr: ColorWhenNotNullRules) {
   return retProps;
 }
 
-export function getStyler(cmr: ColorMappingConfig, foo: SDFMeasure) {
+export function getStyler(cmr: ColorMappingConfig, summary_stats_cell: SDFMeasure) {
   switch (cmr.color_rule) {
     case 'color_map':
-      return colorMap(cmr, foo.histogram_bins);
+      if (summary_stats_cell && summary_stats_cell.histogram_bins !== undefined) {
+        return colorMap(cmr, summary_stats_cell.histogram_bins);
+      } else {
+        console.log("histogram bins not found for color_map")
+        return {};
+      }
     case 'color_not_null':
       return colorNotNull(cmr);
   }
@@ -189,17 +194,21 @@ export function dfToAgrid(
         full_summary_stats_df,
         f.col_name
       );
+
+      const color_map_config = (f.color_map_config
+        ? getStyler(f.color_map_config, hdf[f.col_name])
+        : {})
+
+      const tooltip_config = (f.tooltip_config
+        ? getTooltip(f.tooltip_config, single_series_summary_df)
+        : {})
       const colDef: ColDef = {
         field: f.col_name,
         headerName: f.col_name,
         cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, hdf[f.col_name]),
-        ...(f.color_map_config
-          ? getStyler(f.color_map_config, hdf[f.col_name])
-          : {}),
-        ...(f.tooltip_config
-          ? getTooltip(f.tooltip_config, single_series_summary_df)
-          : {}),
+        ...color_map_config,
+        ...tooltip_config
       };
       if (f.col_name === 'index') {
         colDef.pinned = 'left';

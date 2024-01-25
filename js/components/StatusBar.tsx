@@ -93,7 +93,7 @@ export function StatusBar({
   buckarooOptions: BuckarooOptions;
 }) {
   const optionCycles = _.fromPairs(
-    _.map(buckarooOptions, (v: any, k) => [k, _.concat([false], v)])
+    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
   ) as Record<BKeys, any[]>;
   const idxs = _.fromPairs(
     _.map(_.keys(optionCycles), (k) => [
@@ -143,7 +143,7 @@ export function StatusBar({
       ),
     },
     {
-      field: 'summary_stats',
+      field: 'df_display',
       headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
       headerTooltip: 'Summary Stats',
       width: 120,
@@ -187,6 +187,7 @@ export function StatusBar({
       rows_shown: basicIntFormatter.format(dfMeta.rows_shown),
       sampled: buckarooState.sampled || '0',
       auto_clean: buckarooState.auto_clean || '0',
+      df_display: buckarooState.df_display,
       show_commands: buckarooState.show_commands || '0',
     },
   ];
