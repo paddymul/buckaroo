@@ -2,7 +2,7 @@ import React, { useState, Dispatch, SetStateAction } from 'react';
 import _ from 'lodash';
 import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
-import { tableDf } from '../baked_data/staticData';
+import { summaryDfForTableDf, tableDf } from '../baked_data/staticData';
 import { DFData, DFViewerConfig } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
 import { StatusBar } from './StatusBar';
@@ -58,6 +58,9 @@ export function WidgetDCFCell({
 
   const cDisp = df_display[buckaroo_state.df_display];
   const dfData = df_data_dict[cDisp.data_key];
+
+  console.log("cDisp", cDisp);
+  console.log("dfData", dfData);
   const summaryStatsData = df_data_dict[cDisp.summary_stats_key];
 
   return (
@@ -139,7 +142,7 @@ export function WidgetDCFCellExample() {
     <WidgetDCFCell
       df_meta={dfm}
       df_display={bakedDfDisplay}
-      df_data_dict={{ main: tableDf.data }}
+      df_data_dict={{ main: tableDf.data , 'all': summaryDfForTableDf}}
       buckaroo_options={bOptions}
       buckaroo_state={bState}
       on_buckaroo_state={setBState}
