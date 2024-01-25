@@ -247,28 +247,6 @@ class DataFlow(HasTraits):
         dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
         self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
 
-    # @observe('widget_args_tuple')
-    # def _handle_widget_change(self, change):
-    #     """
-    #     put together df_dict for consumption by the frontend
-    #     """
-    #     print("dataflow _handle_widget_change")
-    #     processed_df, merged_sd, dfviewer_config = self.widget_args_tuple
-    #     if processed_df is None:
-    #         return
-    #     main_df_whole = {'data': pd_to_obj(processed_df),
-    #                    'dfviewer_config': json.loads(json.dumps(dfviewer_config))}
-    #     empty_df = {
-    #         'dfviewer_config': {
-    #             'pinned_rows': [],
-    #             'column_config': [],
-    #         },
-    #         'data': []
-    #     }
-  
-    #     self.df_dict = {'main': main_df_whole,
-    #                     'all': empty_df}
-
 class SimpleStylingAnalysis(ColAnalysis):
     pinned_rows = []
 
@@ -392,14 +370,17 @@ class CustomizableDataflow(DataFlow):
     @property
     def stats_df_viewer_config(self):
         return {
-        'pinned_rows': [],
+        'pinned_rows': [
+      { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+
+        ],
         'column_config': [
             {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
             {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
     
 
-    df_display_args = Any()
-    df_data_dict = Any()
+    df_display_args = Any().tag(sync=True)
+    df_data_dict = Any().tag(sync=True)
 
     @observe('widget_args_tuple')
     def _handle_widget_change(self, change):

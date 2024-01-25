@@ -1,4 +1,4 @@
-import React, { useRef, CSSProperties, useState } from 'react';
+import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
 import { DFData, DFViewerConfig, EmptyDf } from './DFWhole';
 
@@ -7,7 +7,7 @@ import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
 import { getCellRendererSelector } from './gridUtils';
-import { summaryDfForTableDf, tableDf } from 'js/baked_data/staticData';
+//import { summaryDfForTableDf, tableDf } from '../../baked_data/staticData';
 
 export type setColumFunc = (newCol: string) => void;
 
@@ -173,8 +173,14 @@ export function DFViewer(
 }
 
 export function DFViewerEx() {
-  const [activeCol, setActiveCol] = useState('tripduration');
+//  const [activeCol, setActiveCol] = useState('tripduration');
   return (
+    <div>paddy</div>
+  );
+}
+
+/*
+    
     <DFViewer
       df={tableDf.data}
       df_viewer_config={tableDf.dfviewer_config}
@@ -182,5 +188,5 @@ export function DFViewerEx() {
       activeCol={activeCol}
       setActiveCol={setActiveCol}
     />
-  );
-}
+
+    */
