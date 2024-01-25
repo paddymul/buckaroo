@@ -18,6 +18,7 @@ import {
   ColorMapRules,
   TooltipConfig,
   ColorWhenNotNullRules,
+  DFViewerConfig,
 } from './DFWhole';
 import _, { zipObject } from 'lodash';
 import { getTextCellRenderer } from './HistogramCell';
@@ -175,13 +176,14 @@ export function extractSingleSeriesSummary(
 }
 
 export function dfToAgrid(
-  tdf: DFWhole,
+  tdf: DFData,
+  dfviewer_config: DFViewerConfig,
   full_summary_stats_df: DFData
 ): [ColDef[], unknown[]] {
   //more convienient df format for some formatters
   const hdf = extractSDFT(full_summary_stats_df || []);
 
-  const retColumns: ColDef[] = tdf.dfviewer_config.column_config.map(
+  const retColumns: ColDef[] = dfviewer_config.column_config.map(
     (f: ColumnConfig) => {
       const single_series_summary_df = extractSingleSeriesSummary(
         full_summary_stats_df,
@@ -205,7 +207,7 @@ export function dfToAgrid(
       return colDef;
     }
   );
-  return [retColumns, tdf.data];
+  return [retColumns, tdf];
 }
 
 // this is very similar to the colDef parts of dfToAgrid

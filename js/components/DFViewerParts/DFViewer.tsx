@@ -1,36 +1,44 @@
-import React, { useRef, CSSProperties } from 'react';
+import React, { useRef, CSSProperties, useState } from 'react';
 import _ from 'lodash';
-import { DFData, DFWhole, EmptyDf } from './DFWhole';
+import { DFData, DFViewerConfig, EmptyDf } from './DFWhole';
 
 import { dfToAgrid, extractPinnedRows } from './gridUtils';
 import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
 import { getCellRendererSelector } from './gridUtils';
+import { summaryDfForTableDf, tableDf } from 'js/baked_data/staticData';
 
 export type setColumFunc = (newCol: string) => void;
 
 export function DFViewer(
   {
     df,
-    summaryStatsDf,
+    df_viewer_config,
+    summary_stats_data,
     style,
     activeCol,
     setActiveCol,
   }: {
-    df: DFWhole;
-    summaryStatsDf?: DFData;
+    df: DFData;
+    df_viewer_config: DFViewerConfig;
+    summary_stats_data?: DFData;
     style?: CSSProperties;
     activeCol?: string;
     setActiveCol?: setColumFunc;
   } = {
-    df: EmptyDf,
-    summaryStatsDf: [],
+    df: EmptyDf.data,
+    df_viewer_config: EmptyDf.dfviewer_config,
+    summary_stats_data: [],
     style: { height: '300px' },
     setActiveCol: () => null,
   }
 ) {
-  const [agColsPure, agData] = dfToAgrid(df, summaryStatsDf || []);
+  const [agColsPure, agData] = dfToAgrid(
+    df,
+    df_viewer_config,
+    summary_stats_data || []
+  );
 
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
@@ -49,7 +57,7 @@ export function DFViewer(
       sortable: true,
       type: 'rightAligned',
       cellRendererSelector: getCellRendererSelector(
-        df.dfviewer_config.pinned_rows
+        df_viewer_config.pinned_rows
       ),
     },
 
@@ -150,10 +158,10 @@ export function DFViewer(
           gridOptions={gridOptions}
           rowData={agData}
           pinnedTopRowData={
-            summaryStatsDf
+            summary_stats_data
               ? extractPinnedRows(
-                  summaryStatsDf,
-                  df.dfviewer_config.pinned_rows
+                  summary_stats_data,
+                  df_viewer_config.pinned_rows
                 )
               : []
           }
@@ -163,3 +171,14 @@ export function DFViewer(
     </div>
   );
 }
+
+
+export function DFViewerEx() {
+  const [activeCol, setActiveCol] = useState('tripduration');
+  return <DFViewer df={tableDf.data} 
+  df_viewer_config={tableDf.dfviewer_config}
+  summary_stats_data={summaryDfForTableDf}
+
+  activeCol={activeCol} setActiveCol={setActiveCol} />;
+}
+

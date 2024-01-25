@@ -1,11 +1,3 @@
-import {DFViewer} from '../../js/components/DFViewerParts/DFViewer';
-import {summaryDfForTableDf, tableDf } from '../../js/baked_data/staticData';
-import React, { useState} from 'react';
+import { DFViewerEx} from '../../js/components/DFViewerParts/DFViewer';
 
-
-export default function Simple() {
-    const [activeCol, setActiveCol] = useState('tripduration');
-    return <DFViewer df={tableDf} 
-            summaryStatsDf={summaryDfForTableDf}
-    activeCol={activeCol} setActiveCol={setActiveCol} />;
-}
+export default DFViewerEx;

@@ -57,19 +57,20 @@ export function StatusBarEx() {
 
   const [bState, setBState] = useState<BuckarooState>({
     auto_clean: 'conservative',
-    reorderd_columns: false,
     sampled: false,
+    df_display: "main",
+    post_processing:false,
     show_commands: false,
-    summary_stats: 'typing_stats',
     search_string: '',
   });
 
   const bOptions: BuckarooOptions = {
     auto_clean: ['aggressive', 'conservative'],
-    reorderd_columns: [],
+    post_processing: [],
     sampled: ['random'],
     show_commands: ['on'],
-    summary_stats: ['full', 'all', 'typing_stats'],
+    df_display: ['main']
+
   };
 
   return (
@@ -187,7 +188,6 @@ export function StatusBar({
       rows_shown: basicIntFormatter.format(dfMeta.rows_shown),
       sampled: buckarooState.sampled || '0',
       auto_clean: buckarooState.auto_clean || '0',
-      summary_stats: buckarooState.summary_stats || '0',
       show_commands: buckarooState.show_commands || '0',
     },
   ];

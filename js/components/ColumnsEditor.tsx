@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { bakedOperations } from '../baked_data/staticData';
-import { DFWhole, EmptyDf } from './DFViewerParts/DFWhole';
+import { DFViewerConfig, EmptyDf } from './DFViewerParts/DFWhole';
 import { OperationViewer } from './Operations';
 import { Operation } from './OperationUtils';
 import { CommandConfigT } from './CommandUtils';
@@ -14,7 +14,7 @@ export interface WidgetConfig {
 }
 
 export function ColumnsEditor({
-  df,
+  df_viewer_config,
   activeColumn,
   operations,
   setOperations,
@@ -22,7 +22,7 @@ export function ColumnsEditor({
   commandConfig,
   widgetConfig,
 }: {
-  df: DFWhole;
+  df_viewer_config: DFViewerConfig;
   activeColumn: string;
   operations: Operation[];
   setOperations: OperationSetter;
@@ -30,7 +30,7 @@ export function ColumnsEditor({
   commandConfig: CommandConfigT;
   widgetConfig: WidgetConfig;
 }) {
-  const allColumns = df.dfviewer_config.column_config.map(
+  const allColumns = df_viewer_config.column_config.map(
     (field) => field.col_name
   );
   return (
@@ -66,7 +66,7 @@ export function ColumnsEditorEx() {
   };
   return (
     <ColumnsEditor
-      df={tableDf}
+      df_viewer_config={tableDf.dfviewer_config}
       activeColumn={'foo'}
       commandConfig={bakedCommandConfig}
       operations={operations}

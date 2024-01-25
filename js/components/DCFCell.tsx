@@ -2,8 +2,8 @@ import React, { useState, Dispatch, SetStateAction } from 'react';
 import _ from 'lodash';
 import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
-import { summaryDfForTableDf, tableDf } from '../baked_data/staticData';
-import { DFWhole } from './DFViewerParts/DFWhole';
+import { tableDf } from '../baked_data/staticData';
+import { DFData, DFViewerConfig } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
 import { StatusBar } from './StatusBar';
 import { BuckarooState } from './WidgetTypes';
@@ -22,8 +22,14 @@ export type CommandConfigSetterT = (
 
   TODO:add height settings to dfConfig rather than hardcoded.
  */
+export interface IDisplayConfig {
+  data_key: string;
+  df_viewer_config: DFViewerConfig;
+  summary_stats_key: string;
+}
 export function WidgetDCFCell({
-  df_dict,
+  df_data_dict,
+  df_display,
   df_meta,
   operations,
   on_operations,
@@ -33,8 +39,10 @@ export function WidgetDCFCell({
   on_buckaroo_state,
   buckaroo_options,
 }: {
-  df_dict: Record<string, DFWhole>;
+  //  df_dict: Record<string, DFWhole>;
   df_meta: DFMeta;
+  df_data_dict: Record<string, DFData>;
+  df_display: Record<string, IDisplayConfig>;
   operations: Operation[];
   on_operations: (ops: Operation[]) => void;
   operation_results: OperationResult;
@@ -48,8 +56,9 @@ export function WidgetDCFCell({
     showCommands: buckaroo_state.show_commands ? true : false,
   };
 
-  const dfToDisplay = df_dict[buckaroo_state.summary_stats || 'main'];
-  const summaryStatsData = df_dict['all'].data;
+  const cDisp = df_display[buckaroo_state.df_display];
+  const dfData = df_data_dict[cDisp.data_key];
+  const summaryStatsData = df_data_dict[cDisp.summary_stats_key];
 
   return (
     <div
@@ -67,15 +76,16 @@ export function WidgetDCFCell({
           buckarooOptions={buckaroo_options}
         />
         <DFViewer
-          df={dfToDisplay}
-          summaryStatsDf={summaryStatsData}
+          df={dfData}
+          df_viewer_config={cDisp.df_viewer_config}
+          summary_stats_data={summaryStatsData}
           activeCol={activeCol}
           setActiveCol={setActiveCol}
         />
       </div>
       {widgetConfig.showCommands ? (
         <ColumnsEditor
-          df={df_dict['main']}
+          df_viewer_config={cDisp.df_viewer_config}
           activeColumn={activeCol}
           operations={operations}
           setOperations={on_operations}
@@ -99,34 +109,37 @@ export function WidgetDCFCellExample() {
 
   const [bState, setBState] = useState<BuckarooState>({
     auto_clean: 'conservative',
-    reorderd_columns: false,
     sampled: false,
     show_commands: false,
-    summary_stats: false,
+    df_display: 'main',
+    post_processing: false,
     search_string: '',
   });
 
   const bOptions: BuckarooOptions = {
     auto_clean: ['aggressive', 'conservative'],
-    reorderd_columns: [],
+    df_display: ['main'],
     sampled: ['random'],
+    post_processing: [],
     show_commands: ['on'],
     //    'summary_stats' : ['full', 'all', 'typing_stats']
-    summary_stats: ['all'],
-  };
-  const wholeAllSummaryDF: DFWhole = {
-    data: summaryDfForTableDf,
-    dfviewer_config: {
-      column_config: [], // pull in all columns
-      pinned_rows: [],
-    },
   };
 
   const [operations, setOperations] = useState<Operation[]>(bakedOperations);
+
+  const bakedDfDisplay: Record<string, IDisplayConfig> = {
+    main: {
+      data_key: 'main',
+      df_viewer_config: tableDf.dfviewer_config,
+      summary_stats_key: 'all',
+    },
+  };
+
   return (
     <WidgetDCFCell
       df_meta={dfm}
-      df_dict={{ main: tableDf, all: wholeAllSummaryDF }}
+      df_display={bakedDfDisplay}
+      df_data_dict={{ main: tableDf.data }}
       buckaroo_options={bOptions}
       buckaroo_state={bState}
       on_buckaroo_state={setBState}

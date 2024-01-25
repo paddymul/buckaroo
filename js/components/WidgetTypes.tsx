@@ -6,17 +6,17 @@ export interface DFMeta {
 }
 export interface BuckarooOptions {
   sampled: string[];
-  summary_stats: string[];
+  df_display: string[]; // keys into Into
   show_commands: string[];
   auto_clean: string[];
-  reorderd_columns: string[];
+  post_processing: string[];
 }
 export interface BuckarooState {
   sampled: string | false;
-  summary_stats: string | false; // there could be multiple
+  df_display: string; //at least one dataframe must always be displayed
   show_commands: string | false;
   auto_clean: string | false;
-  reorderd_columns: string | false;
+  post_processing: string | false;
   search_string: string;
 }
 
