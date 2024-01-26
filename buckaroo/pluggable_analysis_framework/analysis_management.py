@@ -210,9 +210,7 @@ class DfStats(object):
 
     @property
     def presentation_sdf(self):
-        if self.ap.summary_stats_display == "all":
-            return self.sdf
-        return safe_summary_df(self.sdf, self.ap.summary_stats_display)
+        raise Exception("deprecated")
 
     def add_analysis(self, a_obj):
         passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)

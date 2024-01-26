@@ -376,6 +376,10 @@ class CustomizableDataflow(DataFlow):
         return {
         'pinned_rows': [
       { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+      {
+        'primary_key_val': 'histogram',
+        'displayer_args': { 'displayer': 'histogram' },
+      },
 
         ],
         'column_config': [

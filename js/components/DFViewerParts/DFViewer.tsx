@@ -34,6 +34,7 @@ export function DFViewer(
     setActiveCol: () => null,
   }
 ) {
+  console.log("summary_stats_data", summary_stats_data);
   const [agColsPure, agData] = dfToAgrid(
     df,
     df_viewer_config,
