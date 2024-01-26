@@ -284,10 +284,7 @@ export const tableDf: DFWhole = {
     ],
     pinned_rows: [
       { primary_key_val: 'dtype', displayer_args: { displayer: 'obj' } },
-      {
-        primary_key_val: 'histogram',
-        displayer_args: { displayer: 'histogram' },
-      },
+//      {        primary_key_val: 'histogram',        displayer_args: { displayer: 'histogram' },      },
     ],
   },
   data: [
@@ -349,7 +346,10 @@ export const tableDf: DFWhole = {
 
 export const dfviewer_config_no_pinned: DFViewerConfig = {
   column_config: tableDf.dfviewer_config.column_config,
-  pinned_rows: [],
+  pinned_rows: [
+   { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+    { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }}
+  ],
 }
 const tripDurationBins = [0, 300, 500, 1000, 1500];
 
