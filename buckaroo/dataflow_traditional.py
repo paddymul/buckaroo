@@ -248,7 +248,9 @@ class DataFlow(HasTraits):
         self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
 
 class SimpleStylingAnalysis(ColAnalysis):
-    pinned_rows = []
+    pinned_rows = [
+      { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } }
+    ]
 
     @staticmethod
     def sd_to_column_config(col, sd):
@@ -402,12 +404,19 @@ class CustomizableDataflow(DataFlow):
         self.df_display_args = {
             'main': {'data_key': 'main', 'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
                      'summary_stats_key': 'all_stats'},
-            'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
-                        'summary_stats_key': 'all_stats'},
+            # 'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
+            #             'summary_stats_key': 'all_stats'},
+
+            'summary': {'data_key':'all_stats', 'df_viewer_config': self.stats_df_viewer_config,
+                            'summary_stats_key': 'all_stats'},
+
+
             #iterate over all analysis_klasses that provide styling, rename
         }
 
+        temp_sd = merged_sd.copy()
+        del temp_sd['index']
         self.df_data_dict = {'main': pd_to_obj(processed_df),
-                             'all_stats': pd_to_obj(pd.DataFrame(merged_sd)),
+                             'all_stats': pd_to_obj(pd.DataFrame(temp_sd)),
                              'empty': []}
 
