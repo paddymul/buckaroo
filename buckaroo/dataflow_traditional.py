@@ -345,9 +345,7 @@ class CustomizableDataflow(DataFlow):
             processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
-        if type(stats.presentation_sdf) == dict:
-            return stats.presentation_sdf
-        return json.loads(stats.presentation_sdf.to_json())
+        return stats.sdf
 
     def add_analysis(self, analysis_klass):
         """
@@ -358,10 +356,8 @@ class CustomizableDataflow(DataFlow):
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         stats.add_analysis(analysis_klass)
-        if type(stats.presentation_sdf) == dict:
-            return stats.presentation_sdf
-        self.summary_sd = json.loads(stats.presentation_sdf.to_json())
-    ### end summary stats block        
+        return stats.sdf
+    # ### end summary stats block        
 
     ### style_method config
     def _get_dfviewer_config(self, sd, style_method):

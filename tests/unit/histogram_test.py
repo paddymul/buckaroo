@@ -61,7 +61,7 @@ def test_dfstats_histogram():
         test_df,
         [TypingStats, ComputedDefaultSummaryStats, Histogram, DefaultSummaryStats],
         'test_df', debug=True)
-    sdf = json.loads(stats.presentation_sdf.to_json())
+    sdf = stats.sdf
     
     print(sdf['a'])
     ha = sdf['a']['histogram_args']
