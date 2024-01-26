@@ -92,6 +92,7 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
                         ComputedDefaultSummaryStats,
                         SimpleStylingAnalysis,
                         ColDisplayHints]
+
     DFStatsClass = DfStats
     
     def __init__(self, df, debug=False):

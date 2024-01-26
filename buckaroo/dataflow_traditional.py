@@ -298,9 +298,17 @@ class CustomizableDataflow(DataFlow):
         self.df_name = "placeholder"
         self.debug = True
         self._setup_from_command_kls_list()
+        self.populate_df_meta()
         super().__init__(*args, **kwargs)
 
-    
+
+    def populate_df_meta(self):
+            # df_meta = Dict({
+            #     'columns': 5,
+            #     'rows_shown': 20,
+            #     'total_rows': 877}).tag(sync=True)
+            pass
+
 
     ### start code interpreter block
     def _setup_from_command_kls_list(self):
@@ -375,6 +383,7 @@ class CustomizableDataflow(DataFlow):
 
         ],
         'column_config': [
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
             {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
             {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
     
@@ -389,7 +398,7 @@ class CustomizableDataflow(DataFlow):
         """
         processed_df, merged_sd, df_viewer_config = self.widget_args_tuple
         if processed_df is None:
-            return
+            return 
         self.df_display_args = {
             'main': {'data_key': 'main', 'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
                      'summary_stats_key': 'all_stats'},
