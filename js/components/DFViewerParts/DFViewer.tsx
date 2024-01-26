@@ -7,7 +7,6 @@ import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { GridOptions } from 'ag-grid-community';
 import { getCellRendererSelector } from './gridUtils';
-//import { summaryDfForTableDf, tableDf } from '../../baked_data/staticData';
 
 export type setColumFunc = (newCol: string) => void;
 
@@ -19,6 +18,7 @@ export function DFViewer(
     style,
     activeCol,
     setActiveCol,
+    pinned_rows
   }: {
     df: DFData;
     df_viewer_config: DFViewerConfig;
@@ -26,15 +26,19 @@ export function DFViewer(
     style?: CSSProperties;
     activeCol?: string;
     setActiveCol?: setColumFunc;
+    pinned_rows?: any
   } = {
     df: EmptyDf.data,
     df_viewer_config: EmptyDf.dfviewer_config,
     summary_stats_data: [],
     style: { height: '300px' },
     setActiveCol: () => null,
+    pinned_rows:[]
   }
 ) {
+  console.log("dfviewer df_viewer_config", df_viewer_config);
   console.log("summary_stats_data", summary_stats_data);
+  console.log("full_object", {'df':df, 'df_viewer_config':df_viewer_config, 'summary_stats_data': summary_stats_data})
   const [agColsPure, agData] = dfToAgrid(
     df,
     df_viewer_config,
@@ -49,18 +53,19 @@ export function DFViewer(
     }
   );
 
+  const defaultColDef = {
+    sortable: true,
+    type: 'rightAligned',
+    cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
+  }
+
   const gridOptions: GridOptions = {
     rowSelection: 'single',
     onRowClicked: (event) => console.log('A row was clicked'),
     tooltipShowDelay: 0,
 
-    defaultColDef: {
-      sortable: true,
-      type: 'rightAligned',
-      cellRendererSelector: getCellRendererSelector(
-        df_viewer_config.pinned_rows
-      ),
-    },
+    // defaultColDef needs to be specifically passed in as a prop to the component, not defined here,
+    // otherwise updates aren't reactive
 
     onCellClicked: (event) => {
       const colName = event.column.getColId();
@@ -147,7 +152,14 @@ export function DFViewer(
   makeCondtionalAutosize(50, 350);
   //const pinnedTopRowData = [df.table_hints];
   //pinnedTopRowData={pinnedTopRowData}
-
+const topRowData =    (   summary_stats_data
+? extractPinnedRows(
+    summary_stats_data,
+    //df_viewer_config.pinned_rows
+    pinned_rows ? pinned_rows:[]
+  )
+: [] )
+console.log("topRowData", topRowData)
   return (
     <div className="df-viewer">
       <div
@@ -156,16 +168,10 @@ export function DFViewer(
       >
         <AgGridReact
           ref={gridRef}
+          defaultColDef={defaultColDef}
           gridOptions={gridOptions}
           rowData={agData}
-          pinnedTopRowData={
-            summary_stats_data
-              ? extractPinnedRows(
-                  summary_stats_data,
-                  df_viewer_config.pinned_rows
-                )
-              : []
-          }
+          pinnedTopRowData={topRowData}
           columnDefs={styledColumns}
         ></AgGridReact>
       </div>
@@ -181,7 +187,8 @@ export function DFViewerEx() {
 }
 
 /*
-    
+    //import { summaryDfForTableDf, tableDf } from '../../baked_data/staticData';
+
     <DFViewer
       df={tableDf.data}
       df_viewer_config={tableDf.dfviewer_config}
