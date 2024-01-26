@@ -18,7 +18,6 @@ export function DFViewer(
     style,
     activeCol,
     setActiveCol,
-    pinned_rows
   }: {
     df: DFData;
     df_viewer_config: DFViewerConfig;
@@ -26,25 +25,23 @@ export function DFViewer(
     style?: CSSProperties;
     activeCol?: string;
     setActiveCol?: setColumFunc;
-    pinned_rows?: any
   } = {
     df: EmptyDf.data,
     df_viewer_config: EmptyDf.dfviewer_config,
     summary_stats_data: [],
     style: { height: '300px' },
     setActiveCol: () => null,
-    pinned_rows:[]
   }
 ) {
-  console.log("dfviewer df_viewer_config", df_viewer_config);
-  console.log("summary_stats_data", summary_stats_data);
-  console.log("full_object", {'df':df, 'df_viewer_config':df_viewer_config, 'summary_stats_data': summary_stats_data})
+  //console.log("dfviewer df_viewer_config", df_viewer_config);
+//  console.log("summary_stats_data", summary_stats_data);
+//  console.log("full_object", {'df':df, 'df_viewer_config':df_viewer_config, 'summary_stats_data': summary_stats_data})
   const [agColsPure, agData] = dfToAgrid(
     df,
     df_viewer_config,
     summary_stats_data || []
   );
-
+  const pinned_rows = df_viewer_config.pinned_rows;
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
@@ -107,40 +104,31 @@ export function DFViewer(
     }
 
     const conditionallyAutosize = () => {
-      if (gridRef !== undefined) {
-        if (gridRef.current !== undefined && gridRef.current !== null) {
-          if (gridRef.current.columnApi !== undefined) {
-            gridRef.current.columnApi.autoSizeAllColumns();
-            const dc = gridRef.current.columnApi.getAllDisplayedColumns();
-            // console.log("bodyWidth", cm.bodyWidth)
-            // console.log("cm", cm)
 
-            if (dc.length !== 0) {
-              const aw = dc[0].getActualWidth(); // this eventually changes after the resize
-              //console.log("dc", aw);
-              if (colWidthHasBeenSet === false) {
-                currentColWidth = aw;
-                colWidthHasBeenSet = true;
-              } else {
-                currentColWidth = aw;
-              }
+      if (gridRef.current !== undefined && gridRef.current !== null) {
+        if (gridRef.current.columnApi !== undefined) {
+          gridRef.current.columnApi.autoSizeAllColumns();
+          const dc = gridRef.current.columnApi.getAllDisplayedColumns();
+
+          if (dc.length !== 0) {
+            const aw = dc[0].getActualWidth(); // this eventually changes after the resize
+            if (colWidthHasBeenSet === false) {
+              currentColWidth = aw;
+              colWidthHasBeenSet = true;
+            } else {
+              currentColWidth = aw;
             }
-            gridRef.current.forceUpdate();
           }
+          gridRef.current.forceUpdate();
         }
       }
-      //	    console.log("counter", counter, "colWidthHasBeenSet", colWidthHasBeenSet, originalColWidth, currentColWidth);
+
       if (counter > 0 && colWidthHasBeenSet === false) {
         counter -= 1;
-        // console.log("no gridRef or gridRef.current, setting delay", counter)
         timer = window.setTimeout(conditionallyAutosize, delay);
         return;
       } else if (counter > 0 && currentColWidth === 200) {
         counter -= 1;
-
-        // console.log(
-        //     "new colwidth not recognized yet",
-        //     counter, originalColWidth, gridRef.current!.columnApi!.columnModel!.displayedColumns[0].actualWidth)
         timer = window.setTimeout(conditionallyAutosize, delay);
         return;
       }
@@ -150,8 +138,7 @@ export function DFViewer(
   };
 
   makeCondtionalAutosize(50, 350);
-  //const pinnedTopRowData = [df.table_hints];
-  //pinnedTopRowData={pinnedTopRowData}
+
 const topRowData =    (   summary_stats_data
 ? extractPinnedRows(
     summary_stats_data,
@@ -159,7 +146,7 @@ const topRowData =    (   summary_stats_data
     pinned_rows ? pinned_rows:[]
   )
 : [] )
-console.log("topRowData", topRowData)
+
   return (
     <div className="df-viewer">
       <div

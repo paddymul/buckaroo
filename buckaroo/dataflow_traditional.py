@@ -249,7 +249,8 @@ class DataFlow(HasTraits):
 
 class SimpleStylingAnalysis(ColAnalysis):
     pinned_rows = [
-      { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } }
+        { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+      { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, }
     ]
 
     @staticmethod
@@ -378,10 +379,7 @@ class CustomizableDataflow(DataFlow):
         return {
         'pinned_rows': [
       { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
-      {
-        'primary_key_val': 'histogram',
-        'displayer_args': { 'displayer': 'histogram' },
-      },
+      { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, },
 
         ],
         'column_config': [
@@ -407,7 +405,7 @@ class CustomizableDataflow(DataFlow):
             # 'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
             #             'summary_stats_key': 'all_stats'},
 
-            'summary': {'data_key':'all_stats', 'df_viewer_config': self.stats_df_viewer_config,
+            'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
                             'summary_stats_key': 'all_stats'},
 
 

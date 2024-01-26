@@ -58,12 +58,12 @@ export function WidgetDCFCell({
 
   const cDisp = df_display_args[buckaroo_state.df_display];
   if (cDisp === undefined) {
-    console.log("cDisp undefined", buckaroo_state.df_display, buckaroo_options.df_display)
+  //  console.log("cDisp undefined", buckaroo_state.df_display, buckaroo_options.df_display)
   } else {
-  console.log("cDisp", cDisp);
+//  console.log("cDisp", cDisp);
   }
   const dfData = df_data_dict[cDisp.data_key];
-  console.log("dfData", dfData);
+  //console.log("dfData", dfData);
   const summaryStatsData = df_data_dict[cDisp.summary_stats_key];
 
   return (

@@ -95,7 +95,6 @@ export function DependentTabs({
 }) {
   const [tab, _setTab] = useState('DataFrame');
   const style: CSSProperties = { height: '45vh' };
-  console.log('dependenttabs operationResult', operationResult);
   return (
     <div className="dependent-tabs" style={{ width: '100%' }}>
       <ul className="tabs">
