@@ -155,12 +155,6 @@ def test_widget_instatiation():
     dfc = CustomizableDataflow(BASIC_DF)
     assert dfc.widget_args_tuple[0] is BASIC_DF
 
-    # main_df = {'data': BASIC_DF_JSON_DATA,
-    #            'dfviewer_config': DFVIEWER_CONFIG_DEFAULT}
-
-    # expected_df_dict =  {
-    #     'main': main_df,
-    #     'all': EMPTY_DF_JSON}
 
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
