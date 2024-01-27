@@ -176,14 +176,17 @@ def test_custom_dataflow():
 
     class IntStyling(SimpleStylingAnalysis):
         @staticmethod
-        def sd_to_column_config(col, sd):
+        def single_sd_to_column_config(col, sd):
             return {'col_name':col, 'displayer_args': {'displayer': 'int'}}
 
-        style_method = "int_styles"
+        df_display_name = "int_styles"
+        data_key = "main"
+        summary_stats_key= '555555555'
 
 
     class TwoStyleDFC(CustomizableDataflow):
-        analysis_klasses = [SimpleStylingAnalysis, IntStyling]
+        #analysis_klasses = [SimpleStylingAnalysis, IntStyling]
+        analysis_klasses = [IntStyling]
         
     cdfc = TwoStyleDFC(BASIC_DF)
     assert cdfc.widget_args_tuple[0] is BASIC_DF
@@ -192,12 +195,15 @@ def test_custom_dataflow():
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'int'}},
+                       #{'col_name':'index', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}]}
-
-    cdfc.style_method = "int_styles"
-    assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_INT
+    
+    print(cdfc.df_display_args.keys())
+    print("*"*80)
+    print(cdfc.df_display_args)
+    
+    assert cdfc.df_display_args['int_styles']['df_viewer_config'] == DFVIEWER_CONFIG_INT
 
 from .fixtures import (DistinctCount, Len, DistinctPer, DCLen, DependsNoProvides)
 

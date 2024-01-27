@@ -259,8 +259,8 @@ class UnknownStyleMethod(Exception):
 
 class SimpleStylingAnalysis(ColAnalysis):
     pinned_rows = [
-        {'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
-        {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, }
+        # {'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+        # {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, }
     ]
 
     @staticmethod
@@ -439,7 +439,10 @@ class CustomizableDataflow(DataFlow):
                              'empty': []}
         temp_display_args = {}
         for display_name, A_Klass in self.df_display_klasses.items():
+
             df_viewer_config = A_Klass.style_columns(temp_sd)
+            print(display_name, df_viewer_config)
+            print("#"*80)
             base_column_config = df_viewer_config['column_config']
             df_viewer_config['column_config'] =  merge_column_config(
                 base_column_config, self.column_config_overrides)
