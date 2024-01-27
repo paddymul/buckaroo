@@ -1,10 +1,8 @@
-import json
 import pandas as pd
-import numpy as np
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats, produce_series_df, full_produce_summary_df
 from buckaroo.customizations.histogram import Histogram
 from buckaroo.customizations.analysis import (
-    TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats, ColDisplayHints)
+    TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 
 INT_ARR = [33, 41, 11, 46, 42, 44, 31, 25, 16, 24, 26,  7, 19, 23, 20, 46, 10,
  4, 31, 45, 40, 37, 48, 21, 19, 20, 19, 14, 14, 26, 36, 24, 21, 41,

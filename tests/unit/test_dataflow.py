@@ -1,12 +1,11 @@
-import pytest
 import pandas as pd
-#from buckaroo.dataflow import DataFlow
 from buckaroo.dataflow_traditional import DataFlow
 from buckaroo import dataflow_traditional as dft
-
+from .fixtures import (DistinctCount)
+from buckaroo.dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
+from buckaroo.buckaroo_widget import BuckarooWidget
 
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
-
 
 
 def test_dataflow_operating_df():
@@ -56,11 +55,6 @@ def test_column_config():
 
     #dfviewer_config = d_flow.df_display_args['main']
     assert merged_sd == {'index' : {}, 'a': {}, 'b': {}}
-    # assert dfviewer_config['pinned_rows'] == []
-    # assert dfviewer_config['column_config'] == [
-    #         {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-    #         {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-    #         {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
     
 def test_merge_sds():
 
@@ -133,7 +127,7 @@ def test_merge_column_config():
     assert expected == merged
         
          
-from buckaroo.buckaroo_widget import BuckarooWidget
+
 EMPTY_DF_JSON = {
             'dfviewer_config': {
                 'pinned_rows': [],
@@ -163,9 +157,6 @@ def test_widget_instatiation():
     assert bw.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert bw.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
-
-from buckaroo.dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
-
 def test_custom_dataflow():
 
     class IntStyling(SimpleStylingAnalysis):
@@ -194,7 +185,7 @@ def test_custom_dataflow():
     
     assert cdfc.df_display_args['int_styles']['df_viewer_config'] == DFVIEWER_CONFIG_INT
 
-from .fixtures import (DistinctCount, Len, DistinctPer, DCLen, DependsNoProvides)
+
 
 def test_custom_summary_stats():
     class DCDFC(CustomizableDataflow):

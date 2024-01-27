@@ -3,7 +3,7 @@ import traceback
 import warnings
 
 import numpy as np
-from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble, safe_summary_df
+from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
 from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
