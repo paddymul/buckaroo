@@ -190,18 +190,13 @@ def test_custom_dataflow():
         
     cdfc = TwoStyleDFC(BASIC_DF)
     assert cdfc.widget_args_tuple[0] is BASIC_DF
-    #assert cdfc.df_dict['main']['dfviewer_config'] == DFVIEWER_CONFIG_DEFAULT
-    assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_INT
+    assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
                        #{'col_name':'index', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}]}
-    
-    # print(cdfc.df_display_args.keys())
-    # print("*"*80)
-    # print(cdfc.df_display_args)
     
     assert cdfc.df_display_args['int_styles']['df_viewer_config'] == DFVIEWER_CONFIG_INT
 
