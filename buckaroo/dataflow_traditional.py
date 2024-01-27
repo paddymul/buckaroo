@@ -301,16 +301,15 @@ class CustomizableDataflow(DataFlow):
         self.df_name = "placeholder"
         self.debug = True
         self._setup_from_command_kls_list()
-        self.populate_df_meta()
         super().__init__(*args, **kwargs)
-
+        self.populate_df_meta()
 
     def populate_df_meta(self):
-            # df_meta = Dict({
-            #     'columns': 5,
-            #     'rows_shown': 20,
-            #     'total_rows': 877}).tag(sync=True)
-            pass
+            self.df_meta = {
+                'columns': len(self.raw_df.columns),
+                # I need to recompute this when sampling changes
+                'rows_shown': len(self.sampled_df),  
+                'total_rows': len(self.raw_df)}
 
 
     ### start code interpreter block
