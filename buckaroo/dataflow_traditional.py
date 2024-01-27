@@ -111,11 +111,11 @@ class DataFlow(HasTraits):
     existing_operations = Any([])
     merged_operations = Any()
 
-    cleaned = Any(default=None)
+    cleaned = Any().tag(default=None)
     
     lowcode_operations = Any()
 
-    processed_result = Any(default=None)
+    processed_result = Any().tag(default=None)
 
     analysis_klasses = None
     summary_sd = Any()
@@ -323,6 +323,7 @@ class CustomizableDataflow(DataFlow):
     
     def __init__(self, *args, **kwargs):
         #self.styling_options = filter_analysis(self.analysis_klasses, "style_method")
+        self.df_display_args = {}
         self.setup_options_from_analysis()
         self.df_name = "placeholder"
         self.debug = True
@@ -337,17 +338,25 @@ class CustomizableDataflow(DataFlow):
             'rows_shown': len(self.sampled_df),  
             'total_rows': len(self.raw_df)}
 
-    @property
+    buckaroo_options = Dict({
+        'sampled': ['random'],
+        'auto_clean': ['aggressive', 'conservative'],
+        'post_processing': [],
+        'df_display': ['main', 'summary'],
+        'show_commands': ['on'],
+        'summary_stats': ['all'],
+    }).tag(sync=True)
+
     def setup_options_from_analysis(self):
-        df_display_options = filter_analysis(self.analysis_klasses, "df_display_name")
+        self.df_display_klasses = filter_analysis(self.analysis_klasses, "df_display_name")
         #add a check to verify that there aren't multiple classes offering the same df_display_name
 
         empty_df_display_args = {}
-        for k in df_display_options:
-            empty_df_display_args[k.df_display_name] = EMPTY_DF_DISPLAY_ARG
-            self.df_display_klasses[k.df_display_name] = k
+        for k, kls in self.df_display_klasses.items():
+            empty_df_display_args[kls.df_display_name] = EMPTY_DF_DISPLAY_ARG
+
         new_buckaroo_options = self.buckaroo_options.copy()
-        new_buckaroo_options['df_display'] = df_display_options
+        new_buckaroo_options['df_display'] = self.df_display_klasses.keys()
         #important that we open up the possibilities first before we add them as options in the UI
         self.df_display_args = empty_df_display_args
         self.buckaroo_options = new_buckaroo_options
@@ -420,6 +429,9 @@ class CustomizableDataflow(DataFlow):
         # df_data_dict is still hardcoded for now
         # eventually processed_df will be able to add or alter values of df_data_dict
         # correlation would be added, filtered would probably be altered
+
+        # to expedite processing maybe future provided dfs from postprcoessing could default to empty until that is selected, optionally
+        
         temp_sd = merged_sd.copy()
         del temp_sd['index']
         self.df_data_dict = {'main': pd_to_obj(processed_df),
