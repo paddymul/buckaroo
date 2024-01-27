@@ -33,6 +33,7 @@ class ColAnalysis(object):
     def computed_summary(summary_dict):
         return {}
 
+    @deprecated
     @staticmethod
     def column_order(sampled_ser, summary_ser):
         pass

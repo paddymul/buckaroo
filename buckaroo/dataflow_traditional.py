@@ -1,11 +1,10 @@
 import json
 import pandas as pd
-from traitlets import Unicode, Any, observe, HasTraits, Dict, List
-from ipywidgets import DOMWidget
-from .serialization_utils import df_to_obj, EMPTY_DF_WHOLE, pd_to_obj    
+from traitlets import Unicode, Any, observe, HasTraits, Dict
+from .serialization_utils import pd_to_obj    
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
-
+from .customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
@@ -53,7 +52,7 @@ SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
 
 def style_columns(style_method:str, sd):
     if style_method == "foo":
-        return sentinel_column_config_2
+        return SENTINEL_COLUMN_CONFIG_2
     else:
         ret_col_config = []
         for col in sd.keys():
@@ -244,39 +243,58 @@ class DataFlow(HasTraits):
     @observe('merged_sd', 'style_method')
     def _widget_config(self, change):
         #how to control ordering of column_config???
-        dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
-        self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
+        # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
+        # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
+        self.widget_args_tuple = [self.processed_df, self.merged_sd]
+
+
+
+class UnknownStyleMethod(Exception):
+    def __init__(self, style_method, available_methods, analysis_klasses):
+        self.style_method = style_method
+        self.available_methods = available_methods
+        self.msg =\
+            "style_method of '{self.style_method}' not found in '{available_methods}', all analysis_klasses is []'"
+
 
 class SimpleStylingAnalysis(ColAnalysis):
     pinned_rows = [
-        { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
-      { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, }
+        {'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+        {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, }
     ]
 
     @staticmethod
-    def sd_to_column_config(col, sd):
+    def single_sd_to_column_config(col, sd):
         return {'col_name':col, 'displayer_args': {'displayer': 'obj'}}
     
     @classmethod
     def style_columns(kls, sd):
         ret_col_config = []
         for col in sd.keys():
-            ret_col_config.append(kls.sd_to_column_config(col, sd[col]))
+            ret_col_config.append(kls.single_sd_to_column_config(col, sd[col]))
         return {
             'pinned_rows': kls.pinned_rows,
             'column_config': ret_col_config}
 
-    style_method = "simple"
-    #the analysis code always runs
-    analysis_stuff = None #functions that add dtype and na_per to sumary_sd
+    #what is the key for this in the df_display_args_dictionary
+    df_display_name = "main"
+    data_key = "main"
+    summary_stats_key= 'all_stats'
 
-class UnknownStyleMethod(Exception):
+class SummaryStatsAnalysis(ColAnalysis):
+    def stats_df_viewer_config(self):
+        return {
+        'pinned_rows': [
+      { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
+      { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, },
 
-    def __init__(self, style_method, available_methods, analysis_klasses):
-        self.style_method = style_method
-        self.available_methods = available_methods
-        self.msg =\
-            "style_method of '{self.style_method}' not found in '{available_methods}', all analysis_klasses is []'"
+        ],
+        'column_config': [
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
+
+
 
 def filter_analysis(klasses, attr):
     ret_klses = {}
@@ -286,7 +304,13 @@ def filter_analysis(klasses, attr):
             ret_klses[attr_val] = k
     return ret_klses
             
-from .customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
+
+EMPTY_DFVIEWER_CONFIG = {
+    'pinned_rows': [],
+    'column_config': []}
+EMPTY_DF_DISPLAY_ARG = {'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
+                           'summary_stats_key': 'empty'}
+
 class CustomizableDataflow(DataFlow):
     """
     This allows targetd extension and customization of DataFlow
@@ -295,9 +319,11 @@ class CustomizableDataflow(DataFlow):
     command_klasses = DefaultCommandKlsList
     commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
-
+    df_display_klasses = {}
+    
     def __init__(self, *args, **kwargs):
-        self.styling_options = filter_analysis(self.analysis_klasses, "style_method")
+        #self.styling_options = filter_analysis(self.analysis_klasses, "style_method")
+        self.setup_options_from_analysis()
         self.df_name = "placeholder"
         self.debug = True
         self._setup_from_command_kls_list()
@@ -305,11 +331,30 @@ class CustomizableDataflow(DataFlow):
         self.populate_df_meta()
 
     def populate_df_meta(self):
-            self.df_meta = {
-                'columns': len(self.raw_df.columns),
-                # I need to recompute this when sampling changes
-                'rows_shown': len(self.sampled_df),  
-                'total_rows': len(self.raw_df)}
+        self.df_meta = {
+            'columns': len(self.raw_df.columns),
+            # I need to recompute this when sampling changes
+            'rows_shown': len(self.sampled_df),  
+            'total_rows': len(self.raw_df)}
+
+    @property
+    def setup_options_from_analysis(self):
+        df_display_options = filter_analysis(self.analysis_klasses, "df_display_name")
+        #add a check to verify that there aren't multiple classes offering the same df_display_name
+
+        empty_df_display_args = {}
+        for k in df_display_options:
+            empty_df_display_args[k.df_display_name] = EMPTY_DF_DISPLAY_ARG
+            self.df_display_klasses[k.df_display_name] = k
+        new_buckaroo_options = self.buckaroo_options.copy()
+        new_buckaroo_options['df_display'] = df_display_options
+        #important that we open up the possibilities first before we add them as options in the UI
+        self.df_display_args = empty_df_display_args
+        self.buckaroo_options = new_buckaroo_options
+
+    df_display_args = Any({'main':EMPTY_DF_DISPLAY_ARG})
+    #empty needs to always be present, it enables startup
+    df_data_dict = Any({'empty':[]}).tag(sync=True)
 
 
     ### start code interpreter block
@@ -332,7 +377,7 @@ class CustomizableDataflow(DataFlow):
         full_ops.extend(operations)
         if len(full_ops) == 1:
             return df
-        return self.buckaroo_transform(new_operations , df)
+        return self.buckaroo_transform(full_ops , df)
 
     def run_code_generator(self, operations):
         if len(operations) == 0:
@@ -361,59 +406,55 @@ class CustomizableDataflow(DataFlow):
         return stats.sdf
     # ### end summary stats block        
 
-    ### style_method config
-    def _get_dfviewer_config(self, sd, style_method):
-        if style_method not in self.styling_options:
-            raise UnknownStyleMethod(style_method, self.styling_options.keys(), self.analysis_klasses)
-        
-        styling_analysis = self.styling_options[style_method]
-        dfviewer_config = styling_analysis.style_columns(sd)
-        base_column_config = dfviewer_config['column_config']
-        dfviewer_config['column_config'] =  merge_column_config(
-            base_column_config, self.column_config_overrides)
-        return dfviewer_config
 
-    @property
-    def stats_df_viewer_config(self):
-        return {
-        'pinned_rows': [
-      { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
-      { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, },
-
-        ],
-        'column_config': [
-            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
-    
-
-    df_display_args = Any().tag(sync=True)
-    df_data_dict = Any().tag(sync=True)
-
+    #final processing block
     @observe('widget_args_tuple')
     def _handle_widget_change(self, change):
         """
         put together df_dict for consumption by the frontend
         """
-        processed_df, merged_sd, df_viewer_config = self.widget_args_tuple
+        processed_df, merged_sd = self.widget_args_tuple
         if processed_df is None:
-            return 
-        self.df_display_args = {
-            'main': {'data_key': 'main', 'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
-                     'summary_stats_key': 'all_stats'},
-            # 'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
-            #             'summary_stats_key': 'all_stats'},
+            return
 
-            'summary': {'data_key':'empty', 'df_viewer_config': self.stats_df_viewer_config,
-                            'summary_stats_key': 'all_stats'},
-
-
-            #iterate over all analysis_klasses that provide styling, rename
-        }
-
+        # df_data_dict is still hardcoded for now
+        # eventually processed_df will be able to add or alter values of df_data_dict
+        # correlation would be added, filtered would probably be altered
         temp_sd = merged_sd.copy()
         del temp_sd['index']
         self.df_data_dict = {'main': pd_to_obj(processed_df),
                              'all_stats': pd_to_obj(pd.DataFrame(temp_sd)),
                              'empty': []}
+        temp_display_args = {}
+        for display_name, A_Klass in self.df_display_klasses.items():
+            df_viewer_config = A_Klass.style_columns(temp_sd)
+            base_column_config = df_viewer_config['column_config']
+            df_viewer_config['column_config'] =  merge_column_config(
+                base_column_config, self.column_config_overrides)
+            disp_arg = {'data_key': A_Klass.data_key,
+                        'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
+                        'summary_stats_key': A_Klass.summary_stats_key}
+            temp_display_args[display_name] = disp_arg
+        self.df_display_args = temp_display_args
 
+   
+"""
+Instantiation
+df_data_dict starts with only 'empty'
+first populate df_display_args, make all data point to 'empty', make all df_viewer_configs EMPTY_DFVIEWER_CONFIG
+
+then populate buckaroo_options['df_display'] from gathered classes
+
+Next add 'all_stats' to 'df_data_dict'
+add 'main' to 'df_data_dict'
+
+
+all of the above steps might trigger redisplays, but they will be cheap because df_viewer_config will be empty, pointing at empty data
+
+finally iterate through all 'df_display' analysis_klasses and update df_display_args
+
+
+
+
+
+"""
