@@ -1,11 +1,13 @@
-import React, { useRef, CSSProperties } from 'react';
+import React, { useRef, CSSProperties, useState } from 'react';
 import _ from 'lodash';
 import { DFData, DFViewerConfig, EmptyDf } from './DFWhole';
 
 import { dfToAgrid, extractPinnedRows } from './gridUtils';
 import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import { GridOptions } from 'ag-grid-community';
+import { GridOptions, SizeColumnsToContentStrategy, SizeColumnsToFitProvidedWidthStrategy} from 'ag-grid-community';
+import { summaryDfForTableDf, tableDf } from '../../baked_data/staticData';
+
 import { getCellRendererSelector } from './gridUtils';
 
 export type setColumFunc = (newCol: string) => void;
@@ -74,78 +76,28 @@ export function DFViewer(
     },
   };
   const gridRef = useRef<AgGridReact<unknown>>(null);
-
-  const makeCondtionalAutosize = (count: number, delay: number) => {
-    /*
-      this code is buggy and I'm not confident in it. I'm very
-      surprised that automatically autosizing AG-grid requires custom
-      functions to be written vs just a flag.
-      */
-
-    let counter = count;
-    //let timer: NodeJS.Timeout;
-    let timer: number;
-    let colWidthHasBeenSet = false;
-    let currentColWidth = -10;
-    if (gridRef === undefined || gridRef.current === null) {
-      currentColWidth = 200;
-    } else {
-      try {
-        const dc = gridRef?.current?.columnApi.getAllDisplayedColumns();
-
-        if (dc.length !== 0) {
-          currentColWidth = dc[0].getActualWidth();
-        } else {
-          currentColWidth = 200;
-        }
-      } catch (e) {
-        console.log('88, gridref not defined yet', e);
-      }
-    }
-
-    const conditionallyAutosize = () => {
-
-      if (gridRef.current !== undefined && gridRef.current !== null) {
-        if (gridRef.current.columnApi !== undefined) {
-          gridRef.current.columnApi.autoSizeAllColumns();
-          const dc = gridRef.current.columnApi.getAllDisplayedColumns();
-
-          if (dc.length !== 0) {
-            const aw = dc[0].getActualWidth(); // this eventually changes after the resize
-            if (colWidthHasBeenSet === false) {
-              currentColWidth = aw;
-              colWidthHasBeenSet = true;
-            } else {
-              currentColWidth = aw;
-            }
-          }
-          gridRef.current.forceUpdate();
-        }
-      }
-
-      if (counter > 0 && colWidthHasBeenSet === false) {
-        counter -= 1;
-        timer = window.setTimeout(conditionallyAutosize, delay);
-        return;
-      } else if (counter > 0 && currentColWidth === 200) {
-        counter -= 1;
-        timer = window.setTimeout(conditionallyAutosize, delay);
-        return;
-      }
-    };
-    timer = window.setTimeout(conditionallyAutosize, delay);
-    return () => window.clearTimeout(timer);
-  };
-
-  makeCondtionalAutosize(50, 350);
-
 const topRowData =    (   summary_stats_data
 ? extractPinnedRows(
     summary_stats_data,
-    //df_viewer_config.pinned_rows
     pinned_rows ? pinned_rows:[]
   )
 : [] )
+/*
+
+*/
+
+const getAutoSize = (): SizeColumnsToFitProvidedWidthStrategy| SizeColumnsToContentStrategy  => {
+  if(styledColumns.length < 6 ) {
+    return {
+      type: 'fitProvidedWidth',
+      width: 1000
+    }
+  }
+  return {
+    type: 'fitCellContents'
+  };
+}
+
 
   return (
     <div className="df-viewer">
@@ -160,6 +112,7 @@ const topRowData =    (   summary_stats_data
           rowData={agData}
           pinnedTopRowData={topRowData}
           columnDefs={styledColumns}
+          autoSizeStrategy={getAutoSize()}
         ></AgGridReact>
       </div>
     </div>
@@ -167,15 +120,8 @@ const topRowData =    (   summary_stats_data
 }
 
 export function DFViewerEx() {
-//  const [activeCol, setActiveCol] = useState('tripduration');
+  const [activeCol, setActiveCol] = useState('tripduration');
   return (
-    <div>paddy</div>
-  );
-}
-
-/*
-    //import { summaryDfForTableDf, tableDf } from '../../baked_data/staticData';
-
     <DFViewer
       df={tableDf.data}
       df_viewer_config={tableDf.dfviewer_config}
@@ -183,5 +129,5 @@ export function DFViewerEx() {
       activeCol={activeCol}
       setActiveCol={setActiveCol}
     />
-
-    */
+  );
+}

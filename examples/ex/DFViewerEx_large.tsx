@@ -177,7 +177,7 @@ const dictOfListsToListOfDicts = (a: Record<string, any[]>) : Record<string, any
         'b':genInt(samples,  10,   8),
         'c':genString(samples, 3,  10),
         'd':genInt(samples, 100,  999),
-        'e':genInt(samples,  -3,   55),
+        'e':genInt(samples,  -30_000,   55_123_123),
         'f':genString(samples, 3,  70),
         'g':genInt(samples,  -3,   55),
       })
