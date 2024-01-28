@@ -153,3 +153,30 @@ def test_perverse_on_histogram2():
              nan_per=0
              ))
 
+
+
+def test_weird_grouper():
+    """fails on
+
+  File "/Users/paddy/buckaroo/buckaroo/customizations/analysis.py", line 86, in series_summary
+    value_counts = ser.value_counts()
+                   ^^^^^^^^^^^^^^^^^^
+  File "/Users/paddy/anaconda3/envs/buckaroo-dev-5/lib/python3.11/site-packages/pandas/core/frame.py", line 7264, in value_counts
+    counts = self.groupby(subset, dropna=dropna, observed=False).grouper.size()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/paddy/anaconda3/envs/buckaroo-dev-5/lib/python3.11/site-packages/pandas/core/frame.py", line 8869, in groupby
+    return DataFrameGroupBy(
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/paddy/anaconda3/envs/buckaroo-dev-5/lib/python3.11/site-packages/pandas/core/groupby/groupby.py", line 1278, in __init__
+    grouper, exclusions, obj = get_grouper(
+    """
+    df = pd.DataFrame({'a':np.random.randint(1,50,200), 'b': np.random.randint(1,30,200)})
+    a_ser = df['a'].value_counts()
+    b_ser = df['b'].value_counts()
+    a_df = pd.DataFrame({
+        'a': a_ser.index.values, 'a_counts': a_ser.values})
+    b_df = pd.DataFrame({    'b': b_ser.index.values, 'a_counts': b_ser.values})
+    merged_df = pd.concat([a_df, b_df], axis=1)
+
+    #ahh "a_counts" is repeated, hmmm
+    
