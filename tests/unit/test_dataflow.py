@@ -2,6 +2,7 @@ import pandas as pd
 from buckaroo.dataflow_traditional import DataFlow
 from buckaroo import dataflow_traditional as dft
 from .fixtures import (DistinctCount)
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget
 
@@ -199,3 +200,30 @@ def test_custom_summary_stats():
                           'a': {'distinct_count':2}, 'b': {'distinct_count':3}}
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
 
+SENTINEL_DF = pd.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', 'b', 'c']})
+
+
+class PostProcessingAnalysis(ColAnalysis):
+
+    post_processing_method = "post1"
+
+    @classmethod
+    def post_process_df(kls, cleaned_df):
+        return [SENTINEL_DF, {'sent_int_col': {'sentinel_prop':5}}]
+
+
+def test_custom_post_processing():
+    class PostDCFC(CustomizableDataflow):
+        analysis_klasses = [PostProcessingAnalysis, SimpleStylingAnalysis]
+
+    p_dfc = PostDCFC(BASIC_DF)
+
+    # summary_sd = dc_dfc.widget_args_tuple[1]
+    assert p_dfc.buckaroo_options['post_processing'] == ['post1']
+    assert p_dfc.buckaroo_state['post_processing'] == ''
+
+    temp_buckaroo_state = p_dfc.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'post1'
+    p_dfc.buckaroo_state = temp_buckaroo_state
+
+    assert p_dfc.processed_df is SENTINEL_DF

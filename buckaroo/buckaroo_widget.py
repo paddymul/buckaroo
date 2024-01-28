@@ -71,16 +71,6 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
         'summary_stats': ['all'],
     }).tag(sync=True)
         
-
-    buckaroo_state = Dict({
-        'auto_clean': 'conservative',
-        'post_processing': False,
-        'sampled': False,
-        'show_commands': False,
-        'df_display': 'main',
-        'search_string': '',
-    }).tag(sync=True)
-
     #widget config.  Change these via inheritance to alter core behaviors of buckaroo
     command_klasses = DefaultCommandKlsList
     analysis_klasses = [TypingStats, DefaultSummaryStats,

@@ -115,6 +115,7 @@ class DataFlow(HasTraits):
     
     lowcode_operations = Any()
 
+    post_processing_method = Unicode('foo').tag(default='')
     processed_result = Any().tag(default=None)
 
     analysis_klasses = None
@@ -192,10 +193,13 @@ class DataFlow(HasTraits):
         if self.cleaned is not None:
             return self.cleaned[3]
 
+    def _compute_processed_result(self, cleaned_df, post_processing_method):
+        return [cleaned_df, {}]
+
     @observe('cleaned', 'post_processing_method')
     def _processed_result(self, change):
         #for now this is a no-op because I don't have a post_processing_function or mechanism
-        self.processed_result = [self.cleaned_df, {}]
+        self.processed_result = self._compute_processed_result(self.cleaned_df, self.post_processing_method)
 
     @property
     def processed_df(self):
@@ -322,7 +326,6 @@ class CustomizableDataflow(DataFlow):
     df_display_klasses = {}
     
     def __init__(self, *args, **kwargs):
-        #self.styling_options = filter_analysis(self.analysis_klasses, "style_method")
         self.df_display_args = {}
         self.setup_options_from_analysis()
         self.df_name = "placeholder"
@@ -347,6 +350,16 @@ class CustomizableDataflow(DataFlow):
         'summary_stats': ['all'],
     }).tag(sync=True)
 
+    buckaroo_state = Dict({
+        'auto_clean': 'conservative',
+        'post_processing': '',
+        'sampled': False,
+        'show_commands': False,
+        'df_display': 'main',
+        'search_string': '',
+    }).tag(sync=True)
+
+
     def setup_options_from_analysis(self):
         self.df_display_klasses = filter_analysis(self.analysis_klasses, "df_display_name")
         #add a check to verify that there aren't multiple classes offering the same df_display_name
@@ -355,8 +368,13 @@ class CustomizableDataflow(DataFlow):
         for k, kls in self.df_display_klasses.items():
             empty_df_display_args[kls.df_display_name] = EMPTY_DF_DISPLAY_ARG
 
+
+        self.post_processing_klasses = filter_analysis(self.analysis_klasses, "post_processing_method")
+        
+
         new_buckaroo_options = self.buckaroo_options.copy()
-        new_buckaroo_options['df_display'] = self.df_display_klasses.keys()
+        new_buckaroo_options['df_display'] = list(self.df_display_klasses.keys())
+        new_buckaroo_options['post_processing'] = list(self.post_processing_klasses.keys())
         #important that we open up the possibilities first before we add them as options in the UI
         self.df_display_args = empty_df_display_args
         self.buckaroo_options = new_buckaroo_options
@@ -393,6 +411,10 @@ class CustomizableDataflow(DataFlow):
             return 'no operations'
         return self.gencode_interpreter(operations)
     ### end code interpeter block
+
+
+    def _compute_processed_result(self, cleaned_df, post_processing_method):
+        return [cleaned_df, {}]
 
 
     ### start summary stats block
