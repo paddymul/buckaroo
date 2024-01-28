@@ -361,7 +361,7 @@ class CustomizableDataflow(DataFlow):
         self.df_display_args = empty_df_display_args
         self.buckaroo_options = new_buckaroo_options
 
-    df_display_args = Any({'main':EMPTY_DF_DISPLAY_ARG})
+    df_display_args = Any({'main':EMPTY_DF_DISPLAY_ARG}).tag(sync=True)
     #empty needs to always be present, it enables startup
     df_data_dict = Any({'empty':[]}).tag(sync=True)
 
