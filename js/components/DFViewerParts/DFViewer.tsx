@@ -87,17 +87,20 @@ const topRowData =    (   summary_stats_data
 */
 
 const getAutoSize = (): SizeColumnsToFitProvidedWidthStrategy| SizeColumnsToContentStrategy  => {
-  if(styledColumns.length < 6 ) {
+  console.log("getAutoSize")
+
+  if(styledColumns.length < 3 ) {
     return {
       type: 'fitProvidedWidth',
       width: 1000
     }
   }
   return {
+    
     type: 'fitCellContents'
   };
 }
-
+console.log("getAutosize", getAutoSize().type);
 
   return (
     <div className="df-viewer">

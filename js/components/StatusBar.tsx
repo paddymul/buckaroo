@@ -48,39 +48,6 @@ const helpCell = function (params: any) {
   );
 };
 
-export function StatusBarEx() {
-  const dfm: DFMeta = {
-    columns: 5,
-    rows_shown: 20,
-    total_rows: 8_777_444,
-  };
-
-  const [bState, setBState] = useState<BuckarooState>({
-    auto_clean: 'conservative',
-    sampled: false,
-    df_display: 'main',
-    post_processing: false,
-    show_commands: false,
-    search_string: '',
-  });
-
-  const bOptions: BuckarooOptions = {
-    auto_clean: ['aggressive', 'conservative'],
-    post_processing: [],
-    sampled: ['random'],
-    show_commands: ['on'],
-    df_display: ['main'],
-  };
-
-  return (
-    <StatusBar
-      dfMeta={dfm}
-      buckarooState={bState}
-      setBuckarooState={setBState}
-      buckarooOptions={bOptions}
-    />
-  );
-}
 export function StatusBar({
   dfMeta,
   buckarooState,
@@ -92,9 +59,13 @@ export function StatusBar({
   setBuckarooState: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckarooOptions: BuckarooOptions;
 }) {
-  const optionCycles = _.fromPairs(
-    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
-  ) as Record<BKeys, any[]>;
+  console.log("initial buckarooState", buckarooState);
+//   const optionCycles = _.fromPairs(
+// //    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
+//     _.map(buckarooOptions, (v: any, k) => [k, ( k==='post_processing' ? v :  _.concat([false], v) ) ])
+
+//   ) as Record<BKeys, any[]>;
+  const optionCycles = buckarooOptions;
   const idxs = _.fromPairs(
     _.map(_.keys(optionCycles), (k) => [
       k,
@@ -125,7 +96,9 @@ export function StatusBar({
       return;
     }
     if (_.includes(_.keys(buckarooState), colName)) {
-      setBuckarooState(newBuckarooState(colName as BKeys));
+      const nbstate = newBuckarooState(colName as BKeys);
+      console.log("new buckaroo state", nbstate, buckarooState);
+      setBuckarooState(nbstate);
     }
   };
 
@@ -155,11 +128,12 @@ export function StatusBar({
       headerTooltip: 'Auto Cleaning config',
       width: 120,
     },
-    //   { field: 'reorderdColumns',
-    //   headerName: "Θ",
-    //   headerTooltip:"Reorder Columns",
-    //   width:30
-    // },
+    { field: 'post_processing',
+//      headerName: "Θ",
+      headerName:"post processing",
+      headerTooltip:"post process method",
+      width:100
+    },
     {
       field: 'show_commands',
       headerName: 'λ',
@@ -188,6 +162,7 @@ export function StatusBar({
       sampled: buckarooState.sampled || '0',
       auto_clean: buckarooState.auto_clean || '0',
       df_display: buckarooState.df_display,
+      post_processing: buckarooState.post_processing,
       show_commands: buckarooState.show_commands || '0',
     },
   ];
@@ -214,5 +189,38 @@ export function StatusBar({
         ></AgGridReact>
       </div>
     </div>
+  );
+}
+export function StatusBarEx() {
+  const dfm: DFMeta = {
+    columns: 5,
+    rows_shown: 20,
+    total_rows: 8_777_444,
+  };
+
+  const [bState, setBState] = useState<BuckarooState>({
+    auto_clean: 'conservative',
+    sampled: false,
+    df_display: 'main',
+    post_processing: 'asdf',
+    show_commands: false,
+    search_string: '',
+  });
+
+  const bOptions: BuckarooOptions = {
+    auto_clean: ['aggressive', 'conservative'],
+    post_processing: ['', 'asdf'],
+    sampled: ['random'],
+    show_commands: ['on'],
+    df_display: ['main'],
+  };
+
+  return (
+    <StatusBar
+      dfMeta={dfm}
+      buckarooState={bState}
+      setBuckarooState={setBState}
+      buckarooOptions={bOptions}
+    />
   );
 }

@@ -114,19 +114,19 @@ export function WidgetDCFCellExample() {
   };
 
   const [bState, setBState] = useState<BuckarooState>({
-    auto_clean: 'conservative',
+    auto_clean: '',
     sampled: false,
     show_commands: false,
     df_display: 'main',
-    post_processing: false,
+    post_processing: '',
     search_string: '',
   });
 
   const bOptions: BuckarooOptions = {
-    auto_clean: ['aggressive', 'conservative'],
+    auto_clean: ['', 'aggressive', 'conservative'],
     df_display: ['main', 'no_pinned_nonexistent_summary', 'no_pinned'],
     sampled: ['random'],
-    post_processing: [],
+    post_processing: ['', 'foo', 'bar'],
     show_commands: ['on'],
     //    'summary_stats' : ['full', 'all', 'typing_stats']
   };
