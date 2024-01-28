@@ -115,7 +115,7 @@ class DataFlow(HasTraits):
     
     lowcode_operations = Any()
 
-    post_processing_method = Unicode('foo').tag(default='')
+    post_processing_method = Unicode('').tag(default='')
     processed_result = Any().tag(default=None)
 
     analysis_klasses = None
@@ -360,6 +360,17 @@ class CustomizableDataflow(DataFlow):
     }).tag(sync=True)
 
 
+    @observe('buckaroo_state')
+    def _buckaroo_state(self, change):
+        #how to control ordering of column_config???
+        # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
+        # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
+        #print("change", change)
+        old, new = change['old'], change['new']
+        if not old['post_processing'] == new['post_processing']:
+            self.post_processing_method = new['post_processing']
+            
+
     def setup_options_from_analysis(self):
         self.df_display_klasses = filter_analysis(self.analysis_klasses, "df_display_name")
         #add a check to verify that there aren't multiple classes offering the same df_display_name
@@ -370,7 +381,6 @@ class CustomizableDataflow(DataFlow):
 
 
         self.post_processing_klasses = filter_analysis(self.analysis_klasses, "post_processing_method")
-        
 
         new_buckaroo_options = self.buckaroo_options.copy()
         new_buckaroo_options['df_display'] = list(self.df_display_klasses.keys())
@@ -414,7 +424,11 @@ class CustomizableDataflow(DataFlow):
 
 
     def _compute_processed_result(self, cleaned_df, post_processing_method):
-        return [cleaned_df, {}]
+        if post_processing_method == '':
+            return [cleaned_df, {}]
+        else:
+            post_analysis = self.post_processing_klasses[post_processing_method]
+            return post_analysis.post_process_df(cleaned_df)
 
 
     ### start summary stats block
