@@ -22,7 +22,7 @@ from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.utils  import get_df_name
 
 from .serialization_utils import EMPTY_DF_WHOLE
-
+from .dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
 
 """
 
@@ -36,7 +36,7 @@ summary stats presentations are just different pinned row configs that read from
 
 
 """
-from .dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
+
 
 class BuckarooWidget(CustomizableDataflow, DOMWidget):
     """TODO: Add docstring here
