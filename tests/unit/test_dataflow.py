@@ -219,7 +219,7 @@ def test_custom_post_processing():
     p_dfc = PostDCFC(BASIC_DF)
 
     # summary_sd = dc_dfc.widget_args_tuple[1]
-    assert p_dfc.buckaroo_options['post_processing'] == ['post1']
+    assert p_dfc.buckaroo_options['post_processing'] == ['', 'post1']
     assert p_dfc.buckaroo_state['post_processing'] == ''
 
     temp_buckaroo_state = p_dfc.buckaroo_state.copy()
