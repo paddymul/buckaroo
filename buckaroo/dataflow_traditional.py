@@ -384,7 +384,9 @@ class CustomizableDataflow(DataFlow):
 
         new_buckaroo_options = self.buckaroo_options.copy()
         new_buckaroo_options['df_display'] = list(self.df_display_klasses.keys())
-        new_buckaroo_options['post_processing'] = list(self.post_processing_klasses.keys())
+        post_processing_methods = ['']
+        post_processing_methods.extend(list(self.post_processing_klasses.keys()))
+        new_buckaroo_options['post_processing'] = post_processing_methods
         #important that we open up the possibilities first before we add them as options in the UI
         self.df_display_args = empty_df_display_args
         self.buckaroo_options = new_buckaroo_options
