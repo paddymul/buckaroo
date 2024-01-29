@@ -142,7 +142,7 @@ BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       #{'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
 
@@ -180,7 +180,7 @@ def test_custom_dataflow():
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       #{'col_name':'index', 'displayer_args': {'displayer': 'int'}},
+                       {'col_name':'index', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}]}
     
