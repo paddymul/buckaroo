@@ -59,12 +59,12 @@ export function StatusBar({
   setBuckarooState: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckarooOptions: BuckarooOptions;
 }) {
-  console.log("initial buckarooState", buckarooState);
-//   const optionCycles = _.fromPairs(
-// //    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
-//     _.map(buckarooOptions, (v: any, k) => [k, ( k==='post_processing' ? v :  _.concat([false], v) ) ])
+  console.log('initial buckarooState', buckarooState);
+  //   const optionCycles = _.fromPairs(
+  // //    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
+  //     _.map(buckarooOptions, (v: any, k) => [k, ( k==='post_processing' ? v :  _.concat([false], v) ) ])
 
-//   ) as Record<BKeys, any[]>;
+  //   ) as Record<BKeys, any[]>;
   const optionCycles = buckarooOptions;
   const idxs = _.fromPairs(
     _.map(_.keys(optionCycles), (k) => [
@@ -97,7 +97,7 @@ export function StatusBar({
     }
     if (_.includes(_.keys(buckarooState), colName)) {
       const nbstate = newBuckarooState(colName as BKeys);
-      console.log("new buckaroo state", nbstate, buckarooState);
+      console.log('new buckaroo state', nbstate, buckarooState);
       setBuckarooState(nbstate);
     }
   };
@@ -128,11 +128,12 @@ export function StatusBar({
       headerTooltip: 'Auto Cleaning config',
       width: 120,
     },
-    { field: 'post_processing',
-//      headerName: "Θ",
-      headerName:"post processing",
-      headerTooltip:"post process method",
-      width:100
+    {
+      field: 'post_processing',
+      //      headerName: "Θ",
+      headerName: 'post processing',
+      headerTooltip: 'post process method',
+      width: 100,
     },
     {
       field: 'show_commands',

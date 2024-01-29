@@ -2,7 +2,11 @@ import React, { useState, Dispatch, SetStateAction } from 'react';
 import _ from 'lodash';
 import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
-import { dfviewer_config_no_pinned, summaryDfForTableDf, tableDf } from '../baked_data/staticData';
+import {
+  dfviewer_config_no_pinned,
+  summaryDfForTableDf,
+  tableDf,
+} from '../baked_data/staticData';
 import { DFData, DFViewerConfig } from './DFViewerParts/DFWhole';
 import { DFViewer } from './DFViewerParts/DFViewer';
 import { StatusBar } from './StatusBar';
@@ -58,9 +62,9 @@ export function WidgetDCFCell({
 
   const cDisp = df_display_args[buckaroo_state.df_display];
   if (cDisp === undefined) {
-  //  console.log("cDisp undefined", buckaroo_state.df_display, buckaroo_options.df_display)
+    //  console.log("cDisp undefined", buckaroo_state.df_display, buckaroo_options.df_display)
   } else {
-//  console.log("cDisp", cDisp);
+    //  console.log("cDisp", cDisp);
   }
   const dfData = df_data_dict[cDisp.data_key];
   //console.log("dfData", dfData);
@@ -148,15 +152,14 @@ export function WidgetDCFCellExample() {
       data_key: 'main',
       df_viewer_config: dfviewer_config_no_pinned,
       summary_stats_key: 'nonexistent-key',
-    }
-
+    },
   };
 
   return (
     <WidgetDCFCell
       df_meta={dfm}
       df_display_args={bakedDfDisplay}
-      df_data_dict={{ main: tableDf.data , 'all': summaryDfForTableDf}}
+      df_data_dict={{ main: tableDf.data, all: summaryDfForTableDf }}
       buckaroo_options={bOptions}
       buckaroo_state={bState}
       on_buckaroo_state={setBState}

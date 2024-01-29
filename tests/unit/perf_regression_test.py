@@ -7,6 +7,11 @@ def float_df(N_rows, K_columns):
     return pd.DataFrame(
         {chr(i+97): np.random.random_sample(N_rows) for i in range(K_columns)})
 
+
+"""
+The idea of this is to make a relative timing comparison between just insantiating a dataframe and the full buckaroo testing.  it's crude but should alert to major performance regressions.  particularly with json serialization
+
+"""
 # %timeit float_df(100_000,20) 9ms on my laptop
 
 def bw_do_stuff(df, **kwargs):

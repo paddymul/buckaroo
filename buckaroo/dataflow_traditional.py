@@ -1,4 +1,3 @@
-import json
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
 from .serialization_utils import pd_to_obj    

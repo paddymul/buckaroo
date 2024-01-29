@@ -5,7 +5,11 @@ import { DFData, DFViewerConfig, EmptyDf } from './DFWhole';
 import { dfToAgrid, extractPinnedRows } from './gridUtils';
 import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import { GridOptions, SizeColumnsToContentStrategy, SizeColumnsToFitProvidedWidthStrategy} from 'ag-grid-community';
+import {
+  GridOptions,
+  SizeColumnsToContentStrategy,
+  SizeColumnsToFitProvidedWidthStrategy,
+} from 'ag-grid-community';
 import { summaryDfForTableDf, tableDf } from '../../baked_data/staticData';
 
 import { getCellRendererSelector } from './gridUtils';
@@ -36,8 +40,8 @@ export function DFViewer(
   }
 ) {
   //console.log("dfviewer df_viewer_config", df_viewer_config);
-//  console.log("summary_stats_data", summary_stats_data);
-//  console.log("full_object", {'df':df, 'df_viewer_config':df_viewer_config, 'summary_stats_data': summary_stats_data})
+  //  console.log("summary_stats_data", summary_stats_data);
+  //  console.log("full_object", {'df':df, 'df_viewer_config':df_viewer_config, 'summary_stats_data': summary_stats_data})
   const [agColsPure, agData] = dfToAgrid(
     df,
     df_viewer_config,
@@ -56,7 +60,7 @@ export function DFViewer(
     sortable: true,
     type: 'rightAligned',
     cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
-  }
+  };
 
   const gridOptions: GridOptions = {
     rowSelection: 'single',
@@ -76,31 +80,29 @@ export function DFViewer(
     },
   };
   const gridRef = useRef<AgGridReact<unknown>>(null);
-const topRowData =    (   summary_stats_data
-? extractPinnedRows(
-    summary_stats_data,
-    pinned_rows ? pinned_rows:[]
-  )
-: [] )
-/*
+  const topRowData = summary_stats_data
+    ? extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : [])
+    : [];
+  /*
 
 */
 
-const getAutoSize = (): SizeColumnsToFitProvidedWidthStrategy| SizeColumnsToContentStrategy  => {
-  console.log("getAutoSize")
+  const getAutoSize = ():
+    | SizeColumnsToFitProvidedWidthStrategy
+    | SizeColumnsToContentStrategy => {
+    console.log('getAutoSize');
 
-  if(styledColumns.length < 3 ) {
-    return {
-      type: 'fitProvidedWidth',
-      width: 1000
+    if (styledColumns.length < 3) {
+      return {
+        type: 'fitProvidedWidth',
+        width: 1000,
+      };
     }
-  }
-  return {
-    
-    type: 'fitCellContents'
+    return {
+      type: 'fitCellContents',
+    };
   };
-}
-console.log("getAutosize", getAutoSize().type);
+  console.log('getAutosize', getAutoSize().type);
 
   return (
     <div className="df-viewer">
