@@ -494,7 +494,8 @@ class CustomizableDataflow(DataFlow):
             df_viewer_config['column_config'] =  merge_column_config(
                 base_column_config, self.column_config_overrides)
             disp_arg = {'data_key': A_Klass.data_key,
-                        'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
+                        #'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
+                        'df_viewer_config': df_viewer_config,
                         'summary_stats_key': A_Klass.summary_stats_key}
             temp_display_args[display_name] = disp_arg
         self.df_display_args = temp_display_args

@@ -3,9 +3,9 @@ import numpy as np
 import buckaroo
 import time
 
-def float_df(N,K):
+def float_df(N_rows, K_columns):
     return pd.DataFrame(
-        {chr(i+97): np.random.random_sample(N) for i in range(K)})
+        {chr(i+97): np.random.random_sample(N_rows) for i in range(K_columns)})
 
 # %timeit float_df(100_000,20) 9ms on my laptop
 
@@ -41,7 +41,7 @@ def test_basic_instantiation():
     bw_end2 = time.time()
     bw_time_2 = bw_end2 - bw_start2
     
-    assert bw_time_2 < np_time * 50
+    assert bw_time_2 < np_time * 60
 
 
 

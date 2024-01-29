@@ -92,7 +92,6 @@ class Histogram(ColAnalysis):
 
     @staticmethod
     def series_summary(sampled_ser, ser):
-        print("histogram")
         if not pd.api.types.is_numeric_dtype(ser):
             return dict(histogram_args={})
         if pd.api.types.is_bool_dtype(ser):
