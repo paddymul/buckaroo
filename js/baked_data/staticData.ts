@@ -248,7 +248,8 @@ export const tableDf: DFWhole = {
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
         color_map_config: {
           color_rule: 'color_map',
-          map_name: 'DIVERGING_RED_WHITE_BLUE',
+          //map_name: 'DIVERGING_RED_WHITE_BLUE',
+          map_name: 'BLUE_TO_YELLOW',
           val_column: 'tripduration',
         },
       },

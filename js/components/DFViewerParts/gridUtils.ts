@@ -128,10 +128,14 @@ export function colorNotNull(cmr: ColorWhenNotNullRules) {
 
 export function getStyler(
   cmr: ColorMappingConfig,
-  summary_stats_cell: SDFMeasure
+  col_name: string,
+  histogram_stats: SDFT
+//  summary_stats_cell: SDFMeasure
 ) {
   switch (cmr.color_rule) {
     case 'color_map':
+      const statsCol = cmr.val_column || col_name;
+      const summary_stats_cell = histogram_stats[statsCol]
       if (
         summary_stats_cell &&
         summary_stats_cell.histogram_bins !== undefined
@@ -201,8 +205,8 @@ export function dfToAgrid(
         f.col_name
       );
 
-      const color_map_config = f.color_map_config
-        ? getStyler(f.color_map_config, hdf[f.col_name])
+      const color_map_config = f.color_map_config ?
+         getStyler(f.color_map_config, f.col_name, hdf)
         : {};
 
       const tooltip_config = f.tooltip_config
