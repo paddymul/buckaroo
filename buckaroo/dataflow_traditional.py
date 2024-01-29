@@ -454,6 +454,20 @@ class CustomizableDataflow(DataFlow):
     # ### end summary stats block        
 
 
+
+
+    def _sd_to_jsondf(self, sd):
+        """exists so this can be overriden for polars  """
+        temp_sd = sd.copy()
+        #FIXME add actual test around weird index behavior
+        if 'index' in temp_sd:
+            del temp_sd['index']
+        return self._df_to_obj(pd.DataFrame(temp_sd))
+
+    def _df_to_obj(self, df:pd.DataFrame):
+        return pd_to_obj(df)
+    
+
     #final processing block
     @observe('widget_args_tuple')
     def _handle_widget_change(self, change):
@@ -470,14 +484,12 @@ class CustomizableDataflow(DataFlow):
 
         # to expedite processing maybe future provided dfs from postprcoessing could default to empty until that is selected, optionally
         
-        temp_sd = merged_sd.copy()
-        del temp_sd['index']
-        self.df_data_dict = {'main': pd_to_obj(processed_df),
-                             'all_stats': pd_to_obj(pd.DataFrame(temp_sd)),
+        self.df_data_dict = {'main': self._df_to_obj(processed_df),
+                             'all_stats': self._sd_to_jsondf(merged_sd),
                              'empty': []}
         temp_display_args = {}
         for display_name, A_Klass in self.df_display_klasses.items():
-            df_viewer_config = A_Klass.style_columns(temp_sd)
+            df_viewer_config = A_Klass.style_columns(merged_sd)
             base_column_config = df_viewer_config['column_config']
             df_viewer_config['column_config'] =  merge_column_config(
                 base_column_config, self.column_config_overrides)

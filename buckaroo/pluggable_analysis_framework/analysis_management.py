@@ -15,10 +15,13 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     """
     errs = {}
     series_stats = defaultdict(lambda: {})
-    cols = ["index"]
+
+    cols = []
+    if hasattr(df, "index"):
+        #hack around polars not having indexes"
+        cols.append("index")
     cols.extend(df.columns)
     for possib_ser_name in cols:
-    #for ser_name in df.columns:
         if possib_ser_name == "index":
             ser_name = df.index.name or "index"
             ser = df.index.to_series()
@@ -57,10 +60,12 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     """
     errs = {}
     summary_col_dict = {}
-    cols = ["index"]
+    cols = []
+    if hasattr(df, "index"):
+        #hack around polars not having indexes"
+        cols.append("index")
     cols.extend(df.columns)
     for possib_ser_name in cols:
-    #for ser_name in df.columns:
         if possib_ser_name == "index":
             ser_name = df.index.name or "index"
         else:

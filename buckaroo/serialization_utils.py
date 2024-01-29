@@ -81,6 +81,7 @@ def df_to_obj(unknown_df:Union[pd.DataFrame, Any], summary_dict:Any):
     }
     return {'data':data, 'dfviewer_config': dfviewer_config}
 
+
 def pd_to_obj(df:pd.DataFrame):
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
 
