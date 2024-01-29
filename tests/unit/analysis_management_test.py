@@ -41,17 +41,20 @@ class TestAnalysisPipeline(unittest.TestCase):
         sdf, errs = produce_series_df(
             test_df, [Len], 'test_df', debug=True)
         ld = {'len':4}
-        assert sdf == {'normal_int_series': ld, 'empty_na_ser': ld, 'float_nan_ser': ld}
+        #dict(**sdf) makes the types equal and leads to better error messages if there is a problem
+        assert dict(**sdf) == {'normal_int_series': ld, 'empty_na_ser': ld, 'float_nan_ser': ld, 'index':ld}
 
         sdf2, errs = produce_series_df(
             test_df, [DistinctCount], 'test_df', debug=True)
-        assert sdf2 == {'normal_int_series': {'distinct_count': 4},
+        assert dict(**sdf2) == {'normal_int_series': {'distinct_count': 4},
+                                'index':  {'distinct_count': 4},
                         'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
         sdf3, errs = produce_series_df(
             test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-        assert sdf3 == {'normal_int_series': {'distinct_count': 4},
-                        'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
+        assert dict(**sdf3) == {'normal_int_series': {'distinct_count': 4},
+                                'index':  {'distinct_count': 4},
+                                'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
     def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
@@ -81,7 +84,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         err_key = list(errs.keys())[0]
         err_val = list(errs.values())[0]
-        assert err_key == ('empty_na_ser', 'computed_summary')
+        assert err_key == ('index', 'computed_summary')
         assert err_val[1] ==  AlwaysErr
         #can't compare instances of Exception classes
         # assert errs == {
@@ -228,7 +231,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             summary_stats_display = ['foo']
 
         ap.add_analysis(Foo)
-        self.assertEquals(ap.summary_stats_display, ['foo'])
+        self.assertEqual(ap.summary_stats_display, ['foo'])
 
     def test_invalid_summary_stats_display_throws(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
@@ -287,6 +290,6 @@ class TestDfStats(unittest.TestCase):
         #ab = dfs.presentation_sdf
 
         #triggers a getter?
-        DfStats(word_only_df, [SometimesProvides]).presentation_sdf
+        DfStats(word_only_df, [SometimesProvides]).sdf
 
 
