@@ -93,27 +93,6 @@ export interface SummarySeriesTooltip {
 
 export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
 
-// export interface DFColumn {
-//   name: string;
-//   type: string;
-// }
-
-export type DFDataRow = Record<
-  string,
-  string | number | boolean | any[] | Record<string, any> | null
->;
-
-export type DFData = DFDataRow[];
-
-/*
-When I want to start tagging metadata onto DFData
-export interface DFData {
-  rows: DFDataRow[];
-  //data_meta expansion point for typing info about the data as needed by non-display stuff
-  // typing,  sorting, null handling I'm not sure about it
-};
-*/
-
 export type ColumnConfig = {
   col_name: string;
   displayer_args: DisplayerArgs;
@@ -132,6 +111,23 @@ export interface DFViewerConfig {
   column_config: ColumnConfig[];
   //extra_config: Any;
 }
+
+export type DFDataRow = Record<
+  string,
+  string | number | boolean | any[] | Record<string, any> | null
+>;
+
+export type DFData = DFDataRow[];
+
+/*
+When I want to start tagging metadata onto DFData
+export interface DFData {
+  rows: DFDataRow[];
+  //data_meta expansion point for typing info about the data as needed by non-display stuff
+  // typing,  sorting, null handling I'm not sure about it
+};
+*/
+
 
 export interface DFWhole {
   dfviewer_config: DFViewerConfig;

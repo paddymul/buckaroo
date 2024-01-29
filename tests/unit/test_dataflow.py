@@ -127,6 +127,25 @@ def test_merge_column_config():
             {'col_name':'bar', 'displayer_args': {'displayer': 'int'}}]
     assert expected == merged
         
+
+def test_merge_column_config_hide():
+    overrides = {
+        'bar' : {'merge_rule':'hidden'}}
+    computed_column_config =     [
+
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'foo', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'bar', 'displayer_args': {'displayer': 'obj'}}]
+
+    merged = dft.merge_column_config(
+        computed_column_config, overrides)
+
+    expected = [
+            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+            {'col_name':'foo',   'displayer_args': {'displayer': 'obj'}}]
+        
+    assert expected == merged
+        
          
 
 EMPTY_DF_JSON = {

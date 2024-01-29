@@ -67,11 +67,15 @@ def style_columns(style_method:str, sd):
             'column_config': ret_col_config}
 
 def merge_column_config(styled_column_config, overide_column_configs):
-    ret_column_config = styled_column_config.copy()
-    for row in ret_column_config:
+    existing_column_config = styled_column_config.copy()
+    ret_column_config = []
+    for row in existing_column_config:
         col = row['col_name']
         if col in overide_column_configs:
             row.update(overide_column_configs[col])
+        if row.get('merge_rule', 'blank') == 'hidden':
+            continue
+        ret_column_config.append(row)
     return ret_column_config
 
 def compute_sampled_df(raw_df, sample_method):
