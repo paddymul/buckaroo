@@ -77,19 +77,6 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
                         ColDisplayHints]
 
     DFStatsClass = DfStats
-    
-    def __init__(self, df, debug=False, column_config_overrides=None):
-        super().__init__(df)
-        if not debug:
-            warnings.filterwarnings('ignore')
-        if column_config_overrides is None:
-            column_config_overrides = {}
-        self.column_config_overrides = column_config_overrides
-        self.debug = debug
-        self.df_name = get_df_name(df)
-        self.raw_df = df
-        warnings.filterwarnings('default')
-
 
 '''
 removed for later consideration

@@ -227,3 +227,22 @@ def test_custom_post_processing():
     p_dfc.buckaroo_state = temp_buckaroo_state
 
     assert p_dfc.processed_df is SENTINEL_DF
+
+def test_column_config_override_widget():
+    ROWS = 200
+    # typed_df = pd.DataFrame(
+    #     {'int_col':np.random.randint(1,50, ROWS),
+    #      'float_col': np.random.randint(1,30, ROWS)/.7,
+    #      "str_col": ["foobar"]* ROWS})
+    typed_df = pd.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+    bw2 = BuckarooWidget(
+        typed_df, 
+        column_config_overrides={
+            'float_col':
+            {'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}})
+    float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][2]
+    assert float_col_config == {'col_name': 'float_col', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}
+    
