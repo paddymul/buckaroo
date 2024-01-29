@@ -1,3 +1,4 @@
+import warnings
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
 from .serialization_utils import pd_to_obj    
@@ -9,6 +10,8 @@ SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
 SENTINEL_DF_3 = pd.DataFrame({'pp'   :[99, 33], 'ee':   [     6,     9]})
 SENTINEL_DF_4 = pd.DataFrame({'vvv'  :[12, 49], 'oo':   [ 'ccc', 'www']})
+
+
 
 
 def merge_ops(existing_ops, cleaning_ops):
@@ -323,15 +326,27 @@ class CustomizableDataflow(DataFlow):
     commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
     df_display_klasses = {}
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, df, debug=False, column_config_overrides=None):
+        if column_config_overrides is None:
+            column_config_overrides = {}
+        self.column_config_overrides = column_config_overrides
+        if not debug:
+            warnings.filterwarnings('ignore')
+
+        self.debug = debug
+        #self.df_name = get_df_name(df)
+        self.df_name = "placeholder"
         self.df_display_args = {}
         self.setup_options_from_analysis()
-        self.df_name = "placeholder"
-        self.debug = True
+        super().__init__(df)
+
         self._setup_from_command_kls_list()
-        super().__init__(*args, **kwargs)
         self.populate_df_meta()
+        #self.raw_df = df
+        warnings.filterwarnings('default')
+    
+
 
     def populate_df_meta(self):
         self.df_meta = {
@@ -452,9 +467,6 @@ class CustomizableDataflow(DataFlow):
         return stats.sdf
     # ### end summary stats block        
 
-
-
-
     def _sd_to_jsondf(self, sd):
         """exists so this can be overriden for polars  """
         temp_sd = sd.copy()
@@ -481,11 +493,14 @@ class CustomizableDataflow(DataFlow):
         # eventually processed_df will be able to add or alter values of df_data_dict
         # correlation would be added, filtered would probably be altered
 
-        # to expedite processing maybe future provided dfs from postprcoessing could default to empty until that is selected, optionally
+        # to expedite processing maybe future provided dfs from
+        # postprcoessing could default to empty until that is
+        # selected, optionally
         
         self.df_data_dict = {'main': self._df_to_obj(processed_df),
                              'all_stats': self._sd_to_jsondf(merged_sd),
                              'empty': []}
+
         temp_display_args = {}
         for display_name, A_Klass in self.df_display_klasses.items():
             df_viewer_config = A_Klass.style_columns(merged_sd)

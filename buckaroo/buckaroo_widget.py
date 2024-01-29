@@ -49,9 +49,6 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
     _view_module_version = Unicode(module_version).tag(sync=True)
 
     operations = List().tag(sync=True)
-    #df_dict: Dict[str, DFWhole] = Dict({}).tag(sync=True)
-    df_dict = Dict({}).tag(sync=True)
-
 
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
@@ -81,10 +78,13 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
 
     DFStatsClass = DfStats
     
-    def __init__(self, df, debug=False):
+    def __init__(self, df, debug=False, column_config_overrides=None):
         super().__init__(df)
         if not debug:
             warnings.filterwarnings('ignore')
+        if column_config_overrides is None:
+            column_config_overrides = {}
+        self.column_config_overrides = column_config_overrides
         self.debug = debug
         self.df_name = get_df_name(df)
         self.raw_df = df
