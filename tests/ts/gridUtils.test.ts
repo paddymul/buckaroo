@@ -2,7 +2,8 @@
 
 import { extractSDFT,  getHistoIndex, } from '../../js/components/DFViewerParts/gridUtils';
 import { DFData } from "../../js/components/DFViewerParts/DFWhole";
-import { getFormatter, objFormatter, stringFormatter } from '../../js/components/DFViewerParts/Displayer';
+import { getFloatFormatter, getFormatter, objFormatter, stringFormatter } from '../../js/components/DFViewerParts/Displayer';
+import { ValueFormatterParams } from 'ag-grid-community';
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
@@ -14,6 +15,24 @@ it("should test getFormater", () => {
 
 });
 
+it("should format floats with a consistently spaced decimal pont",
+  () => {
+    const floatFormatter = getFloatFormatter(
+      {'displayer':'float', 'minimumFractionDigits':0, 'maximumFractionDigits':3})
+    const res1 = floatFormatter({'value': 1.997} as ValueFormatterParams);
+    expect(res1).toBe("1.997");
+    const res2 = floatFormatter({'value': 1.000} as ValueFormatterParams);
+    expect(res2).toBe("1    ");
+    const res3 = floatFormatter({'value': 1} as ValueFormatterParams);
+    expect(res3).toBe("1    ");
+    const res4 = floatFormatter({'value': 31} as ValueFormatterParams);
+    expect(res4).toBe("31    ");
+
+    const res5 = floatFormatter({'value': 1.5} as ValueFormatterParams);
+    expect(res5).toBe("1.5  ");
+
+  }
+)
   it("should convert to expected format", () => {
     const basicSDF:DFData = [
       {'index': 'histogram_bins',     'a':[2,3]},

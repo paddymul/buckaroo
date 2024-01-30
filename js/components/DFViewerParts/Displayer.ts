@@ -102,16 +102,24 @@ const getIntegerFormatter = (hint: IntegerDisplayerA) => {
   };
   return numericFormatter;
 };
-const getFloatFormatter = (hint: FloatDisplayerA) => {
+export const getFloatFormatter = (hint: FloatDisplayerA) => {
   const floatFormatter = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3,
+    minimumFractionDigits: hint.minimumFractionDigits,
+    maximumFractionDigits: hint.maximumFractionDigits,
   });
   return (params: ValueFormatterParams): string => {
     if (params.value === null) {
       return '';
     }
-    return floatFormatter.format(params.value);
+    const res:string = floatFormatter.format(params.value);
+    if(!_.includes(res, ".")){
+      const padLength = res.length + hint.maximumFractionDigits + 1
+      return res.padEnd(padLength)
+    } else {
+      const fracPart = res.split(".")[1];
+      const padLength = (hint.maximumFractionDigits - fracPart.length) + res.length;
+      return res.padEnd(padLength)
+    }
   };
 };
 

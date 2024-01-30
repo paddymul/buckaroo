@@ -13,6 +13,8 @@ export interface StringDisplayerA {
 } //max_length?: number;
 export interface FloatDisplayerA {
   displayer: 'float';
+  minimumFractionDigits: number,
+  maximumFractionDigits: number,
 }
 
 export interface DatetimeDefaultDisplayerA {
