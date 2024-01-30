@@ -331,10 +331,11 @@ class CustomizableDataflow(DataFlow):
     DFStatsClass = DfStats
     df_display_klasses = {}
 
-    def __init__(self, df, debug=False, column_config_overrides=None):
+    def __init__(self, df, debug=False, column_config_overrides=None, pinned_rows=None):
         if column_config_overrides is None:
             column_config_overrides = {}
         self.column_config_overrides = column_config_overrides
+        self.pinned_rows = pinned_rows
         if not debug:
             warnings.filterwarnings('ignore')
 
@@ -516,6 +517,9 @@ class CustomizableDataflow(DataFlow):
                         'df_viewer_config': df_viewer_config,
                         'summary_stats_key': A_Klass.summary_stats_key}
             temp_display_args[display_name] = disp_arg
+
+        if self.pinned_rows:
+            temp_display_args['main']['df_viewer_config']['pinned_rows'] = self.pinned_rows
         self.df_display_args = temp_display_args
 
    

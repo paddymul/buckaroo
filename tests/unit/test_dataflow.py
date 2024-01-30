@@ -249,10 +249,6 @@ def test_custom_post_processing():
 
 def test_column_config_override_widget():
     ROWS = 200
-    # typed_df = pd.DataFrame(
-    #     {'int_col':np.random.randint(1,50, ROWS),
-    #      'float_col': np.random.randint(1,30, ROWS)/.7,
-    #      "str_col": ["foobar"]* ROWS})
     typed_df = pd.DataFrame(
         {'int_col': [1] * ROWS,
          'float_col': [.5] * ROWS,
@@ -264,4 +260,18 @@ def test_column_config_override_widget():
             {'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}})
     float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][2]
     assert float_col_config == {'col_name': 'float_col', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}
+    
+
+
+def test_pinned_rows_override_widget():
+    ROWS = 200
+    typed_df = pd.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+    HIST_ROW = {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }}
+    bw2 = BuckarooWidget(typed_df, pinned_rows=[HIST_ROW])
+    pinned_rows = bw2.df_display_args['main']['df_viewer_config']['pinned_rows']
+    assert pinned_rows[0] == HIST_ROW
+
     
