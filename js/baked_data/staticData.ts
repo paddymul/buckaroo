@@ -255,7 +255,7 @@ export const tableDf: DFWhole = {
       },
       {
         col_name: 'nanFloat',
-        displayer_args: { displayer: 'float' },
+        displayer_args: { displayer: 'float', minimumFractionDigits:2, maximumFractionDigits:8 },
         tooltip_config: { tooltip_type: 'summary_series' },
       },
       { col_name: 'end station name', displayer_args: { displayer: 'obj' } },
@@ -276,7 +276,7 @@ export const tableDf: DFWhole = {
           exist_column: 'nanFloat',
         },
       },
-      { col_name: 'floatCol', displayer_args: { displayer: 'float' } },
+      { col_name: 'floatCol', displayer_args: { displayer: 'float', minimumFractionDigits:1, maximumFractionDigits:3} },
       {
         col_name: 'nanNumeric',
         displayer_args: { displayer: 'integer', min_digits: 3, max_digits: 5 },
@@ -352,13 +352,13 @@ export const dfviewer_config_no_pinned: DFViewerConfig = {
   column_config: tableDf.dfviewer_config.column_config,
   pinned_rows: [
     { primary_key_val: 'dtype', displayer_args: { displayer: 'obj' } },
-    {
-      primary_key_val: 'histogram',
-      displayer_args: { displayer: 'histogram' },
+    { primary_key_val: 'histogram', displayer_args: { displayer: 'histogram' },
     },
   ],
 };
 const tripDurationBins = [0, 300, 500, 1000, 1500];
+
+
 
 export const summaryDfForTableDf: DFData = [
   {
@@ -399,85 +399,50 @@ export const summaryDfForTableDf: DFData = [
   },
 ];
 
-/*
-export const stringIndexDf: DFWhole = {
-  schema: {
-    fields: [
-      { name: 'index', type: 'integer' },
-      { name: 'datetime_col', type: 'datetime' },
-      { name: 'datetime_col2', type: 'datetime' },
-      { name: 'a', type: 'integer' },
-      { name: 'b', type: 'boolean' },
-      { name: 'list_col', type: 'obj' },
-      { name: 'strings', type: 'boolean' },
-      { name: 'dict_col', type: 'obj' },
-    ],
-    primaryKey: ['index'],
-    pandas_version: '1.4.0',
-  },
-  data: [
-    {
-      index: 0,
-      a: 1,
-      b: true,
-      strings: 'a',
-      list_col: ['a', 'b'],
-      dict_col: { a: 10, b: 20 },
-      datetime_col: '2001-01-01T00:00:00.000',
-      datetime_col2: '2001-01-01T00:00:00.000',
-    },
-    {
-      index: 1,
-      a: 2,
-      b: false,
-      strings: '',
-      list_col: [1, 2],
-      dict_col: { b: 20, c: 30 },
-      datetime_col: '2001-05-03T00:01:00.000',
-      datetime_col2: '2001-05-03T00:01:00.000',
-    },
-    {
-      index: 2,
-      a: 3,
-      b: false,
-      strings: ' ',
-      list_col: [true, false],
-      dict_col: { a: 'foo' },
-      datetime_col: '2001-05-03T15:44:55.000',
-      datetime_col2: '2001-05-03T15:44:55.000',
-    },
-  ],
-  table_hints: {
-    a: {
-      type: 'integer',
-      min_digits: 1,
-      max_digits: 1,
+export const realSummaryTableData:DFData = [
+{'index': 'dtype',
+  'int_col': 'int64',
+  'float_col': 'float64',
+  'str_col': 'object'},
+ {'index': 'min', 'int_col': 1, 'float_col': 1.4285714286, },
+ {'index': 'max', 'int_col': 49, 'float_col': 41.4285714286, 'str_col': null},
+ {'index': 'mean',
+  'int_col': 24.75,
+  'float_col': 22.4714285714},
+ {'index': 'unique_count', 'int_col': 4, 'float_col': 0, 'str_col': 0},
+ {'index': 'empty_count', 'int_col': 0, 'float_col': 0, 'str_col': 0},
+ {'index': 'distinct_count', 'int_col': 49, 'float_col': 29, 'str_col': 1}]
 
-      histogram: [
-        { name: 1, cat_pop: 50.0 },
-        { name: 2, cat_pop: 50.0 },
-        { name: 'longtail', unique: 100.0 },
-      ],
-    },
-    b: {
-      type: 'integer',
-      min_digits: 1,
-      max_digits: 1,
-      histogram: [
-        { name: true, cat_pop: 50.0 },
-        { name: false, cat_pop: 50.0 },
-        { name: 'longtail', unique: 100.0 },
-      ],
-    },
-    strings: { type: 'string', histogram: [] },
-    datetime_col: { type: 'datetime', formatter: 'default', histogram: [] },
-    datetime_col2: {
-      type: 'datetime',
-      formatter: 'toLocaleString',
-      args: { year: 'numeric', month: 'numeric', day: 'numeric' },
-      locale: 'en-CA',
-      histogram: [],
-    },
-  },
-};
-*/
+ export const realSummaryConfig:DFViewerConfig = {'pinned_rows': [{'primary_key_val': 'dtype',
+ 'displayer_args': {'displayer': 'obj'}},
+{'primary_key_val': 'min',
+ 'displayer_args': {'displayer': 'float',
+  'minimumFractionDigits': 3,
+  'maximumFractionDigits': 3}},
+{'primary_key_val': 'mean',
+ 'displayer_args': {'displayer': 'float',
+  'minimumFractionDigits': 3,
+  'maximumFractionDigits': 3}},
+{'primary_key_val': 'max',
+ 'displayer_args': {'displayer': 'float',
+  'minimumFractionDigits': 3,
+  'maximumFractionDigits': 3}},
+{'primary_key_val': 'unique_count',
+ 'displayer_args': {'displayer': 'float',
+  'minimumFractionDigits': 0,
+  'maximumFractionDigits': 0}},
+{'primary_key_val': 'distinct_count',
+ 'displayer_args': {'displayer': 'float',
+  'minimumFractionDigits': 0,
+  'maximumFractionDigits': 0}},
+{'primary_key_val': 'empty_count',
+ 'displayer_args': {'displayer': 'float',
+  'minimumFractionDigits': 0,
+  'maximumFractionDigits': 0}}],
+'column_config': [
+//  {'col_name': 'index',  'displayer_args': {'displayer': 'string'}},
+ {'col_name': 'index',
+ 'displayer_args': {'displayer': 'string'}, 'ag_grid_specs': {minWidth:150, pinned:'left'} },
+{'col_name': 'int_col', 'displayer_args': {'displayer': 'obj'}},
+{'col_name': 'float_col', 'displayer_args': {'displayer': 'obj'}},
+{'col_name': 'str_col', 'displayer_args': {'displayer': 'obj'}}]}

@@ -130,7 +130,6 @@ export function getStyler(
   cmr: ColorMappingConfig,
   col_name: string,
   histogram_stats: SDFT
-//  summary_stats_cell: SDFMeasure
 ) {
   switch (cmr.color_rule) {
     case 'color_map':
@@ -219,10 +218,8 @@ export function dfToAgrid(
         ...addToColDef(f.displayer_args, hdf[f.col_name]),
         ...color_map_config,
         ...tooltip_config,
+        ...f.ag_grid_specs
       };
-      if (f.col_name === 'index') {
-        colDef.pinned = 'left';
-      }
       return colDef;
     }
   );
@@ -252,6 +249,7 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
       const possibCellRenderer = getCellRenderer(
         prc.displayer_args as CellRendererArgs
       );
+
       if (possibCellRenderer === undefined) {
         const formattedRenderer: CellRendererSelectorResult = {
           component: getTextCellRenderer(

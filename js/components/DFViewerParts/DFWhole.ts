@@ -1,5 +1,6 @@
 // I'm not sure about adding underlying types too
 
+import { ColDef } from 'ag-grid-community';
 import _ from 'lodash';
 
 export interface ObjDisplayerA {
@@ -100,6 +101,7 @@ export type ColumnConfig = {
   displayer_args: DisplayerArgs;
   color_map_config?: ColorMappingConfig;
   tooltip_config?: TooltipConfig;
+  ag_grid_specs?: ColDef
   //extra column info ???
 };
 

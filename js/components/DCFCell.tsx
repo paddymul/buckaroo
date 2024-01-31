@@ -4,6 +4,8 @@ import { OperationResult, baseOperationResults } from './DependentTabs';
 import { ColumnsEditor, WidgetConfig } from './ColumnsEditor';
 import {
   dfviewer_config_no_pinned,
+  realSummaryConfig,
+  realSummaryTableData,
   summaryDfForTableDf,
   tableDf,
 } from '../baked_data/staticData';
@@ -128,7 +130,7 @@ export function WidgetDCFCellExample() {
 
   const bOptions: BuckarooOptions = {
     auto_clean: ['', 'aggressive', 'conservative'],
-    df_display: ['main', 'no_pinned_nonexistent_summary', 'no_pinned'],
+    df_display: ['main', 'realSummary', 'no_pinned'],
     sampled: ['random'],
     post_processing: ['', 'foo', 'bar'],
     show_commands: ['on'],
@@ -143,23 +145,30 @@ export function WidgetDCFCellExample() {
       df_viewer_config: tableDf.dfviewer_config,
       summary_stats_key: 'all',
     },
+    realSummary: {
+      data_key: 'empty',
+      df_viewer_config: realSummaryConfig,
+      summary_stats_key: 'real_summary'
+    },
+
     no_pinned: {
       data_key: 'main',
       df_viewer_config: dfviewer_config_no_pinned,
       summary_stats_key: 'all',
     },
-    no_pinned_nonexistent_summary: {
-      data_key: 'main',
-      df_viewer_config: dfviewer_config_no_pinned,
-      summary_stats_key: 'nonexistent-key',
-    },
+    
   };
 
+  const df_data_dict = { main: tableDf.data, all: summaryDfForTableDf, real_summary:realSummaryTableData, 
+    empty:[
+      {'index': 'distinct_count'}
+  
+  ] }
   return (
     <WidgetDCFCell
       df_meta={dfm}
       df_display_args={bakedDfDisplay}
-      df_data_dict={{ main: tableDf.data, all: summaryDfForTableDf }}
+      df_data_dict={df_data_dict}
       buckaroo_options={bOptions}
       buckaroo_state={bState}
       on_buckaroo_state={setBState}

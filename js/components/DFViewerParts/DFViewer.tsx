@@ -47,7 +47,8 @@ export function DFViewer(
     df_viewer_config,
     summary_stats_data || []
   );
-  const pinned_rows = df_viewer_config.pinned_rows;
+  //agColsPure[0].minWidth=150;
+
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
@@ -80,19 +81,17 @@ export function DFViewer(
     },
   };
   const gridRef = useRef<AgGridReact<unknown>>(null);
+  const pinned_rows = df_viewer_config.pinned_rows;
   const topRowData = summary_stats_data
     ? extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : [])
     : [];
-  /*
-
-*/
 
   const getAutoSize = ():
     | SizeColumnsToFitProvidedWidthStrategy
     | SizeColumnsToContentStrategy => {
     console.log('getAutoSize');
 
-    if (styledColumns.length < 3) {
+    if (styledColumns.length < 1) {
       return {
         type: 'fitProvidedWidth',
         width: 1000,
@@ -102,7 +101,6 @@ export function DFViewer(
       type: 'fitCellContents',
     };
   };
-  console.log('getAutosize', getAutoSize().type);
 
   return (
     <div className="df-viewer">
@@ -116,7 +114,7 @@ export function DFViewer(
           gridOptions={gridOptions}
           rowData={agData}
           pinnedTopRowData={topRowData}
-          columnDefs={styledColumns}
+          columnDefs={_.cloneDeep(styledColumns)}
           autoSizeStrategy={getAutoSize()}
         ></AgGridReact>
       </div>

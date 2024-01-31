@@ -18,6 +18,7 @@ const examples = {
     DFViewerEx: {title: 'DFViewer', file: 'DFViewerEx'},
     DFViewerEx_string_index: {title: 'DFViewer string index', file: 'DFViewerEx_string_index'},
     DFViewerEx_large: {title: 'DFViewer large', file: 'DFViewerEx_large'},
+    DFViewerEx_real_summary: {title: 'DFViewer summary', file: 'DFViewerEx_real_summary'},
 
     StatusBarEx: {title: 'StatusBar', file: 'StatusBarEx'},
     HistogramEx: {title: 'Histogram', file: 'HistogramEx'}
