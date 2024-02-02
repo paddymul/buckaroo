@@ -3,6 +3,9 @@
 import { ColDef } from 'ag-grid-community';
 import _ from 'lodash';
 
+type AGGrid_ColDef = ColDef;
+
+
 export interface ObjDisplayerA {
   displayer: 'obj';
 }
@@ -77,22 +80,15 @@ export interface ColorFromColumn {
   col_name: string;
 }
 
-export type ColorMappingConfig =
-  | ColorMapRules
-  | ColorWhenNotNullRules
-  | ColorFromColumn;
+export type ColorMappingConfig = ColorMapRules | ColorWhenNotNullRules | ColorFromColumn;
 
 //TooltipRules
 export interface SimpleTooltip {
   tooltip_type: 'simple';
-  val_column: string;
-}
+  val_column: string;}
 
 export interface SummarySeriesTooltip {
-  tooltip_type: 'summary_series';
-  //single_series_summary_df: DFWhole;
-  //val_column: string;
-}
+  tooltip_type: 'summary_series';}
 
 export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
 
@@ -101,20 +97,19 @@ export type ColumnConfig = {
   displayer_args: DisplayerArgs;
   color_map_config?: ColorMappingConfig;
   tooltip_config?: TooltipConfig;
-  ag_grid_specs?: ColDef
-  //extra column info ???
-};
+  ag_grid_specs?: AGGrid_ColDef};
 
 export type PinnedRowConfig = {
   primary_key_val: string;
   displayer_args: DisplayerArgs;
+  //used to render index column values with string not the specified displayer, otherwise the column will be listed as NaN or blank
+  //by default the "index" column is always rendered with "obj"
+  default_renderer_columns?: string[]; 
 };
 
 export interface DFViewerConfig {
   pinned_rows: PinnedRowConfig[];
-  column_config: ColumnConfig[];
-  //extra_config: Any;
-}
+  column_config: ColumnConfig[];}
 
 export type DFDataRow = Record<
   string,

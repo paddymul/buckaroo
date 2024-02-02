@@ -86,7 +86,6 @@ export function StatusBar({
     const nextIdx = nextIndex(curIdx, arr);
     const newVal = arr[nextIdx];
     const newState = _.clone(buckarooState);
-    //console.log("k", k, "arr", arr, 'curIdx', curIdx, 'nextIdx', nextIdx, 'newVal', newVal);
     newState[k] = newVal;
     return newState;
   };
@@ -97,11 +96,10 @@ export function StatusBar({
     }
     if (_.includes(_.keys(buckarooState), colName)) {
       const nbstate = newBuckarooState(colName as BKeys);
-      console.log('new buckaroo state', nbstate, buckarooState);
       setBuckarooState(nbstate);
     }
   };
-
+  const showSearch = false;
   const localSetSearchString = (search_query: string) => {
     setBuckarooState({ ...buckarooState, search_string: search_query });
   };
@@ -114,13 +112,16 @@ export function StatusBar({
         buckarooState.search_string,
         localSetSearchString
       ),
+      hide: !showSearch
     },
+
     {
       field: 'df_display',
       headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
       headerTooltip: 'Summary Stats',
       width: 120,
     },
+    /*
     {
       field: 'auto_clean',
       //headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
@@ -128,6 +129,7 @@ export function StatusBar({
       headerTooltip: 'Auto Cleaning config',
       width: 120,
     },
+    */
     {
       field: 'post_processing',
       //      headerName: "Θ",

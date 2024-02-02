@@ -246,6 +246,12 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
         return anyRenderer;
       }
       const prc: PinnedRowConfig = maybePrc;
+      console.log("params", params);
+      const currentCol = params.column?.getColId();
+      if((prc.default_renderer_columns === undefined && currentCol === 'index') ||
+       _.includes(prc.default_renderer_columns, currentCol)){
+        return anyRenderer;
+      }
       const possibCellRenderer = getCellRenderer(
         prc.displayer_args as CellRendererArgs
       );
