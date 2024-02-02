@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from buckaroo.dataflow_traditional import DataFlow
 from buckaroo import dataflow_traditional as dft
@@ -237,7 +238,6 @@ def test_custom_post_processing():
 
     p_dfc = PostDCFC(BASIC_DF)
 
-    # summary_sd = dc_dfc.widget_args_tuple[1]
     assert p_dfc.buckaroo_options['post_processing'] == ['', 'post1']
     assert p_dfc.buckaroo_state['post_processing'] == ''
 
@@ -246,6 +246,32 @@ def test_custom_post_processing():
     p_dfc.buckaroo_state = temp_buckaroo_state
 
     assert p_dfc.processed_df is SENTINEL_DF
+
+class AlwaysFailPostProcessingAnalysis(ColAnalysis):
+
+    post_processing_method = "always_fail"
+
+    @classmethod
+    def post_process_df(kls, cleaned_df):
+        1/0
+
+
+def test_error_post_processing():
+    class ErrorCFC(CustomizableDataflow):
+        analysis_klasses = [AlwaysFailPostProcessingAnalysis, SimpleStylingAnalysis]
+
+    e_dfc = ErrorCFC(BASIC_DF)
+
+    # assert e_dfc.buckaroo_options['post_processing'] == ['', 'post1']
+    # assert e_dfc.buckaroo_state['post_processing'] == ''
+
+    assert e_dfc.buckaroo_options['post_processing'] == ['', 'always_fail']
+    assert e_dfc.buckaroo_state['post_processing'] == ''
+
+    temp_buckaroo_state = e_dfc.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'always_fail'
+    e_dfc.buckaroo_state = temp_buckaroo_state
+    assert e_dfc.processed_df.values == [["division by zero"]]
 
 def test_column_config_override_widget():
     ROWS = 200
@@ -275,3 +301,34 @@ def test_pinned_rows_override_widget():
     assert pinned_rows[0] == HIST_ROW
 
     
+
+class TransposeProcessing(ColAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        return [df.T, {}]
+    post_processing_method = "transpose"
+
+
+def test_transpose_error():
+
+    ROWS = 5
+    typed_df = pd.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+
+
+    base_a_klasses = BuckarooWidget.analysis_klasses.copy()
+    base_a_klasses.extend([TransposeProcessing])
+
+    class VCBuckarooWidget(BuckarooWidget):
+        analysis_klasses = base_a_klasses
+
+    vcb = VCBuckarooWidget(typed_df, debug=False)
+    temp_buckaroo_state = vcb.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'transpose'
+    vcb.buckaroo_state = temp_buckaroo_state
+    assert vcb.processed_df.values.tolist() == [
+        [1, 1, 1, 1, 1],
+        [0.5, 0.5, 0.5, 0.5, 0.5],
+        ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]

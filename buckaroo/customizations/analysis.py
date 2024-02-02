@@ -24,11 +24,15 @@ def probable_datetime(ser):
         return False
 
 def get_mode(ser):
-    mode_raw = ser.mode()
-    if len(mode_raw) == 0:
+    try:
+        mode_raw = ser.mode()
+        if len(mode_raw) == 0:
+            return np.nan
+        else:
+            return mode_raw.values[0]
+    except Exception as e:
         return np.nan
-    else:
-        return mode_raw.values[0]
+
 
 """
 to best take advantage of the DAG and pluggable_analysis_framework, structure your code as follows

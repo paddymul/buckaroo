@@ -275,7 +275,13 @@ class SimpleStylingAnalysis(ColAnalysis):
 
     @staticmethod
     def single_sd_to_column_config(col, sd):
-        return {'col_name':col, 'displayer_args': {'displayer': 'obj'}}
+        return {'col_name':str(col), 'displayer_args': {'displayer': 'obj'}}
+
+    #what is the key for this in the df_display_args_dictionary
+    df_display_name = "main"
+    data_key = "main"
+    summary_stats_key= 'all_stats'
+
     
     @classmethod
     def style_columns(kls, sd):
@@ -286,10 +292,6 @@ class SimpleStylingAnalysis(ColAnalysis):
             'pinned_rows': kls.pinned_rows,
             'column_config': ret_col_config}
 
-    #what is the key for this in the df_display_args_dictionary
-    df_display_name = "main"
-    data_key = "main"
-    summary_stats_key= 'all_stats'
 
 class SummaryStatsAnalysis(ColAnalysis):
     def stats_df_viewer_config(self):
@@ -384,7 +386,6 @@ class CustomizableDataflow(DataFlow):
         #how to control ordering of column_config???
         # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
         # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
-        #print("change", change)
         old, new = change['old'], change['new']
         if not old['post_processing'] == new['post_processing']:
             self.post_processing_method = new['post_processing']
@@ -449,16 +450,25 @@ class CustomizableDataflow(DataFlow):
             return [cleaned_df, {}]
         else:
             post_analysis = self.post_processing_klasses[post_processing_method]
-            return post_analysis.post_process_df(cleaned_df)
+            try:
+                ret_df =  post_analysis.post_process_df(cleaned_df)
+                return ret_df
+            except Exception as e:
+                return [pd.DataFrame({'err': [str(e)]}), {}]
 
 
     ### start summary stats block
     def _get_summary_sd(self, processed_df):
-        stats = self.DFStatsClass(
-            processed_df,
-            self.analysis_klasses,
-            self.df_name, debug=self.debug)
-        return stats.sdf
+        try:
+            stats = self.DFStatsClass(
+                processed_df,
+                self.analysis_klasses,
+                self.df_name, debug=self.debug)
+            sdf = stats.sdf
+            return stats.sdf
+        except Exception as e:
+            print(e)
+            1/0
 
     def add_analysis(self, analysis_klass):
         """
@@ -488,7 +498,7 @@ class CustomizableDataflow(DataFlow):
     @observe('widget_args_tuple')
     def _handle_widget_change(self, change):
         """
-        put together df_dict for consumption by the frontend
+       put together df_dict for consumption by the frontend
         """
         processed_df, merged_sd = self.widget_args_tuple
         if processed_df is None:
@@ -521,7 +531,6 @@ class CustomizableDataflow(DataFlow):
         if self.pinned_rows:
             temp_display_args['main']['df_viewer_config']['pinned_rows'] = self.pinned_rows
         self.df_display_args = temp_display_args
-
    
 """
 Instantiation
