@@ -66,7 +66,7 @@ class PolarsAnalysisPipeline(AnalysisPipeline):
     """
  
     @staticmethod
-    def polars_full_produce_summary_df(
+    def full_produce_summary_df(
             df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
             df_name:str='test_df', debug:bool=False):
         series_stat_dict, series_errs = polars_produce_series_df(df, ordered_objs, df_name, debug)

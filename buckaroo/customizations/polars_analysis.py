@@ -46,7 +46,6 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
     @staticmethod
     def computed_summary(summary_dict):
         len_ = summary_dict['length']
-        
         return dict(
             distinct_per=summary_dict['distinct_count']/len_,
             empty_per=summary_dict.get('empty_count',0)/len_,
@@ -83,6 +82,7 @@ class BasicAnalysis(PolarsAnalysis):
 
     @staticmethod
     def computed_summary(summary_dict):
+        print("summary_dict", summary_dict)
         temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
         regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
         return dict(mode=regular_col_vc_df[0]['key'][0])
