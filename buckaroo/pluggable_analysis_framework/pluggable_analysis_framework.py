@@ -1,6 +1,6 @@
 import graphlib
 from collections import OrderedDict
-from typing import List, Union
+from typing import List, Union, Any, Mapping, Tuple, Callable
 
 class ColAnalysis(object):
     """
@@ -45,6 +45,10 @@ class ColAnalysis(object):
     def cname(kls):
         #print(dir(kls))
         return kls.__qualname__
+
+    select_clauses:List[Any] = []
+    column_ops: Mapping[str, Tuple[List[Any], Callable[[Any], Any]]] = {}
+
     
 class NotProvidedException(Exception):
     pass

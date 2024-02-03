@@ -310,13 +310,11 @@ class TransposeProcessing(ColAnalysis):
 
 
 def test_transpose_error():
-
     ROWS = 5
     typed_df = pd.DataFrame(
         {'int_col': [1] * ROWS,
          'float_col': [.5] * ROWS,
          "str_col": ["foobar"]* ROWS})
-
 
     base_a_klasses = BuckarooWidget.analysis_klasses.copy()
     base_a_klasses.extend([TransposeProcessing])

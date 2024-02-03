@@ -6,16 +6,27 @@ from .serialization_utils import pd_to_obj
 from buckaroo.customizations.polars_commands import (
     DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
 )
+from traitlets import Unicode, List, Dict
+from ._frontend import module_name, module_version
+from buckaroo.dataflow_traditional import SimpleStylingAnalysis
 
 
+local_analysis_klasses = PL_Analysis_Klasses.copy()
+local_analysis_klasses.append(SimpleStylingAnalysis)
 class PolarsBuckarooWidget(BuckarooWidget):
     """TODO: Add docstring here
     """
     command_classes = [DropCol, FillNA, GroupBy]
-    analysis_klasses = PL_Analysis_Klasses
+    analysis_klasses = local_analysis_klasses
     DFStatsClass = PlDfStats
 
 
+    _model_name = Unicode('DCEFWidgetModel').tag(sync=True)
+    _model_module = Unicode(module_name).tag(sync=True)
+    _model_module_version = Unicode(module_version).tag(sync=True)
+    _view_name = Unicode('DCEFWidgetView').tag(sync=True)
+    _view_module = Unicode(module_name).tag(sync=True)
+    _view_module_version = Unicode(module_version).tag(sync=True)
 
     def _sd_to_jsondf(self, sd):
         """exists so this can be overriden for polars  """
