@@ -58,7 +58,6 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
     then it produces a summary dataframe
     """
-    print("regular produce_summary_df")
     errs = {}
     summary_col_dict = {}
     cols = []
@@ -82,7 +81,6 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
                     summary_res = a_kls.computed_summary(base_summary_dict)
                     warnings.filterwarnings('default')
                 else:
-                    print("about to call computed summary from regular")
                     summary_res = a_kls.computed_summary(base_summary_dict)
                 for k,v in summary_res.items():
                     base_summary_dict.update(summary_res)
@@ -112,7 +110,6 @@ class AnalysisPipeline(object):
 
     @staticmethod
     def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
-        print("analysis_management full_produce_summary_df")
         if len(df) == 0:
             return {}, {}
 
@@ -171,9 +168,7 @@ class AnalysisPipeline(object):
 
 
     def process_df(self, input_df, debug=False):
-        print("beginning of process_df")
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
-        print("output_df.columns", list(output_df.keys()))
         return output_df, errs
 
     def add_analysis(self, new_aobj):

@@ -82,7 +82,6 @@ class BasicAnalysis(PolarsAnalysis):
 
     @staticmethod
     def computed_summary(summary_dict):
-        print("summary_dict", summary_dict)
         temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
         regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
         return dict(mode=regular_col_vc_df[0]['key'][0])
@@ -90,14 +89,14 @@ class BasicAnalysis(PolarsAnalysis):
 
 class PlTyping(PolarsAnalysis):
     column_ops = {'dtype':  ("all", lambda col_series: col_series.dtype)}
-    provides_summary = ['dtype', '_type', 'is_numeric']
+    provides_summary = ['dtype', '_type', 'is_numeric', 'is_integer']
 
 
     @staticmethod
     def computed_summary(summary_dict):
         dt = summary_dict['dtype']
 
-        res = {'is_numeric':  False}
+        res = {'is_numeric':  False, 'is_integer': False}
 
         if dt in pdt.INTEGER_DTYPES:
             t = 'integer'
@@ -113,6 +112,8 @@ class PlTyping(PolarsAnalysis):
             t = 'unknown'
         if t in ('integer', 'float'):
             res['is_numeric'] = True
+        if t == 'integer':
+            res['is_integer'] = True
         res['_type'] = t
         return res
 
@@ -135,10 +136,8 @@ def normalize_polars_histogram_ser(ser):
     edges[0], edges[-1] = smallest, largest
     counts = hist_df['count'][1:]
     norm_counts = counts/counts.sum()
-    print("polars histogram", edges)
     return { 'low_tail': smallest, 'high_tail':largest,
              'meat_histogram': (counts.to_list(), edges),
-             'histogram_bins': edges,
              'normalized_populations': norm_counts.to_list()}
 
 
@@ -193,24 +192,27 @@ class HistogramAnalysis(PolarsAnalysis):
         'histogram_args': (NUMERIC_POLARS_DTYPES, normalize_polars_histogram_ser)}
 
     requires_summary = ['min', 'max', 'value_counts', 'length', 'unique_count', 'is_numeric', 'nan_per']
-    provides_summary = ['categorical_histogram', 'histogram']
+    provides_summary = ['categorical_histogram', 'histogram', 'histogram_bins']
 
     @staticmethod
     def computed_summary(summary_dict):
-        #1/0
         vc = summary_dict['value_counts']
         cd = categorical_dict_from_vc(vc)
         is_numeric = summary_dict['is_numeric']
         nan_per = summary_dict['nan_per']
         if is_numeric and len(vc.explode()) > 5:
-            #histogram_args = summary_dict['histogram_args']
+            #histogram_bins = summary_dict['histogram_args']['meat_histogram'][1]
             histogram_args = summary_dict['histogram_args']
             min_, max_, nan_per = summary_dict['min'], summary_dict['max'], summary_dict['nan_per']
             temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
             if len(temp_histo) > 5:
                 #if we had basically a categorical variable encoded into an integer.. don't return it
-                return {'histogram': temp_histo}
-        return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd, nan_per)}
+                return {'histogram': temp_histo,
+                        'histogram_bins': summary_dict['histogram_args']['meat_histogram'][1]
+                        }
+        return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd, nan_per),
+                'histogram_bins': ['faked']
+                }
 
 class PlColDisplayHints(PolarsAnalysis):
     requires_summary = ['min', 'max', '_type', 'is_numeric']

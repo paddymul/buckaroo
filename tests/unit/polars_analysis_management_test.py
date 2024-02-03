@@ -8,7 +8,7 @@ from buckaroo.customizations.polars_analysis import (
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    PolarsAnalysisPipeline, polars_produce_series_df, PolarsAnalysis)
+    PolarsAnalysisPipeline, polars_produce_series_df, PolarsAnalysis, PlDfStats)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -71,9 +71,10 @@ def test_produce_series_column_ops():
     assert summary_df["int_col"]["histogram_args"]["meat_histogram"] == (
         [2,  0,  0,  0,  0,  0,  0,  0,  0,  1],
         [1.0,  4.0,  7.0,  10.0,  13.0,  16.0,  19.0,  22.0,  25.0,  28.0,  100.0],)
+
     
 
-HA_CLASSES = [VCAnalysis, PlTyping, BasicAnalysis,  ComputedDefaultSummaryStats,  HistogramAnalysis]
+HA_CLASSES = [VCAnalysis, PlTyping, BasicAnalysis, ComputedDefaultSummaryStats, HistogramAnalysis]
 def test_histogram_analysis():
     cats = [chr(x) for x in range(97, 102)] * 2 
     cats += [chr(x) for x in range(103,113)]
@@ -83,6 +84,8 @@ def test_histogram_analysis():
     summary_df, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, HA_CLASSES, debug=True)
     assert summary_df["categories"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
     assert summary_df["numerical_categories"]["categorical_histogram"] == {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
+
+
     
 def test_numeric_histograms():
     #np.random.standard_normal(50)
@@ -129,6 +132,10 @@ def test_numeric_histograms():
         {'name': '1.87998263 - 1.87998263', 'tail': 1}]
     assert summary_df['float_col']['histogram'] == expected_float_histogram
 
+    assert summary_df["int_col"]["histogram_bins"] == [
+        -272.0, -199.0, -158.0, -117.0, -76.0,
+        -35.0, 6.0, 47.0, 88.0, 129.0, 174.0]
+
     expected_int_histogram = [
         {'name': '-272 - -272.0', 'tail': 1},
         {'name': '-272--199', 'population': 4.0},  {'name': '-199--158', 'population': 0.0},
@@ -141,3 +148,13 @@ def test_numeric_histograms():
 
 
 
+def test_pl_typing():
+    
+    class AdaptingStylingAnalysis(PolarsAnalysis):
+        requires_summary = ["histogram", "is_numeric", "dtype", "is_integer"]
+
+    dfs = PlDfStats(df,
+                    [AdaptingStylingAnalysis, PlTyping, HistogramAnalysis,
+                     BasicAnalysis, VCAnalysis,
+                     ComputedDefaultSummaryStats])
+    

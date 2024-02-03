@@ -70,12 +70,8 @@ class PolarsAnalysisPipeline(AnalysisPipeline):
             df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
             df_name:str='test_df', debug:bool=False):
         series_stat_dict, series_errs = polars_produce_series_df(df, ordered_objs, df_name, debug)
-        print("series_stat_dict", list(series_stat_dict.keys()))
         summary_dict, summary_errs = produce_summary_df(
             df, series_stat_dict, ordered_objs, df_name, debug)
-        print("ordered_objs", ordered_objs)
-        print("summary_dict", list(summary_dict.keys()))
-
         series_errs.update(summary_errs)
         return summary_dict, series_errs
 
