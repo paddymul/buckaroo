@@ -459,16 +459,16 @@ class CustomizableDataflow(DataFlow):
 
     ### start summary stats block
     def _get_summary_sd(self, processed_df):
-        try:
+        # try:
             stats = self.DFStatsClass(
                 processed_df,
                 self.analysis_klasses,
                 self.df_name, debug=self.debug)
             sdf = stats.sdf
             return sdf
-        except Exception as e:
-            print(e)
-            1/0
+        # except Exception as e:
+        #     print(e)
+        #     1/0
 
     def add_analysis(self, analysis_klass):
         """

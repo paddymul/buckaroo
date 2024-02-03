@@ -1,5 +1,6 @@
 import pandas as pd
-from buckaroo.pluggable_analysis_framework.analysis_management import DfStats, produce_series_df, full_produce_summary_df
+from buckaroo.pluggable_analysis_framework.analysis_management import (
+    DfStats, produce_series_df, AnalysisPipeline)
 from buckaroo.customizations.histogram import Histogram
 from buckaroo.customizations.analysis import (
     TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
@@ -42,12 +43,12 @@ def test_produce_series_df():
     _assert_ha(ha)
 
 def test_full_produce_summary_df():
-    sdf, errs = full_produce_summary_df(test_df, [Histogram], debug=True)
+    sdf, errs = AnalysisPipeline.full_produce_summary_df(test_df, [Histogram], debug=True)
     ha = sdf['a']['histogram_args']
     _assert_ha(ha)
     
 def test_full_produce_summary_df2():
-    sdf, errs = full_produce_summary_df(
+    sdf, errs = AnalysisPipeline.full_produce_summary_df(
         test_df,
         [TypingStats, ComputedDefaultSummaryStats, Histogram, DefaultSummaryStats],
         debug=True)

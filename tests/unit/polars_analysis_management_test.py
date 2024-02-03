@@ -1,4 +1,3 @@
-
 import polars as pl
 import numpy as np
 from polars import functions as F
@@ -9,8 +8,7 @@ from buckaroo.customizations.polars_analysis import (
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    full_produce_summary_df,
-    produce_series_df, PolarsAnalysis)
+    PolarsAnalysisPipeline, polars_produce_series_df, PolarsAnalysis)
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -38,7 +36,7 @@ class SelectOnlyAnalysis(PolarsAnalysis):
 def test_produce_series_df():
     """just make sure this doesn't fail"""
     
-    sdf, errs = produce_series_df(
+    sdf, errs = polars_produce_series_df(
         test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
     expected = {
         'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None},
@@ -52,7 +50,7 @@ class MaxAnalysis(PolarsAnalysis):
 def test_produce_series_combine_df():
     """just make sure this doesn't fail"""
     
-    sdf, errs = produce_series_df(
+    sdf, errs = polars_produce_series_df(
         test_df, [SelectOnlyAnalysis, MaxAnalysis], 'test_df', debug=True)
     expected = {
         'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None, 'max': 4.8},
@@ -67,7 +65,7 @@ def test_produce_series_column_ops():
          'int_col':[1,2,3,30, 100],
          'float_col':[1.1, 1.1, 3, 3, 5]})
 
-    summary_df, _unused = produce_series_df(mixed_df, [HistogramAnalysis])
+    summary_df, _unused = polars_produce_series_df(mixed_df, [HistogramAnalysis])
     assert summary_df["string_col"] == {}
 
     assert summary_df["int_col"]["histogram_args"]["meat_histogram"] == (
@@ -82,7 +80,7 @@ def test_histogram_analysis():
     cats += ['foo']*30 + ['bar'] * 50
 
     df = pl.DataFrame({'categories': cats, 'numerical_categories': [3]*30 + [7] * 70})
-    summary_df, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
+    summary_df, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, HA_CLASSES, debug=True)
     assert summary_df["categories"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
     assert summary_df["numerical_categories"]["categorical_histogram"] == {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
     
@@ -118,7 +116,7 @@ def test_numeric_histograms():
         'int_col2': int_arr2
     })
 
-    summary_df, errs = full_produce_summary_df(df, HA_CLASSES, debug=True)
+    summary_df, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, HA_CLASSES, debug=True)
     print(summary_df['int_col']['histogram'])
 
     expected_float_histogram = [

@@ -58,6 +58,7 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
     then it produces a summary dataframe
     """
+    print("regular produce_summary_df")
     errs = {}
     summary_col_dict = {}
     cols = []
@@ -81,6 +82,7 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
                     summary_res = a_kls.computed_summary(base_summary_dict)
                     warnings.filterwarnings('default')
                 else:
+                    print("about to call computed summary from regular")
                     summary_res = a_kls.computed_summary(base_summary_dict)
                 for k,v in summary_res.items():
                     base_summary_dict.update(summary_res)
@@ -93,16 +95,6 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
         summary_col_dict[ser_name] = base_summary_dict
     return summary_col_dict, errs
 
-def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
-    if len(df) == 0:
-        return {}, {}
-
-    series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
-    summary_df, summary_errs = produce_summary_df(
-        df, series_stat_dict, ordered_objs, df_name, debug)
-    series_errs.update(summary_errs)
-
-    return summary_df, series_errs
 
 #TODO Figure out how to do proper typing with AnalysisPipeline and the polars subclasses
 # We want a TypeVar for DFType and AT.  But the main function, process_df whild still return 3 dicts
@@ -118,11 +110,23 @@ class AnalysisPipeline(object):
     #this is only a list to prevent it from being interpretted as an instance method
     #full_produce_func: List[Callable[[DFT, List[AT], str, bool], Any]] =
 
-    full_produce_func = [full_produce_summary_df]
+    @staticmethod
+    def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
+        print("analysis_management full_produce_summary_df")
+        if len(df) == 0:
+            return {}, {}
+
+        series_stat_dict, series_errs = produce_series_df(df, ordered_objs, df_name, debug)
+        summary_df, summary_errs = produce_summary_df(
+            df, series_stat_dict, ordered_objs, df_name, debug)
+        series_errs.update(summary_errs)
+        return summary_df, series_errs
+
     style_method = None
     
     def __init__(self, analysis_objects, unit_test_objs=True):
-        self.produce_func = self.full_produce_func[0]
+
+        #self.produce_func = self.full_produce_func[0]
         self.summary_stats_display = "all"
         self.unit_test_objs = unit_test_objs
         self.verify_analysis_objects(analysis_objects)
@@ -157,7 +161,7 @@ class AnalysisPipeline(object):
 
         """
         try:
-            output_df, errs = self.produce_func(PERVERSE_DF, self.ordered_a_objs)
+            output_df, errs = self.full_produce_summary_df(PERVERSE_DF, self.ordered_a_objs)
             if len(errs) == 0:
                 return True, []
             else:
@@ -167,7 +171,9 @@ class AnalysisPipeline(object):
 
 
     def process_df(self, input_df, debug=False):
-        output_df, errs = self.produce_func(input_df, self.ordered_a_objs, debug=debug)
+        print("beginning of process_df")
+        output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
+        print("output_df.columns", list(output_df.keys()))
         return output_df, errs
 
     def add_analysis(self, new_aobj):

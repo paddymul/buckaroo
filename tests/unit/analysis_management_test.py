@@ -5,7 +5,8 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 
 from buckaroo.pluggable_analysis_framework.analysis_management import (
     AnalysisPipeline, NonExistentSummaryRowException, DfStats,
-    full_produce_summary_df, produce_series_df)
+    #full_produce_summary_df,
+    produce_series_df)
 
 from buckaroo.pluggable_analysis_framework.safe_summary_df import (output_full_reproduce)
 
@@ -58,28 +59,28 @@ class TestAnalysisPipeline(unittest.TestCase):
 
     def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
-        sdf, errs = full_produce_summary_df(
+        sdf, errs = AnalysisPipeline.full_produce_summary_df(
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_full_produce_summary_df_empy(self):
         """just make sure this doesn't fail"""
         
-        sdf, errs = full_produce_summary_df(
+        sdf, errs = AnalysisPipeline.full_produce_summary_df(
             empty_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_full_produce_summary_df_empy2(self):
         """just make sure this doesn't fail"""
         
-        sdf, errs = full_produce_summary_df(
+        sdf, errs = AnalysisPipeline.full_produce_summary_df(
             empty_df_with_columns, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}
 
     def test_full_produce_summary_df_errs(self):
         """just make sure this doesn't fail"""
         single_col_df = test_df[['empty_na_ser']]
-        sdf, errs = full_produce_summary_df(
+        sdf, errs = AnalysisPipeline.full_produce_summary_df(
             single_col_df, [AlwaysErr], 'test_df', debug=False)
 
         err_key = list(errs.keys())[0]

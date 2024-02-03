@@ -135,8 +135,10 @@ def normalize_polars_histogram_ser(ser):
     edges[0], edges[-1] = smallest, largest
     counts = hist_df['count'][1:]
     norm_counts = counts/counts.sum()
+    print("polars histogram", edges)
     return { 'low_tail': smallest, 'high_tail':largest,
              'meat_histogram': (counts.to_list(), edges),
+             'histogram_bins': edges,
              'normalized_populations': norm_counts.to_list()}
 
 
@@ -195,6 +197,7 @@ class HistogramAnalysis(PolarsAnalysis):
 
     @staticmethod
     def computed_summary(summary_dict):
+        #1/0
         vc = summary_dict['value_counts']
         cd = categorical_dict_from_vc(vc)
         is_numeric = summary_dict['is_numeric']
