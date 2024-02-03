@@ -112,7 +112,7 @@ export function StatusBar({
         buckarooState.search_string,
         localSetSearchString
       ),
-      hide: !showSearch
+      hide: !showSearch,
     },
 
     {

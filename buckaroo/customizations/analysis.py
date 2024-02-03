@@ -30,7 +30,7 @@ def get_mode(ser):
             return np.nan
         else:
             return mode_raw.values[0]
-    except Exception as e:
+    except Exception:
         return np.nan
 
 

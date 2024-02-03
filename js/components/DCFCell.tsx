@@ -148,7 +148,7 @@ export function WidgetDCFCellExample() {
     realSummary: {
       data_key: 'empty',
       df_viewer_config: realSummaryConfig,
-      summary_stats_key: 'real_summary'
+      summary_stats_key: 'real_summary',
     },
 
     no_pinned: {
@@ -156,14 +156,14 @@ export function WidgetDCFCellExample() {
       df_viewer_config: dfviewer_config_no_pinned,
       summary_stats_key: 'all',
     },
-    
   };
 
-  const df_data_dict = { main: tableDf.data, all: summaryDfForTableDf, real_summary:realSummaryTableData, 
-    empty:[
-      {'index': 'distinct_count'}
-  
-  ] }
+  const df_data_dict = {
+    main: tableDf.data,
+    all: summaryDfForTableDf,
+    real_summary: realSummaryTableData,
+    empty: [{ index: 'distinct_count' }],
+  };
   return (
     <WidgetDCFCell
       df_meta={dfm}

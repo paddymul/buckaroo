@@ -132,9 +132,11 @@ export function getStyler(
   histogram_stats: SDFT
 ) {
   switch (cmr.color_rule) {
-    case 'color_map':
+    case 'color_map': {
+      //block necessary because you cant define varaibles in case blocks
       const statsCol = cmr.val_column || col_name;
-      const summary_stats_cell = histogram_stats[statsCol]
+      const summary_stats_cell = histogram_stats[statsCol];
+
       if (
         summary_stats_cell &&
         summary_stats_cell.histogram_bins !== undefined
@@ -144,6 +146,7 @@ export function getStyler(
         console.log('histogram bins not found for color_map');
         return {};
       }
+    }
     case 'color_not_null':
       return colorNotNull(cmr);
   }
@@ -204,8 +207,8 @@ export function dfToAgrid(
         f.col_name
       );
 
-      const color_map_config = f.color_map_config ?
-         getStyler(f.color_map_config, f.col_name, hdf)
+      const color_map_config = f.color_map_config
+        ? getStyler(f.color_map_config, f.col_name, hdf)
         : {};
 
       const tooltip_config = f.tooltip_config
@@ -218,7 +221,7 @@ export function dfToAgrid(
         ...addToColDef(f.displayer_args, hdf[f.col_name]),
         ...color_map_config,
         ...tooltip_config,
-        ...f.ag_grid_specs
+        ...f.ag_grid_specs,
       };
       return colDef;
     }
@@ -246,10 +249,13 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
         return anyRenderer;
       }
       const prc: PinnedRowConfig = maybePrc;
-      console.log("params", params);
+      console.log('params', params);
       const currentCol = params.column?.getColId();
-      if((prc.default_renderer_columns === undefined && currentCol === 'index') ||
-       _.includes(prc.default_renderer_columns, currentCol)){
+      if (
+        (prc.default_renderer_columns === undefined &&
+          currentCol === 'index') ||
+        _.includes(prc.default_renderer_columns, currentCol)
+      ) {
         return anyRenderer;
       }
       const possibCellRenderer = getCellRenderer(

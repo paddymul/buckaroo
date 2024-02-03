@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from buckaroo.dataflow_traditional import DataFlow
 from buckaroo import dataflow_traditional as dft

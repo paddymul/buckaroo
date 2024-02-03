@@ -465,7 +465,7 @@ class CustomizableDataflow(DataFlow):
                 self.analysis_klasses,
                 self.df_name, debug=self.debug)
             sdf = stats.sdf
-            return stats.sdf
+            return sdf
         except Exception as e:
             print(e)
             1/0

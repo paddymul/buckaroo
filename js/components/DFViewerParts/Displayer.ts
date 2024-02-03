@@ -111,14 +111,15 @@ export const getFloatFormatter = (hint: FloatDisplayerA) => {
     if (params.value === null) {
       return '';
     }
-    const res:string = floatFormatter.format(params.value);
-    if(!_.includes(res, ".")){
-      const padLength = res.length + hint.maximumFractionDigits + 1
-      return res.padEnd(padLength)
+    const res: string = floatFormatter.format(params.value);
+    if (!_.includes(res, '.')) {
+      const padLength = res.length + hint.maximumFractionDigits + 1;
+      return res.padEnd(padLength);
     } else {
-      const fracPart = res.split(".")[1];
-      const padLength = (hint.maximumFractionDigits - fracPart.length) + res.length;
-      return res.padEnd(padLength)
+      const fracPart = res.split('.')[1];
+      const padLength =
+        hint.maximumFractionDigits - fracPart.length + res.length;
+      return res.padEnd(padLength);
     }
   };
 };

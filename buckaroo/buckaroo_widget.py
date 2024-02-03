@@ -7,7 +7,6 @@
 """
 TODO: Add module docstring
 """
-import warnings
 
 from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict
@@ -19,7 +18,6 @@ from .customizations.all_transforms import DefaultCommandKlsList
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats, ColDisplayHints)
 from .customizations.histogram import (Histogram)
 from .pluggable_analysis_framework.analysis_management import DfStats
-from .pluggable_analysis_framework.utils  import get_df_name
 
 from .serialization_utils import EMPTY_DF_WHOLE
 from .dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
