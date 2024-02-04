@@ -1,4 +1,4 @@
-from buckaroo.dataflow_traditional import SimpleStylingAnalysis
+from buckaroo.dataflow_traditional import StylingAnalysis
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 import polars as pl 
@@ -14,6 +14,7 @@ BASIC_DF = pl.DataFrame({'a': [10, 20, 20], 'b':['foo', 'bar', 'baz']})
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
+                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
 
@@ -36,7 +37,7 @@ def test_custom_dataflow():
     should be identical between polars and pandas
 
     """
-    class IntStyling(SimpleStylingAnalysis):
+    class IntStyling(StylingAnalysis):
         @staticmethod
         def single_sd_to_column_config(col, sd):
             return {'col_name':col, 'displayer_args': {'displayer': 'int'}}
@@ -47,7 +48,7 @@ def test_custom_dataflow():
 
 
     class TwoStyleDFC(PolarsBuckarooWidget):
-        analysis_klasses = [SimpleStylingAnalysis, IntStyling]
+        analysis_klasses = [StylingAnalysis, IntStyling]
         #analysis_klasses = [IntStyling]
         
     cdfc = TwoStyleDFC(BASIC_DF)
@@ -56,6 +57,7 @@ def test_custom_dataflow():
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
+                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}]}
     
@@ -82,7 +84,7 @@ def test_custom_post_processing():
 
     """
     class PostDCFC(PolarsBuckarooWidget):
-        analysis_klasses = [PostProcessingAnalysis, SimpleStylingAnalysis]
+        analysis_klasses = [PostProcessingAnalysis, StylingAnalysis]
 
     p_dfc = PostDCFC(BASIC_DF)
 
@@ -126,59 +128,3 @@ def test_transpose_error():
         ['1', '1', '1', '1', '1'],
         ['0.5', '0.5', '0.5', '0.5', '0.5'],
         ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]
-"""    
-class AlwaysFailPostProcessingAnalysis(ColAnalysis):
-
-    post_processing_method = "always_fail"
-
-    @classmethod
-    def post_process_df(kls, cleaned_df):
-        1/0
-
-
-def test_error_post_processing():
-    class ErrorCFC(CustomizableDataflow):
-        analysis_klasses = [AlwaysFailPostProcessingAnalysis, SimpleStylingAnalysis]
-
-    e_dfc = ErrorCFC(BASIC_DF)
-
-    # assert e_dfc.buckaroo_options['post_processing'] == ['', 'post1']
-    # assert e_dfc.buckaroo_state['post_processing'] == ''
-
-    assert e_dfc.buckaroo_options['post_processing'] == ['', 'always_fail']
-    assert e_dfc.buckaroo_state['post_processing'] == ''
-
-    temp_buckaroo_state = e_dfc.buckaroo_state.copy()
-    temp_buckaroo_state['post_processing'] = 'always_fail'
-    e_dfc.buckaroo_state = temp_buckaroo_state
-    assert e_dfc.processed_df.values == [["division by zero"]]
-
-def test_column_config_override_widget():
-    ROWS = 200
-    typed_df = pd.DataFrame(
-        {'int_col': [1] * ROWS,
-         'float_col': [.5] * ROWS,
-         "str_col": ["foobar"]* ROWS})
-    bw2 = BuckarooWidget(
-        typed_df, 
-        column_config_overrides={
-            'float_col':
-            {'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}})
-    float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][2]
-    assert float_col_config == {'col_name': 'float_col', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}
-    
-
-
-def test_pinned_rows_override_widget():
-    ROWS = 200
-    typed_df = pd.DataFrame(
-        {'int_col': [1] * ROWS,
-         'float_col': [.5] * ROWS,
-         "str_col": ["foobar"]* ROWS})
-    HIST_ROW = {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }}
-    bw2 = BuckarooWidget(typed_df, pinned_rows=[HIST_ROW])
-    pinned_rows = bw2.df_display_args['main']['df_viewer_config']['pinned_rows']
-    assert pinned_rows[0] == HIST_ROW
-
-    
-"""

@@ -5,7 +5,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_produce_series_df)
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
-from buckaroo.dataflow_traditional import SimpleStylingAnalysis
+from buckaroo.dataflow_traditional import StylingAnalysis
 
 def test_basic_instantiation():
     PolarsBuckarooWidget(
@@ -52,7 +52,7 @@ def test_polars_all_stats():
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     class SimplePolarsBuckaroo(PolarsBuckarooWidget):
-        analysis_klasses= [SelectOnlyAnalysis, SimpleStylingAnalysis]
+        analysis_klasses= [SelectOnlyAnalysis, StylingAnalysis]
 
     spbw = SimplePolarsBuckaroo(test_df)
     assert spbw.merged_sd == {
@@ -88,7 +88,7 @@ def test_pandas_all_stats():
                 quin99=4.0)
 
     class SimpleBuckaroo(BuckarooWidget):
-        analysis_klasses= [SimpleAnalysis, SimpleStylingAnalysis]
+        analysis_klasses= [SimpleAnalysis, StylingAnalysis]
 
     sbw = SimpleBuckaroo(pd_test_df)
     assert sbw.merged_sd == {

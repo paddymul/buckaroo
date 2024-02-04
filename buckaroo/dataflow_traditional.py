@@ -267,11 +267,8 @@ class UnknownStyleMethod(Exception):
             "style_method of '{self.style_method}' not found in '{available_methods}', all analysis_klasses is []'"
 
 
-class SimpleStylingAnalysis(ColAnalysis):
-    pinned_rows = [
-        # {'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
-        # {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, }
-    ]
+class StylingAnalysis(ColAnalysis):
+    pinned_rows = []
 
     @staticmethod
     def single_sd_to_column_config(col, sd):
@@ -317,7 +314,7 @@ class CustomizableDataflow(DataFlow):
     """
     This allows targetd extension and customization of DataFlow
     """
-    analysis_klasses = [SimpleStylingAnalysis]
+    analysis_klasses = [StylingAnalysis]
     command_klasses = DefaultCommandKlsList
     commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats

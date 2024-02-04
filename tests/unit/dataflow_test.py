@@ -3,7 +3,7 @@ from buckaroo.dataflow_traditional import DataFlow
 from buckaroo import dataflow_traditional as dft
 from .fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
-from buckaroo.dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
+from buckaroo.dataflow_traditional import CustomizableDataflow, StylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget
 
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
@@ -179,7 +179,7 @@ def test_widget_instatiation():
 
 def test_custom_dataflow():
 
-    class IntStyling(SimpleStylingAnalysis):
+    class IntStyling(StylingAnalysis):
         @staticmethod
         def single_sd_to_column_config(col, sd):
             return {'col_name':col, 'displayer_args': {'displayer': 'int'}}
@@ -190,7 +190,7 @@ def test_custom_dataflow():
 
 
     class TwoStyleDFC(CustomizableDataflow):
-        analysis_klasses = [SimpleStylingAnalysis, IntStyling]
+        analysis_klasses = [StylingAnalysis, IntStyling]
         #analysis_klasses = [IntStyling]
         
     cdfc = TwoStyleDFC(BASIC_DF)
@@ -209,7 +209,7 @@ def test_custom_dataflow():
 
 def test_custom_summary_stats():
     class DCDFC(CustomizableDataflow):
-        analysis_klasses = [DistinctCount, SimpleStylingAnalysis]
+        analysis_klasses = [DistinctCount, StylingAnalysis]
 
     dc_dfc = DCDFC(BASIC_DF)
 
@@ -233,7 +233,7 @@ class PostProcessingAnalysis(ColAnalysis):
 
 def test_custom_post_processing():
     class PostDCFC(CustomizableDataflow):
-        analysis_klasses = [PostProcessingAnalysis, SimpleStylingAnalysis]
+        analysis_klasses = [PostProcessingAnalysis, StylingAnalysis]
 
     p_dfc = PostDCFC(BASIC_DF)
 
@@ -257,7 +257,7 @@ class AlwaysFailPostProcessingAnalysis(ColAnalysis):
 
 def test_error_post_processing():
     class ErrorCFC(CustomizableDataflow):
-        analysis_klasses = [AlwaysFailPostProcessingAnalysis, SimpleStylingAnalysis]
+        analysis_klasses = [AlwaysFailPostProcessingAnalysis, StylingAnalysis]
 
     e_dfc = ErrorCFC(BASIC_DF)
 

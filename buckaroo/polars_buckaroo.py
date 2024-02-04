@@ -8,11 +8,11 @@ from buckaroo.customizations.polars_commands import (
 )
 from traitlets import Unicode
 from ._frontend import module_name, module_version
-from buckaroo.dataflow_traditional import SimpleStylingAnalysis
+from buckaroo.dataflow_traditional import StylingAnalysis
 
 
 local_analysis_klasses = PL_Analysis_Klasses.copy()
-local_analysis_klasses.append(SimpleStylingAnalysis)
+local_analysis_klasses.append(StylingAnalysis)
 class PolarsBuckarooWidget(BuckarooWidget):
     """TODO: Add docstring here
     """

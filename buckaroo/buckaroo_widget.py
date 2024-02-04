@@ -20,7 +20,7 @@ from .customizations.histogram import (Histogram)
 from .pluggable_analysis_framework.analysis_management import DfStats
 
 from .serialization_utils import EMPTY_DF_WHOLE
-from .dataflow_traditional import CustomizableDataflow, SimpleStylingAnalysis
+from .dataflow_traditional import CustomizableDataflow, StylingAnalysis
 
 """
 
@@ -71,7 +71,7 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
     analysis_klasses = [TypingStats, DefaultSummaryStats,
                         Histogram,
                         ComputedDefaultSummaryStats,
-                        SimpleStylingAnalysis,
+                        StylingAnalysis,
                         ColDisplayHints]
 
     DFStatsClass = DfStats
