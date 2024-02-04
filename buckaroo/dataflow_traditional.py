@@ -282,30 +282,20 @@ class SimpleStylingAnalysis(ColAnalysis):
     data_key = "main"
     summary_stats_key= 'all_stats'
 
-    
     @classmethod
     def style_columns(kls, sd):
         ret_col_config = []
+
+        #this is necessary for polars to add an index column, which is
+        #required so that summary_stats makes sense
+        if 'index' not in sd:
+            ret_col_config.append({'col_name': 'index', 'displayer_args': {'displayer': 'obj'}})
+            
         for col in sd.keys():
             ret_col_config.append(kls.single_sd_to_column_config(col, sd[col]))
         return {
             'pinned_rows': kls.pinned_rows,
             'column_config': ret_col_config}
-
-
-class SummaryStatsAnalysis(ColAnalysis):
-    def stats_df_viewer_config(self):
-        return {
-        'pinned_rows': [
-      { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' } },
-      { 'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }, },
-
-        ],
-        'column_config': [
-            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
-
 
 
 def filter_analysis(klasses, attr):

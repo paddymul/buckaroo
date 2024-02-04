@@ -32,9 +32,10 @@ class PolarsBuckarooWidget(BuckarooWidget):
         """exists so this can be overriden for polars  """
         import pandas as pd
         temp_sd = sd.copy()
+
         #FIXME add actual test around weird index behavior
-        if 'index' in temp_sd:
-            del temp_sd['index']
+        # if 'index' in temp_sd:
+        #     del temp_sd['index']
         return pd_to_obj(pd.DataFrame(temp_sd))
 
     def _df_to_obj(self, df):
