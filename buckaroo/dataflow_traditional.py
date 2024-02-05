@@ -270,9 +270,10 @@ class UnknownStyleMethod(Exception):
 class StylingAnalysis(ColAnalysis):
     pinned_rows = []
 
-    @staticmethod
-    def single_sd_to_column_config(col, sd):
+    @classmethod
+    def style_column(kls, col, column_metadata):
         return {'col_name':str(col), 'displayer_args': {'displayer': 'obj'}}
+
 
     #what is the key for this in the df_display_args_dictionary
     df_display_name = "main"
@@ -289,7 +290,7 @@ class StylingAnalysis(ColAnalysis):
             ret_col_config.append({'col_name': 'index', 'displayer_args': {'displayer': 'obj'}})
             
         for col in sd.keys():
-            ret_col_config.append(kls.single_sd_to_column_config(col, sd[col]))
+            ret_col_config.append(kls.style_column(col, sd[col]))
         return {
             'pinned_rows': kls.pinned_rows,
             'column_config': ret_col_config}

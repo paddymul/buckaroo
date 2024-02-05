@@ -39,7 +39,7 @@ def test_custom_dataflow():
     """
     class IntStyling(StylingAnalysis):
         @staticmethod
-        def single_sd_to_column_config(col, sd):
+        def style_column(col, sd):
             return {'col_name':col, 'displayer_args': {'displayer': 'int'}}
 
         df_display_name = "int_styles"
