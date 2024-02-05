@@ -78,10 +78,6 @@ def merge_column_config(styled_column_config, overide_column_configs):
         ret_column_config.append(row)
     return ret_column_config
 
-def compute_sampled_df(raw_df, sample_method):
-    if sample_method == "first":
-        return raw_df[:1]
-    return raw_df
 
 class DataFlow(HasTraits):
     """This class is meant to only represent the dataflow through
@@ -138,12 +134,17 @@ class DataFlow(HasTraits):
 
     widget_args_tuple = Any()
 
+
     
+    def _compute_sampled_df(self, raw_df, sample_method):
+        if sample_method == "first":
+            return raw_df[:1]
+        return raw_df
 
 
     @observe('raw_df', 'sample_method')
     def _sampled_df(self, change):
-        self.sampled_df = compute_sampled_df(self.raw_df, self.sample_method)
+        self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
 
     def _run_df_interpreter(self, df, ops):
         if len(ops) == 1:
@@ -387,6 +388,8 @@ class CustomizableDataflow(DataFlow):
         for k, kls in self.df_display_klasses.items():
             empty_df_display_args[kls.df_display_name] = EMPTY_DF_DISPLAY_ARG
 
+
+        self.DFStatsClass.verify_analysis_objects(self.analysis_klasses)
 
         self.post_processing_klasses = filter_analysis(self.analysis_klasses, "post_processing_method")
 

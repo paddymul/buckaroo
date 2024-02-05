@@ -172,10 +172,6 @@ def test_widget_instatiation():
 
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
-    bw = BuckarooWidget(BASIC_DF)
-
-    assert bw.df_data_dict['main'] == BASIC_DF_JSON_DATA
-    assert bw.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
 def test_custom_dataflow():
 

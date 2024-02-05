@@ -31,12 +31,7 @@ def enable(sampled=True,
         from IPython.display import display
         try:
             bw = BuckarooWidget(df,
-                                sampled=sampled,
-                                summaryStats=summaryStats,
-                                reorderdColumns=reorderdColumns,
-                                showCommands=showCommands,
-                                auto_clean=auto_clean,
-                                postProcessingF=postProcessingF)
+                                debug=debug)
             return display(bw)
         except:
             if debug:
@@ -64,11 +59,9 @@ def enable(sampled=True,
                 return
             raise NotImplementedError
 
-
     ip_formatter = ip.display_formatter.ipython_display_formatter
     ip_formatter.for_type(pd.DataFrame, _display_as_buckaroo)
     
-
     try:
         import polars as pl
         ip_formatter.for_type(pl.DataFrame, _display_polars_as_buckaroo)

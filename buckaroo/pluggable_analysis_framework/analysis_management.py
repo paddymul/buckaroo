@@ -193,6 +193,10 @@ class DfStats(object):
 
     ap_class = AnalysisPipeline
 
+    @classmethod
+    def verify_analysis_objects(kls, col_analysis_objs):
+        kls.ap_class(col_analysis_objs)
+
     def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
         self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
         self.col_order = self.df.columns
