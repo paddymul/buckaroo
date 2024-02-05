@@ -17,6 +17,7 @@ from .customizations.all_transforms import DefaultCommandKlsList
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats, ColDisplayHints)
 from .customizations.histogram import (Histogram)
+from .customizations.styling import (DefaultSummaryStats, DefaultMainStyling)
 from .pluggable_analysis_framework.analysis_management import DfStats
 
 from .serialization_utils import EMPTY_DF_WHOLE
@@ -28,7 +29,7 @@ I have dfstats to manage the production of actual summary stats
 
 I now need to manage the styles (column config)
 
-I also want to manage the multipel summary stats presentations
+I also want to manage the multiple summary stats presentations
 
 summary stats presentations are just different pinned row configs that read from the same summary stats dictionary
 
@@ -71,25 +72,7 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
     analysis_klasses = [TypingStats, DefaultSummaryStats,
                         Histogram,
                         ComputedDefaultSummaryStats,
-                        StylingAnalysis,
+                        DefaultSummaryStats, DefaultMainStyling,
                         ColDisplayHints]
 
     DFStatsClass = DfStats
-
-'''
-removed for later consideration
-
-    def run_post_processing(self):
-        if self.postProcessingF:
-            try:
-                if self.transformed_df is None:
-                    working_df = self.get_working_df()
-                else:
-                    working_df = self.transformed_df
-                self.processed_result = self.postProcessingF(working_df)
-            except Exception:
-                traceback.print_exc()
-
-
-
-'''
