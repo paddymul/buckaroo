@@ -8,12 +8,12 @@ from buckaroo.customizations.polars_commands import (
 )
 from traitlets import Unicode
 from ._frontend import module_name, module_version
-from .customizations.styling import DefaultSummaryStats, DefaultMainStyling
+from .customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
 
 
 local_analysis_klasses = PL_Analysis_Klasses.copy()
 local_analysis_klasses.extend(
-    [DefaultSummaryStats, DefaultMainStyling])
+    [DefaultSummaryStatsStyling, DefaultMainStyling])
 
 class PolarsBuckarooWidget(BuckarooWidget):
     """TODO: Add docstring here
@@ -42,5 +42,4 @@ class PolarsBuckarooWidget(BuckarooWidget):
 
     def _df_to_obj(self, df):
         return pd_to_obj(df.to_pandas())
-
 
