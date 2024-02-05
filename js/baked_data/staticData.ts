@@ -257,8 +257,8 @@ export const tableDf: DFWhole = {
         col_name: 'nanFloat',
         displayer_args: {
           displayer: 'float',
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 8,
+          min_fraction_digits: 2,
+          max_fraction_digits: 8,
         },
         tooltip_config: { tooltip_type: 'summary_series' },
       },
@@ -284,8 +284,8 @@ export const tableDf: DFWhole = {
         col_name: 'floatCol',
         displayer_args: {
           displayer: 'float',
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 3,
+          min_fraction_digits: 1,
+          max_fraction_digits: 3,
         },
       },
       {
@@ -427,48 +427,48 @@ export const realSummaryConfig: DFViewerConfig = {
       primary_key_val: 'min',
       displayer_args: {
         displayer: 'float',
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3,
+        min_fraction_digits: 3,
+        max_fraction_digits: 3,
       },
     },
     {
       primary_key_val: 'mean',
       displayer_args: {
         displayer: 'float',
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3,
+        min_fraction_digits: 3,
+        max_fraction_digits: 3,
       },
     },
     {
       primary_key_val: 'max',
       displayer_args: {
         displayer: 'float',
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3,
+        min_fraction_digits: 3,
+        max_fraction_digits: 3,
       },
     },
     {
       primary_key_val: 'unique_count',
       displayer_args: {
         displayer: 'float',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        min_fraction_digits: 0,
+        max_fraction_digits: 0,
       },
     },
     {
       primary_key_val: 'distinct_count',
       displayer_args: {
         displayer: 'float',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        min_fraction_digits: 0,
+        max_fraction_digits: 0,
       },
     },
     {
       primary_key_val: 'empty_count',
       displayer_args: {
         displayer: 'float',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        min_fraction_digits: 0,
+        max_fraction_digits: 0,
       },
     },
   ],

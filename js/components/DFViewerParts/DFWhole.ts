@@ -13,11 +13,12 @@ export interface BooleanDisplayerA {
 }
 export interface StringDisplayerA {
   displayer: 'string';
-} //max_length?: number;
+  max_length?: number;
+} 
 export interface FloatDisplayerA {
   displayer: 'float';
-  minimumFractionDigits: number;
-  maximumFractionDigits: number;
+  min_fraction_digits: number;
+  max_fraction_digits: number;
 }
 
 export interface DatetimeDefaultDisplayerA {

@@ -5,6 +5,7 @@ import {
   FloatDisplayerA,
   IntegerDisplayerA,
   DatetimeLocaleDisplayerA,
+  StringDisplayerA,
 } from './DFWhole';
 import _ from 'lodash';
 import { HistogramCell, LinkCellRenderer } from './HistogramCell';
@@ -21,10 +22,16 @@ export const basicIntFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 3,
 });
 
-export const stringFormatter = (params: ValueFormatterParams): string => {
-  const val = params.value;
+export const getStringFormatter = (args:StringDisplayerA) => {
+  const stringFormatter = (params: ValueFormatterParams): string => {
+    const val = params.value;
+    if(args.max_length){
+      return val.slice(0, args.max_length);
+    }
   return val;
-};
+  };
+return stringFormatter;
+}
 const dictDisplayer = (val: Record<string, any>): string => {
   const objBody = _.map(
     val,
@@ -104,8 +111,8 @@ const getIntegerFormatter = (hint: IntegerDisplayerA) => {
 };
 export const getFloatFormatter = (hint: FloatDisplayerA) => {
   const floatFormatter = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: hint.minimumFractionDigits,
-    maximumFractionDigits: hint.maximumFractionDigits,
+    minimumFractionDigits: hint.min_fraction_digits,
+    maximumFractionDigits: hint.max_fraction_digits,
   });
   return (params: ValueFormatterParams): string => {
     if (params.value === null) {
@@ -113,12 +120,12 @@ export const getFloatFormatter = (hint: FloatDisplayerA) => {
     }
     const res: string = floatFormatter.format(params.value);
     if (!_.includes(res, '.')) {
-      const padLength = res.length + hint.maximumFractionDigits + 1;
+      const padLength = res.length + hint.max_fraction_digits + 1;
       return res.padEnd(padLength);
     } else {
       const fracPart = res.split('.')[1];
       const padLength =
-        hint.maximumFractionDigits - fracPart.length + res.length;
+        hint.max_fraction_digits - fracPart.length + res.length;
       return res.padEnd(padLength);
     }
   };
@@ -159,7 +166,7 @@ export function getFormatter(
     case 'integer':
       return getIntegerFormatter(fArgs);
     case 'string':
-      return stringFormatter;
+      return getStringFormatter(fArgs);
     case 'datetimeDefault':
       return defaultDatetimeFormatter;
     case 'datetimeLocaleString':
@@ -171,7 +178,7 @@ export function getFormatter(
     case 'obj':
       return objFormatter;
     default:
-      return stringFormatter;
+      return getStringFormatter({displayer:'string'});
   }
 }
 
