@@ -54,8 +54,11 @@ export interface HistogramDisplayerA {
 export interface LinkifyDisplayerA {
   displayer: 'linkify';
 }
+export interface BooleanCheckboxDisplayerA {
+  displayer: 'boolean_checkbox';
+}
 
-export type CellRendererArgs = HistogramDisplayerA | LinkifyDisplayerA;
+export type CellRendererArgs = HistogramDisplayerA | LinkifyDisplayerA |BooleanCheckboxDisplayerA;
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
 export const cellRendererDisplayers = ['histogram', 'linkify'];

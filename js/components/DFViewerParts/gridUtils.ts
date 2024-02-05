@@ -217,6 +217,7 @@ export function dfToAgrid(
       const colDef: ColDef = {
         field: f.col_name,
         headerName: f.col_name,
+        cellDataType:false,
         cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, hdf[f.col_name]),
         ...color_map_config,

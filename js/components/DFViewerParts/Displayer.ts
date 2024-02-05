@@ -25,13 +25,15 @@ export const basicIntFormatter = new Intl.NumberFormat('en-US', {
 export const getStringFormatter = (args:StringDisplayerA) => {
   const stringFormatter = (params: ValueFormatterParams): string => {
     const val = params.value;
-    if(args.max_length){
+    if(val && args.max_length){
       return val.slice(0, args.max_length);
     }
   return val;
   };
 return stringFormatter;
 }
+
+
 const dictDisplayer = (val: Record<string, any>): string => {
   const objBody = _.map(
     val,
@@ -182,12 +184,20 @@ export function getFormatter(
   }
 }
 
+/*
+{
+  cellRenderer: 'agCheckboxCellRenderer',
+  cellRendererParams: {   disabled: true}
+  }
+  */
 export function getCellRenderer(crArgs: CellRendererArgs) {
   switch (crArgs.displayer) {
     case 'histogram':
       return HistogramCell;
     case 'linkify':
       return LinkCellRenderer;
+    case 'boolean_checkbox':
+      return 'agCheckboxCellRenderer'
   }
 }
 
