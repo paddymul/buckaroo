@@ -261,7 +261,12 @@ class DataFlow(HasTraits):
     @observe('processed_result', 'analysis_klasses')
     @exception_protect('summary_sd-protector')
     def _summary_sd(self, change):
-        self.summary_sd = self._get_summary_sd(self.processed_df)
+        result_summary_sd = self._get_summary_sd(self.processed_df)
+        # print("result_summary_sd", type(result_summary_sd))
+        # print(result_summary_sd)
+        self.summary_sd = result_summary_sd
+        # print("self.summary_sd", type(self.summary_sd))
+        # print(self.summary_sd)
 
     @observe('summary_sd')
     @exception_protect('merged_sd-protector')
@@ -488,7 +493,8 @@ class CustomizableDataflow(DataFlow):
             self.df_name, debug=self.debug)
         sdf = stats.sdf
         if stats.errs:
-            pass
+            return {}
+        
         else:
             return sdf
 

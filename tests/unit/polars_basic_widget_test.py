@@ -1,7 +1,10 @@
 import polars as pl
 from polars import functions as F
+import numpy as np
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_produce_series_df)
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
+    ColAnalysis)
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 from buckaroo.dataflow_traditional import StylingAnalysis
@@ -163,6 +166,64 @@ def test_weird():
         
     PolarsBuckarooWidget(pl_histo)
 
+class ValueCountPostProcessing(PolarsAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        result_df = df.select(
+            F.all().value_counts().implode().list.gather(pl.arange(0, 10), null_on_oob=True).explode().struct.rename_fields(['val', 'unused_count']).struct.field('val').prefix('val_'),
+            F.all().value_counts().implode().list.gather(pl.arange(0, 10), null_on_oob=True).explode().struct.field('count').prefix('count_'))
+        return [result_df, {}]
+    post_processing_method = "value_counts"
+    
+
+class TransposeProcessing(ColAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        return [df.transpose(), {}]
+    post_processing_method = "transpose"
+
+class ShowErrorsPostProcessing(PolarsAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        print("^"*80)
+        print(type(df))
+        df.select
+        result_df = df.select(
+            F.all(),
+                              
+            pl.col('float_col').lt(5).replace(True, "foo").replace(False, None).alias('errored_float'))
+        extra_column_config = {
+            'index': {},
+            'float_col' : {'column_config_override': { 
+                               {'color_map_config': {
+                                'color_rule': 'color_not_null',
+                                'conditional_color': 'red',
+                                'exist_column': 'errored_float'}}}}}
+        #return [result_df, extra_column_config]
+        return [result_df, {}]
+
+    post_processing_method = "show_errors"
+
+ROWS = 5
+typed_df = pl.DataFrame(
+    {'int_col':np.random.randint(1,50, ROWS), 'float_col': np.random.randint(1,30, ROWS)/.7,
+     'timestamp':["2020-01-01 01:00Z", "2020-01-01 02:00Z",
+                  "2020-02-28 02:00Z", "2020-03-15 02:00Z", None],
+     "str_col": ["foobar", "Realllllly long string", "", None, "normal"]})
+typed_df = typed_df.with_columns(timestamp=pl.col('timestamp').str.to_datetime() )
+column_config_overrides={'float_col': {'color_map_config': {
+    'color_rule': 'color_not_null',
+    'conditional_color': 'red', 'exist_column': 'errored_float'}}}
+    
+def test_polars_to_pandas():
+    bw = PolarsBuckarooWidget(typed_df)
+    bw.add_analysis(ShowErrorsPostProcessing)
+    
+    temp_buckaroo_state = bw.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'show_errors'
+    bw.buckaroo_state = temp_buckaroo_state
+
+    
 '''
 FIXME:test a large dataframe that forces sampling
 '''

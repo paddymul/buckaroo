@@ -28,7 +28,7 @@ def test_widget_instatiation():
     #the BasicStyling is simple and predictable, it writes to 'basic' which nothing else should
     dfc.add_analysis(BasicStyling)
 
-    assert dfc.widget_args_tuple[0] is BASIC_DF
+    assert dfc.widget_args_tuple[1] is BASIC_DF
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
 
     actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
@@ -58,7 +58,7 @@ def test_custom_dataflow():
         #analysis_klasses = [IntStyling]
         
     cdfc = TwoStyleDFC(BASIC_DF)
-    assert cdfc.widget_args_tuple[0] is BASIC_DF
+    assert cdfc.widget_args_tuple[1] is BASIC_DF
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],

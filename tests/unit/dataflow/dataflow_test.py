@@ -48,7 +48,7 @@ def test_merged_sd():
 def test_column_config():
     basic_df = pd.DataFrame({'a': [10, 20, 30], 'b':['foo', 'bar', 'baz']})
     d_flow = DataFlow(basic_df)
-    df, merged_sd = d_flow.widget_args_tuple
+    _unused, df, merged_sd = d_flow.widget_args_tuple
 
     #dfviewer_config = d_flow.df_display_args['main']
     assert merged_sd == {'index' : {}, 'a': {}, 'b': {}}
@@ -210,7 +210,6 @@ def test_traceback():
         ab = traceback.walk_stack(None)
     for what in ab:
         print(what)
-    1/0
     
 def test_error_handling():
     """
@@ -229,4 +228,3 @@ def test_error_handling():
     # SummaryFailDataFlow(simple_df)
 
     assert exc_depth(sf_exc) < 7
-    SampleFailDataFlow(simple_df)

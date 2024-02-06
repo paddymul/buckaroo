@@ -24,7 +24,7 @@ DFVIEWER_CONFIG_DEFAULT = {
 
 def test_widget_instatiation():
     dfc = CustomizableDataflow(BASIC_DF)
-    assert dfc.widget_args_tuple[0] is BASIC_DF
+    assert dfc.widget_args_tuple[1] is BASIC_DF
 
 
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
@@ -47,7 +47,7 @@ def test_custom_dataflow():
         #analysis_klasses = [IntStyling]
         
     cdfc = TwoStyleDFC(BASIC_DF)
-    assert cdfc.widget_args_tuple[0] is BASIC_DF
+    assert cdfc.widget_args_tuple[1] is BASIC_DF
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
@@ -66,8 +66,9 @@ def test_custom_summary_stats():
 
     dc_dfc = DCDFC(BASIC_DF)
 
-    summary_sd = dc_dfc.widget_args_tuple[1]
-
+    summary_sd = dc_dfc.widget_args_tuple[2]
+    print(summary_sd)
+    print("^"*80)
     assert summary_sd == {'index': {'distinct_count': 3}, 
                           'a': {'distinct_count':2}, 'b': {'distinct_count':3}}
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
