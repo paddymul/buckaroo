@@ -94,7 +94,9 @@ def test_pandas_all_stats():
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
-def Xtest_object_dtype1():
+
+
+def test_object_dtype1():
     """
     originally I thought that these errors with objects in polars were caused by just doing something dumb with polars...
     But the first two lines run fine, something happens inside of PolarsBuckarooWidget

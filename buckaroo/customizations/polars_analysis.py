@@ -98,7 +98,7 @@ class BasicAnalysis(PolarsAnalysis):
             return dict(mode=regular_col_vc_df[0]['key'][0], distinct_count=len(temp_df))
         else:
             print("subbing nonexistent value_counts")
-            return dict(mode=None, value_counts=DUMMY_VALUE_COUNTS, distinct_count=None)
+            return dict(mode=None, value_counts=DUMMY_VALUE_COUNTS, distinct_count=0)
 
 
 class PlTyping(PolarsAnalysis):
