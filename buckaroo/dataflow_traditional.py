@@ -465,12 +465,16 @@ class CustomizableDataflow(DataFlow):
         """
         same as get_summary_sd, call whatever to set summary_sd and trigger further comps
         """
+
         stats = self.DFStatsClass(
             self.processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         stats.add_analysis(analysis_klass)
-        return stats.sdf
+        self.analysis_klasses = stats.ap.ordered_a_objs
+        self.setup_options_from_analysis()
+        self.summary_sd = stats.sdf
+
     # ### end summary stats block        
 
     def _sd_to_jsondf(self, sd):
