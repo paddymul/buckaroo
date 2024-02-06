@@ -80,15 +80,19 @@ def merge_column_config(styled_column_config, overide_column_configs):
     return ret_column_config
 
 import six
-def exception_protect(func):
-    def wrapped(self, *args, **kwargs):
-        try:
-            func(self, *args, **kwargs)
-        except Exception as e:
-            if self.exception is None:
-                self.exception = sys.exc_info()
-            raise
-    return wrapped
+def exception_protect(protect_name=None):
+    def wrapped_decorator(func):
+        def wrapped(self, *args, **kwargs):
+            try:
+                func(self, *args, **kwargs)
+            except Exception as e:
+                if protect_name:
+                    print("protect handler", protect_name, self.exception)
+                if self.exception is None:
+                    self.exception = sys.exc_info()
+                raise
+        return wrapped
+    return wrapped_decorator
 
 class DataFlow(HasTraits):
     """This class is meant to only represent the dataflow through
@@ -108,10 +112,11 @@ class DataFlow(HasTraits):
     
     """
     def __init__(self, raw_df):
+        self.exception = None
         super().__init__()
         self.summary_sd = {}
         self.existing_operations = []
-        self.exception = None
+
         try:
             self.raw_df = raw_df
         except Exception as e:
@@ -160,7 +165,7 @@ class DataFlow(HasTraits):
 
 
     @observe('raw_df', 'sample_method')
-    @exception_protect
+    @exception_protect('sampled_df-protector')
     def _sampled_df(self, change):
         self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
 
@@ -188,7 +193,7 @@ class DataFlow(HasTraits):
         return cleaning_ops, cleaning_sd
 
     @observe('sampled_df', 'cleaning_method', 'existing_operations')
-    @exception_protect
+    @exception_protect('operation_result-protector')
     def _operation_result(self, change):
         if self.sampled_df is None:
             return
@@ -223,7 +228,7 @@ class DataFlow(HasTraits):
         return [cleaned_df, {}]
 
     @observe('cleaned', 'post_processing_method')
-    @exception_protect
+    @exception_protect('processed_result-protector')
     def _processed_result(self, change):
         #for now this is a no-op because I don't have a post_processing_function or mechanism
         self.processed_result = self._compute_processed_result(self.cleaned_df, self.post_processing_method)
@@ -253,12 +258,12 @@ class DataFlow(HasTraits):
         return ret_summary
 
     @observe('processed_result', 'analysis_klasses')
-    @exception_protect
+    @exception_protect('summary_sd-protector')
     def _summary_sd(self, change):
         self.summary_sd = self._get_summary_sd(self.processed_df)
 
     @observe('summary_sd')
-    @exception_protect
+    @exception_protect('merged_sd-protector')
     def _merged_sd(self, change):
         #slightly inconsitent that processed_sd gets priority over
         #summary_sd, given that processed_df is computed first. My
@@ -274,7 +279,7 @@ class DataFlow(HasTraits):
         return dfviewer_config
 
     @observe('merged_sd', 'style_method')
-    @exception_protect
+    @exception_protect('widget_config-protector')
     def _widget_config(self, change):
         #how to control ordering of column_config???
         # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
