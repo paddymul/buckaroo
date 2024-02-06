@@ -41,5 +41,10 @@ class PolarsBuckarooWidget(BuckarooWidget):
         return pd_to_obj(pd.DataFrame(temp_sd))
 
     def _df_to_obj(self, df):
-        return pd_to_obj(df.to_pandas())
+        import pandas as pd
+        #FIXME HACK
+        if isinstance(df, pd.DataFrame):
+            return pd_to_obj(df)
 
+        else:
+            return pd_to_obj(df.to_pandas())
