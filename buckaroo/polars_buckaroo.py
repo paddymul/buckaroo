@@ -44,6 +44,7 @@ class PolarsBuckarooWidget(BuckarooWidget):
         import pandas as pd
         #FIXME HACK
         if isinstance(df, pd.DataFrame):
+            raise Exception("PolarsBuckarooWidget got a pandas dataframe in _df_to_obj")
             return pd_to_obj(df)
 
         else:
