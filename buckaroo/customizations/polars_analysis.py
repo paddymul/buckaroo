@@ -52,39 +52,53 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
             unique_per=summary_dict['unique_count']/len_,
             nan_per=summary_dict['nan_count']/len_)
 
+import polars.selectors as cs
+import polars as pl
+
+PROBABLY_STRUCTS = (~cs.numeric() & ~cs.string() & ~cs.temporal())
+NOT_STRUCTS = (~PROBABLY_STRUCTS)
 
 class VCAnalysis(PolarsAnalysis):
     provides_summary = ['value_counts']
     select_clauses = [
-        pl.all().exclude("count").value_counts(sort=True)
+        NOT_STRUCTS.exclude("count").value_counts(sort=True)
         .implode().name.map(json_postfix('value_counts')),
-        pl.selectors.matches("^count$")
+        (NOT_STRUCTS & pl.selectors.matches("^count$"))
         .alias("not_counts")
         .value_counts(sort=True)
         .implode()
         .alias("count").name.map(json_postfix('value_counts'))]
     
 
+DUMMY_VALUE_COUNTS = pl.Series(
+    [{'a': 3, 'count': 1}, {'a': 4, 'count': 1}, {'a': 5, 'count': 1}])
 class BasicAnalysis(PolarsAnalysis):
     provides_summary = ['length', 'nan_count', 'min', 'max', 'min',
                         'mode', 'mean','unique_count', 'empty_count',
                         'distinct_count']
+
+    requires_summary = ['value_counts']
     select_clauses = [
         F.all().len().name.map(json_postfix('length')),
         F.all().null_count().name.map(json_postfix('nan_count')),
-        F.all().min().name.map(json_postfix('min')),
-        F.all().max().name.map(json_postfix('max')),
+        NOT_STRUCTS.min().name.map(json_postfix('min')),
+        NOT_STRUCTS.max().name.map(json_postfix('max')),
         F.all().mean().name.map(json_postfix('mean')),
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
-        F.all().approx_n_unique().name.map(json_postfix('distinct_count')),
+        #NOT_STRUCTS.approx_n_unique().name.map(json_postfix('distinct_count')),
         (F.all().len() - F.all().is_duplicated().sum()).name.map(json_postfix('unique_count')),
     ]
 
     @staticmethod
     def computed_summary(summary_dict):
-        temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
-        regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
-        return dict(mode=regular_col_vc_df[0]['key'][0])
+        
+        if 'value_counts' in summary_dict:
+            temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
+            regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
+            return dict(mode=regular_col_vc_df[0]['key'][0], distinct_count=len(temp_df))
+        else:
+            print("subbing nonexistent value_counts")
+            return dict(mode=None, value_counts=DUMMY_VALUE_COUNTS, distinct_count=None)
 
 
 class PlTyping(PolarsAnalysis):

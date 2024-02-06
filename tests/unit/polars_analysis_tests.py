@@ -9,7 +9,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     polars_produce_series_df, PolarsAnalysis)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
-from buckaroo.customizations.polars_analysis import PlTyping, BasicAnalysis
+from buckaroo.customizations.polars_analysis import PlTyping, BasicAnalysis, VCAnalysis
 
 
 class SelectOnlyAnalysis(PolarsAnalysis):
@@ -42,8 +42,8 @@ def test_struct():
     structs have caused hard to debug errors.  Make sure they are properly tested
     """
     ser = pl.Series([{'a':5}])
-    df = pl.DataFrame({'b': ser})
-    dfs = PlDfStats(df, [BasicAnalysis], debug=True)
+    df = pl.DataFrame({'b': ser, 'normal': [4]})
+    dfs = PlDfStats(df, [VCAnalysis, BasicAnalysis], debug=True)
     print(dfs.sdf)
     assert dfs.errs == {}
 
