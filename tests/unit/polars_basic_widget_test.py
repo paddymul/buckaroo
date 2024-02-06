@@ -99,13 +99,13 @@ def test_pandas_all_stats():
 def Xtest_object_dtype1():
 
     ser = pl.Series([{'a':5}])
-    df = pl.DataFrame({'nested_dicts2': ser})
+    df = pl.DataFrame({'b': ser})
     PolarsBuckarooWidget(df)
 
 def Xtest_object_dtype2():
 
     ser = pl.Series([{'a':5}], dtype=pl.Object)
-    df = pl.DataFrame({'nested_dicts2': ser})
+    df = pl.DataFrame({'b': ser})
     PolarsBuckarooWidget(df)
 
 
