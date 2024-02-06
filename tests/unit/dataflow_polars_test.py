@@ -19,17 +19,23 @@ DFVIEWER_CONFIG_DEFAULT = {
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]}
 
 
+class BasicStyling(StylingAnalysis):
+    df_display_name = "basic"
+    
+
 def test_widget_instatiation():
     dfc = PolarsBuckarooWidget(BASIC_DF)
+    #the BasicStyling is simple and predictable, it writes to 'basic' which nothing else should
+    dfc.add_analysis(BasicStyling)
+
     assert dfc.widget_args_tuple[0] is BASIC_DF
-
-
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
-    assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
-    bw = PolarsBuckarooWidget(BASIC_DF)
 
-    assert bw.df_data_dict['main'] == BASIC_DF_JSON_DATA
-    assert bw.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+    actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
+    expected_column_config = DFVIEWER_CONFIG_DEFAULT['column_config']
+
+    #this test is brittle because styling is rapidly changing in development
+    assert actual_column_config == expected_column_config 
 
 def test_custom_dataflow():
     """Tests that a styling method can be added BuckarooWidget and
