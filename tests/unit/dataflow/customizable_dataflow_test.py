@@ -1,6 +1,4 @@
 import pandas as pd
-from buckaroo.dataflow_traditional import DataFlow
-from buckaroo import dataflow_traditional as dft
 from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow_traditional import CustomizableDataflow, StylingAnalysis

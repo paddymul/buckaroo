@@ -1,9 +1,8 @@
-import numpy as np
 import polars as pl
 from polars import functions as F
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_produce_series_df)
-from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
+from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 from buckaroo.dataflow_traditional import StylingAnalysis
 
@@ -48,15 +47,14 @@ def test_polars_all_stats():
     sdf, errs = polars_produce_series_df(
         test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
     expected = {
-        #'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None},
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
-    dsdf = replace_in_dict(sdf, [(np.nan, None)])
+    #dsdf = replace_in_dict(sdf, [(np.nan, None)])
     class SimplePolarsBuckaroo(PolarsBuckarooWidget):
         analysis_klasses= [SelectOnlyAnalysis, StylingAnalysis]
 
     spbw = SimplePolarsBuckaroo(test_df)
-    assert spbw.merged_sd == {
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
+    assert spbw.merged_sd == expected
+
     assert spbw.df_data_dict['all_stats'] == [
         {'index': 'mean', 'normal_int_series': 2.5},
         {'index': 'null_count', 'normal_int_series': 0.0},

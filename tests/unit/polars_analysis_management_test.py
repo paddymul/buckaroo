@@ -161,8 +161,8 @@ def test_pl_typing():
     class AdaptingStylingAnalysis(PolarsAnalysis):
         requires_summary = ["histogram", "is_numeric", "dtype", "is_integer"]
 
-    dfs = PlDfStats(df,
-                    [AdaptingStylingAnalysis, PlTyping, HistogramAnalysis,
-                     BasicAnalysis, VCAnalysis,
-                     ComputedDefaultSummaryStats])
+    PlDfStats(df,
+              [AdaptingStylingAnalysis, PlTyping, HistogramAnalysis,
+               BasicAnalysis, VCAnalysis,
+               ComputedDefaultSummaryStats])
     
