@@ -96,12 +96,23 @@ def test_pandas_all_stats():
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
-def Xtest_object_dtype():
-    PolarsBuckarooWidget(pl.DataFrame({
-        'nested_dicts2': pl.Series([
-            {'level_1': {'a':10, 'b':20, 'c':'some string'}}, None, None, None, None, None], dtype=pl.Object)}
-                                      ))
-    
+def Xtest_object_dtype1():
+
+    ser = pl.Series([{'a':5}])
+    df = pl.DataFrame({'nested_dicts2': ser})
+    PolarsBuckarooWidget(df)
+
+def Xtest_object_dtype2():
+
+    ser = pl.Series([{'a':5}], dtype=pl.Object)
+    df = pl.DataFrame({'nested_dicts2': ser})
+    PolarsBuckarooWidget(df)
+
+
+    # I eventually wanted to test non regular object like this
+    # ser = pl.Series([
+    #         {'level_1': {'a':10}}, None], dtype=pl.Object)
+    # df = pl.DataFrame({'nested_dicts2': ser})
 
 '''
 FIXME:test a large dataframe that forces sampling
