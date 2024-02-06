@@ -285,7 +285,7 @@ class DataFlow(HasTraits):
         #how to control ordering of column_config???
         # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
         # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
-        self.widget_args_tuple = [self.processed_df, self.merged_sd]
+        self.widget_args_tuple = (id(self.processed_df), self.processed_df, self.merged_sd)
 
 
 
@@ -526,7 +526,7 @@ class CustomizableDataflow(DataFlow):
         """
        put together df_dict for consumption by the frontend
         """
-        processed_df, merged_sd = self.widget_args_tuple
+        _unused, processed_df, merged_sd = self.widget_args_tuple
         if processed_df is None:
             return
 

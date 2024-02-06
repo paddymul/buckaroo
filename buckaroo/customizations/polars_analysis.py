@@ -83,11 +83,10 @@ class BasicAnalysis(PolarsAnalysis):
         F.all().null_count().name.map(json_postfix('nan_count')),
         NOT_STRUCTS.min().name.map(json_postfix('min')),
         NOT_STRUCTS.max().name.map(json_postfix('max')),
-        F.all().mean().name.map(json_postfix('mean')),
+        NOT_STRUCTS.mean().name.map(json_postfix('mean')),
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
-        #NOT_STRUCTS.approx_n_unique().name.map(json_postfix('distinct_count')),
-        (F.all().len() - F.all().is_duplicated().sum()).name.map(json_postfix('unique_count')),
-    ]
+        (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count'))
+        ]
 
     @staticmethod
     def computed_summary(summary_dict):
@@ -97,8 +96,9 @@ class BasicAnalysis(PolarsAnalysis):
             regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
             return dict(mode=regular_col_vc_df[0]['key'][0], distinct_count=len(temp_df))
         else:
-            print("subbing nonexistent value_counts")
-            return dict(mode=None, value_counts=DUMMY_VALUE_COUNTS, distinct_count=0)
+
+            return dict(mode=None, value_counts=DUMMY_VALUE_COUNTS, distinct_count=0,
+                        mean=0, unique_count=0)
 
 
 class PlTyping(PolarsAnalysis):

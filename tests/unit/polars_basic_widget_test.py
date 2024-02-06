@@ -119,6 +119,50 @@ def Xtest_object_dtype2():
     #         {'level_1': {'a':10}}, None], dtype=pl.Object)
     # df = pl.DataFrame({'nested_dicts2': ser})
 
+def test_weird():
+# RAW = {
+#     'names': ['all_NA', 'half_NA','longtail', 'longtail_unique'],
+#     'histo': [
+#         [{'name': 'NA', 'NA': 100.0}],
+#         [{'name': 1, 'cat_pop': 46.0}, {'name': 'NA', 'NA': 54.0}],
+#         [{'name': 'long_30', 'cat_pop': 0.0}, {'name': 'long_15', 'cat_pop': 0.0},
+#          {'name': 'long_29', 'cat_pop': 0.0}, {'name': 'long_184', 'cat_pop': 0.0},
+#          {'name': 'long_101', 'cat_pop': 0.0}, {'name': 'long_48', 'cat_pop': 0.0},
+#          {'name': 'long_123', 'cat_pop': 0.0}, {'name': 'longtail', 'longtail': 77.0},
+#          {'name': 'NA', 'NA': 20.0}],
+#     [
+#          {'name': 'long_120', 'cat_pop': 0.0}, {'name': 'long_41', 'cat_pop': 0.0},
+#          {'name': 'long_0', 'cat_pop': 0.0}, {'name': 'long_32', 'cat_pop': 0.0},
+#          {'name': 'long_44', 'cat_pop': 0.0}, {'name': 'long_113', 'cat_pop': 0.0},
+#          {'name': 'long_22', 'cat_pop': 0.0},
+#          {'name': 'longtail', 'unique': 50.0, 'longtail': 47.0}]]}
+
+# pl_histo = pl.DataFrame(RAW)
+# pl_histo
+
+#     RAW = ​ {
+#      'all_NA':           [{'name': 'NA', 'NA': 100.0}],
+#      'half_NA':          [{'name': 1, 'cat_pop': 46.0}, {'name': 'NA', 'NA': 54.0}],
+#      'longtail':         [{'name': 'long_30', 'cat_pop': 0.0}, {'name': 'long_15', 'cat_pop': 0.0},
+#                           {'name': 'long_29', 'cat_pop': 0.0}, {'name': 'long_184', 'cat_pop': 0.0},
+#                           {'name': 'long_101', 'cat_pop': 0.0}, {'name': 'long_48', 'cat_pop': 0.0},
+#                           {'name': 'long_123', 'cat_pop': 0.0}, {'name': 'longtail', 'longtail': 77.0},
+#                           {'name': 'NA', 'NA': 20.0}],
+#      'longtail_unique': [
+#          {'name': 'long_120', 'cat_pop': 0.0}, {'name': 'long_41', 'cat_pop': 0.0},
+#          {'name': 'long_0', 'cat_pop': 0.0}, {'name': 'long_32', 'cat_pop': 0.0},
+#          {'name': 'long_44', 'cat_pop': 0.0}, {'name': 'long_113', 'cat_pop': 0.0},
+#          {'name': 'long_22', 'cat_pop': 0.0},
+#          {'name': 'longtail', 'unique': 50.0, 'longtail': 47.0}]}
+
+    RAW = {'names': ['all_NA', 'half_NA'],
+        'histo': [
+            [{'name': 'NA', 'NA': 100.0}],
+            [{'name': 1, 'cat_pop': 46.0}, {'name': 'NA', 'NA': 54.0}]]}
+    pl_histo = pl.DataFrame(RAW)
+        
+    PolarsBuckarooWidget(pl_histo)
+
 '''
 FIXME:test a large dataframe that forces sampling
 '''
