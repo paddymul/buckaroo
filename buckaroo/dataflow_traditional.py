@@ -1,3 +1,4 @@
+import sys
 import warnings
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
@@ -78,7 +79,7 @@ def merge_column_config(styled_column_config, overide_column_configs):
         ret_column_config.append(row)
     return ret_column_config
 
-
+import six
 class DataFlow(HasTraits):
     """This class is meant to only represent the dataflow through
     buckaroo with no accomodation for widget particulars
@@ -100,11 +101,13 @@ class DataFlow(HasTraits):
         super().__init__()
         self.summary_sd = {}
         self.existing_operations = []
-        # try:
-        #     self.raw_df = raw_df
-        # except Exception as e:
-        #     raise self.exception
-        self.raw_df = raw_df
+        try:
+            self.raw_df = raw_df
+        except Exception as e:
+            # print("e", sys.exc_info())
+            # print("self.exception", self.exception)
+            six.reraise(self.exception[0], self.exception[1], self.exception[2])
+        # self.raw_df = raw_df
 
     raw_df = Any('')
     sample_method = Unicode('default')
@@ -147,12 +150,12 @@ class DataFlow(HasTraits):
 
     @observe('raw_df', 'sample_method')
     def _sampled_df(self, change):
-        self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
-        # try:
-        #     self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
-        # except Exception as e:
-        #     self.exception = e
-        #     raise
+        try:
+            self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
+        except Exception as e:
+            self.exception = sys.exc_info()
+
+            raise
 
     def _run_df_interpreter(self, df, ops):
         if len(ops) == 1:
