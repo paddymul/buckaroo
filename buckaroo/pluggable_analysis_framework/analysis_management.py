@@ -204,9 +204,9 @@ class DfStats(object):
         self.operating_df_name = operating_df_name
         self.debug = debug
 
-        self.sdf, errs = self.ap.process_df(self.df, self.debug)
-        if errs:
-            output_full_reproduce(errs, self.sdf, operating_df_name)
+        self.sdf, self.errs = self.ap.process_df(self.df, self.debug)
+        if self.errs:
+            output_full_reproduce(self.errs, self.sdf, operating_df_name)
         
     def get_operating_df(self, df, force_full_eval):
         rows = len(df)

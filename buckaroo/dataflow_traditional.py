@@ -86,8 +86,9 @@ def exception_protect(protect_name=None):
             try:
                 func(self, *args, **kwargs)
             except Exception as e:
-                if protect_name:
-                    print("protect handler", protect_name, self.exception)
+                #sometimes useful for debugging tricky call order stuff
+                # if protect_name:
+                #     print("protect handler", protect_name, self.exception)
                 if self.exception is None:
                     self.exception = sys.exc_info()
                 raise
@@ -481,16 +482,15 @@ class CustomizableDataflow(DataFlow):
 
     ### start summary stats block
     def _get_summary_sd(self, processed_df):
-        # try:
-            stats = self.DFStatsClass(
-                processed_df,
-                self.analysis_klasses,
-                self.df_name, debug=self.debug)
-            sdf = stats.sdf
+        stats = self.DFStatsClass(
+            processed_df,
+            self.analysis_klasses,
+            self.df_name, debug=self.debug)
+        sdf = stats.sdf
+        if stats.errs:
+            pass
+        else:
             return sdf
-        # except Exception as e:
-        #     print(e)
-        #     1/0
 
     def add_analysis(self, analysis_klass):
         """
