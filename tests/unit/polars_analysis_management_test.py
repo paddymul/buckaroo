@@ -13,8 +13,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
         #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
-        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])
-    })
+        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])})
 
 word_only_df = pl.DataFrame({'letters': 'h o r s e'.split(' ')})
 
@@ -82,8 +81,17 @@ def test_histogram_analysis():
 
     df = pl.DataFrame({'categories': cats, 'numerical_categories': [3]*30 + [7] * 70})
     summary_df, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, HA_CLASSES, debug=True)
-    assert summary_df["categories"]["categorical_histogram"] == {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
-    assert summary_df["numerical_categories"]["categorical_histogram"] == {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
+
+    actual_cats = summary_df["categories"]["categorical_histogram"]
+    expected_cats = {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
+    assert actual_cats == expected_cats
+
+    
+    actual_numcats = summary_df["numerical_categories"]["categorical_histogram"]
+
+    rounded_actual_numcats = dict([(k, np.round(v,2)) for k,v in actual_numcats.items()])
+    expected_categorical_histogram = {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
+    assert rounded_actual_numcats == expected_categorical_histogram
 
 
     

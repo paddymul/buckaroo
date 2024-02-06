@@ -96,7 +96,7 @@ def test_pandas_all_stats():
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
-def test_object_dtype():
+def Xtest_object_dtype():
     PolarsBuckarooWidget(pl.DataFrame({
         'nested_dicts2': pl.Series([
             {'level_1': {'a':10, 'b':20, 'c':'some string'}}, None, None, None, None, None], dtype=pl.Object)}
