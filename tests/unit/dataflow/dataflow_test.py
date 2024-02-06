@@ -141,4 +141,92 @@ def test_merge_column_config_hide():
             {'col_name':'foo',   'displayer_args': {'displayer': 'obj'}}]
         
     assert expected == merged
-        
+
+
+
+class ExpectedFail(Exception):
+    pass
+
+
+    
+def tb_depth(tb, depth=1):
+    """
+    returns the depth of a traceback
+    """
+    if tb.tb_next is None:
+        return depth
+    else:
+        return tb_depth(tb.tb_next, depth+1)
+
+def exc_depth(exc):
+    """
+    returns the depth of an exception
+    """
+    return tb_depth(exc.__traceback__)
+
+import sys, traceback
+
+def test_exc_depth():
+    def level_3():
+        1/0
+    def level_2():
+        level_3()
+    def level_1():
+        level_2()
+    try:
+        level_1()
+    except Exception:
+        l1_exc = sys.exception()
+    assert tb_depth(l1_exc.__traceback__) == 4
+
+    try:
+        level_2()
+    except Exception:
+        l2_exc = sys.exception()
+    assert tb_depth(l2_exc.__traceback__) == 3
+
+
+class SampleFailDataFlow(DataFlow):
+
+    # def _compute_processed_result(self, cleaned_df, post_processing_method):
+    #     raise ExpectedFail("_compute_processed_result")
+
+    # def _get_summary_sd(self, df):
+    #     raise ExpectedFail("_get_summary_sd")
+
+    
+    def _compute_sampled_df(self, raw_df, sample_method):
+        raise ExpectedFail("_compute_sampled_df")
+
+    #need to split out
+    # df_data_dict call
+    # df_display_args call
+
+import traceback
+def test_traceback():
+    try:
+        SummaryFailDataFlow(simple_df)
+    except Exception:
+        ab = traceback.walk_stack(None)
+    for what in ab:
+        print(what)
+    1/0
+    
+def test_error_handling():
+    """
+
+    when something fails in DataFlow, we get stack traces of traitlets.change
+    there should be shorter stacktraces, the errors should be written to "data_flow_errors"
+
+    I get 300 line stacktraces, aint nobody got time for that
+    https://pymotw.com/3/traceback/
+    """
+    try:
+        SampleFailDataFlow(simple_df)
+    except Exception:
+        sf_exc = sys.exception()
+    print(exc_depth(sf_exc))
+    # SummaryFailDataFlow(simple_df)
+
+    assert exc_depth(sf_exc) < 7
+    SampleFailDataFlow(simple_df)

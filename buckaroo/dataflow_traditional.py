@@ -100,8 +100,11 @@ class DataFlow(HasTraits):
         super().__init__()
         self.summary_sd = {}
         self.existing_operations = []
+        # try:
+        #     self.raw_df = raw_df
+        # except Exception as e:
+        #     raise self.exception
         self.raw_df = raw_df
-
 
     raw_df = Any('')
     sample_method = Unicode('default')
@@ -145,6 +148,11 @@ class DataFlow(HasTraits):
     @observe('raw_df', 'sample_method')
     def _sampled_df(self, change):
         self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
+        # try:
+        #     self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
+        # except Exception as e:
+        #     self.exception = e
+        #     raise
 
     def _run_df_interpreter(self, df, ops):
         if len(ops) == 1:
@@ -257,6 +265,9 @@ class DataFlow(HasTraits):
         # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
         # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
         self.widget_args_tuple = [self.processed_df, self.merged_sd]
+
+
+
 
 
 
