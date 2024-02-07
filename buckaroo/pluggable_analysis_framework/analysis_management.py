@@ -72,7 +72,8 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
             ser_name = possib_ser_name
     #figure out how to add in "index"... but just for table_hints
     #for ser_name in df.columns:
-        base_summary_dict = series_stats[ser_name]
+        #base_summary_dict = series_stats[ser_name]
+        base_summary_dict = series_stats.get(ser_name, {})
         for a_kls in ordered_objs:
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
@@ -169,6 +170,8 @@ class AnalysisPipeline(object):
 
     def process_df(self, input_df, debug=False):
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
+        print("process_df", type(output_df))
+        print(output_df)
         return output_df, errs
 
     def add_analysis(self, new_aobj):

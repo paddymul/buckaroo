@@ -262,11 +262,7 @@ class DataFlow(HasTraits):
     @exception_protect('summary_sd-protector')
     def _summary_sd(self, change):
         result_summary_sd = self._get_summary_sd(self.processed_df)
-        # print("result_summary_sd", type(result_summary_sd))
-        # print(result_summary_sd)
         self.summary_sd = result_summary_sd
-        # print("self.summary_sd", type(self.summary_sd))
-        # print(self.summary_sd)
 
     @observe('summary_sd')
     @exception_protect('merged_sd-protector')
@@ -342,6 +338,8 @@ def filter_analysis(klasses, attr):
             ret_klses[attr_val] = k
     return ret_klses
             
+class PostProcessingException(Exception):
+    pass
 
 EMPTY_DFVIEWER_CONFIG = {
     'pinned_rows': [],
@@ -472,6 +470,8 @@ class CustomizableDataflow(DataFlow):
         return self.gencode_interpreter(operations)
     ### end code interpeter block
 
+    def _build_error_dataframe(self, e):
+        return pd.DataFrame({'err': [str(e)]})
 
     def _compute_processed_result(self, cleaned_df, post_processing_method):
         if post_processing_method == '':
@@ -482,7 +482,7 @@ class CustomizableDataflow(DataFlow):
                 ret_df =  post_analysis.post_process_df(cleaned_df)
                 return ret_df
             except Exception as e:
-                return [pd.DataFrame({'err': [str(e)]}), {}]
+                return [self._build_error_dataframe(e), {}]
 
 
     ### start summary stats block

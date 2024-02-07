@@ -1,3 +1,4 @@
+import polars as pl
 from buckaroo.buckaroo_widget import BuckarooWidget
 from .customizations.polars_analysis import PL_Analysis_Klasses
 from .pluggable_analysis_framework.polars_analysis_management import (
@@ -39,6 +40,9 @@ class PolarsBuckarooWidget(BuckarooWidget):
         # if 'index' in temp_sd:
         #     del temp_sd['index']
         return pd_to_obj(pd.DataFrame(temp_sd))
+
+    def _build_error_dataframe(self, e):
+        return pl.DataFrame({'err': [str(e)]})
 
     def _df_to_obj(self, df):
         import pandas as pd
