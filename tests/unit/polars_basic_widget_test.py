@@ -190,16 +190,7 @@ class ShowErrorsPostProcessing(PolarsAnalysis):
         df.select
         result_df = df.select(
             F.all(),
-                              
             pl.col('float_col').lt(5).replace(True, "foo").replace(False, None).alias('errored_float'))
-        extra_column_config = {
-            'index': {},
-            'float_col' : {'column_config_override': { 
-                               {'color_map_config': {
-                                'color_rule': 'color_not_null',
-                                'conditional_color': 'red',
-                                'exist_column': 'errored_float'}}}}}
-        #return [result_df, extra_column_config]
         return [result_df, {}]
 
     post_processing_method = "show_errors"

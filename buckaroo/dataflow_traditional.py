@@ -1,3 +1,4 @@
+import six
 import sys
 import warnings
 import pandas as pd
@@ -79,13 +80,13 @@ def merge_column_config(styled_column_config, overide_column_configs):
         ret_column_config.append(row)
     return ret_column_config
 
-import six
+
 def exception_protect(protect_name=None):
     def wrapped_decorator(func):
         def wrapped(self, *args, **kwargs):
             try:
                 func(self, *args, **kwargs)
-            except Exception as e:
+            except Exception:
                 #sometimes useful for debugging tricky call order stuff
                 # if protect_name:
                 #     print("protect handler", protect_name, self.exception)
@@ -120,11 +121,8 @@ class DataFlow(HasTraits):
 
         try:
             self.raw_df = raw_df
-        except Exception as e:
-            # print("e", sys.exc_info())
-            # print("self.exception", self.exception)
+        except Exception:
             six.reraise(self.exception[0], self.exception[1], self.exception[2])
-        # self.raw_df = raw_df
 
     raw_df = Any('')
     sample_method = Unicode('default')

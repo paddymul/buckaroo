@@ -9,7 +9,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     polars_produce_series_df, PolarsAnalysis)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
-from buckaroo.customizations.polars_analysis import PlTyping, BasicAnalysis, VCAnalysis
+from buckaroo.customizations.polars_analysis import BasicAnalysis, VCAnalysis
 
 
 class SelectOnlyAnalysis(PolarsAnalysis):

@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 from buckaroo.dataflow_traditional import DataFlow
 from buckaroo import dataflow_traditional as dft
@@ -164,7 +165,7 @@ def exc_depth(exc):
     """
     return tb_depth(exc.__traceback__)
 
-import sys, traceback
+
 
 def test_exc_depth():
     def level_3():
@@ -187,29 +188,8 @@ def test_exc_depth():
 
 
 class SampleFailDataFlow(DataFlow):
-
-    # def _compute_processed_result(self, cleaned_df, post_processing_method):
-    #     raise ExpectedFail("_compute_processed_result")
-
-    # def _get_summary_sd(self, df):
-    #     raise ExpectedFail("_get_summary_sd")
-
-    
     def _compute_sampled_df(self, raw_df, sample_method):
         raise ExpectedFail("_compute_sampled_df")
-
-    #need to split out
-    # df_data_dict call
-    # df_display_args call
-
-import traceback
-def test_traceback():
-    try:
-        SummaryFailDataFlow(simple_df)
-    except Exception:
-        ab = traceback.walk_stack(None)
-    for what in ab:
-        print(what)
     
 def test_error_handling():
     """
@@ -225,6 +205,5 @@ def test_error_handling():
     except Exception:
         sf_exc = sys.exception()
     print(exc_depth(sf_exc))
-    # SummaryFailDataFlow(simple_df)
 
     assert exc_depth(sf_exc) < 7

@@ -1,5 +1,6 @@
 import polars as pl
 import numpy as np
+import polars.selectors as cs
 from polars import functions as F
 from polars import datatypes as pdt
 from buckaroo.customizations.analysis_utils import int_digits
@@ -52,8 +53,7 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
             unique_per=summary_dict['unique_count']/len_,
             nan_per=summary_dict['nan_count']/len_)
 
-import polars.selectors as cs
-import polars as pl
+
 
 PROBABLY_STRUCTS = (~cs.numeric() & ~cs.string() & ~cs.temporal())
 NOT_STRUCTS = (~PROBABLY_STRUCTS)
