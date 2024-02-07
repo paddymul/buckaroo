@@ -406,7 +406,7 @@ class CustomizableDataflow(DataFlow):
 
 
     @observe('buckaroo_state')
-    @exception_protect('processed_result-protector')
+    @exception_protect('buckaroo_state-protector')
     def _buckaroo_state(self, change):
         #how to control ordering of column_config???
         # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
