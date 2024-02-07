@@ -179,7 +179,13 @@ def test_other_post_processing():
 class TransposeProcessing2(ColAnalysis):
     @classmethod
     def post_process_df(kls, df):
-        return [df.transpose(), {}]
+        typed_df = pl.DataFrame(
+            {'foo_col': [1] * ROWS,
+             'float_col': [13.5] * ROWS,
+             "str_col": ["foobar"]* ROWS})
+
+        #return [df.transpose(), {}]
+        return [typed_df, {}]
     post_processing_method = "transpose2"
 
 
