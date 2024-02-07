@@ -350,6 +350,28 @@ EMPTY_DFVIEWER_CONFIG = {
 EMPTY_DF_DISPLAY_ARG = {'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
                            'summary_stats_key': 'empty'}
 
+class Sampling:
+
+    max_columns      =     250
+    pre_limit        = 100_000
+    serialize_limit  =  10_000
+
+    @classmethod
+    def pre_stats_sample(kls, df):
+        if len(df.columns) > kls.max_columns:
+            print("Removing excess columns, found %d columns" %  len(df.columns))
+            df = df[df.columns[:kls.max_columns]]
+        if kls.pre_limit and len(df) > kls.pre_limit:
+            return df.sample(kls.pre_limit)
+        return df
+
+
+    @classmethod
+    def serialize_sample(kls, df):
+        if kls.serialize_limit and len(df) > kls.serialize_limit:
+            return df.sample(kls.serialize_limit)
+        return df
+
 class CustomizableDataflow(DataFlow):
     """
     This allows targetd extension and customization of DataFlow
@@ -358,6 +380,7 @@ class CustomizableDataflow(DataFlow):
     command_klasses = DefaultCommandKlsList
     commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
+    sampling_klass = Sampling
     df_display_klasses = {}
 
     def __init__(self, df, debug=False, column_config_overrides=None, pinned_rows=None):
@@ -373,7 +396,7 @@ class CustomizableDataflow(DataFlow):
         self.df_name = "placeholder"
         self.df_display_args = {}
         self.setup_options_from_analysis()
-        super().__init__(df)
+        super().__init__(self.sampling_klass.pre_stats_sample(df))
 
         self._setup_from_command_kls_list()
         self.populate_df_meta()
@@ -528,7 +551,7 @@ class CustomizableDataflow(DataFlow):
         return self._df_to_obj(pd.DataFrame(temp_sd))
 
     def _df_to_obj(self, df:pd.DataFrame):
-        return pd_to_obj(df)
+        return pd_to_obj(self.sampling_klass.serialize_sample(df))
     
 
     #final processing block

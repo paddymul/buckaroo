@@ -2,6 +2,7 @@ from buckaroo.dataflow_traditional import StylingAnalysis
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 import polars as pl 
+import numpy as np
 
 simple_df = pl.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
@@ -204,3 +205,8 @@ def test_column_config_override():
     assert int_cc_after['col_name'] == 'int_col' #make sure we found the right row
     assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
 
+def test_sample():
+    big_df = pl.DataFrame({'a': np.arange(30_000)})
+    bw = PolarsBuckarooWidget(big_df)
+    assert len(bw.processed_df) == len(big_df)
+    assert len(bw.df_data_dict['main']) == 10_000

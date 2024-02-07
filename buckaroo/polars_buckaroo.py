@@ -10,7 +10,11 @@ from buckaroo.customizations.polars_commands import (
 from traitlets import Unicode
 from ._frontend import module_name, module_version
 from .customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
+from .dataflow_traditional import Sampling
 
+
+class PLSampling(Sampling):
+    pre_limit = False
 
 local_analysis_klasses = PL_Analysis_Klasses.copy()
 local_analysis_klasses.extend(
@@ -30,6 +34,7 @@ class PolarsBuckarooWidget(BuckarooWidget):
     _view_name = Unicode('DCEFWidgetView').tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
+    sampling_klass = PLSampling
 
     def _sd_to_jsondf(self, sd):
         """exists so this can be overriden for polars  """
@@ -45,11 +50,7 @@ class PolarsBuckarooWidget(BuckarooWidget):
         return pl.DataFrame({'err': [str(e)]})
 
     def _df_to_obj(self, df):
-        import pandas as pd
-        #FIXME HACK
-        if isinstance(df, pd.DataFrame):
-            raise Exception("PolarsBuckarooWidget got a pandas dataframe in _df_to_obj")
-            return pd_to_obj(df)
+        # I want to this, but then row numbers are lost
+        #return pd_to_obj(self.sampling_klass.serialize_sample(df).to_pandas())
+        return pd_to_obj(self.sampling_klass.serialize_sample(df.to_pandas()))
 
-        else:
-            return pd_to_obj(df.to_pandas())

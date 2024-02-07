@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
@@ -183,3 +184,8 @@ def test_transpose_error():
         [1, 1, 1, 1, 1],
         [0.5, 0.5, 0.5, 0.5, 0.5],
         ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]
+def test_sample():
+    big_df = pd.DataFrame({'a': np.arange(105_000)})
+    bw = CustomizableDataflow(big_df)
+    assert len(bw.processed_df) == 100_000
+    assert len(bw.df_data_dict['main']) == 10_000
