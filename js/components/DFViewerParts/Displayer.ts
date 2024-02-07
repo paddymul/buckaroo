@@ -22,17 +22,16 @@ export const basicIntFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 3,
 });
 
-export const getStringFormatter = (args:StringDisplayerA) => {
+export const getStringFormatter = (args: StringDisplayerA) => {
   const stringFormatter = (params: ValueFormatterParams): string => {
     const val = params.value;
-    if(val && args.max_length){
+    if (val && args.max_length) {
       return val.slice(0, args.max_length);
     }
-  return val;
+    return val;
   };
-return stringFormatter;
-}
-
+  return stringFormatter;
+};
 
 const dictDisplayer = (val: Record<string, any>): string => {
   const objBody = _.map(
@@ -126,8 +125,7 @@ export const getFloatFormatter = (hint: FloatDisplayerA) => {
       return res.padEnd(padLength);
     } else {
       const fracPart = res.split('.')[1];
-      const padLength =
-        hint.max_fraction_digits - fracPart.length + res.length;
+      const padLength = hint.max_fraction_digits - fracPart.length + res.length;
       return res.padEnd(padLength);
     }
   };
@@ -180,7 +178,7 @@ export function getFormatter(
     case 'obj':
       return objFormatter;
     default:
-      return getStringFormatter({displayer:'string'});
+      return getStringFormatter({ displayer: 'string' });
   }
 }
 
@@ -197,7 +195,7 @@ export function getCellRenderer(crArgs: CellRendererArgs) {
     case 'linkify':
       return LinkCellRenderer;
     case 'boolean_checkbox':
-      return 'agCheckboxCellRenderer'
+      return 'agCheckboxCellRenderer';
   }
 }
 

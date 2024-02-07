@@ -112,7 +112,7 @@ export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
 export function colorNotNull(cmr: ColorWhenNotNullRules) {
   function cellStyle(params: CellClassParams) {
     if (params.data === undefined) {
-      return {backgroundColor: 'inherit'};
+      return { backgroundColor: 'inherit' };
     }
     const val = params.data[cmr.exist_column];
     const valPresent = val && val !== null;
@@ -220,7 +220,7 @@ export function dfToAgrid(
       const colDef: ColDef = {
         field: f.col_name,
         headerName: f.col_name,
-        cellDataType:false,
+        cellDataType: false,
         cellStyle: {}, // necessary for colormapped columns to have a default
         ...addToColDef(f.displayer_args, hdf[f.col_name]),
         ...color_map_config,

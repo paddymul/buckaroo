@@ -14,7 +14,7 @@ export interface BooleanDisplayerA {
 export interface StringDisplayerA {
   displayer: 'string';
   max_length?: number;
-} 
+}
 export interface FloatDisplayerA {
   displayer: 'float';
   min_fraction_digits: number;
@@ -58,7 +58,10 @@ export interface BooleanCheckboxDisplayerA {
   displayer: 'boolean_checkbox';
 }
 
-export type CellRendererArgs = HistogramDisplayerA | LinkifyDisplayerA |BooleanCheckboxDisplayerA;
+export type CellRendererArgs =
+  | HistogramDisplayerA
+  | LinkifyDisplayerA
+  | BooleanCheckboxDisplayerA;
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
 export const cellRendererDisplayers = ['histogram', 'linkify'];
