@@ -1,4 +1,5 @@
 from buckaroo.dataflow_traditional import StylingAnalysis
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import (PolarsAnalysis)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 import polars as pl 
@@ -125,10 +126,89 @@ def test_transpose_error():
         analysis_klasses = base_a_klasses
 
     vcb = VCBuckarooWidget(typed_df, debug=False)
+    assert type(vcb.processed_df) == pl.DataFrame
+    assert vcb.processed_df.to_numpy().tolist() ==[
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar']]
+
     temp_buckaroo_state = vcb.buckaroo_state.copy()
     temp_buckaroo_state['post_processing'] = 'transpose'
     vcb.buckaroo_state = temp_buckaroo_state
+    assert type(vcb.processed_df) == pl.DataFrame
+    #note that Polars doesn'transpose to objects, but to strings instead
+    assert vcb.processed_df.to_numpy().tolist() == [
+        ['1', '1', '1', '1', '1'],
+        ['0.5', '0.5', '0.5', '0.5', '0.5'],
+        ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]
 
+
+class ShowErrorsPostProcessing(ColAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        print("^"*80)
+        print(type(df))
+        result_df = df.select(
+            F.all(),
+            #pl.col('float_col').lt(5).replace(True, "foo").replace(False, None).alias('errored_float')
+        )
+        #return [result_df, {}]
+        return [df, {}]
+
+    post_processing_method = "show_errors"
+
+def test_other_post_processing():
+    ROWS = 5
+    typed_df = pl.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+    bw = PolarsBuckarooWidget(typed_df, debug=False)
+
+    bw.add_analysis(ShowErrorsPostProcessing)
+
+    temp_buckaroo_state = bw.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'show_errors'
+    bw.buckaroo_state = temp_buckaroo_state
+    print(bw.processed_df)
+    1/0
+
+    
+class TransposeProcessing2(ColAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        return [df.transpose(), {}]
+    post_processing_method = "transpose2"
+
+
+def test_transpose_error2():
+    ROWS = 5
+    typed_df = pl.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+
+    base_a_klasses = PolarsBuckarooWidget.analysis_klasses.copy()
+    base_a_klasses.extend([TransposeProcessing2])
+
+    class VCBuckarooWidget2(PolarsBuckarooWidget):
+        analysis_klasses = base_a_klasses
+
+    vcb = VCBuckarooWidget2(typed_df, debug=False)
+    assert type(vcb.processed_df) == pl.DataFrame
+    assert vcb.processed_df.to_numpy().tolist() ==[
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar'],
+        [1, 0.5, 'foobar']]
+
+    temp_buckaroo_state = vcb.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'transpose2'
+    vcb.buckaroo_state = temp_buckaroo_state
+    assert type(vcb.processed_df) == pl.DataFrame
     #note that Polars doesn'transpose to objects, but to strings instead
     assert vcb.processed_df.to_numpy().tolist() == [
         ['1', '1', '1', '1', '1'],
