@@ -324,7 +324,12 @@ class StylingAnalysis(ColAnalysis):
             ret_col_config.append({'col_name': 'index', 'displayer_args': {'displayer': 'obj'}})
             
         for col in sd.keys():
-            ret_col_config.append(kls.style_column(col, sd[col]))
+            col_meta = sd[col]
+            base_style = kls.style_column(col, col_meta)
+            if 'column_config_override' in col_meta:
+                base_style.update(col_meta['column_config_override'])
+            ret_col_config.append(base_style)
+            
         return {
             'pinned_rows': kls.pinned_rows,
             'column_config': ret_col_config}
