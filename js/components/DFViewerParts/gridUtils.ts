@@ -111,6 +111,9 @@ export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
 
 export function colorNotNull(cmr: ColorWhenNotNullRules) {
   function cellStyle(params: CellClassParams) {
+    if (params.data === undefined) {
+      return {backgroundColor: 'inherit'};
+    }
     const val = params.data[cmr.exist_column];
     const valPresent = val && val !== null;
     const isPinned = params.node.rowPinned;
