@@ -153,8 +153,6 @@ class AlwaysErrorPostProcessing(ColAnalysis):
         1/0
     post_processing_method = "always_error"
 
-
-
 def test_always_error_post_processing():
     ROWS = 5
     typed_df = pl.DataFrame(
@@ -171,3 +169,41 @@ def test_always_error_post_processing():
     
     print(bw.processed_df.to_numpy().tolist())
     assert bw.processed_df.to_numpy().tolist() ==  [['division by zero']]
+
+ROWS = 5
+typed_df = pl.DataFrame(
+    {'int_col': [1] * ROWS,
+     'float_col': [.5] * ROWS,
+     "str_col": ["foobar"]* ROWS})
+
+EXPECTED_OVERRIDE = {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'Volume_colors'}}
+class ColumnConfigOverride(ColAnalysis):
+    @classmethod
+    def post_process_df(kls, df):
+        return [df, {
+            'int_col':{
+	        'column_config_override': EXPECTED_OVERRIDE}}]
+    post_processing_method = "override"
+
+def test_column_config_override():
+
+    bw = PolarsBuckarooWidget(typed_df, debug=False)
+
+    bw.add_analysis(ColumnConfigOverride)
+
+    assert 'column_config_override' not in bw.merged_sd['int_col']
+    cc_initial = bw.df_display_args['main']['df_viewer_config']['column_config']
+    int_cc_initial = cc_initial[1]
+    assert int_cc_initial['col_name'] == 'int_col' #make sure we found the right row
+    assert 'color_map_config' not in int_cc_initial
+    
+    temp_buckaroo_state = bw.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'override'
+    bw.buckaroo_state = temp_buckaroo_state
+    
+    assert bw.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
+    cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
+    int_cc_after = cc_after[1]
+    assert int_cc_after['col_name'] == 'int_col' #make sure we found the right row
+    assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
+
