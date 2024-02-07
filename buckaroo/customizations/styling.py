@@ -17,6 +17,10 @@ class DefaultMainStyling(StylingAnalysis):
 
     @classmethod
     def style_column(kls, col, sd):
+        #print(col, list(sd.keys()))
+        if len(sd.keys()) == 0:
+            #I'm still having problems with index and polars
+            return {'col_name':col, 'displayer_args': {'displayer': 'obj'}}
         digits = 3
         if sd['is_integer']:
             disp = {'displayer': 'float', 'minimumFractionDigits':0, 'maximumFractionDigits':0}
