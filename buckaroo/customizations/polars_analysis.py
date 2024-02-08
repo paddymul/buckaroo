@@ -118,6 +118,9 @@ class PlTyping(PolarsAnalysis):
             t = 'datetime'
         elif dt in pdt.FLOAT_DTYPES:
             t = 'float'
+        elif dt in pl.datatypes.TEMPORAL_DTYPES:
+            #feels like a hack
+            t = 'temporal'
         elif dt == pdt.Utf8:
             t = 'string'
         elif dt == pdt.Boolean:
