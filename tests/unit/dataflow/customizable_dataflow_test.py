@@ -93,11 +93,8 @@ def test_custom_post_processing():
     p_dfc = PostDCFC(BASIC_DF)
 
     assert p_dfc.buckaroo_options['post_processing'] == ['', 'post1']
-    assert p_dfc.buckaroo_state['post_processing'] == ''
-
-    temp_buckaroo_state = p_dfc.buckaroo_state.copy()
-    temp_buckaroo_state['post_processing'] = 'post1'
-    p_dfc.buckaroo_state = temp_buckaroo_state
+    assert p_dfc.post_processing_method == ''
+    p_dfc.post_processing_method = 'post1'
 
     assert p_dfc.processed_df is SENTINEL_DF
 
@@ -116,15 +113,8 @@ def test_error_post_processing():
 
     e_dfc = ErrorCFC(BASIC_DF)
 
-    # assert e_dfc.buckaroo_options['post_processing'] == ['', 'post1']
-    # assert e_dfc.buckaroo_state['post_processing'] == ''
-
     assert e_dfc.buckaroo_options['post_processing'] == ['', 'always_fail']
-    assert e_dfc.buckaroo_state['post_processing'] == ''
-
-    temp_buckaroo_state = e_dfc.buckaroo_state.copy()
-    temp_buckaroo_state['post_processing'] = 'always_fail'
-    e_dfc.buckaroo_state = temp_buckaroo_state
+    e_dfc.post_processing_method = 'always_fail'
     assert e_dfc.processed_df.values == [["division by zero"]]
 
 def test_column_config_override_widget():

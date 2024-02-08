@@ -421,27 +421,6 @@ class CustomizableDataflow(DataFlow):
         'summary_stats': ['all'],
     }).tag(sync=True)
 
-    buckaroo_state = Dict({
-        'auto_clean': 'conservative',
-        'post_processing': '',
-        'sampled': False,
-        'show_commands': False,
-        'df_display': 'main',
-        'search_string': '',
-    }).tag(sync=True)
-
-
-    @observe('buckaroo_state')
-    @exception_protect('buckaroo_state-protector')
-    def _buckaroo_state(self, change):
-        #how to control ordering of column_config???
-        # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
-        # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
-        old, new = change['old'], change['new']
-        if not old['post_processing'] == new['post_processing']:
-            self.post_processing_method = new['post_processing']
-            
-
     def setup_options_from_analysis(self):
         self.df_display_klasses = filter_analysis(self.analysis_klasses, "df_display_name")
         #add a check to verify that there aren't multiple classes offering the same df_display_name
@@ -526,19 +505,6 @@ class CustomizableDataflow(DataFlow):
         else:
             return sdf
 
-    def add_analysis(self, analysis_klass):
-        """
-        same as get_summary_sd, call whatever to set summary_sd and trigger further comps
-        """
-
-        stats = self.DFStatsClass(
-            self.processed_df,
-            self.analysis_klasses,
-            self.df_name, debug=self.debug)
-        stats.add_analysis(analysis_klass)
-        self.analysis_klasses = stats.ap.ordered_a_objs
-        self.setup_options_from_analysis()
-        self.summary_sd = stats.sdf
 
     # ### end summary stats block        
 
