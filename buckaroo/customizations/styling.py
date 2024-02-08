@@ -23,12 +23,13 @@ class DefaultMainStyling(StylingAnalysis):
             return {'col_name':col, 'displayer_args': {'displayer': 'obj'}}
         digits = 3
         if sd['is_integer']:
-            disp = {'displayer': 'float', 'minimumFractionDigits':0, 'maximumFractionDigits':0}
+            disp = {'displayer': 'float', 'min_fraction_digits':0, 'max_fraction_digits':0}
         elif sd['is_numeric']:
-            disp = {'displayer': 'float', 'minimumFractionDigits':digits, 'maximumFractionDigits':digits}
+            disp = {'displayer': 'float', 'min_fraction_digits':digits, 'max_fraction_digits':digits}
         else:
             disp = {'displayer': 'obj'}
         return {'col_name':col, 'displayer_args': disp }
+
 
 class DefaultSummaryStatsStyling(StylingAnalysis):
     pinned_rows = [

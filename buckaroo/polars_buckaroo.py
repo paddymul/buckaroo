@@ -26,14 +26,6 @@ class PolarsBuckarooWidget(BuckarooWidget):
     command_classes = [DropCol, FillNA, GroupBy]
     analysis_klasses = local_analysis_klasses
     DFStatsClass = PlDfStats
-
-
-    _model_name = Unicode('DCEFWidgetModel').tag(sync=True)
-    _model_module = Unicode(module_name).tag(sync=True)
-    _model_module_version = Unicode(module_version).tag(sync=True)
-    _view_name = Unicode('DCEFWidgetView').tag(sync=True)
-    _view_module = Unicode(module_name).tag(sync=True)
-    _view_module_version = Unicode(module_version).tag(sync=True)
     sampling_klass = PLSampling
 
     def _sd_to_jsondf(self, sd):
