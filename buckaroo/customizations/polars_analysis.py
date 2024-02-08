@@ -213,9 +213,12 @@ class HistogramAnalysis(PolarsAnalysis):
 
     @staticmethod
     def computed_summary(summary_dict):
+        if len(summary_dict.keys()) == 0:
+            return {}
+        
         vc = summary_dict['value_counts']
         cd = categorical_dict_from_vc(vc)
-        is_numeric = summary_dict['is_numeric']
+        is_numeric = summary_dict.get('is_numeric', False)
         nan_per = summary_dict['nan_per']
         if is_numeric and len(vc.explode()) > 5:
             #histogram_bins = summary_dict['histogram_args']['meat_histogram'][1]
