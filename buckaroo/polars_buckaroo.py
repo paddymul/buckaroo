@@ -7,8 +7,6 @@ from .serialization_utils import pd_to_obj
 from buckaroo.customizations.polars_commands import (
     DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
 )
-from traitlets import Unicode
-from ._frontend import module_name, module_version
 from .customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
 from .dataflow_traditional import Sampling
 
