@@ -6,14 +6,15 @@ def obj_(pkey):
 
 def float_(pkey, digits=3):
     return {'primary_key_val': pkey, 
-            'displayer_args': { 'displayer': 'float', 'minimumFractionDigits':digits, 'maximumFractionDigits':digits}}
+            'displayer_args': {
+                'displayer': 'float', 'min_fraction_digits':digits, 'max_fraction_digits':digits}}
 
 
 class DefaultMainStyling(StylingAnalysis):
     requires_summary = ["histogram", "is_numeric", "dtype", "_type"]
     pinned_rows = [
         obj_('dtype'),
-        {'primary_key_val': 'histogram', 'displayer_args': { 'displayer': 'histogram' }}]
+        {'primary_key_val': 'histogram', 'displayer_args': {'displayer': 'histogram'}}]
 
     @classmethod
     def style_column(kls, col:str, column_metadata: Any) -> Any:
@@ -41,13 +42,12 @@ class DefaultSummaryStatsStyling(StylingAnalysis):
     pinned_rows = [
         obj_('dtype'),
         float_('min'),
-        #float_('median'),
         float_('mean'),
         float_('max'),
         float_('unique_count', 0),
         float_('distinct_count', 0),
-        float_('empty_count', 0)
-    ]
+        float_('empty_count', 0)]
+
     df_display_name = "summary"
     data_key = "empty"
     summary_stats_key= 'all_stats'
