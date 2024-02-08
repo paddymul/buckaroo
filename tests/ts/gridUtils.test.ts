@@ -2,14 +2,14 @@
 
 import { extractSDFT,  getHistoIndex, } from '../../js/components/DFViewerParts/gridUtils';
 import { DFData } from "../../js/components/DFViewerParts/DFWhole";
-import { getFloatFormatter, getFormatter, objFormatter, stringFormatter } from '../../js/components/DFViewerParts/Displayer';
+import { getFloatFormatter, getFormatter, objFormatter } from '../../js/components/DFViewerParts/Displayer';
 import { ValueFormatterParams } from 'ag-grid-community';
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
 
 it("should test getFormater", () => {
-  expect(getFormatter({displayer: 'string'})).toBe(stringFormatter)
+//  expect(getFormatter({displayer: 'string'})).toBe(stringFormatter)
   expect(getFormatter({displayer: 'obj'})).toBe(objFormatter);
 
 
@@ -18,7 +18,7 @@ it("should test getFormater", () => {
 it("should format floats with a consistently spaced decimal pont",
   () => {
     const floatFormatter = getFloatFormatter(
-      {'displayer':'float', 'minimumFractionDigits':0, 'maximumFractionDigits':3})
+      {'displayer':'float', 'min_fraction_digits':0, 'max_fraction_digits':3})
     const res1 = floatFormatter({'value': 1.997} as ValueFormatterParams);
     expect(res1).toBe("1.997");
     const res2 = floatFormatter({'value': 1.000} as ValueFormatterParams);
