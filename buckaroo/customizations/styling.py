@@ -32,7 +32,7 @@ class DefaultMainStyling(StylingAnalysis):
         elif t == 'temporal':
             disp = {'displayer': 'datetimeLocaleString','locale': 'en-US',  'args': {}}
         elif t == 'string':
-            disp = {'displayer': 'string', 'max_length':15}
+            disp = {'displayer': 'string', 'max_length': 35}
         else:
             disp = {'displayer': 'obj'}
         return {'col_name':col, 'displayer_args': disp }
