@@ -19,6 +19,7 @@ from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, 
 from .customizations.histogram import (Histogram)
 from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyling)
 from .pluggable_analysis_framework.analysis_management import DfStats
+from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
 from .serialization_utils import EMPTY_DF_WHOLE
 from .dataflow_traditional import CustomizableDataflow, StylingAnalysis, exception_protect
@@ -100,3 +101,16 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
         self.analysis_klasses = stats.ap.ordered_a_objs
         self.setup_options_from_analysis()
         self.summary_sd = stats.sdf
+
+    def add_processing(self, df_processing_func):
+        proc_func_name = df_processing_func.__name__
+        class DecoratedProcessing(ColAnalysis):
+            @classmethod
+            def post_process_df(kls, df):
+                new_df = df_processing_func(df)
+                return [new_df, {}]
+            post_processing_method = proc_func_name
+        self.add_analysis(DecoratedProcessing)
+        temp_buckaroo_state = self.buckaroo_state.copy()
+        temp_buckaroo_state['post_processing'] = proc_func_name
+        self.buckaroo_state = temp_buckaroo_state

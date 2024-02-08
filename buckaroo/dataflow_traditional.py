@@ -486,7 +486,6 @@ class CustomizableDataflow(DataFlow):
             post_analysis = self.post_processing_klasses[post_processing_method]
             try:
                 ret_df, sd =  post_analysis.post_process_df(cleaned_df)
-                print("type(ret_df)", type(ret_df), type(sd))
                 return (ret_df, sd)
             except Exception as e:
                 return (self._build_error_dataframe(e), {})
