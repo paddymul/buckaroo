@@ -177,13 +177,13 @@ def test_exc_depth():
     try:
         level_1()
     except Exception:
-        l1_exc = sys.exception()
+        l1_exc = sys.exc_info()[1]
     assert tb_depth(l1_exc.__traceback__) == 4
 
     try:
         level_2()
     except Exception:
-        l2_exc = sys.exception()
+        l2_exc = sys.exc_info()[1]
     assert tb_depth(l2_exc.__traceback__) == 3
 
 
@@ -203,7 +203,7 @@ def test_error_handling():
     try:
         SampleFailDataFlow(simple_df)
     except Exception:
-        sf_exc = sys.exception()
+        sf_exc = sys.exc_info()[1] #eption()
     print(exc_depth(sf_exc))
 
     assert exc_depth(sf_exc) < 7
