@@ -163,8 +163,6 @@ class AnalysisPipeline(object):
 
     def process_df(self, input_df, debug=False):
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
-        # print("process_df", type(output_df))
-        # print(output_df)
         return output_df, errs
 
     def add_analysis(self, new_aobj):

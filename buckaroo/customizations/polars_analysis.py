@@ -223,7 +223,6 @@ class HistogramAnalysis(PolarsAnalysis):
         is_numeric = summary_dict.get('is_numeric', False)
         nan_per = summary_dict['nan_per']
         if is_numeric and len(vc.explode()) > 5:
-            #histogram_bins = summary_dict['histogram_args']['meat_histogram'][1]
             histogram_args = summary_dict['histogram_args']
             min_, max_, nan_per = summary_dict['min'], summary_dict['max'], summary_dict['nan_per']
             temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
@@ -236,25 +235,6 @@ class HistogramAnalysis(PolarsAnalysis):
                 'histogram_bins': ['faked']
                 }
 
-# class PlColDisplayHints(PolarsAnalysis):
-#     requires_summary = ['min', 'max', '_type', 'is_numeric']
-#     provides_summary = [
-#         'min_digits', 'max_digits', 'type', 'formatter']
-
-#     @staticmethod
-#     def computed_summary(summary_dict):
-#         base_dict = {'type':summary_dict['_type']}
-#         if summary_dict['_type'] == 'datetime':
-#             base_dict['formatter'] = 'default'
-#         if summary_dict['is_numeric']:
-#             base_dict.update({
-#                 'min_digits':int_digits(summary_dict['min']),
-#                 'max_digits':int_digits(summary_dict['max']),
-#                 })
-#         return base_dict
-
 PL_Analysis_Klasses = [VCAnalysis, BasicAnalysis, PlTyping,
-                       #PlColDisplayHints,
-                       HistogramAnalysis,
-                       ComputedDefaultSummaryStats]
+                       HistogramAnalysis, ComputedDefaultSummaryStats]
 

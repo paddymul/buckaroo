@@ -52,7 +52,6 @@ class ColAnalysis:
 
     @classmethod
     def cname(kls):
-        #print(dir(kls))
         return kls.__qualname__
 
     select_clauses:List[Any] = []
@@ -105,7 +104,6 @@ def order_analysis(a_objs):
             temp_provided = fp[0]
         first_mid_key = mid_key = ao.__name__ + "###" + temp_provided
         for k in ao.full_provides()[1:]:
-            #print("k", k)
             next_mid_key = ao.__name__ + "###" + k
             graph[mid_key] = set([next_mid_key])
             key_class_objs[mid_key] = ao
@@ -113,10 +111,8 @@ def order_analysis(a_objs):
         graph[mid_key] = set(ao.requires_summary)
         key_class_objs[mid_key] = ao
         for j in ao.full_provides():
-            #print("j", j)
             graph[j] = set([first_mid_key])
     ts = graphlib.TopologicalSorter(graph)
     seq =  tuple(ts.static_order())
-    #print("seq", seq)
     full_class_list = [key_class_objs.get(k, None) for k in seq]
     return clean_list(full_class_list)

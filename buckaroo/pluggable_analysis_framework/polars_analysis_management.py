@@ -17,22 +17,6 @@ class PolarsAnalysis(ColAnalysis):
     column_ops: Mapping[str, Tuple[List[pl.PolarsDataType], Callable[[pl.Series], Any]]] = {}
 
 
-    @classmethod
-    @property
-    def provides_summary(kls):
-        return list(kls.provides_defaults.keys())
-    
-# def normalize_polars_histogram(ph:pl.DataFrame, ser:pl.Series):
-#     edges = ph['break_point'].to_list()
-#     edges[0], edges[-1] = ser.min(), ser.max()
-#     #col_series.hist(bin_count=10)
-#     col_only_df = ph.select(pl.col("^.*_count$"))
-#     counts = col_only_df[col_only_df.columns[0]].to_list()
-#     #counts = ph['_count'].to_list()
-#     return counts[1:], edges
-
-
-
 
 def polars_produce_series_df(df:pl.DataFrame,
                       unordered_objs:List[PolarsAnalysis],
@@ -56,7 +40,6 @@ def polars_produce_series_df(df:pl.DataFrame,
     for col in df.columns:
         summary_dict[col] = {}
         for a_klass in unordered_objs:
-            print("col", col, "a_klass", a_klass, a_klass.provides_defaults)
             summary_dict[col].update(a_klass.provides_defaults)
     first_run_dict = split_to_dicts(result_df)
 
