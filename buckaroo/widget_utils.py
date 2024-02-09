@@ -46,13 +46,7 @@ def enable(sampled=True,
         from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 
         try:
-            return display(PolarsBuckarooWidget(polars_df,
-                                          sampled=sampled,
-                                          summaryStats=summaryStats,
-                                          reorderdColumns=reorderdColumns,
-                                          showCommands=showCommands,
-                                          auto_clean=auto_clean,
-                                          postProcessingF=postProcessingF))
+            return display(PolarsBuckarooWidget(polars_df))
         except:
             if debug:
                 traceback.print_exc()
