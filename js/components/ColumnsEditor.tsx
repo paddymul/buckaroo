@@ -33,19 +33,19 @@ export function ColumnsEditor({
   );
   return (
     <div className="columns-editor" style={{ width: '100%' }}>
-        <div>
-          <OperationViewer
-            operations={operations}
-            setOperations={setOperations}
-            activeColumn={activeColumn}
-            allColumns={allColumns}
-            commandConfig={commandConfig}
-          />
-          <DependentTabs
-            filledOperations={operations}
-            operationResult={operationResult}
-          />
-        </div>
+      <div>
+        <OperationViewer
+          operations={operations}
+          setOperations={setOperations}
+          activeColumn={activeColumn}
+          allColumns={allColumns}
+          commandConfig={commandConfig}
+        />
+        <DependentTabs
+          filledOperations={operations}
+          operationResult={operationResult}
+        />
+      </div>
     </div>
   );
 }
