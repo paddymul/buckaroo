@@ -3,10 +3,10 @@ import sys
 import warnings
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
-from .serialization_utils import pd_to_obj    
+from ..serialization_utils import pd_to_obj    
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
-from .customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
+from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
