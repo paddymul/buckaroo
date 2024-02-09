@@ -49,7 +49,8 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
 
 
 
-PROBABLY_STRUCTS = (~cs.numeric() & ~cs.string() & ~cs.temporal())
+PROBABLY_STRUCTS = (~cs.numeric() & ~cs.string() & ~cs.temporal() &
+                    ~cs.boolean())
 NOT_STRUCTS = (~PROBABLY_STRUCTS)
 
 class VCAnalysis(PolarsAnalysis):
