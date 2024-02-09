@@ -32,12 +32,6 @@ Overtime codebases will probably trend towards many classes with single facts, b
 
 
 class ComputedDefaultSummaryStats(PolarsAnalysis):
-    summary_stats_display = [
-        'dtype',
-        'length', 'nan_count', 'distinct_count', 'empty_count',
-        'empty_per', 'unique_per', 'is_numeric', 
-        'mode', 'min', 'max','mean']
-
     requires_summary = ['length', 'nan_count',
                         'unique_count', 'empty_count', 'distinct_count']
     provides_defaults = dict(
@@ -59,7 +53,12 @@ PROBABLY_STRUCTS = (~cs.numeric() & ~cs.string() & ~cs.temporal())
 NOT_STRUCTS = (~PROBABLY_STRUCTS)
 
 class VCAnalysis(PolarsAnalysis):
-    provides_defaults = dict(value_counts=pl.List(pl.Struct({'a': pl.Int64, 'count': pl.UInt32})))
+
+
+    provides_defaults = dict(
+        value_counts=pl.Series(
+            "",
+            [{'a': 'error', 'count': 1}], dtype=pl.Struct({'a': pl.String, 'count': pl.UInt32})))
 
     select_clauses = [
         NOT_STRUCTS.exclude("count").value_counts(sort=True)
