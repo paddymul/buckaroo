@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow_traditional import CustomizableDataflow, StylingAnalysis
@@ -26,8 +27,6 @@ DFVIEWER_CONFIG_DEFAULT = {
 def test_widget_instatiation():
     dfc = CustomizableDataflow(BASIC_DF)
     assert dfc.widget_args_tuple[1] is BASIC_DF
-
-
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
@@ -98,6 +97,21 @@ def test_custom_post_processing():
     p_dfc.post_processing_method = 'post1'
 
     assert p_dfc.processed_df is SENTINEL_DF
+
+class AlwaysFailAnalysis(ColAnalysis):
+    provides_defaults = {}
+
+    @staticmethod
+    def computed_summary(foo):
+        1/0
+def test_error_analysis():
+    class ErrorCustomDataflow(CustomizableDataflow):
+        analysis_klasses = [AlwaysFailAnalysis]
+
+    e_dfc = ErrorCustomDataflow(BASIC_DF)
+    #basically asserting that it doesn't throw an error
+    with pytest.raises(Exception):
+        e_dfc = ErrorCustomDataflow(BASIC_DF, debug=True)
 
 class AlwaysFailPostProcessingAnalysis(ColAnalysis):
     provides_defaults = {}

@@ -478,9 +478,6 @@ class CustomizableDataflow(DataFlow):
         return self.gencode_interpreter(operations)
     ### end code interpeter block
 
-    def _build_error_dataframe(self, e):
-        return pd.DataFrame({'err': [str(e)]})
-
     def _compute_processed_result(self, cleaned_df, post_processing_method):
         if post_processing_method == '':
             return [cleaned_df, {}]
@@ -492,8 +489,12 @@ class CustomizableDataflow(DataFlow):
             except Exception as e:
                 return (self._build_error_dataframe(e), {})
 
+    def _build_error_dataframe(self, e):
+        return pd.DataFrame({'err': [str(e)]})
+
 
     ### start summary stats block
+
     def _get_summary_sd(self, processed_df):
         stats = self.DFStatsClass(
             processed_df,
@@ -501,8 +502,10 @@ class CustomizableDataflow(DataFlow):
             self.df_name, debug=self.debug)
         sdf = stats.sdf
         if stats.errs:
-            return {}
-        
+            if self.debug:
+                raise Exception("Error executing analysis")
+            else:
+                return {}
         else:
             return sdf
 
