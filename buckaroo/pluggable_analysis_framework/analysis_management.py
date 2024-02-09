@@ -32,15 +32,16 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
         #to proeprly benchmark
         sampled_ser = ser
         for a_kls in ordered_objs:
+            col_stat_dict = list(a_kls.provides_defaults.keys())
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
                         warnings.filterwarnings('ignore')
                         
-                    col_stat_dict = a_kls.series_summary(sampled_ser, ser)
+                    col_stat_dict.upedate(a_kls.series_summary(sampled_ser, ser))
                     warnings.filterwarnings('default')
                 else:
-                    col_stat_dict = a_kls.series_summary(sampled_ser, ser)
+                    col_stat_dict.update(a_kls.series_summary(sampled_ser, ser))
 
                 series_stats[ser_name].update(col_stat_dict)
             except Exception as e:
@@ -132,18 +133,10 @@ class AnalysisPipeline(object):
     def process_summary_facts_set(self):
         all_provided = []
         for a_obj in self.ordered_a_objs:
-            all_provided.extend(a_obj.provides_summary)
-            if a_obj.summary_stats_display:
-                self.summary_stats_display = a_obj.summary_stats_display
+            all_provided.extend(list(a_obj.provides_defaults.keys()))
 
         self.provided_summary_facts_set = set(all_provided)
 
-        #all is a special value that will dipslay every row
-        if self.summary_stats_display and not self.summary_stats_display == "all":
-            #verify that we have a way of computing all of the facts we are displaying
-            if not self.provided_summary_facts_set.issuperset(set(self.summary_stats_display)):
-                missing = set(self.summary_stats_display) - set(self.provided_summary_facts_set)
-                raise NonExistentSummaryRowException(missing)
 
     def verify_analysis_objects(self, analysis_objects):
         self.ordered_a_objs = order_analysis(analysis_objects)

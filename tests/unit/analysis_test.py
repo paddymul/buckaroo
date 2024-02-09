@@ -1,7 +1,7 @@
 from datetime import datetime as dtdt
 import numpy as np
 import pandas as pd
-from buckaroo.customizations.analysis import DefaultSummaryStats, ColDisplayHints
+from buckaroo.customizations.analysis import DefaultSummaryStats
 from buckaroo.customizations.histogram import Histogram
 from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF
 
@@ -55,15 +55,6 @@ def test_unhashable3():
 def test_default_summary_stats():
     for ser in all_sers:
         print(DefaultSummaryStats.series_summary(ser, ser))
-
-def xtest_datetime_hints():
-    result = ColDisplayHints.summary(
-        datetime_ser, {'nan_per':0}, datetime_ser)
-    assert     {'type': 'datetime',
-                'formatter': 'default',
-                'is_integer': False,
-                'is_numeric': False,
-                } == result    
 
 def test_datetime_histogram():
     series_result = Histogram.series_summary(

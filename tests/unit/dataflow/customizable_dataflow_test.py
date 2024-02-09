@@ -34,6 +34,7 @@ def test_widget_instatiation():
 def test_custom_dataflow():
 
     class IntStyling(StylingAnalysis):
+        provides_defaults = {}
         @staticmethod
         def style_column(col, sd):
             return {'col_name':col, 'displayer_args': {'displayer': 'int'}}
@@ -78,7 +79,7 @@ SENTINEL_DF = pd.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', '
 
 
 class PostProcessingAnalysis(ColAnalysis):
-
+    provides_defaults = {}
     post_processing_method = "post1"
 
     @classmethod
@@ -99,7 +100,7 @@ def test_custom_post_processing():
     assert p_dfc.processed_df is SENTINEL_DF
 
 class AlwaysFailPostProcessingAnalysis(ColAnalysis):
-
+    provides_defaults = {}
     post_processing_method = "always_fail"
 
     @classmethod
@@ -147,6 +148,7 @@ def test_pinned_rows_override_widget():
     
 
 class TransposeProcessing(ColAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         return [df.T, {}]
@@ -178,4 +180,5 @@ def test_sample():
     big_df = pd.DataFrame({'a': np.arange(105_000)})
     bw = CustomizableDataflow(big_df)
     assert len(bw.processed_df) == 100_000
+    print(list(bw.df_data_dict.keys()))
     assert len(bw.df_data_dict['main']) == 10_000

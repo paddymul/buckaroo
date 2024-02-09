@@ -86,7 +86,9 @@ def numeric_histogram(histogram_args, min_, max_, nan_per):
 
 
 class Histogram(ColAnalysis):
-
+    provides_defaults = dict(
+        histogram= [[],[]], histogram_args=[], histogram_bins=[])
+                    
     @staticmethod
     def series_summary(sampled_ser, ser):
         if not pd.api.types.is_numeric_dtype(ser):
@@ -117,7 +119,7 @@ class Histogram(ColAnalysis):
 
     requires_summary = ['value_counts', 'nan_per', 'is_numeric', 'length',
                         'min', 'max',]
-    provides_summary = ['histogram', 'histogram_args', 'histogram_bins']
+
 
     @staticmethod
     def computed_summary(summary_dict):

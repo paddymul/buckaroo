@@ -300,12 +300,14 @@ class UnknownStyleMethod(Exception):
 
 
 class StylingAnalysis(ColAnalysis):
+    provides_defaults = {}
     pinned_rows = []
 
+    #the type should be
+    #def style_column(col:str, column_metadata: SingleColumnMetadata) -> ColumnConfig:
     @classmethod
     def style_column(kls, col, column_metadata):
         return {'col_name':str(col), 'displayer_args': {'displayer': 'obj'}}
-
 
     #what is the key for this in the df_display_args_dictionary
     df_display_name = "main"

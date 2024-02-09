@@ -15,7 +15,7 @@ from ._frontend import module_name, module_version
 from .customizations.all_transforms import DefaultCommandKlsList
 
 
-from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats, ColDisplayHints)
+from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from .customizations.histogram import (Histogram)
 from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyling)
 from .pluggable_analysis_framework.analysis_management import DfStats
@@ -82,8 +82,8 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
                         ComputedDefaultSummaryStats,
                         StylingAnalysis,
                         DefaultSummaryStats,
-                        DefaultSummaryStatsStyling, DefaultMainStyling,
-                        ColDisplayHints]
+                        DefaultSummaryStatsStyling, DefaultMainStyling]
+
 
     DFStatsClass = DfStats
 

@@ -1,6 +1,7 @@
 import polars as pl
 import numpy as np
 from polars import functions as F
+import polars.selectors as cs
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
     ComputedDefaultSummaryStats)
@@ -25,12 +26,28 @@ empty_df = pl.DataFrame({})
 
 
 class SelectOnlyAnalysis(PolarsAnalysis):
-
+    provides_defaults = {}
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().quantile(.99).name.map(json_postfix('quin99'))]
 
+
+def test_non_full_analysis():
+    class MixedAnalysis(PolarsAnalysis):
+        provides_defaults = dict(
+            empty_count=0, sum=0)
+
+        select_clauses = [
+            F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
+            cs.numeric().sum().name.map(json_postfix('sum'))]
+
+    df = pl.DataFrame({'a': [10, 20], 'b': ['', 'bar']})
+        
+    pdf = PlDfStats(df, [MixedAnalysis])
+    assert pdf.sdf == {'a': dict(empty_count=0, sum=30),
+                       'b': dict(empty_count=1, sum=0)}
+    
 
 def test_produce_series_df():
     """just make sure this doesn't fail"""
@@ -44,6 +61,7 @@ def test_produce_series_df():
     assert dsdf == expected
 
 class MaxAnalysis(PolarsAnalysis):
+    provides_defaults = {}
     select_clauses = [F.all().max().name.map(json_postfix('max'))]
 
 def test_produce_series_combine_df():
@@ -58,6 +76,8 @@ def test_produce_series_combine_df():
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
 
+
+
 def test_produce_series_column_ops():
     mixed_df = pl.DataFrame(
         {'string_col': ["foo", "bar", "baz"] + [""]*2,
@@ -65,7 +85,7 @@ def test_produce_series_column_ops():
          'float_col':[1.1, 1.1, 3, 3, 5]})
 
     summary_df, _unused = polars_produce_series_df(mixed_df, [HistogramAnalysis])
-    assert summary_df["string_col"] == {}
+    assert summary_df["string_col"] == {'categorical_histogram': [], 'histogram': [], 'histogram_bins': []}
 
     assert summary_df["int_col"]["histogram_args"]["meat_histogram"] == (
         [2,  0,  0,  0,  0,  0,  0,  0,  0,  1],
@@ -157,6 +177,7 @@ def test_numeric_histograms():
 def test_pl_typing():
     
     class AdaptingStylingAnalysis(PolarsAnalysis):
+        provides_defaults = {}
         requires_summary = ["histogram", "is_numeric", "dtype", "is_integer"]
 
     PlDfStats(df,

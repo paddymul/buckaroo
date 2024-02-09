@@ -41,7 +41,8 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
 
     requires_summary = ['length', 'nan_count',
                         'unique_count', 'empty_count', 'distinct_count']
-    provides_summary = ['distinct_per', 'empty_per', 'unique_per', 'nan_per']
+    provides_defaults = dict(
+        distinct_per=0, empty_per=0, unique_per=0, nan_per=0)
                         
 
     @staticmethod
@@ -59,7 +60,8 @@ PROBABLY_STRUCTS = (~cs.numeric() & ~cs.string() & ~cs.temporal())
 NOT_STRUCTS = (~PROBABLY_STRUCTS)
 
 class VCAnalysis(PolarsAnalysis):
-    provides_summary = ['value_counts']
+    provides_defaults = dict(value_counts=pl.List(pl.Struct({'a': pl.Int64, 'count': pl.UInt32})))
+
     select_clauses = [
         NOT_STRUCTS.exclude("count").value_counts(sort=True)
         .implode().name.map(json_postfix('value_counts')),
@@ -73,9 +75,10 @@ class VCAnalysis(PolarsAnalysis):
 DUMMY_VALUE_COUNTS = pl.Series(
     [{'a': 3, 'count': 1}, {'a': 4, 'count': 1}, {'a': 5, 'count': 1}])
 class BasicAnalysis(PolarsAnalysis):
-    provides_summary = ['length', 'nan_count', 'min', 'max', 'min',
-                        'mode', 'mean','unique_count', 'empty_count',
-                        'distinct_count']
+
+
+    provides_defaults = dict(length=0, nan_count=0, min=0, max=0, mode=0,
+                             mean=0, unique_count=0, empty_count=0, distinct_count=0)
 
     requires_summary = ['value_counts']
     select_clauses = [
@@ -103,8 +106,7 @@ class BasicAnalysis(PolarsAnalysis):
 
 class PlTyping(PolarsAnalysis):
     column_ops = {'dtype':  ("all", lambda col_series: col_series.dtype)}
-    provides_summary = ['dtype', '_type', 'is_numeric', 'is_integer']
-
+    provides_defaults = dict(dtype='unknown', _type='unknown', is_numeric=False, is_integer=False)
 
     @staticmethod
     def computed_summary(summary_dict):
@@ -210,6 +212,7 @@ class HistogramAnalysis(PolarsAnalysis):
 
     requires_summary = ['min', 'max', 'value_counts', 'length', 'unique_count', 'is_numeric', 'nan_per']
     provides_summary = ['categorical_histogram', 'histogram', 'histogram_bins']
+    provides_defaults = dict(categorical_histogram=[], histogram=[], histogram_bins=[])
 
     @staticmethod
     def computed_summary(summary_dict):
@@ -234,24 +237,25 @@ class HistogramAnalysis(PolarsAnalysis):
                 'histogram_bins': ['faked']
                 }
 
-class PlColDisplayHints(PolarsAnalysis):
-    requires_summary = ['min', 'max', '_type', 'is_numeric']
-    provides_summary = [
-        'min_digits', 'max_digits', 'type', 'formatter']
+# class PlColDisplayHints(PolarsAnalysis):
+#     requires_summary = ['min', 'max', '_type', 'is_numeric']
+#     provides_summary = [
+#         'min_digits', 'max_digits', 'type', 'formatter']
 
-    @staticmethod
-    def computed_summary(summary_dict):
-        base_dict = {'type':summary_dict['_type']}
-        if summary_dict['_type'] == 'datetime':
-            base_dict['formatter'] = 'default'
-        if summary_dict['is_numeric']:
-            base_dict.update({
-                'min_digits':int_digits(summary_dict['min']),
-                'max_digits':int_digits(summary_dict['max']),
-                })
-        return base_dict
+#     @staticmethod
+#     def computed_summary(summary_dict):
+#         base_dict = {'type':summary_dict['_type']}
+#         if summary_dict['_type'] == 'datetime':
+#             base_dict['formatter'] = 'default'
+#         if summary_dict['is_numeric']:
+#             base_dict.update({
+#                 'min_digits':int_digits(summary_dict['min']),
+#                 'max_digits':int_digits(summary_dict['max']),
+#                 })
+#         return base_dict
 
-PL_Analysis_Klasses = [VCAnalysis, BasicAnalysis, PlTyping, PlColDisplayHints,
+PL_Analysis_Klasses = [VCAnalysis, BasicAnalysis, PlTyping,
+                       #PlColDisplayHints,
                        HistogramAnalysis,
                        ComputedDefaultSummaryStats]
 

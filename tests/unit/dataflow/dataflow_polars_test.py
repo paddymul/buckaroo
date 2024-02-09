@@ -21,6 +21,7 @@ DFVIEWER_CONFIG_DEFAULT = {
 
 
 class BasicStyling(StylingAnalysis):
+    provides_defaults = {}
     df_display_name = "basic"
     
 
@@ -75,7 +76,7 @@ SENTINEL_DF = pl.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', '
 
 
 class PostProcessingAnalysis(ColAnalysis):
-
+    provides_defaults = {}
     post_processing_method = "post1"
 
     @classmethod
@@ -106,6 +107,7 @@ def test_custom_post_processing():
 
 
 class TransposeProcessing(ColAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         return [df.transpose(), {}]
@@ -146,6 +148,7 @@ def test_transpose_error():
 
 
 class AlwaysErrorPostProcessing(ColAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         1/0
@@ -176,6 +179,7 @@ typed_df = pl.DataFrame(
 
 EXPECTED_OVERRIDE = {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'Volume_colors'}}
 class ColumnConfigOverride(ColAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         return [df, {

@@ -2,7 +2,7 @@ import graphlib
 from collections import OrderedDict
 from typing import List, Union, Any, Mapping, Tuple, Callable
 
-class ColAnalysis(object):
+class ColAnalysis:
     """
     Col Analysis runs on a single column
 
@@ -14,11 +14,18 @@ class ColAnalysis(object):
 
     provides_series_stats:List[str] = [] # what does this provide at a series level
 
+    @classmethod
+    @property
+    def provides_summary(kls):
+        print("provides_summary")
+        return list(kls.provides_defaults.keys())
+
 
     @classmethod
-    def full_provides(cls):
-        a = cls.provides_series_stats.copy()
-        a.extend(cls.provides_summary)
+    def full_provides(kls):
+        a = kls.provides_series_stats.copy()
+        #I can't figure out why the property won't work here
+        a.extend(list(kls.provides_defaults.keys()))
         return a
 
     summary_stats_display:Union[List[str], None] = None
