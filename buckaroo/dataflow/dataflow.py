@@ -4,23 +4,23 @@ import warnings
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
 from ..serialization_utils import pd_to_obj    
+from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
-from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
-SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
-SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
-SENTINEL_DF_3 = pd.DataFrame({'pp'   :[99, 33], 'ee':   [     6,     9]})
-SENTINEL_DF_4 = pd.DataFrame({'vvv'  :[12, 49], 'oo':   [ 'ccc', 'www']})
+from .autocleaning import SentinelAutocleaning
 
+def merge_sds(*sds):
+    """merge sds with later args taking precedence
 
+    sub-merging of "overide_config"??
+    """
+    base_sd = {}
+    for sd in sds:
+        for column in sd.keys():
+            base_sd[column] = merge_column(base_sd.get(column, {}), sd[column])
+    return base_sd
 
-
-def merge_ops(existing_ops, cleaning_ops):
-    """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
-    a = existing_ops.copy()
-    a.extend(cleaning_ops)
-    return a
 
 def merge_column(base, new):
     """
@@ -36,17 +36,6 @@ def merge_column(base, new):
     if len(base_override) > 0:
         ret['column_config_override'] = base_override
     return ret
-
-def merge_sds(*sds):
-    """merge sds with later args taking precedence
-
-    sub-merging of "overide_config"??
-    """
-    base_sd = {}
-    for sd in sds:
-        for column in sd.keys():
-            base_sd[column] = merge_column(base_sd.get(column, {}), sd[column])
-    return base_sd
 
 SENTINEL_COLUMN_CONFIG_1 = "ASDF"
 SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
@@ -118,11 +107,13 @@ class DataFlow(HasTraits):
         super().__init__()
         self.summary_sd = {}
         self.existing_operations = []
-
+        self.ac_obj = self.autocleaning_klass()
         try:
             self.raw_df = raw_df
         except Exception:
             six.reraise(self.exception[0], self.exception[1], self.exception[2])
+
+    autocleaning_klass = SentinelAutocleaning
 
     raw_df = Any('')
     sample_method = Unicode('default')
@@ -168,40 +159,15 @@ class DataFlow(HasTraits):
     def _sampled_df(self, change):
         self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
 
-    def _run_df_interpreter(self, df, ops):
-        if len(ops) == 1:
-            return SENTINEL_DF_1
-        if len(ops) == 2:
-            return SENTINEL_DF_2
-        return df
-
-    def _run_code_generator(self, ops):
-        if len(ops) == 1:
-            return "codegen 1"
-        if len(ops) == 2:
-            return "codegen 2"
-        return ""
-
-    def _run_cleaning(self, df, cleaning_method):
-        cleaning_ops = []
-        if cleaning_method == "one op":
-            cleaning_ops =  [""]
-        if cleaning_method == "two op":
-            cleaning_ops = ["", ""]
-        cleaning_sd = {}
-        return cleaning_ops, cleaning_sd
-
     @observe('sampled_df', 'cleaning_method', 'existing_operations')
     @exception_protect('operation_result-protector')
     def _operation_result(self, change):
-        if self.sampled_df is None:
+        result = self.ac_obj.handle_ops_and_clean(
+            self.sampled_df, self.cleaning_method, self.existing_operations)
+        if result is None:
             return
-        cleaning_operations, cleaning_sd = self._run_cleaning(self.sampled_df, self.cleaning_method)
-        merged_operations = merge_ops(self.existing_operations, cleaning_operations)
-        cleaned_df = self._run_df_interpreter(self.sampled_df, merged_operations)
-        generated_code = self._run_code_generator(merged_operations)
-        self.cleaned = [cleaned_df, cleaning_sd, generated_code, merged_operations]
-
+        else:
+            self.cleaned = result
     @property
     def cleaned_df(self):
         if self.cleaned is not None:
@@ -335,13 +301,6 @@ class StylingAnalysis(ColAnalysis):
             'column_config': ret_col_config}
 
 
-def filter_analysis(klasses, attr):
-    ret_klses = {}
-    for k in klasses:
-        attr_val = getattr(k, attr, None)
-        if attr_val is not None:
-            ret_klses[attr_val] = k
-    return ret_klses
             
 class PostProcessingException(Exception):
     pass
@@ -379,7 +338,6 @@ class CustomizableDataflow(DataFlow):
     This allows targetd extension and customization of DataFlow
     """
     analysis_klasses = [StylingAnalysis]
-    command_klasses = DefaultCommandKlsList
     commandConfig = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
     sampling_klass = Sampling
@@ -400,7 +358,6 @@ class CustomizableDataflow(DataFlow):
         self.setup_options_from_analysis()
         super().__init__(self.sampling_klass.pre_stats_sample(df))
 
-        self._setup_from_command_kls_list()
         self.populate_df_meta()
         #self.raw_df = df
         warnings.filterwarnings('default')
@@ -451,31 +408,14 @@ class CustomizableDataflow(DataFlow):
 
 
     ### start code interpreter block
-    def _setup_from_command_kls_list(self):
-        #used to initially setup the interpreter, and when a command
-        #is added interactively
-        c_klasses = self.command_klasses
-        c_defaults, c_patterns, df_interpreter, gencode_interpreter = configure_buckaroo(c_klasses)
-        self.df_interpreter, self.gencode_interpreter = df_interpreter, gencode_interpreter
-        self.commandConfig = dict(argspecs=c_patterns, defaultArgs=c_defaults)
-
     def add_command(self, incomingCommandKls):
-        without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
-        without_incoming.append(incomingCommandKls)
-        self.command_klasses = without_incoming
-        self.setup_from_command_kls_list()
+        return self.ac_obj.add_command(incomingCommandKls)
 
     def _run_df_interpreter(self, df, operations):
-        full_ops = [{'symbol': 'begin'}]
-        full_ops.extend(operations)
-        if len(full_ops) == 1:
-            return df
-        return self.buckaroo_transform(full_ops , df)
+        self.ac_obj._run_df_interpreter(df, operations)
 
     def run_code_generator(self, operations):
-        if len(operations) == 0:
-            return 'no operations'
-        return self.gencode_interpreter(operations)
+        self.ac_obj.run_code_generator(operations)
     ### end code interpeter block
 
     def _compute_processed_result(self, cleaned_df, post_processing_method):
