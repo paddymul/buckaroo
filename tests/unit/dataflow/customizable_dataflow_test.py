@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
-from buckaroo.dataflow_traditional import CustomizableDataflow, StylingAnalysis
+from buckaroo.dataflow import CustomizableDataflow, StylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget
          
 
@@ -108,10 +108,10 @@ def test_error_analysis():
     class ErrorCustomDataflow(CustomizableDataflow):
         analysis_klasses = [AlwaysFailAnalysis]
 
-    e_dfc = ErrorCustomDataflow(BASIC_DF)
+    ErrorCustomDataflow(BASIC_DF)
     #basically asserting that it doesn't throw an error
     with pytest.raises(Exception):
-        e_dfc = ErrorCustomDataflow(BASIC_DF, debug=True)
+        ErrorCustomDataflow(BASIC_DF, debug=True)
 
 class AlwaysFailPostProcessingAnalysis(ColAnalysis):
     provides_defaults = {}

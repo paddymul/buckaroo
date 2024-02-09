@@ -1,7 +1,7 @@
 import sys
 import pandas as pd
-from buckaroo.dataflow_traditional import DataFlow
-from buckaroo import dataflow_traditional as dft
+from buckaroo.dataflow import DataFlow
+from buckaroo import dataflow as dft
 
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 

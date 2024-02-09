@@ -22,7 +22,7 @@ from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
 from .serialization_utils import EMPTY_DF_WHOLE
-from .dataflow_traditional import CustomizableDataflow, StylingAnalysis, exception_protect
+from .dataflow import CustomizableDataflow, StylingAnalysis, exception_protect
 
 
 class BuckarooWidget(CustomizableDataflow, DOMWidget):

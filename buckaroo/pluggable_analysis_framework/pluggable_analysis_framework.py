@@ -23,7 +23,7 @@ class ColAnalysis:
 
     @classmethod
     def full_provides(kls):
-        if(type(kls.provides_defaults) is not dict):
+        if not isinstance(kls.provides_defaults, dict):
             raise Exception("no provides Defaults for %r" %kls)
         a = kls.provides_series_stats.copy()
         #I can't figure out why the property won't work here
