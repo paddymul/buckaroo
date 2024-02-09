@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
-from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF, NonExistentSummaryRowException
+from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     order_analysis, check_solvable)
 
@@ -32,13 +32,13 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
         #to proeprly benchmark
         sampled_ser = ser
         for a_kls in ordered_objs:
-            col_stat_dict = list(a_kls.provides_defaults.keys())
+            col_stat_dict = a_kls.provides_defaults.copy()
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
                         warnings.filterwarnings('ignore')
                         
-                    col_stat_dict.upedate(a_kls.series_summary(sampled_ser, ser))
+                    col_stat_dict.update(a_kls.series_summary(sampled_ser, ser))
                     warnings.filterwarnings('default')
                 else:
                     col_stat_dict.update(a_kls.series_summary(sampled_ser, ser))

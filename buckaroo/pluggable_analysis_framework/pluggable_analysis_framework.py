@@ -10,19 +10,21 @@ class ColAnalysis:
     """
     requires_raw = False
     requires_summary:List[str] = [] # What summary stats does this analysis provide
-    provides_summary:List[str] = [] # mean/max/histogram
 
     provides_series_stats:List[str] = [] # what does this provide at a series level
+    provides_defaults:Mapping[str, any] = {}
+
 
     @classmethod
     @property
     def provides_summary(kls):
-        print("provides_summary")
         return list(kls.provides_defaults.keys())
 
 
     @classmethod
     def full_provides(kls):
+        if(type(kls.provides_defaults) is not dict):
+            raise Exception("no provides Defaults for %r" %kls)
         a = kls.provides_series_stats.copy()
         #I can't figure out why the property won't work here
         a.extend(list(kls.provides_defaults.keys()))

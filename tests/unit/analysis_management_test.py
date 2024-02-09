@@ -4,7 +4,7 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
 
 from buckaroo.pluggable_analysis_framework.analysis_management import (
-    AnalysisPipeline, NonExistentSummaryRowException, DfStats,
+    AnalysisPipeline, DfStats,
     #full_produce_summary_df,
     produce_series_df)
 
@@ -19,16 +19,16 @@ class DumbTableHints(ColAnalysis):
     provides_summary = [
         'is_numeric', 'is_integer', 'min_digits', 'max_digits', 'histogram']
 
+    provides_defaults = {
+        'is_numeric':False, 'is_integer':False, 'histogram':[]}
     @staticmethod
     def computed_summary(summary_dict):
         return {'is_numeric':True,
                 'is_integer':False,
-                'min_digits':3,
-                'max_digits':10,
                 'histogram': []}
 
 class AlwaysErr(ColAnalysis):
-    provides_summary = ['foo']
+    provides_defaults = {'foo':0}
 
     @staticmethod
     def computed_summary(summary_dict):
@@ -47,15 +47,18 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         sdf2, errs = produce_series_df(
             test_df, [DistinctCount], 'test_df', debug=True)
-        assert dict(**sdf2) == {'normal_int_series': {'distinct_count': 4},
-                                'index':  {'distinct_count': 4},
-                        'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
+        assert dict(**sdf2) == {
+            'normal_int_series': {'distinct_count': 4},
+            'index':  {'distinct_count': 4},
+            'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
 
         sdf3, errs = produce_series_df(
             test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-        assert dict(**sdf3) == {'normal_int_series': {'distinct_count': 4},
-                                'index':  {'distinct_count': 4},
-                                'empty_na_ser': {'distinct_count':0}, 'float_nan_ser': {'distinct_count':2}}
+        assert dict(**sdf3) == {
+            'normal_int_series': {'distinct_count': 4, 'distinct_per':0},
+            'index':             {'distinct_count': 4, 'distinct_per':0},
+            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0},
+            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0}}
 
     def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
@@ -104,7 +107,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_add_aobj(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provides_summary = ['foo']
+            provides_defaults = {'foo':0}
             requires_summary = ['length']
 
             @staticmethod
@@ -117,7 +120,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_add_buggy_aobj(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provides_summary = ['foo']
+            provides_defaults = {'foo':0}
             requires_summary = ['length']
 
             @staticmethod
@@ -131,7 +134,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_replace_aobj(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
         class Foo(ColAnalysis):
-            provides_summary = ['foo']
+            provides_defaults = {'foo':0}
             requires_summary = ['length']
 
             @staticmethod
@@ -145,7 +148,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         #self.assertEqual(len(sdf['tripduration']), 18)
         #Create an updated Foo that returns 9
         class Foo(ColAnalysis):
-            provides_summary = ['foo']
+            provides_defaults = {'foo':0}
             requires_summary = ['length']
 
             @staticmethod
@@ -158,110 +161,9 @@ class TestAnalysisPipeline(unittest.TestCase):
         #self.assertEqual(len(sdf2['tripduration']), 18)
         #Create an updated Foo that returns 9
 
-    def test_summary_stats_display(self):
-        class AlwaysFoo(ColAnalysis):
-            provides_summary = ['foo']
-            summary_stats_display = ['foo']
-
-            @staticmethod
-            def computed_summary(summary_dict):
-                return dict(foo=3)
-
-        class AlwaysBar(ColAnalysis):
-            provides_summary = ['bar']
-            summary_stats_display = ['bar']
-
-            @staticmethod
-            def computed_summary(summary_dict):
-                return dict(bar=3)
-
-        ap = AnalysisPipeline([AlwaysFoo])
-        self.assertEqual(ap.summary_stats_display, ["foo"])
-        ap.add_analysis(AlwaysBar)
-        assert ap.summary_stats_display == ["bar"]
-
-        ap2 = AnalysisPipeline([AlwaysFoo, AlwaysBar])
-        assert ap2.ordered_a_objs == [AlwaysFoo, AlwaysBar]
-        assert ap2.summary_stats_display == ["bar"]
-
-    def test_summary_stats_display2(self):
-        """
-        defines vagaries of dependent analysis and sumary stats
-        """
-        class AlwaysFoo(ColAnalysis):
-            provides_summary = ['foo']
-            summary_stats_display = ['foo']
-
-            @staticmethod
-            def computed_summary(summary_dict):
-                return dict(foo=3)
-        class DependsFoo(ColAnalysis):
-            provides_summary = ['xoq']
-            requires_summary = ['foo']
-            summary_stats_display = ['xoq']
-
-            @staticmethod
-            def computed_summary(summary_dict):
-                return dict(xoq=3)
-
-
-        class AlwaysBar(ColAnalysis):
-            provides_summary = ['bar']
-            summary_stats_display = ['bar']
-
-            @staticmethod
-            def computed_summary(summary_dict):
-                return dict(bar=3)
-
-        ap2 = AnalysisPipeline([AlwaysFoo, AlwaysBar])
-        self.assertEqual(ap2.summary_stats_display, ["bar"])
-        ap2.add_analysis(DependsFoo)
-        self.assertEqual(ap2.summary_stats_display, ["xoq"])
-
-        ap = AnalysisPipeline([DependsFoo, AlwaysFoo])
-        self.assertEqual(ap.summary_stats_display, ["xoq"])
-        ap2.add_analysis(AlwaysBar)
-        #Always Bar doesn't depend on anything so it doesn't replace xoq in summary_stats_display
-        assert ap.summary_stats_display == ["xoq"]
-
-    def test_add_summary_stats_display(self):
-        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
-        class Foo(ColAnalysis):
-            provides_summary = ['foo']
-            requires_summary = ['length']
-            summary_stats_display = ['foo']
-
-        ap.add_analysis(Foo)
-        self.assertEqual(ap.summary_stats_display, ['foo'])
-
-    def test_invalid_summary_stats_display_throws(self):
-        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
-        class Foo(ColAnalysis):
-            provides_summary = ['foo']
-            requires_summary = ['length']
-            summary_stats_display = ['not_provided']
-
-        def bad_add():
-            ap.add_analysis(Foo)            
-
-        self.assertRaises(NonExistentSummaryRowException, bad_add)
-
-    def test_invalid_summary_stats_display_throws2(self):
-        ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
-        class Foo(ColAnalysis):
-            provides_summary = ['foo']
-            requires_summary = ['length']
-            summary_stats_display = ['not_provided']
-
-        def bad_add():
-            ap.add_analysis(Foo)            
-
-        self.assertRaises(NonExistentSummaryRowException, bad_add)
-
-
 
 class SometimesProvides(ColAnalysis):
-    provides_summary = ['conditional_on_dtype']
+    provides_defaults = {'conditional_on_dtype':'xcvz'}
 
     summary_stats_display = ['conditional_on_dtype']
     

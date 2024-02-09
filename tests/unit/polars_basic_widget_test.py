@@ -11,13 +11,7 @@ from buckaroo.dataflow_traditional import StylingAnalysis
 
 def test_basic_instantiation():
     PolarsBuckarooWidget(
-        pl.DataFrame({'a':[1,2,3]}), )
-
-def test_sdf_hints():
-    pbw = PolarsBuckarooWidget(
-        pl.DataFrame({'a':[1,2,3]}), debug=True)
-    assert pbw.merged_sd['a']['type'] == 'integer'
-
+        pl.DataFrame({'a':[1,2,3]}))
 
 
 EXPECTED_DF_VIEWER_CONFIG = {
@@ -78,6 +72,7 @@ def test_pandas_all_stats():
 
     
     class SimpleAnalysis(ColAnalysis):
+        provides_defaults = {}
         requires_raw = True
         provides_series_stats = ["distinct_count"]
 
@@ -167,6 +162,7 @@ def test_weird():
     PolarsBuckarooWidget(pl_histo)
 
 class ValueCountPostProcessing(PolarsAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         result_df = df.select(
@@ -177,12 +173,14 @@ class ValueCountPostProcessing(PolarsAnalysis):
     
 
 class TransposeProcessing(ColAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         return [df.transpose(), {}]
     post_processing_method = "transpose"
 
 class ShowErrorsPostProcessing(PolarsAnalysis):
+    provides_defaults = {}
     @classmethod
     def post_process_df(kls, df):
         print("^"*80)

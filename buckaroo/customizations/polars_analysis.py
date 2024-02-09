@@ -3,7 +3,6 @@ import numpy as np
 import polars.selectors as cs
 from polars import functions as F
 from polars import datatypes as pdt
-from buckaroo.customizations.analysis_utils import int_digits
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.pluggable_analysis_framework.polars_utils import NUMERIC_POLARS_DTYPES

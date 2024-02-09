@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from buckaroo.customizations.analysis_utils import int_digits
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 import warnings
 
@@ -108,11 +107,6 @@ class DefaultSummaryStats(ColAnalysis):
 
 class ComputedDefaultSummaryStats(ColAnalysis):
 
-    summary_stats_display = [
-        'dtype',
-        'length', 'nan_count', 'distinct_count', 'empty_count',
-        'empty_per', 'unique_per', 'is_numeric', 'is_integer',
-        'is_datetime', 'mode', 'min', 'max','mean']
 
     requires_summary = ['length', 'nan_count',
                         'value_counts']

@@ -105,6 +105,7 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
     def add_processing(self, df_processing_func):
         proc_func_name = df_processing_func.__name__
         class DecoratedProcessing(ColAnalysis):
+            provides_defaults = {}
             @classmethod
             def post_process_df(kls, df):
                 new_df = df_processing_func(df)
