@@ -2,6 +2,7 @@ import polars as pl
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PLCleaningStats, BasicAnalysis)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats, PolarsAnalysis
+from buckaroo.jlisp.lisp_utils import split_operations, lists_match
 
 dirty_df = pl.DataFrame({
     'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
@@ -24,7 +25,7 @@ class CleaningGenOps(PolarsAnalysis):
     @classmethod
     def computed_summary(kls, column_metadata):
         if column_metadata['int_parse'] > kls.int_parse_threshhold:
-            return {'cleaning_ops': ['clean_int']}
+            return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}]}
         else:
             return {'cleaning_ops': []}
 
@@ -36,11 +37,13 @@ def test_cleaning_stats():
     assert dfs.sdf['b']['int_parse'] == 0.4
     assert dfs.sdf['b']['int_parse_fail'] == 0.6
 
+
+SAFE_INT_TOKEN = [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}]
 def test_ops_gen():
 
     dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.4, int_parse_fail=.6),
                                CleaningGenOps], debug=True)
-    assert dfs.sdf['b']['cleaning_ops'] == ['clean_int']
+    assert dfs.sdf['b']['cleaning_ops'] == SAFE_INT_TOKEN
     dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.2, int_parse_fail=.8),
                                CleaningGenOps])
     assert dfs.sdf['b']['cleaning_ops'] == []
@@ -58,11 +61,14 @@ def format_ops(column_meta):
 
 def test_format_ops():
 
-    column_meta = {'a': {'cleaning_ops':['clean_int']},
-                   'b': {'cleaning_ops':['replace_dirty', '\n', None]}}
+    column_meta = {
+        'a': {'cleaning_ops':SAFE_INT_TOKEN },
+        'b': {'cleaning_ops': [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, '\n', None]}}
 
     expected_ops = [
-        ['clean_int', 'a'],
-        ['replace_dirty', 'b', '\n', None]]
+        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, 'a'],
+        [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, 'b', '\n', None]]
+
+    
     assert format_ops(column_meta) == expected_ops
 
