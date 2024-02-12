@@ -40,11 +40,29 @@ def test_ops_gen():
 
     dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.4, int_parse_fail=.6),
                                CleaningGenOps], debug=True)
-    
     assert dfs.sdf['b']['cleaning_ops'] == ['clean_int']
-
     dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.2, int_parse_fail=.8),
                                CleaningGenOps])
     assert dfs.sdf['b']['cleaning_ops'] == []
 
+
+def format_ops(column_meta):
+    ret_ops = []
+    for k,v in column_meta.items():
+        ops = v['cleaning_ops']
+        if len(ops) > 0:
+            temp_ops = ops.copy()
+            temp_ops.insert(1, k)
+            ret_ops.append(temp_ops)
+    return ret_ops
+
+def test_format_ops():
+
+    column_meta = {'a': {'cleaning_ops':['clean_int']},
+                   'b': {'cleaning_ops':['replace_dirty', '\n', None]}}
+
+    expected_ops = [
+        ['clean_int', 'a'],
+        ['replace_dirty', 'b', '\n', None]]
+    assert format_ops(column_meta) == expected_ops
 
