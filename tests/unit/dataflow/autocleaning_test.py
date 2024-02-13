@@ -5,7 +5,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlD
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match
 from buckaroo.dataflow.autocleaning import Autocleaning, merge_ops, format_ops
 from buckaroo.customizations.polars_commands import (
-    PlSafeInt, DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
+    PlSafeInt, DropCol, FillNA, GroupBy, NoOp
 )
 
 
@@ -92,22 +92,43 @@ def test_merge_ops():
     print( merge_ops(existing_ops, cleaning_ops))
     print("@"*80)
     assert merge_ops(existing_ops, cleaning_ops) == expected_merged
-        
 
-def test_handle_user_ops():
+
+def test_merge_ops2():
+    user_ops = [
+        [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']]
+
+    cleaning_ops = [
+        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
 
     
+def test_handle_user_ops():
     class ACModded(Autocleaning):
         autocleaning_analysis_klasses = [VCAnalysis, PLCleaningStats, BasicAnalysis, CleaningGenOps]
-        command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy]
-    
+        command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
     ac = ACModded()    
     df = pl.DataFrame({'a': [10, 20, 30]})
-
     cleaning_result = ac.handle_ops_and_clean(df, cleaning_method='normal', existing_operations=[])
-
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
-    
-    
     assert merged_operations == [
         [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
+
+    existing_ops = [
+        [{'symbol': 'old_safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
+    cleaning_result2 = ac.handle_ops_and_clean(
+        df, cleaning_method='normal', existing_operations=existing_ops)
+    cleaned_df, cleaning_sd, generated_code, merged_operations2 = cleaning_result2
+    assert merged_operations2 == [
+        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
+
+
+    df2 = pl.DataFrame({'a': [10, 20, 30], 'b': [10, 20, 30]})
+    user_ops = [
+        [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']]
+    cleaning_result3 = ac.handle_ops_and_clean(
+        df, cleaning_method='normal', existing_operations=user_ops)
+    cleaned_df, cleaning_sd, generated_code, merged_operations3 = cleaning_result3
+    assert merged_operations3 == [
+        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a'],
+        [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']
+    ]

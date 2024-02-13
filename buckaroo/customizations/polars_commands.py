@@ -32,6 +32,20 @@ class FillNA(Command):
     @staticmethod 
     def transform_to_py(df, col, val):
         return "    df = df.with_columns(pl.col('%s').fill_null(%r))" % (col, val)
+
+class NoOp(Command):
+    #used for testing command stuff
+    #argument_names = ["df", "col", "fill_val"]
+    command_default = [s('noop'), s('df'), "col"]
+    command_pattern = [None]
+
+    @staticmethod 
+    def transform(df, col):
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col, val):
+        return "    #noop"
     
 class PlSafeInt(Command):
     #argument_names = ["df", "col", "fill_val"]
