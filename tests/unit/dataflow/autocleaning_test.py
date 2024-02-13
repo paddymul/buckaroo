@@ -3,7 +3,7 @@ from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PLCleaningStats, BasicAnalysis)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats, PolarsAnalysis
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match
-from buckaroo.dataflow.autocleaning import Autocleaning, merge_ops, format_ops
+from buckaroo.dataflow.autocleaning import Autocleaning, merge_ops, format_ops, make_origs
 from buckaroo.customizations.polars_commands import (
     PlSafeInt, DropCol, FillNA, GroupBy, NoOp
 )
@@ -67,6 +67,8 @@ def test_format_ops():
     assert format_ops(column_meta) == expected_ops
 
 
+
+
 class AlwaysSafeIntGenOps(PolarsAnalysis):
     requires_summary = []
     provides_defaults = {'cleaning_ops': []}
@@ -92,14 +94,6 @@ def test_merge_ops():
     print( merge_ops(existing_ops, cleaning_ops))
     print("@"*80)
     assert merge_ops(existing_ops, cleaning_ops) == expected_merged
-
-
-def test_merge_ops2():
-    user_ops = [
-        [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']]
-
-    cleaning_ops = [
-        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
 
     
 def test_handle_user_ops():
@@ -132,3 +126,26 @@ def test_handle_user_ops():
         [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a'],
         [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']
     ]
+
+def test_make_origs():
+    df_a = pl.DataFrame({'a': [10, 20, 30, 40], 'b': [1, 2, 3, 4]})
+    df_b = pl.DataFrame({'a': [10, 20,  0, 40], 'b': [1, 2, 3, 4]})    
+
+    expected = pl.DataFrame(
+        [pl.Series("a",      [  10,   20,    0,   40], dtype=pl.Int64),
+         pl.Series("a_orig", [None, None,   30, None], dtype=pl.Int64),
+         pl.Series("b",      [   1,    2,    3,    4], dtype=pl.Int64),
+         pl.Series("b_orig", [None, None, None, None], dtype=pl.Int64)])
+
+    assert make_origs(df_a, df_b).to_dicts() == expected.to_dicts()
+
+def test_handle_clean_df():
+    class ACModded(Autocleaning):
+        autocleaning_analysis_klasses = [VCAnalysis, PLCleaningStats, BasicAnalysis, CleaningGenOps]
+        command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
+    ac = ACModded()    
+    df = pl.DataFrame({'a': [10, 20, 30]})
+    cleaning_result = ac.handle_ops_and_clean(df, cleaning_method='normal', existing_operations=[])
+    cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
+
+    assert 'a_original' in cleaned_df.columns
