@@ -6,7 +6,18 @@ from ..jlisp.lispy import s
 #from ..auto_clean.cleaning_commands import (to_bool, to_datetime, to_int, to_float, to_string)
 
 class Command(object):
-    pass
+    @staticmethod 
+    def transform(df, col, val):
+        return df.with_columns(pl.col(col).fill_null(val))
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col, val):
+        return "    df = df.with_columns(pl.col('%s').fill_null(%r))" % (col, val)
+
+    @staticmethod
+    def internal_cleaning_transform(df, col):
+        return df
     
 class FillNA(Command):
     #argument_names = ["df", "col", "fill_val"]
@@ -21,6 +32,20 @@ class FillNA(Command):
     @staticmethod 
     def transform_to_py(df, col, val):
         return "    df = df.with_columns(pl.col('%s').fill_null(%r))" % (col, val)
+    
+class PlSafeInt(Command):
+    #argument_names = ["df", "col", "fill_val"]
+    command_default = [s('safe_int'), s('df'), "col"]
+    command_pattern = [None]
+
+    @staticmethod 
+    def transform(df, col):
+        return df.with_columns(pl.col(col).cast(pl.Int64, strict=False))
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return "    df = df.with_columns(pl.col('%s').cast(pl.Int64, strict=False))" % (col, val)
 
 class DropCol(Command):
     #argument_names = ["df", "col"]

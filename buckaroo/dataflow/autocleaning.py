@@ -4,6 +4,21 @@ from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats, PolarsAnalysis
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
+
+'''
+
+
+    def handle_ops_and_clean_orig(self, df, cleaning_method, existing_operations):
+        if self.sampled_df is None:
+            return None
+        cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
+        merged_operations = merge_ops(existing_operations, cleaning_operations)
+        cleaned_df = self._run_df_interpreter(df, merged_operations)
+        generated_code = self._run_code_generator(merged_operations)
+        self.cleaned [cleaned_df, cleaning_sd, generated_code, merged_operations]
+
+
+'''
 def dumb_merge_ops(existing_ops, cleaning_ops):
     """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
     a = existing_ops.copy()
@@ -52,7 +67,7 @@ def format_ops(column_meta):
         ops = v['cleaning_ops']
         if len(ops) > 0:
             temp_ops = ops.copy()
-            temp_ops.insert(1, k)
+            temp_ops.insert(2, k)
             ret_ops.append(temp_ops)
     return ret_ops
 
@@ -60,6 +75,9 @@ def format_ops(column_meta):
 class Autocleaning:
     command_klasses = [DefaultCommandKlsList]
     autocleaning_analysis_klasses = []
+
+    def __init__(self):
+        self._setup_from_command_kls_list()
 
     ### start code interpreter block
     def _setup_from_command_kls_list(self):
@@ -80,9 +98,12 @@ class Autocleaning:
     def _run_df_interpreter(self, df, operations):
         full_ops = [{'symbol': 'begin'}]
         full_ops.extend(operations)
+        print("*"*80)
+        print(full_ops)
+        print("*"*80)
         if len(full_ops) == 1:
             return df
-        return self.buckaroo_transform(full_ops , df)
+        return self.df_interpreter(full_ops , df)
 
     def run_code_generator(self, operations):
         if len(operations) == 0:
@@ -102,16 +123,10 @@ class Autocleaning:
             return None
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
+        print("@"*80)
+        print(merged_operations[0])
+        print("@"*80)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
-        generated_code = self._run_code_generator(merged_operations)
+        #generated_code = self._run_code_generator(merged_operations)
+        generated_code = "asdfasdfas"
         return [cleaned_df, cleaning_sd, generated_code, merged_operations]
-
-    def handle_ops_and_clean_orig(self, df, cleaning_method, existing_operations):
-        if self.sampled_df is None:
-            return None
-        cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
-        merged_operations = merge_ops(existing_operations, cleaning_operations)
-        cleaned_df = self._run_df_interpreter(df, merged_operations)
-        generated_code = self._run_code_generator(merged_operations)
-        self.cleaned [cleaned_df, cleaning_sd, generated_code, merged_operations]
-

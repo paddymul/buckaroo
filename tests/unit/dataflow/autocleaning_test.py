@@ -5,7 +5,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlD
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match
 from buckaroo.dataflow.autocleaning import Autocleaning, merge_ops, format_ops
 from buckaroo.customizations.polars_commands import (
-    DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
+    PlSafeInt, DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
 )
 
 
@@ -29,7 +29,7 @@ class CleaningGenOps(PolarsAnalysis):
     @classmethod
     def computed_summary(kls, column_metadata):
         if column_metadata['int_parse'] > kls.int_parse_threshhold:
-            return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}]}
+            return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}]}
         else:
             return {'cleaning_ops': []}
 
@@ -42,7 +42,7 @@ def test_cleaning_stats():
     assert dfs.sdf['b']['int_parse_fail'] == 0.6
 
 
-SAFE_INT_TOKEN = [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}]
+SAFE_INT_TOKEN = [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}]
 def test_ops_gen():
 
     dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.4, int_parse_fail=.6),
@@ -57,11 +57,13 @@ def test_ops_gen():
 def test_format_ops():
     column_meta = {
         'a': {'cleaning_ops':SAFE_INT_TOKEN },
-        'b': {'cleaning_ops': [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, '\n', None]}}
+        'b': {'cleaning_ops': [
+            {'symbol': 'replace_dirty', 'meta':{'auto_clean': True}},
+            {'symbol': 'df'}, '\n', None]}}
 
     expected_ops = [
-        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, 'a'],
-        [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, 'b', '\n', None]]
+        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a'],
+        [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'b', '\n', None]]
     assert format_ops(column_meta) == expected_ops
 
 
@@ -71,7 +73,8 @@ class AlwaysSafeIntGenOps(PolarsAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}]}
+        return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}},
+                                 {'symbol': 'df'}]}
 
 def test_merge_ops():
     existing_ops = [
@@ -96,7 +99,7 @@ def test_handle_user_ops():
     
     class ACModded(Autocleaning):
         autocleaning_analysis_klasses = [VCAnalysis, PLCleaningStats, BasicAnalysis, CleaningGenOps]
-        command_klasses = [DropCol, FillNA, GroupBy]
+        command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy]
     
     ac = ACModded()    
     df = pl.DataFrame({'a': [10, 20, 30]})
@@ -107,4 +110,4 @@ def test_handle_user_ops():
     
     
     assert merged_operations == [
-        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, 'a']]
+        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
