@@ -115,7 +115,7 @@ class Autocleaning:
             return df
         return self.df_interpreter(full_ops , df)
 
-    def run_code_generator(self, operations):
+    def _run_code_generator(self, operations):
         if len(operations) == 0:
             return 'no operations'
         return self.gencode_interpreter(operations)
@@ -135,6 +135,5 @@ class Autocleaning:
         merged_operations = merge_ops(existing_operations, cleaning_operations)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
         merged_cleaned_df = make_origs(df, cleaned_df)
-        #generated_code = self._run_code_generator(merged_operations)
-        generated_code = "asdfasdfas"
+        generated_code = self._run_code_generator(merged_operations)
         return [merged_cleaned_df, cleaning_sd, generated_code, merged_operations]

@@ -31,7 +31,6 @@ class FillNA(Command):
 
 class NoOp(Command):
     #used for testing command stuff
-    #argument_names = ["df", "col", "fill_val"]
     command_default = [s('noop'), s('df'), "col"]
     command_pattern = [None]
 
@@ -40,7 +39,7 @@ class NoOp(Command):
         return df
 
     @staticmethod 
-    def transform_to_py(df, col, val):
+    def transform_to_py(df, col):
         return "    #noop"
     
 class PlSafeInt(Command):
@@ -54,7 +53,7 @@ class PlSafeInt(Command):
 
     @staticmethod 
     def transform_to_py(df, col):
-        return "    df = df.with_columns(pl.col('%s').cast(pl.Int64, strict=False))" % (col, val)
+        return "    df = df.with_columns(pl.col('%s').cast(pl.Int64, strict=False))" % (col)
 
 class DropCol(Command):
     #argument_names = ["df", "col"]

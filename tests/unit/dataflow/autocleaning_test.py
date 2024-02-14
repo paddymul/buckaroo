@@ -165,3 +165,17 @@ def test_handle_clean_df():
         'a_orig': ["30",  "40"]})
     assert cleaned_df.to_dicts() == expected.to_dicts()
 
+EXPECTED_GEN_CODE = """def clean(df):
+    df = df.with_columns(pl.col('a').cast(pl.Int64, strict=False))
+    return df"""
+
+def test_autoclean_codegen():
+    class ACModded(Autocleaning):
+        autocleaning_analysis_klasses = [VCAnalysis, PLCleaningStats, BasicAnalysis, CleaningGenOps]
+        command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
+    ac = ACModded()    
+    df = pl.DataFrame({'a': ["30", "40"]})
+    cleaning_result = ac.handle_ops_and_clean(df, cleaning_method='normal', existing_operations=[])
+    cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
+
+    assert generated_code == EXPECTED_GEN_CODE
