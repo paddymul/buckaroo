@@ -15,10 +15,6 @@ class Command(object):
     def transform_to_py(df, col, val):
         return "    df = df.with_columns(pl.col('%s').fill_null(%r))" % (col, val)
 
-    @staticmethod
-    def internal_cleaning_transform(df, col):
-        return df
-    
 class FillNA(Command):
     #argument_names = ["df", "col", "fill_val"]
     command_default = [s('fillna'), s('df'), "col", 8]
@@ -48,7 +44,6 @@ class NoOp(Command):
         return "    #noop"
     
 class PlSafeInt(Command):
-    #argument_names = ["df", "col", "fill_val"]
     command_default = [s('safe_int'), s('df'), "col"]
     command_pattern = [None]
 

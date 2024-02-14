@@ -76,8 +76,9 @@ def make_origs(raw_df, cleaned_df):
     clauses = []
     for col in raw_df.columns:
         clauses.append(cleaned_df[col])
-        clauses.append(
-            pl.when((raw_df[col] - cleaned_df[col]).eq(0)).then(None).otherwise(raw_df[col]).alias(col+"_orig"))
+        clauses.append(raw_df[col].alias(col+"_orig"))
+        # clauses.append(
+        #     pl.when((raw_df[col] - cleaned_df[col]).eq(0)).then(None).otherwise(raw_df[col]).alias(col+"_orig"))
     ret_df = cleaned_df.select(clauses)
     return ret_df
 
@@ -132,10 +133,8 @@ class Autocleaning:
             return None
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
-        print("@"*80)
-        print(merged_operations[0])
-        print("@"*80)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
+        merged_cleaned_df = make_origs(df, cleaned_df)
         #generated_code = self._run_code_generator(merged_operations)
         generated_code = "asdfasdfas"
-        return [cleaned_df, cleaning_sd, generated_code, merged_operations]
+        return [merged_cleaned_df, cleaning_sd, generated_code, merged_operations]
