@@ -238,13 +238,13 @@ class PLCleaningStats(PolarsAnalysis):
     
     @staticmethod
     def computed_summary(column_metadata):
-        vc_ser, l = column_metadata['value_counts'], column_metadata['length']
+        vc_ser, len_ = column_metadata['value_counts'], column_metadata['length']
         vc_df = pl.DataFrame({'vc': vc_ser.explode()}).unnest('vc')
         regular_col_vc_df = vc_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
         int_parse = pl.col('key').cast(pl.Int64, strict=False).is_null()
         per_df = regular_col_vc_df.select(
             int_parse.replace({True:1, False:0}).mul(pl.col('count')).sum().alias('int_parse_fail'),
-            int_parse.replace({True:0, False:1}).mul(pl.col('count')).sum().alias('int_parse')) / l
+            int_parse.replace({True:0, False:1}).mul(pl.col('count')).sum().alias('int_parse')) / len_
         return per_df.to_dicts()[0]
 
 

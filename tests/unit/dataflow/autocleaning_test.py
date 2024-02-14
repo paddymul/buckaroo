@@ -2,7 +2,6 @@ import polars as pl
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PLCleaningStats, BasicAnalysis)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats, PolarsAnalysis
-from buckaroo.jlisp.lisp_utils import split_operations, lists_match
 from buckaroo.dataflow.autocleaning import Autocleaning, merge_ops, format_ops, make_origs, AutocleaningConfig
 from buckaroo.customizations.polars_commands import (
     PlSafeInt, DropCol, FillNA, GroupBy, NoOp
@@ -119,8 +118,6 @@ def test_handle_user_ops():
     assert merged_operations2 == [
         [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
 
-
-    df2 = pl.DataFrame({'a': [10, 20, 30], 'b': [10, 20, 30]})
     user_ops = [
         [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']]
     cleaning_result3 = ac.handle_ops_and_clean(
@@ -148,7 +145,6 @@ def desired_test_make_origs():
     assert make_origs(df_a, df_b).to_dicts() == expected.to_dicts()
 
 def test_make_origs_different_dtype():
-    ac = Autocleaning([ACConf])
     raw = pl.DataFrame({'a': [30, "40"]})
     cleaned = pl.DataFrame({'a': [30,  40]})
     expected = pl.DataFrame({
