@@ -82,28 +82,45 @@ def make_origs(raw_df, cleaned_df):
     ret_df = cleaned_df.select(clauses)
     return ret_df
 
-class Autocleaning:
+
+class AutocleaningConfig:
     command_klasses = [DefaultCommandKlsList]
     autocleaning_analysis_klasses = []
 
-    def __init__(self):
-        self._setup_from_command_kls_list()
+    name = 'default'
+    
+
+class Autocleaning:
+    # def add_command(self, incomingCommandKls):
+    #     without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
+    #     without_incoming.append(incomingCommandKls)
+    #     self.command_klasses = without_incoming
+    #     self.setup_from_command_kls_list()
+
+
+    def __init__(self, ac_configs):
+
+        self.config_dict = {}
+        for conf in ac_configs:
+            self.config_dict[conf.name] = conf
+        #self._setup_from_command_kls_list()
 
     ### start code interpreter block
-    def _setup_from_command_kls_list(self):
+    def _setup_from_command_kls_list(self, name):
         #used to initially setup the interpreter, and when a command
         #is added interactively
-        c_klasses = self.command_klasses
+        if name not in self.config_dict:
+            options = list(self.config_dict.keys())
+            raise Exception(
+                "Unknown autocleaning conf of %s, available options are %r" % (name, options))
+        conf = self.config_dict[name]
+        c_klasses, self.autocleaning_analysis_klasses = conf.command_klasses, conf.autocleaning_analysis_klasses
+
         c_defaults, c_patterns, df_interpreter, gencode_interpreter = configure_buckaroo(c_klasses)
         self.df_interpreter, self.gencode_interpreter = df_interpreter, gencode_interpreter
         self.commandConfig = dict(argspecs=c_patterns, defaultArgs=c_defaults)
-        self.autocleaning_genops = filter_analysis(self.autocleaning_analysis_klasses, "autocleaning_ops")
+        #self.autocleaning_genops = filter_analysis(analysis_klasses, "autocleaning_ops")
 
-    def add_command(self, incomingCommandKls):
-        without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
-        without_incoming.append(incomingCommandKls)
-        self.command_klasses = without_incoming
-        self.setup_from_command_kls_list()
 
     def _run_df_interpreter(self, df, operations):
         full_ops = [{'symbol': 'begin'}]
@@ -127,10 +144,10 @@ class Autocleaning:
         cleaning_sd = {}
         return gen_ops, cleaning_sd
 
-
     def handle_ops_and_clean(self, df, cleaning_method, existing_operations):
         if df is None:
             return None
+        self._setup_from_command_kls_list(cleaning_method)
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
