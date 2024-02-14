@@ -40,9 +40,6 @@ def merge_column(base, new):
 SENTINEL_COLUMN_CONFIG_1 = "ASDF"
 SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
 
-
-
-
 def style_columns(style_method:str, sd):
     if style_method == "foo":
         return SENTINEL_COLUMN_CONFIG_2
