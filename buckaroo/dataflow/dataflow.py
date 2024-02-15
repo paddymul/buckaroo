@@ -7,8 +7,13 @@ from ..serialization_utils import pd_to_obj
 from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
-
 from .autocleaning import SentinelAutocleaning
+
+def merge_ops(existing_ops, cleaning_ops):
+    """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
+    a = existing_ops.copy()
+    a.extend(cleaning_ops)
+    return a
 
 def merge_sds(*sds):
     """merge sds with later args taking precedence
