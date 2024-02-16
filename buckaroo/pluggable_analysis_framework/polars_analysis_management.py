@@ -7,7 +7,6 @@ from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 from .pluggable_analysis_framework import ColAnalysis
 from .analysis_management import (produce_summary_df, AnalysisPipeline, DfStats)
-from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
 from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
 
 
