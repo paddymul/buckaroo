@@ -99,10 +99,4 @@ class PlDfStats(DfStats):
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
     ap_class = PolarsAnalysisPipeline
-    
-    @property
-    def presentation_sdf(self):
-        import pandas as pd
-        if self.ap.summary_stats_display == "all":
-            return pd.DataFrame(self.sdf)
-        return safe_summary_df(self.sdf, self.ap.summary_stats_display)
+

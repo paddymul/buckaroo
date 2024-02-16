@@ -22,7 +22,10 @@ from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
 from .serialization_utils import EMPTY_DF_WHOLE
-from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis, exception_protect
+from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis, exception_protect, Sampling
+
+class PandasSampling(Sampling):
+    pre_limit = 10_000_000
 
 
 class BuckarooWidget(CustomizableDataflow, DOMWidget):
@@ -83,8 +86,7 @@ class BuckarooWidget(CustomizableDataflow, DOMWidget):
                         StylingAnalysis,
                         DefaultSummaryStats,
                         DefaultSummaryStatsStyling, DefaultMainStyling]
-
-
+    sampling_klass = PandasSampling
     DFStatsClass = DfStats
 
 

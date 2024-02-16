@@ -2,7 +2,6 @@ from collections import defaultdict
 import traceback
 import warnings
 
-import numpy as np
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
 from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF
@@ -192,7 +191,7 @@ class DfStats(object):
         kls.ap_class(col_analysis_objs)
 
     def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
-        self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
+        self.df = df_stats_df
         self.col_order = self.df.columns
         self.ap = self.ap_class(col_analysis_objs)
         self.operating_df_name = operating_df_name
@@ -201,20 +200,6 @@ class DfStats(object):
         self.sdf, self.errs = self.ap.process_df(self.df, self.debug)
         if self.errs:
             output_full_reproduce(self.errs, self.sdf, operating_df_name)
-        
-    def get_operating_df(self, df, force_full_eval):
-        rows = len(df)
-        cols = len(df.columns)
-        item_count = rows * cols
-
-        if item_count > FAST_SUMMARY_WHEN_GREATER:
-            return df.sample(np.min([50_000, len(df)]))
-        else:
-            return df
-
-    @property
-    def presentation_sdf(self):
-        raise Exception("deprecated")
 
     def add_analysis(self, a_obj):
         passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)

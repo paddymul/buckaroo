@@ -72,10 +72,9 @@ class VCAnalysis(PolarsAnalysis):
 DUMMY_VALUE_COUNTS = pl.Series(
     [{'a': 3, 'count': 1}, {'a': 4, 'count': 1}, {'a': 5, 'count': 1}])
 class BasicAnalysis(PolarsAnalysis):
-
-
     provides_defaults = dict(length=0, nan_count=0, min=0, max=0, mode=0,
-                             mean=0, unique_count=0, empty_count=0, distinct_count=0)
+                             mean=0, unique_count=0, empty_count=0, distinct_count=0,
+                             std=0)
 
     requires_summary = ['value_counts']
     select_clauses = [
@@ -84,6 +83,7 @@ class BasicAnalysis(PolarsAnalysis):
         NOT_STRUCTS.min().name.map(json_postfix('min')),
         NOT_STRUCTS.max().name.map(json_postfix('max')),
         NOT_STRUCTS.mean().name.map(json_postfix('mean')),
+        cs.numeric().std().name.map(json_postfix('std')),
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
         (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count'))
         ]

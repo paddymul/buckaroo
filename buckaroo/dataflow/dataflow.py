@@ -1,6 +1,7 @@
 import six
 import sys
 import warnings
+import numpy as np
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
 from ..serialization_utils import pd_to_obj    
@@ -359,6 +360,8 @@ class Sampling:
             print("Removing excess columns, found %d columns" %  len(df.columns))
             df = df[df.columns[:kls.max_columns]]
         if kls.pre_limit and len(df) > kls.pre_limit:
+            if isinstance(df, pd.DataFrame):
+                return df.sample(kls.pre_limit).sort_index()
             return df.sample(kls.pre_limit)
         return df
 
@@ -366,6 +369,8 @@ class Sampling:
     @classmethod
     def serialize_sample(kls, df):
         if kls.serialize_limit and len(df) > kls.serialize_limit:
+            # if isinstance(df, pd.DataFrame):
+            #     return df.sample(np.min(kls.pre_limit, len(df))).sort_index()
             return df.sample(kls.serialize_limit)
         return df
 
@@ -482,11 +487,12 @@ class CustomizableDataflow(DataFlow):
         temp_sd = sd.copy()
         #FIXME add actual test around weird index behavior
         if 'index' in temp_sd:
-            del temp_sd['index']
+           del temp_sd['index']
         return self._df_to_obj(pd.DataFrame(temp_sd))
 
     def _df_to_obj(self, df:pd.DataFrame):
-        return pd_to_obj(self.sampling_klass.serialize_sample(df))
+        temp_df = self.sampling_klass.serialize_sample(df).sort_index()
+        return pd_to_obj(temp_df)
     
 
     #final processing block

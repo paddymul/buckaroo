@@ -43,6 +43,7 @@ class DefaultSummaryStatsStyling(StylingAnalysis):
         obj_('dtype'),
         float_('min'),
         float_('mean'),
+        float_('std'),
         float_('max'),
         float_('unique_count', 0),
         float_('distinct_count', 0),
@@ -50,4 +51,4 @@ class DefaultSummaryStatsStyling(StylingAnalysis):
 
     df_display_name = "summary"
     data_key = "empty"
-    summary_stats_key= 'all_stats'
+    summary_stats_key='all_stats'
