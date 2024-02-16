@@ -7,7 +7,6 @@ from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 from .pluggable_analysis_framework import ColAnalysis
 from .analysis_management import (produce_summary_df, AnalysisPipeline, DfStats)
-from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
 from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
 
 
@@ -99,10 +98,4 @@ class PlDfStats(DfStats):
     DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
     '''
     ap_class = PolarsAnalysisPipeline
-    
-    @property
-    def presentation_sdf(self):
-        import pandas as pd
-        if self.ap.summary_stats_display == "all":
-            return pd.DataFrame(self.sdf)
-        return safe_summary_df(self.sdf, self.ap.summary_stats_display)
+

@@ -82,7 +82,7 @@ class TypingStats(ColAnalysis):
 class DefaultSummaryStats(ColAnalysis):
     provides_defaults = {
         'length':0, 'min':0, 'max':0, 'mean':0, 'nan_count':0,
-        'value_counts':0, 'mode':0}
+        'value_counts':0, 'mode':0, 'std':0}
     @staticmethod
     def series_summary(sampled_ser, ser):
         l = len(ser)
@@ -101,6 +101,7 @@ class DefaultSummaryStats(ColAnalysis):
         if is_numeric and not is_bool:
             base_d.update({
                 'mean': ser.mean(),
+                'std': ser.std(),
                 'min': ser.dropna().min(),
                 'max': ser.dropna().max()})
         return base_d
