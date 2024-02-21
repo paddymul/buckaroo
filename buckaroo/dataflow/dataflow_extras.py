@@ -11,6 +11,10 @@ EMPTY_DF_DISPLAY_ARG = {'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
 
+SENTINEL_COLUMN_CONFIG_1 = "ASDF"
+SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
+
+
 
 def merge_ops(existing_ops, cleaning_ops):
     """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """

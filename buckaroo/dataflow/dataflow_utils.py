@@ -1,5 +1,5 @@
 import sys
-from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
+from .customizations.styling import (DefaultMainStyling)
 
 def exception_protect(protect_name=None):
     """
