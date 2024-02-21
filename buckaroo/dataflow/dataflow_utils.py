@@ -1,3 +1,26 @@
+import sys
+from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
+
+def exception_protect(protect_name=None):
+    """
+    used to make sure that an exception from any part of DataFlow derived classes has the minimum amount of traitlets observer stuff in the stack trace.
+
+    Requires that a a class has `self.exception`
+    
+    """
+    def wrapped_decorator(func):
+        def wrapped(self, *args, **kwargs):
+            try:
+                func(self, *args, **kwargs)
+            except Exception:
+                #sometimes useful for debugging tricky call order stuff
+                # if protect_name:
+                #     print("protect handler", protect_name, self.exception)
+                if self.exception is None:
+                    self.exception = sys.exc_info()
+                raise
+        return wrapped
+    return wrapped_decorator
 
 def find_most_specific_styling(klasses, df_display_name):
     """if we have multiple styling klasses, all of which extend StylingAnalysis keyed to df_display_name='main'
