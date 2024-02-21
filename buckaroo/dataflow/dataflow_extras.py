@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 
@@ -76,6 +77,29 @@ def style_columns(style_method:str, sd):
             ],
             'column_config': ret_col_config}
 
+
+def exception_protect(protect_name=None):
+    """
+    used to make sure that an exception from any part of DataFlow derived classes has the minimum amount of traitlets observer stuff in the stack trace.
+
+    Requires that a a class has `self.exception`
+
+    protect_name occurs in the printed exception handler to narrow down the call stack
+    
+    """
+    def wrapped_decorator(func):
+        def wrapped(self, *args, **kwargs):
+            try:
+                func(self, *args, **kwargs)
+            except Exception:
+                #sometimes useful for debugging tricky call order stuff
+                # if protect_name:
+                #     print("protect handler", protect_name, self.exception)
+                if self.exception is None:
+                    self.exception = sys.exc_info()
+                raise
+        return wrapped
+    return wrapped_decorator
 
 
 

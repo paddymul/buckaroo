@@ -1,26 +1,4 @@
-import sys
-from .customizations.styling import (DefaultMainStyling)
-
-def exception_protect(protect_name=None):
-    """
-    used to make sure that an exception from any part of DataFlow derived classes has the minimum amount of traitlets observer stuff in the stack trace.
-
-    Requires that a a class has `self.exception`
-    
-    """
-    def wrapped_decorator(func):
-        def wrapped(self, *args, **kwargs):
-            try:
-                func(self, *args, **kwargs)
-            except Exception:
-                #sometimes useful for debugging tricky call order stuff
-                # if protect_name:
-                #     print("protect handler", protect_name, self.exception)
-                if self.exception is None:
-                    self.exception = sys.exc_info()
-                raise
-        return wrapped
-    return wrapped_decorator
+from buckaroo.customizations.styling import (DefaultMainStyling)
 
 def find_most_specific_styling(klasses, df_display_name):
     """if we have multiple styling klasses, all of which extend StylingAnalysis keyed to df_display_name='main'
@@ -75,3 +53,25 @@ def configure_buckaroo(
     class SyntheticStyling(BaseStylingKls):
         pinned_rows = base_pinned_rows
         df_display_name = "dfviewer_special"
+
+
+def DFViewer(df,
+             column_config_overrides=None,
+             extra_pinned_rows=None, pinned_rows=None,
+             extra_analysis_klasses=None, analysis_klasses=None):
+
+        
+    if extra_analysis_klasses:
+        if analysis_klasses is not None:
+            raise Exception("Must specify either extra_analysis_klasses or analysis_klasses, not both")
+
+    
+        
+                        
+    # bw = BuckarooWidget(df)
+    # dfv_config = bw.df_display_args['main']['df_viewer_config']
+    # dfv_config['pinned_rows'] = []
+    # df_data = bw.df_data_dict['main']
+    # return DFViewerWidget(df_data=df_data, df_viewer_config=dfv_config)
+
+

@@ -5,11 +5,10 @@ from traitlets import Unicode, Any, observe, HasTraits, Dict
 from ..serialization_utils import pd_to_obj    
 from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
-from .dataflow_utils import exception_protect
 from .dataflow_extras import (
     EMPTY_DF_DISPLAY_ARG, SENTINEL_DF_1, SENTINEL_DF_2,
     merge_ops, merge_sds, merge_column_config,
-    style_columns, StylingAnalysis,
+    style_columns, exception_protect, StylingAnalysis,
     Sampling)
 
 
