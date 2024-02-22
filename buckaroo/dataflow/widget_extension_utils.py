@@ -1,7 +1,7 @@
 from buckaroo.customizations.styling import (DefaultMainStyling)
 from buckaroo.buckaroo_widget import RawDFViewerWidget, BuckarooWidget
 
-def find_most_specific_styling(klasses, df_display_name):
+def find_most_specific_styling(klasses, df_display_name='main'):
     """if we have multiple styling klasses, all of which extend StylingAnalysis keyed to df_display_name='main'
     we want a deterministic result for which one is the called class to provide styling for that key
 
@@ -13,7 +13,9 @@ def find_most_specific_styling(klasses, df_display_name):
 
     https://stackoverflow.com/questions/23660447/how-can-i-sort-a-list-of-python-classes-by-inheritance-depth
     """
-
+    styling_klasses = filter(lambda x: issubclass(x, DefaultMainStyling), klasses)
+    klasses_by_depth = sorted(styling_klasses, key=lambda x: len(x.__mro__))
+    return klasses_by_depth[-1]
 
 def analysis_extend(
         BaseBuckarooKls,
