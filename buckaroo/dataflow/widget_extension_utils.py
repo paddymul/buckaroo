@@ -17,6 +17,8 @@ def find_most_specific_styling(klasses, df_display_name='main'):
     klasses_by_depth = sorted(styling_klasses, key=lambda x: len(x.__mro__))
     return klasses_by_depth[-1]
 
+class InvalidArgumentException(Exception):
+    pass
 def analysis_extend(
         BaseBuckarooKls,
         extra_analysis_klasses=None, analysis_klasses=None):
@@ -26,7 +28,8 @@ def analysis_extend(
     base_a_klasses = BaseBuckarooKls.analysis_klasses.copy()
     if extra_analysis_klasses:
         if analysis_klasses is not None:
-            raise Exception("Must specify either extra_analysis_klasses or analysis_klasses, not both")
+            raise InvalidArgumentException(
+                "Must specify either extra_analysis_klasses or analysis_klasses, not both")
         base_a_klasses.extend(extra_analysis_klasses)
     elif analysis_klasses:
         base_a_klasses = analysis_klasses
@@ -39,7 +42,8 @@ def get_styling_analysis(
     base_pinned_rows = BaseStylingKlass.pinned_rows.copy()
     if extra_pinned_rows:
         if pinned_rows is not None:
-            raise Exception("Must specify either extra_pinned_rows or pinned_rows, not both")
+            raise InvalidArgumentException(
+                "Must specify either extra_pinned_rows or pinned_rows, not both")
         base_pinned_rows.extend(extra_pinned_rows)
     elif pinned_rows is not None: # is not None accomodates empty list
         base_pinned_rows = pinned_rows
