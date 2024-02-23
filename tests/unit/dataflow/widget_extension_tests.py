@@ -3,7 +3,7 @@ from buckaroo.dataflow.widget_extension_utils import (
     find_most_specific_styling, analysis_extend, get_styling_analysis,
     InvalidArgumentException,
     configure_buckaroo)
-from buckaroo.customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyling, obj_)
+from buckaroo.customizations.styling import (DefaultMainStyling, obj_)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.buckaroo_widget import BuckarooWidget
 
