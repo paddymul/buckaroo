@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from ._version import __version__
 from .buckaroo_widget import BuckarooWidget
+from .dataflow.widget_extension_utils import DFViewer
 from .widget_utils import is_in_ipython, enable, disable
 
 

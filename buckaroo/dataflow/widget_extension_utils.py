@@ -91,7 +91,17 @@ def DFViewer(df,
              column_config_overrides=None,
              extra_pinned_rows=None, pinned_rows=None,
              extra_analysis_klasses=None, analysis_klasses=None):
+    """
+    Display a DataFrame with buckaroo styling and analysis, no extra UI pieces
 
+    column_config_overrides allows targetted specific overriding of styling
+
+    extra_pinned_rows adds pinned_rows of summary stats
+    pinned_rows replaces the default pinned rows
+
+    extra_analysis_klasses adds an analysis_klass
+    analysis_klasses replaces default analysis_klass
+    """
     BuckarooKls = configure_buckaroo(
         BuckarooWidget,
         extra_pinned_rows=extra_pinned_rows, pinned_rows=pinned_rows,
