@@ -75,16 +75,18 @@ def test_configure_buckaroo_extra():
 
 
 def test_configure_buckaroo_replace():
-
-    ReplaceBuckaroo = configure_buckaroo(
-        BuckarooWidget, analysis_klasses=[Custom_1],
-        pinned_rows=[foo_row])
     
-    SyntheticStyling = [kls for kls in ExtraBuckaroo.analysis_klasses if kls.__name__ == 'SyntheticStyling'][0]
+    ReplaceBuckaroo = configure_buckaroo(
+        BuckarooWidget, analysis_klasses=[Custom_1, DefaultMainStyling],
+        pinned_rows=[foo_row])
+
+    #bad things will happen if there isn't a Styling, but I'd caveat empetor for that
+    
+    SyntheticStyling = [kls for kls in ReplaceBuckaroo.analysis_klasses if kls.__name__ == 'SyntheticStyling'][0]
 
     assert SyntheticStyling.pinned_rows == [foo_row]
 
-    assert len(ReplaceBuckaroo.analysis_klasses) == 2
+    assert len(ReplaceBuckaroo.analysis_klasses) == 3
     assert Custom_1 in ReplaceBuckaroo.analysis_klasses
 
                        
