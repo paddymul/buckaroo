@@ -43,10 +43,10 @@ def test_analysis_extend():
     with pytest.raises(InvalidArgumentException):
         analysis_extend(BuckarooWidget, extra_analysis_klasses=[Custom_1], analysis_klasses=[ExtendedCustomStyling])
 
+
+foo_row = obj_('foo')
+
 def test_get_styling_analysis():
-
-    foo_row = obj_('foo')
-
     base_pinned_row_len = len(DefaultMainStyling.pinned_rows)
     ExtraFooStyling = get_styling_analysis(
         DefaultMainStyling,
@@ -59,4 +59,32 @@ def test_get_styling_analysis():
     assert ReplacePinnedStyling.pinned_rows == [foo_row]
     with pytest.raises(InvalidArgumentException):
         get_styling_analysis(DefaultMainStyling, extra_pinned_rows=[1], pinned_rows=[2])
+
+def test_configure_buckaroo_extra():
+
+    ExtraBuckaroo = configure_buckaroo(
+        BuckarooWidget, extra_pinned_rows=[foo_row], extra_analysis_klasses=[Custom_1])
+    SyntheticStyling = [kls for kls in ExtraBuckaroo.analysis_klasses if kls.__name__ == 'SyntheticStyling'][0]
+
+    base_pinned_row_len = len(DefaultMainStyling.pinned_rows)
+
+    assert foo_row in SyntheticStyling.pinned_rows
+    assert len(SyntheticStyling.pinned_rows) == (base_pinned_row_len + 1)
+
+    assert Custom_1 in ExtraBuckaroo.analysis_klasses
+
+
+def test_configure_buckaroo_replace():
+
+    ReplaceBuckaroo = configure_buckaroo(
+        BuckarooWidget, analysis_klasses=[Custom_1],
+        pinned_rows=[foo_row])
     
+    SyntheticStyling = [kls for kls in ExtraBuckaroo.analysis_klasses if kls.__name__ == 'SyntheticStyling'][0]
+
+    assert SyntheticStyling.pinned_rows == [foo_row]
+
+    assert len(ReplaceBuckaroo.analysis_klasses) == 2
+    assert Custom_1 in ReplaceBuckaroo.analysis_klasses
+
+                       

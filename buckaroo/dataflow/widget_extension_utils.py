@@ -74,7 +74,7 @@ def configure_buckaroo(
     #there could possibly be another way of picking off the styling
     #klass vs just knowing that it's default BaseStylingKls
     #BaseStylingKls = DefaultMainStyling 
-    BaseStylingKls = find_most_specific_styling(a_klasses, DefaultMainStyling, 'main')
+    BaseStylingKls = find_most_specific_styling(a_klasses)
 
     special_styling_analysis_klass = get_styling_analysis(
         BaseStylingKls, extra_pinned_rows, pinned_rows)
