@@ -96,7 +96,7 @@ class Autocleaning:
     #     self.command_klasses = without_incoming
     #     self.setup_from_command_kls_list()
 
-
+    DFStatsKlass = DfStats
     def __init__(self, ac_configs):
 
         self.config_dict = {}
@@ -137,7 +137,7 @@ class Autocleaning:
         return self.gencode_interpreter(operations)
 
     def _run_cleaning(self, df, cleaning_method):
-        dfs = DfStats(df, self.autocleaning_analysis_klasses, debug=True)
+        dfs = self.DFStatsKlass(df, self.autocleaning_analysis_klasses, debug=True)
         gen_ops = format_ops(dfs.sdf)
 
         cleaning_sd = {}
