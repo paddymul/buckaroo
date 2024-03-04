@@ -1,6 +1,7 @@
 import pandas as pd
 from buckaroo.jlisp.lisp_utils import split_operations
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
+#from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
+from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
 
@@ -136,7 +137,7 @@ class Autocleaning:
         return self.gencode_interpreter(operations)
 
     def _run_cleaning(self, df, cleaning_method):
-        dfs = PlDfStats(df, self.autocleaning_analysis_klasses, debug=True)
+        dfs = DfStats(df, self.autocleaning_analysis_klasses, debug=True)
         gen_ops = format_ops(dfs.sdf)
 
         cleaning_sd = {}
