@@ -1,9 +1,8 @@
 import polars as pl
-import pandas as pd
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PLCleaningStats, BasicAnalysis)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats, PolarsAnalysis
-from buckaroo.dataflow.autocleaning import Autocleaning, merge_ops, format_ops, make_origs, AutocleaningConfig
+from buckaroo.dataflow.autocleaning import merge_ops, format_ops, make_origs, AutocleaningConfig
 from buckaroo.polars_buckaroo import PolarsAutocleaning
 from buckaroo.customizations.polars_commands import (
     PlSafeInt, DropCol, FillNA, GroupBy, NoOp
