@@ -102,7 +102,6 @@ class Autocleaning:
         self.config_dict = {}
         for conf in ac_configs:
             self.config_dict[conf.name] = conf
-        #self._setup_from_command_kls_list()
 
     ### start code interpreter block
     def _setup_from_command_kls_list(self, name):
@@ -118,7 +117,6 @@ class Autocleaning:
         c_defaults, c_patterns, df_interpreter, gencode_interpreter = configure_buckaroo(c_klasses)
         self.df_interpreter, self.gencode_interpreter = df_interpreter, gencode_interpreter
         self.commandConfig = dict(argspecs=c_patterns, defaultArgs=c_defaults)
-        #self.autocleaning_genops = filter_analysis(analysis_klasses, "autocleaning_ops")
 
 
     def _run_df_interpreter(self, df, operations):

@@ -1,7 +1,8 @@
 import polars as pl
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PLCleaningStats, BasicAnalysis)
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats, PolarsAnalysis
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, make_origs, AutocleaningConfig
 from buckaroo.polars_buckaroo import PolarsAutocleaning
 from buckaroo.customizations.polars_commands import (
@@ -16,12 +17,12 @@ dirty_df = pl.DataFrame({
 
 
 def make_default_analysis(**kwargs):
-    class DefaultAnalysis(PolarsAnalysis):
+    class DefaultAnalysis(ColAnalysis):
         requires_summary = []
         provides_defaults = kwargs
     return DefaultAnalysis
 
-class CleaningGenOps(PolarsAnalysis):
+class CleaningGenOps(ColAnalysis):
     requires_summary = ['int_parse_fail', 'int_parse']
     provides_defaults = {'cleaning_ops': []}
 
@@ -66,17 +67,6 @@ def test_format_ops():
         [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'b', '\n', None]]
     assert format_ops(column_meta) == expected_ops
 
-
-
-
-class AlwaysSafeIntGenOps(PolarsAnalysis):
-    requires_summary = []
-    provides_defaults = {'cleaning_ops': []}
-
-    @classmethod
-    def computed_summary(kls, column_metadata):
-        return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}},
-                                 {'symbol': 'df'}]}
 
 def test_merge_ops():
     existing_ops = [
