@@ -37,8 +37,8 @@ def enable(sampled=True,
     ip = is_in_ipython()
     #buckaroo_mtime = dtdt.fromtimestamp(os.path.getmtime(buckaroo.__file__))
 
-    par_process = psutil.Process().parent()
-    server_start_time = dtdt.fromtimestamp(psutil.Process().parent().create_time())
+    parent_process = psutil.Process().parent()
+    server_start_time = dtdt.fromtimestamp(parent_process.create_time())
 
     buckaroo_mtime = dtdt.fromtimestamp(os.path.getmtime(__file__))
 
