@@ -1,6 +1,10 @@
 import traceback
 from .buckaroo_widget import BuckarooWidget
 import pandas as pd
+from datetime import datetime as dtdt
+import os
+import psutil
+
 
 def is_in_ipython():
 
@@ -31,6 +35,17 @@ def enable(sampled=True,
     """
 
     ip = is_in_ipython()
+    #buckaroo_mtime = dtdt.fromtimestamp(os.path.getmtime(buckaroo.__file__))
+
+    par_process = psutil.Process().parent()
+    server_start_time = dtdt.fromtimestamp(psutil.Process().parent().create_time())
+
+    buckaroo_mtime = dtdt.fromtimestamp(os.path.getmtime(__file__))
+
+    if buckaroo_mtime > server_start_time:
+        print("""It looks like you installed Buckaroo after you started this notebook server. If you see a message like "Failed to load model class 'DCEFWidgetModel' from module 'buckaroo'", restart the jupyter server and try again.  If you have furter errors, please file a bug report at https://github.com/paddymul/buckaroo""")
+        print("buckaroo_mtime", buckaroo_mtime, "server_start_time", server_start_time)
+
     
     def _display_as_buckaroo(df):
         from IPython.display import display
