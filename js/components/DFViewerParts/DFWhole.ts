@@ -135,10 +135,15 @@ export type PinnedRowConfig = {
   default_renderer_columns?: string[];
 };
 
+export type ComponentConfig = {
+  height_fraction?: number;
+};
+
 export interface DFViewerConfig {
   pinned_rows: PinnedRowConfig[];
   column_config: ColumnConfig[];
   extra_grid_config?: GridOptions;
+  component_config?: ComponentConfig;
 }
 
 export type DFDataRow = Record<

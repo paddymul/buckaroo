@@ -95,7 +95,7 @@ export function DFViewer({
     if (styledColumns.length < 1) {
       return {
         type: 'fitProvidedWidth',
-        width: 1000,
+        width: window.innerWidth - 100,
       };
     }
     return {
@@ -103,14 +103,30 @@ export function DFViewer({
     };
   };
 
+  const regularDivStyle = {
+    height:
+      window.innerHeight /
+      (df_viewer_config?.component_config?.height_fraction || 2),
+  };
+
+  const shortDivStyle = {
+    minHeight: 50,
+    maxHeight: 800,
+  };
+
+  const shortMode = agData.length + df_viewer_config.pinned_rows.length < 10;
+  const layoutType = shortMode ? 'autoHeight' : 'normal';
+  const applicableStyle = shortMode ? shortDivStyle : regularDivStyle;
+
   return (
-    <div className="df-viewer">
+    <div className={`df-viewer  ${shortMode ? 'short-mode' : 'regular-mode'}`}>
       <div
-        style={{ height: 400 }}
-        className="theme-hanger ag-theme-alpine-dark"
+        style={applicableStyle}
+        className="theme-hanger ag-theme-alpine-dark "
       >
         <AgGridReact
           ref={gridRef}
+          domLayout={layoutType}
           defaultColDef={defaultColDef}
           gridOptions={gridOptions}
           rowData={agData}

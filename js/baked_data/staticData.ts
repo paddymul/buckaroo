@@ -311,6 +311,7 @@ export const tableDf: DFWhole = {
       },
     ],
     extra_grid_config: { rowHeight: 105 },
+    component_config: { heightFraction: 1 },
     pinned_rows: [
       //      { primary_key_val: 'dtype', displayer_args: { displayer: 'obj' } },
       //      {        primary_key_val: 'histogram',        displayer_args: { displayer: 'histogram' },      },
