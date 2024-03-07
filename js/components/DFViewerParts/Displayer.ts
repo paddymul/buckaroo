@@ -12,6 +12,7 @@ import {
   Base64PNGDisplayer,
   HistogramCell,
   LinkCellRenderer,
+  SVGDisplayer,
 } from './HistogramCell';
 import { CellRendererArgs, FormatterArgs } from './DFWhole';
 
@@ -202,6 +203,8 @@ export function getCellRenderer(crArgs: CellRendererArgs) {
       return Base64PNGDisplayer;
     case 'boolean_checkbox':
       return 'agCheckboxCellRenderer';
+    case 'SVGDisplayer':
+      return SVGDisplayer;
   }
 }
 

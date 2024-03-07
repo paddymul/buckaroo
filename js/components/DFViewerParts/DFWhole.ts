@@ -62,11 +62,16 @@ export interface Base64PNGImageDisplayerA {
   displayer: 'Base64PNGImageDisplayer';
 }
 
+export interface SVGDisplayerA {
+  displayer: 'SVGDisplayer';
+}
+
 export type CellRendererArgs =
   | HistogramDisplayerA
   | LinkifyDisplayerA
   | BooleanCheckboxDisplayerA
-  | Base64PNGImageDisplayerA;
+  | Base64PNGImageDisplayerA
+  | SVGDisplayerA;
 
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
@@ -74,6 +79,7 @@ export const cellRendererDisplayers = [
   'histogram',
   'linkify',
   'Base64PNGImageDisplayer',
+  'SVGDisplayer',
 ];
 
 //ColorMapRules
