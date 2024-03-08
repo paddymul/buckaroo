@@ -3,6 +3,7 @@ import buckaroo
 
 from buckaroo.customizations.styling import DefaultMainStyling, StylingAnalysis
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
+from .dataflow.dataflow_extras import (Sampling)
 from buckaroo.serialization_utils import pd_to_obj
 from buckaroo.customizations.analysis import (TypingStats)
 import geopandas
@@ -45,6 +46,11 @@ class GeoStyling(StylingAnalysis): #DefaultMainStyling):
     ]
 
     extra_grid_config = {'rowHeight':105}
+
+class GeoPdSampling(Sampling):
+        #pre_limit = 500_000
+        #no point in a larger limit until summary stats work for Geopandas
+        pre_limit = 2_000
     
 
 class GeopandasBuckarooWidget(buckaroo.BuckarooWidget):
@@ -52,6 +58,8 @@ class GeopandasBuckarooWidget(buckaroo.BuckarooWidget):
         TypingStats,
         GeoStyling,
         SvgReprPostProcessing]
+
+    sampling_klass = GeoPdSampling
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
