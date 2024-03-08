@@ -83,7 +83,7 @@ def enable(sampled=True,
 
     def _display_geopandas_as_buckaroo(gdf):
         from IPython.display import display
-        from buckaroo.geopandas import GeopandasBuckarooWidget
+        from buckaroo.geopandas_buckaroo import GeopandasBuckarooWidget
 
         try:
             return display(GeopandasBuckarooWidget(gdf))
