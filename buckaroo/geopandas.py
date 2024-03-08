@@ -1,4 +1,33 @@
-rom buckaroo.customizations.styling import DefaultMainStyling, obj_, StylingAnalysis
+import pandas as pd
+import buckaroo
+
+from buckaroo.customizations.styling import DefaultMainStyling, obj_, StylingAnalysis
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
+from buckaroo.serialization_utils import pd_to_obj
+
+class SvgReprPostProcessing(ColAnalysis):
+    @classmethod
+    def post_process_df(kls, gdf):
+        geo_columns = []
+        svg_columns = []
+        columns = gdf.columns.copy()
+        svg_ser_dict = {}
+        for col in gdf.columns:
+            ser = gdf[col]
+            if isinstance(ser.dtype, geopandas.array.GeometryDtype):
+                svg_col_name = col+"_svg"
+                geo_columns.append(col)
+                svg_columns.append(svg_col_name)
+                svg_ser_dict[svg_col_name] = ser.apply(lambda x: x._repr_svg_())
+        svg_df = pd.DataFrame(svg_ser_dict)
+        merged_df = pd.concat([svg_df, gdf], axis=1)
+        
+        extra_conf = {}
+        for col in svg_columns:
+            extra_conf[col] = {'column_config_override': {'displayer_args': {'displayer': 'SVGDisplayer'}}}
+        return merged_df, extra_conf
+    post_processing_method = "svg_geo"
+    
 class GeoStyling(StylingAnalysis): #DefaultMainStyling):
     requires_summary = [#"histogram", 
                         "is_numeric", "dtype", "_type"]
@@ -9,54 +38,17 @@ class GeoStyling(StylingAnalysis): #DefaultMainStyling):
             return {'col_name':col, 'displayer_args': {'displayer': 'string', 'max_length': 100}}
         else:
             return DefaultMainStyling.style_column(col, column_metadata)
-    pinned_rows = [obj_('dtype'), obj_('_type')]
+    pinned_rows = [
+        #obj_('dtype'), obj_('_type')
+    ]
     
-from buckaroo.serialization_utils import pd_to_obj
-from buckaroo.customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 
 class GeopandasBuckarooWidget(buckaroo.BuckarooWidget):
     analysis_klasses = [
-        TypingStats, #DefaultSummaryStats,
-        #ComputedDefaultSummaryStats,
-        GeoStyling
-        #DefaultSummaryStatsStyling, DefaultMainStyling   
-    ]
+        TypingStats,
+        GeoStyling,
+        SvgReprPostProcessing]
+    
     def _df_to_obj(self, df):
-        # I want to this, but then row numbers are lost
-        #return pd_to_obj(self.sampling_klass.serialize_sample(df).to_pandas())
         pd_df = pd.DataFrame(dict(zip(df.columns, df.to_numpy().T)))
         return pd_to_obj(self.sampling_klass.serialize_sample(pd_df))
-
-
-    
-import pandas as pd
-import buckaroo
-#gdf = geopandas.GeoDataFrame.from_features(geojson)
-def render_geopandas(gp_df):
-    import geopandas
-    
-    geo_columns = []
-    svg_columns = []
-    columns = gp_df.columns.copy()
-    for col in gp_df.columns:
-        ser = gp_df[col]
-        if isinstance(ser.dtype, geopandas.array.GeometryDtype):
-            svg_col_name = col+"_svg"
-            geo_columns.append(col)
-            svg_columns.append(svg_col_name)
-            gp_df[svg_col_name] = ser.apply(lambda x: x._repr_svg_())
-    
-    df = pd.DataFrame(dict(zip(gp_df.columns, gp_df.to_numpy().T)))
-
-    col_config_override = {}
-    for column in geo_columns:
-       col_config_override[column] = {'merge_rule': 'hidden'}
-    for column in svg_columns:
-       col_config_override[column] = {'displayer_args': {'displayer': 'SVGDisplayer'}}
-    svg_columns.extend(columns)
-    #print(svg_columns)
-    return buckaroo.BuckarooWidget(df[svg_columns], column_config_overrides=col_config_override, 
-                                   pinned_rows=[],
-                                   extra_grid_config={'rowHeight':105})
-#bw = render_geopandas(gdf)
-#bw
