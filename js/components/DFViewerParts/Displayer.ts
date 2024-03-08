@@ -6,6 +6,7 @@ import {
   IntegerDisplayerA,
   DatetimeLocaleDisplayerA,
   StringDisplayerA,
+  ObjDisplayerA,
 } from './DFWhole';
 import _ from 'lodash';
 import {
@@ -83,10 +84,20 @@ const objDisplayer = (val: any | any[]): string => {
   return val;
 };
 
-export const objFormatter = (params: ValueFormatterParams): string => {
-  const val = params.value;
-  return objDisplayer(val);
-};
+export const getObjectFormatter = (fArgs:ObjDisplayerA) => {
+  const objFormatter = (params: ValueFormatterParams): string => {
+    const val = params.value;
+    const fullString = objDisplayer(val);
+    if(fArgs.max_length) {
+      return fullString.slice(0, fArgs.max_length)
+    } else {
+      return fullString
+    }
+  };
+  return objFormatter;
+}
+export const objFormatter = getObjectFormatter({'displayer':'obj'})
+
 
 export const boolDisplayer = (val: boolean) => {
   if (val === true) {
@@ -181,7 +192,7 @@ export function getFormatter(
     case 'boolean':
       return booleanFormatter;
     case 'obj':
-      return objFormatter;
+      return getObjectFormatter(fArgs);
     default:
       return getStringFormatter({ displayer: 'string' });
   }

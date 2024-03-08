@@ -7,6 +7,7 @@ type AGGrid_ColDef = ColDef;
 
 export interface ObjDisplayerA {
   displayer: 'obj';
+  max_length?:number;
 }
 export interface BooleanDisplayerA {
   displayer: 'boolean';
