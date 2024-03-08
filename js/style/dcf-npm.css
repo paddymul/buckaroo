@@ -210,7 +210,7 @@ div.dependent-tabs ul.tabs li.active {
 
 .df-viewer.short-mode .ag-center-cols-viewport {
 /*  min-height: unset !important;  */
-min-height: 50px;
+    min-height: 50px;
 }
 /*
 .df-viewer.short-mode > div {
