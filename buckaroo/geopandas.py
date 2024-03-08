@@ -1,8 +1,7 @@
 import pandas as pd
 import buckaroo
-from traitlets import Dict
 
-from buckaroo.customizations.styling import DefaultMainStyling, obj_, StylingAnalysis
+from buckaroo.customizations.styling import DefaultMainStyling, StylingAnalysis
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 from buckaroo.serialization_utils import pd_to_obj
 from buckaroo.customizations.analysis import (TypingStats)
@@ -14,7 +13,6 @@ class SvgReprPostProcessing(ColAnalysis):
     def post_process_df(kls, gdf):
         geo_columns = []
         svg_columns = []
-        columns = gdf.columns.copy()
         svg_ser_dict = {}
         for col in gdf.columns:
             ser = gdf[col]
@@ -39,7 +37,7 @@ class GeoStyling(StylingAnalysis): #DefaultMainStyling):
     def style_column(kls, col:str, column_metadata):
         t = column_metadata['_type']
         if t == 'obj':
-            return {'col_name':col, 'displayer_args': {'displayer': 'string', 'max_length': 100}}
+            return {'col_name':col, 'displayer_args': {'displayer': 'string', 'max_length': 50}}
         else:
             return DefaultMainStyling.style_column(col, column_metadata)
     pinned_rows = [
