@@ -103,21 +103,25 @@ export function DFViewer({
     };
   };
 
+  const dfvHeight =
+    window.innerHeight /
+    (df_viewer_config?.component_config?.height_fraction || 2);
   const regularDivStyle = {
-    height:
-      window.innerHeight /
-      (df_viewer_config?.component_config?.height_fraction || 2),
+    height: dfvHeight,
   };
 
   const shortDivStyle = {
     minHeight: 50,
-    maxHeight: 800,
+    maxHeight: dfvHeight,
   };
 
-  const shortMode = agData.length + df_viewer_config.pinned_rows.length < 10;
+  const belowMinRows = agData.length + df_viewer_config.pinned_rows.length < 10;
+  const shortMode =
+    belowMinRows &&
+    df_viewer_config?.extra_grid_config?.rowHeight === undefined;
   const layoutType = shortMode ? 'autoHeight' : 'normal';
   const applicableStyle = shortMode ? shortDivStyle : regularDivStyle;
-
+  console.log('shortMode', shortMode, dfvHeight);
   return (
     <div className={`df-viewer  ${shortMode ? 'short-mode' : 'regular-mode'}`}>
       <div
