@@ -41,20 +41,25 @@ def enable(sampled=True,
 
     buckaroo_mtime = dtdt.fromtimestamp(os.path.getmtime(__file__))
 
-    if buckaroo_mtime > server_start_time:
-        print("""It looks like you installed Buckaroo after you started this notebook server. If you see a message like "Failed to load model class 'DCEFWidgetModel' from module 'buckaroo'", restart the jupyter server and try again.  If you have furter errors, please file a bug report at https://github.com/paddymul/buckaroo""")
+    jupyter_env = determine_jupter_env()
+    if jupyter_env in ["jupyter-lab", "jupyter-notebook"] and buckaroo_mtime > server_start_time:
+        print("It looks like you installed Buckaroo after you started this notebook server.")
+        print("""If you see a messages like""")
+        print(""""Failed to load model class 'DCEFWidgetModel' from module 'buckaroo'" """)
+        print("""restart the jupyter server and try again.""")
+        print("""If you have furter errors, please file a bug report at https://github.com/paddymul/buckaroo""")
         print("-"*80)
         print("buckaroo_mtime", buckaroo_mtime, "server_start_time", server_start_time)
         #note we don't throw an exception here because this is a
         #warning. I think this usecase specifically works on google
         #colab
 
+
     
     def _display_as_buckaroo(df):
         from IPython.display import display
         try:
-            bw = BuckarooWidget(df,
-                                debug=debug)
+            bw = BuckarooWidget(df, debug=debug)
             return display(bw)
         except:
             if debug:
@@ -76,6 +81,19 @@ def enable(sampled=True,
                 return
             raise NotImplementedError
 
+    def _display_geopandas_as_buckaroo(gdf):
+        from IPython.display import display
+        from buckaroo.geopandas_buckaroo import GeopandasBuckarooWidget
+
+        try:
+            return display(GeopandasBuckarooWidget(gdf))
+        except:
+            if debug:
+                traceback.print_exc()
+                return
+            raise NotImplementedError
+
+
     ip_formatter = ip.display_formatter.ipython_display_formatter
     ip_formatter.for_type(pd.DataFrame, _display_as_buckaroo)
     
@@ -84,6 +102,14 @@ def enable(sampled=True,
         ip_formatter.for_type(pl.DataFrame, _display_polars_as_buckaroo)
     except ImportError:
         pass
+
+    try:
+        import geopandas
+        ip_formatter.for_type(geopandas.geodataframe.GeoDataFrame, _display_geopandas_as_buckaroo)
+    except ImportError:
+        pass
+
+
     return True
 
 def disable():
@@ -103,3 +129,23 @@ def disable():
     except ImportError:
         pass
     print("The default DataFrame displayers have been restored. To re-enable Buckaroo use `from buckaroo import enable; enable()`")
+
+def determine_jupter_env():
+    import psutil
+    parent_process = psutil.Process().parent().cmdline()[-1]
+
+    if 'jupyter-lab' in parent_process:
+        return "jupyter-lab"
+    elif 'jupyter-notebook' in parent_process:
+        return "jupyter-notebook"
+    elif '__vsc_ipynb_file__' in globals():
+        return "vscode"
+    else:
+        try:
+            from IPython.core import getipython
+            if 'google.colab' in str(getipython.get_ipython()):
+                return "google-colab"
+        except:
+            pass
+    return "unknown"
+
