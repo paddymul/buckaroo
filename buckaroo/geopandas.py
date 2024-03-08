@@ -43,6 +43,8 @@ class GeoStyling(StylingAnalysis): #DefaultMainStyling):
     pinned_rows = [
         #obj_('dtype'), obj_('_type')
     ]
+
+    extra_grid_config = {'rowHeight':105}
     
 
 class GeopandasBuckarooWidget(buckaroo.BuckarooWidget):
