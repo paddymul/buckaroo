@@ -1,9 +1,13 @@
 import pandas as pd
 import buckaroo
+from traitlets import Dict
 
 from buckaroo.customizations.styling import DefaultMainStyling, obj_, StylingAnalysis
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 from buckaroo.serialization_utils import pd_to_obj
+from buckaroo.customizations.analysis import (TypingStats)
+import geopandas
+
 
 class SvgReprPostProcessing(ColAnalysis):
     @classmethod
@@ -48,7 +52,13 @@ class GeopandasBuckarooWidget(buckaroo.BuckarooWidget):
         TypingStats,
         GeoStyling,
         SvgReprPostProcessing]
-    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        t_state = self.buckaroo_state.copy()
+        t_state['post_processing'] = 'svg_geo'
+        self.buckaroo_state = t_state
+        
     def _df_to_obj(self, df):
         pd_df = pd.DataFrame(dict(zip(df.columns, df.to_numpy().T)))
         return pd_to_obj(self.sampling_klass.serialize_sample(pd_df))
