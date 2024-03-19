@@ -1,7 +1,6 @@
 import * as React from 'react';
-//import {WidgetDCFCellExample} from 'react-edit-list';
-import {WidgetDCFCellExample} from 'buckaroo';
+import {extraComponents} from 'buckaroo';
 
 export default function Simple() {
-    return <WidgetDCFCellExample />;
+    return <extraComponents.WidgetDCFCellExample />;
 }

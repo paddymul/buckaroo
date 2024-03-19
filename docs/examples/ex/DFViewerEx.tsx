@@ -1,3 +1,3 @@
-import { DFViewerEx} from 'buckaroo';
+import { extraComponents } from 'buckaroo';
 
-export default DFViewerEx;
+export default extraComponents.DFViewerEx;

@@ -18,6 +18,7 @@
 .codeblock {
     max-height: 90vh;
     overflow-y: scroll;
+    text-align: left;
 }
 
 .codeblock > pre {
