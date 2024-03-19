@@ -1,8 +1,7 @@
 import * as React from 'react';
-import {
-  OperationViewer,
-} from '../../js/components/Operations';
-import {bakedOperations, bakedCommandConfig } from '../../js/baked_data/staticData';
+import { OperationViewer } from 'buckaroo';
+//import {bakedOperations, bakedCommandConfig } from '../../../js/baked_data/staticData';
+import {bakedOperations, bakedCommandConfig } from 'buckaroo';
 
 
 export default function Simple() {

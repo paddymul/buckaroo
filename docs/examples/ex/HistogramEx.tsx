@@ -1,6 +1,8 @@
 import React from 'react';
-import {histograms } from '../../js/baked_data/staticData';
-import { HistogramCell } from '../../js/components/DFViewerParts/HistogramCell';
+//import { histograms } from '../../js/baked_data/staticData';
+import { histograms } from 'buckaroo';
+//import { HistogramCell } from '../../js/components/DFViewerParts/HistogramCell';
+import { HistogramCell } from 'buckaroo';
 
 
 

@@ -1,20 +1,24 @@
-import {DFViewer} from '../../js/components/DFViewerParts/DFViewer';
+import {DFViewer} from 'buckaroo';
 //import { stringIndexDf } from '../../js/baked_data/staticData';
 import React, { useState} from 'react';
 //import { DFData, DFViewerConfig } from '../../js/components/DFViewerParts/DFWhole';
-import { realSummaryConfig, realSummaryTableData } from '../../js/baked_data/staticData';
+import { realSummaryConfig, realSummaryTableData } from 'buckaroo';
+import { DFViewerConfig } from 'buckaroo';
 
 
   export default function DFViewerExString() {
     const [activeCol, setActiveCol] = useState('tripduration');
-    
+    const dfv_config:DFViewerConfig = {
+      column_config:   realSummaryConfig.column_config,
+      pinned_rows: []}
+
         const current = {
           'df':realSummaryTableData, 'df_viewer_config': realSummaryConfig, 
           'summary_stats_data':realSummaryTableData };
 
-    return <DFViewer df_data={current.df}
-    df_viewer_config={current.df_viewer_config}
-    summary_stats_data={current.summary_stats_data}
+    return <DFViewer df_data={current.df.slice(0,3)}
+    df_viewer_config={dfv_config}
+    summary_stats_data={[]}
     activeCol={activeCol} setActiveCol={setActiveCol} />;
   }
   

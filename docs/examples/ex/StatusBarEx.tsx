@@ -1,4 +1,4 @@
-import {StatusBarEx} from '../../js/components/StatusBar';
+import {StatusBarEx} from 'buckaroo';
 
 export default StatusBarEx;
 // export default function Simple() {

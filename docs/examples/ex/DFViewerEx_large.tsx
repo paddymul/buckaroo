@@ -1,9 +1,8 @@
-import {DFViewer} from '../../js/components/DFViewerParts/DFViewer';
+import React, { useState} from 'react';
 import _ from 'lodash';
 
-//import { stringIndexDf } from '../../js/baked_data/staticData';
-import React, { useState} from 'react';
-import { DFData, DFViewerConfig } from '../../js/components/DFViewerParts/DFWhole';
+import {DFViewer} from 'buckaroo';
+import { DFData, DFViewerConfig } from 'buckaroo';
 
 const data = [
   {
