@@ -1,24 +1,47 @@
 {
   "compilerOptions": {
+    //"declaration": true, REL
     "declaration": true,
+    //  "declarationMap": true, REL MISSING
+    //  "removeComments": true, REL MISSING
+    //  "downlevelIteration": true, REL MISSING
+    // "paths": {
+    //       "react-edit-list": [
+    //           "./src"
+    //       ]
+    //   } REL MISSING
+    //  "esModuleInterop": true, REL
     "esModuleInterop": true,
+     //  "allowSyntheticDefaultImports": true, REL
     "allowSyntheticDefaultImports": true,
+    //"lib": [ "esnext",  "dom", "dom.iterable" ], REL DIFFERENT
       "lib": ["es2019", "dom",       "dom.iterable"],
+    // "module": "commonjs", REL
     "module": "commonjs",
+     //  "moduleResolution": "node", REL
     "moduleResolution": "node",
-    "noEmitOnError": true,
-    "noUnusedLocals": true,
+    //"noImplicitAny": false, REL MISSING 
+    "noEmitOnError": true, // ONLY
+    "noUnusedLocals": true, // ONLY
+    //"outDir": ".", REL DIFFERENT
     "outDir": "lib",
+    // "resolveJsonModule": true, REL
     "resolveJsonModule": true,
-    "rootDirs": ["./", "js"],
+    "rootDirs": ["./", "js"],  // ONLY
+    //  "skipLibCheck": true, REL
     "skipLibCheck": true,
+     //  "sourceMap": true, REL
     "sourceMap": true,
+     //  "strict": true, REL
     "strict": true,
       "experimentalDecorators": true,
     // This allows us to initialize members in the "initialize" method
     "strictPropertyInitialization": false,
+    //  "target": "es5", REL DIFFERENT
       "target": "es2015",
+    // "jsx": "react", REL
       "jsx": "react",
+    //  "baseUrl": "./", REL
       "baseUrl": "."
   },
     "typeRoots": [
