@@ -42,6 +42,7 @@
     "build:nbextension": "webpack --mode=production --no-devtool",
     "build:widget-examples": "cd widget-examples/basic && webpack --mode=production",
     "build:all": "npm run build:labextension && npm run build:nbextension && npm run build:widget-examples",
+    "build:examples": "webpack --mode=production --config docs/webpack.typescript.localdev.ts --env production",
     "clean": "rimraf dist && npm run clean:lib && npm run clean:labextension && npm run clean:nbextension",
     "clean:lib": "rimraf lib",
     "clean:labextension": "rimraf buckaroo/labextension",
