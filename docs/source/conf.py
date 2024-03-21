@@ -5,6 +5,7 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import json
 
 project = 'Buckaroo'
 copyright = '2023-2024, Paddy Mullen'
