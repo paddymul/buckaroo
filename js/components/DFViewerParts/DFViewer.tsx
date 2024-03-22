@@ -16,8 +16,6 @@ import { getCellRendererSelector } from './gridUtils';
 
 export type setColumFunc = (newCol: string) => void;
 
-
-
 export function DFViewer({
   df_data: df,
   df_viewer_config,
@@ -105,9 +103,12 @@ export function DFViewer({
     };
   };
 
- const hs = heightStyle(
-  agData.length, df_viewer_config.pinned_rows.length,
-  df_viewer_config?.extra_grid_config?.rowHeight, df_viewer_config?.component_config);
+  const hs = heightStyle(
+    agData.length,
+    df_viewer_config.pinned_rows.length,
+    df_viewer_config?.extra_grid_config?.rowHeight,
+    df_viewer_config?.component_config
+  );
 
   return (
     <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
@@ -130,40 +131,41 @@ export function DFViewer({
   );
 }
 
-export const heightStyle = (numRows:number,  pinnedRowLen:number, rowHeight?:number, compC?: ComponentConfig) => {
+export const heightStyle = (
+  numRows: number,
+  pinnedRowLen: number,
+  rowHeight?: number,
+  compC?: ComponentConfig
+) => {
   const inIframe = window.parent !== window;
-   const dfvHeight =
-     compC?.dfvHeight || window.innerHeight / (compC?.height_fraction || 2);
-   const regularDivStyle = {  height: dfvHeight   };
- 
-   const shortDivStyle = {minHeight: 50, maxHeight: dfvHeight};
- 
-//   const belowMinRows = agData.length + df_viewer_config.pinned_rows.length < 10;
-const belowMinRows = (numRows + pinnedRowLen ) < 10;
+  const dfvHeight =
+    compC?.dfvHeight || window.innerHeight / (compC?.height_fraction || 2);
+  const regularDivStyle = { height: dfvHeight };
 
-   const shortMode =
-     compC?.shortMode ||
-     (belowMinRows && rowHeight === undefined);
-   const domLayout = compC?.layoutType || (shortMode ? 'autoHeight' : 'normal');
-   const applicableStyle = shortMode ? shortDivStyle : regularDivStyle;
-   console.log('shortMode', shortMode, dfvHeight, inIframe);
+  const shortDivStyle = { minHeight: 50, maxHeight: dfvHeight };
+
+  //   const belowMinRows = agData.length + df_viewer_config.pinned_rows.length < 10;
+  const belowMinRows = numRows + pinnedRowLen < 10;
+
+  const shortMode =
+    compC?.shortMode || (belowMinRows && rowHeight === undefined);
+  const domLayout = compC?.layoutType || (shortMode ? 'autoHeight' : 'normal');
+  const applicableStyle = shortMode ? shortDivStyle : regularDivStyle;
+  console.log('shortMode', shortMode, dfvHeight, inIframe);
   return {
     classMode: shortMode ? 'short-mode' : 'regular-mode',
     inIframe: inIframe ? 'in-iframe' : '',
     domLayout,
     applicableStyle,
-  }
+  };
 
-
-/*
+  /*
   ab = window.location.host;
  "cskfus796ts-496ff2e9c6d22116-0-colab.googleusercontent.com"
  bc = window.location.pathname
  "/outputframe.html" 
-*/ 
-
-}
-
+*/
+};
 
 export function DFViewerEx() {
   const [activeCol, setActiveCol] = useState('tripduration');
