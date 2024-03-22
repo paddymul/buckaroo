@@ -6,6 +6,7 @@ import { dfToAgrid, extractPinnedRows } from './gridUtils';
 import { replaceAtMatch } from '../utils';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import {
+  DomLayoutType,
   GridOptions,
   SizeColumnsToContentStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
@@ -130,15 +131,21 @@ export function DFViewer({
   );
 }
 
-interface heightStyleArgs {
+interface HeightStyleArgs {
   numRows: number;
   pinnedRowLen: number;
   readonly location: Location;
   rowHeight?: number;
   compC?: ComponentConfig;
 }
+interface HeightStyleI {
+  domLayout:DomLayoutType;
+  inIframe: string;
+  classMode: 'short-mode'|'regular-mode';
+  applicableStyle:CSSProperties;
+}
 
-export const heightStyle = (hArgs: heightStyleArgs) => {
+export const heightStyle = (hArgs: HeightStyleArgs):HeightStyleI => {
   const { numRows, pinnedRowLen, location, rowHeight, compC } = hArgs;
   const isGoogleColab =
     location.host.indexOf('colab.googleusercontent.com') !== -1;
@@ -163,22 +170,23 @@ export const heightStyle = (hArgs: heightStyleArgs) => {
     'inIframe',
     inIframe
   );
+  const inIframeClass = inIframe ? 'inIframe' : '';
   if (isGoogleColab || inIframe) {
     return {
       classMode: 'regular-mode',
       domLayout: 'normal',
       applicableStyle: { height: 500 },
-      inIframe: true,
+      inIframe: inIframeClass,
     };
   }
-  const domLayout = compC?.layoutType || (shortMode ? 'autoHeight' : 'normal');
+  const domLayout:DomLayoutType = compC?.layoutType || (shortMode ? 'autoHeight' : 'normal');
   const applicableStyle = shortMode ? shortDivStyle : regularDivStyle;
   const classMode = shortMode ? 'short-mode' : 'regular-mode';
   return {
     classMode,
     domLayout,
     applicableStyle,
-    inIframe,
+    inIframe:inIframeClass
   };
 
   /*
