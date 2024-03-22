@@ -103,6 +103,7 @@ export function DFViewer({
     };
   };
 
+  const inIframe = window.parent !== window;
   const compC = df_viewer_config?.component_config;
   const dfvHeight =
     compC?.dfvHeight || window.innerHeight / (compC?.height_fraction || 2);
