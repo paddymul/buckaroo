@@ -10,7 +10,7 @@ import json
 project = 'Buckaroo'
 copyright = '2023-2024, Paddy Mullen'
 author = 'Paddy Mullen'
-release = json.loads(open("../package.json").read())['version']
+release = json.loads(open("../../package.json").read())['version']
 
 
 # -- General configuration ---------------------------------------------------
