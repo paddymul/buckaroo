@@ -139,13 +139,13 @@ interface HeightStyleArgs {
   compC?: ComponentConfig;
 }
 interface HeightStyleI {
-  domLayout:DomLayoutType;
+  domLayout: DomLayoutType;
   inIframe: string;
-  classMode: 'short-mode'|'regular-mode';
-  applicableStyle:CSSProperties;
+  classMode: 'short-mode' | 'regular-mode';
+  applicableStyle: CSSProperties;
 }
 
-export const heightStyle = (hArgs: HeightStyleArgs):HeightStyleI => {
+export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
   const { numRows, pinnedRowLen, location, rowHeight, compC } = hArgs;
   const isGoogleColab =
     location.host.indexOf('colab.googleusercontent.com') !== -1;
@@ -179,14 +179,15 @@ export const heightStyle = (hArgs: HeightStyleArgs):HeightStyleI => {
       inIframe: inIframeClass,
     };
   }
-  const domLayout:DomLayoutType = compC?.layoutType || (shortMode ? 'autoHeight' : 'normal');
+  const domLayout: DomLayoutType =
+    compC?.layoutType || (shortMode ? 'autoHeight' : 'normal');
   const applicableStyle = shortMode ? shortDivStyle : regularDivStyle;
   const classMode = shortMode ? 'short-mode' : 'regular-mode';
   return {
     classMode,
     domLayout,
     applicableStyle,
-    inIframe:inIframeClass
+    inIframe: inIframeClass,
   };
 
   /*
