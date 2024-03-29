@@ -51,7 +51,8 @@ test = [
     "hypothesis>=6.88.1",
     "polars>=0.19.4",
     "pydantic>=2.5.2",
-    "pyarrow"
+    "pyarrow",
+    "geopandas"
 ]
 polars = ["polars>=0.20.7"]
 jupyterlab = ["jupyterlab>=3.6.0"]
