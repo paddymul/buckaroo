@@ -53,6 +53,7 @@ class GeoPdSampling(Sampling):
         pre_limit = 2_000
     
 
+
 class GeopandasBase(buckaroo.BuckarooWidget):
 
     def _df_to_obj(self, df):
@@ -71,6 +72,8 @@ class GeopandasBase(buckaroo.BuckarooWidget):
         # the stats name
         return pd_to_obj(pd.DataFrame(temp_sd))
 
+class GeopandasBuckarooWidget(GeopandasBase):
+    pass
     
 class GeopandasSVGBuckarooWidget(GeopandasBase):
     analysis_klasses = [
@@ -85,6 +88,3 @@ class GeopandasSVGBuckarooWidget(GeopandasBase):
         t_state = self.buckaroo_state.copy()
         t_state['post_processing'] = 'svg_geo'
         self.buckaroo_state = t_state
-
-class GeopandasBuckarooWidget(GeopandasBase):
-    pass
