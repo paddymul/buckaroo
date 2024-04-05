@@ -307,12 +307,25 @@ class CustomizableDataflow(DataFlow):
         """exists so this can be overriden for polars  """
         temp_sd = sd.copy()
         #FIXME add actual test around weird index behavior
+        print("here 310")
         if 'index' in temp_sd:
             del temp_sd['index']
-        return self._df_to_obj(pd.DataFrame(temp_sd))
+        print("here 313")
+        temp_df = pd.DataFrame(temp_sd)
+        print("here 315")
+        ab =  self._df_to_obj(temp_df)
+        print("here 316")
+        return ab 
+    
 
     def _df_to_obj(self, df:pd.DataFrame):
-        return pd_to_obj(self.sampling_klass.serialize_sample(df))
+        sampled = self.sampling_klass.serialize_sample(df)
+        print("here 323")
+        print("type sampled", type(sampled))
+        print(sampled)
+        ab = pd_to_obj(sampled)
+        print("here 325")
+        return ab 
     
 
     #final processing block
@@ -332,11 +345,15 @@ class CustomizableDataflow(DataFlow):
         # to expedite processing maybe future provided dfs from
         # postprcoessing could default to empty until that is
         # selected, optionally
-        
-        self.df_data_dict = {'main': self._df_to_obj(processed_df),
-                             'all_stats': self._sd_to_jsondf(merged_sd),
-                             'empty': []}
 
+        ab = self._df_to_obj(processed_df)
+        print("here 343")
+        bc = self._sd_to_jsondf(merged_sd),
+        print("here 345")
+        self.df_data_dict = {'main': ab,
+                             'all_stats': bc,
+                             'empty': []}
+        print("here 349")
         temp_display_args = {}
         for display_name, A_Klass in self.df_display_klasses.items():
             df_viewer_config = A_Klass.style_columns(merged_sd)

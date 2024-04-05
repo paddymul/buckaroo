@@ -83,16 +83,30 @@ def df_to_obj(unknown_df:Union[pd.DataFrame, Any], summary_dict:Any):
 
 
 def pd_to_obj(df:pd.DataFrame):
-    obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+    print("here ser 86")
+    if len(df) > 4:
+        df = df[20:21]
+        val = df.iloc[0][0]
+        print("val", val)
+        print("type(val)", type(val))
 
-    if isinstance(df.index, pd.MultiIndex):
-        old_index = df.index
-        temp_index = pd.Index(df.index.to_list(), tupleize_cols=False)
-        df.index = temp_index
-        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
-        df.index = old_index
-    else:
-        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+    print("df.index", df.index)
+    print("len df", len(df))
+    #serialized = df.to_json(orient='table', indent=2, default_handler=str)
+    serialized = df.to_json(orient='table', indent=2, default_handler=str)
+    print("here ser 88")
+    obj = json.loads(serialized)
+    print("here ser 99")
+    print(obj['data'])
+
+    # if isinstance(df.index, pd.MultiIndex):
+    #     old_index = df.index
+    #     temp_index = pd.Index(df.index.to_list(), tupleize_cols=False)
+    #     df.index = temp_index
+    #     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+    #     df.index = old_index
+    # else:
+    #     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
     return obj['data']
 
 
