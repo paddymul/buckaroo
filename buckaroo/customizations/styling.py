@@ -21,7 +21,7 @@ class DefaultMainStyling(StylingAnalysis):
         #print(col, list(sd.keys()))
         if len(column_metadata.keys()) == 0:
             #I'm still having problems with index and polars
-            return {'col_name':col, 'displayer_args': {'displayer': 'obj'}}
+            return {'col_name':str(col), 'displayer_args': {'displayer': 'obj'}}
 
         digits = 3
         t = column_metadata['_type']
@@ -35,7 +35,7 @@ class DefaultMainStyling(StylingAnalysis):
             disp = {'displayer': 'string', 'max_length': 35}
         else:
             disp = {'displayer': 'obj'}
-        return {'col_name':col, 'displayer_args': disp }
+        return {'col_name':str(col), 'displayer_args': disp }
 
 
 class DefaultSummaryStatsStyling(StylingAnalysis):
