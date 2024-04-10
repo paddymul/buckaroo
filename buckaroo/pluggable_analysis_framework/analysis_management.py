@@ -230,7 +230,7 @@ class DfStats(object):
         if ut_errs:
             # setting debug=False here because we're already printing reproduce instructions, let the users produce their own stacktrace.. I think
             ut_summary_df, ut_errs2 = produce_summary_df(
-                PERVERSE_DF, self.ap.ordered_a_objs, debug=False)
+                PERVERSE_DF, {}, self.ap.ordered_a_objs, debug=False)
             output_full_reproduce(ut_errs, ut_summary_df, "PERVERSE_DF")
         if errs:
             output_full_reproduce(errs, self.sdf, self.operating_df_name)
