@@ -83,9 +83,12 @@ def df_to_obj(unknown_df:Union[pd.DataFrame, Any], summary_dict:Any):
 
 
 def pd_to_obj(df:pd.DataFrame):
+    print("--------------")
     print("here ser 86")
+
     if len(df) > 4:
         df = df[20:21]
+        print(df)
         val = df.iloc[0][0]
         print("val", val)
         print("type(val)", type(val))
@@ -93,7 +96,7 @@ def pd_to_obj(df:pd.DataFrame):
     print("df.index", df.index)
     print("len df", len(df))
     #serialized = df.to_json(orient='table', indent=2, default_handler=str)
-    serialized = df.to_json(orient='table', indent=2, default_handler=str)
+    serialized = df.to_json(orient='table') #, indent=2, default_handler=str)
     print("here ser 88")
     obj = json.loads(serialized)
     print("here ser 99")
