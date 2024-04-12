@@ -58,7 +58,7 @@ test = [
 polars = ["polars>=0.20.7",
        "polars[timezone]"
 ]
-jupyterlab = ["jupyterlab>=3.6.0"]
+jupyterlab = ["jupyterlab>=4.0.13"]
 notebook = ["notebook>=7.0.0"]
 
 
