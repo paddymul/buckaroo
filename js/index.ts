@@ -1,4 +1,4 @@
-// Copyright (c) Bloomberg
+// Copyright (c) Paddy Mullen
 // Distributed under the terms of the Modified BSD License.
 
 import { ColumnsEditor, ColumnsEditorEx } from './components/ColumnsEditor';

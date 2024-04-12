@@ -19,11 +19,11 @@ const EXTENSION_ID = 'buckaroo:plugin';
  */
 const datagridPlugin: IPlugin<Application<Widget>, void> = {
   id: EXTENSION_ID,
-  requires: [IJupyterWidgetRegistry],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  optional: [IThemeManager as any],
+  // requires: [IJupyterWidgetRegistry],
+  // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // optional: [IThemeManager as any],
   activate: activateWidgetExtension,
-  autoStart: true,
+  // autoStart: true,
 };
 
 export default datagridPlugin;
@@ -31,13 +31,46 @@ export default datagridPlugin;
 /**
  * Activate the widget extension.
  */
+// function activateWidgetExtension(
+//   app: Application<Widget>,
+//   registry: IJupyterWidgetRegistry,
+//   themeManager: IThemeManager | null
+// ): void {
+//   console.log('buckaroo_widget plugin.ts after change EXTENSION_ID');
+//   // Exporting a patched DataGridView widget which handles dynamic theme changes
+//   registry.registerWidget({
+//     name: MODULE_NAME,
+//     version: MODULE_VERSION,
+//     exports: {
+//       ...dcefwidget,
+//     },
+//   });
+// }
+
+// /**
+//  * The datagrid plugin.
+//  */
+// const datagridPlugin: IPlugin<Application<Widget>, void> = {
+//   id: EXTENSION_ID,
+//   requires: [IJupyterWidgetRegistry],
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   optional: [IThemeManager as any],
+//   activate: activateWidgetExtension,
+//   autoStart: true,
+// };
+
+// export default datagridPlugin;
+
+/**
+ * Activate the widget extension.
+ */
 function activateWidgetExtension(
   app: Application<Widget>,
   registry: IJupyterWidgetRegistry,
-  themeManager: IThemeManager | null
+  themeManager: IThemeManager | null,
 ): void {
   console.log('buckaroo_widget plugin.ts after change EXTENSION_ID');
-  // Exporting a patched DataGridView widget which handles dynamic theme changes
+
   registry.registerWidget({
     name: MODULE_NAME,
     version: MODULE_VERSION,
@@ -46,3 +79,4 @@ function activateWidgetExtension(
     },
   });
 }
+

@@ -4,7 +4,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
       "lib": ["es2019", "dom",       "dom.iterable"],
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "noEmitOnError": true,
     "noUnusedLocals": true,
@@ -17,7 +17,7 @@
       "experimentalDecorators": true,
     // This allows us to initialize members in the "initialize" method
     "strictPropertyInitialization": false,
-      "target": "es2015",
+      "target": "es2017",
       "jsx": "react",
       "baseUrl": "."
   },

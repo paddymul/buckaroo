@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    "hatchling",
-    "jupyterlab~=4.0",
+    "hatchling>=1.18",
+    "jupyterlab~=4.0.5",
     "pandas>=2.1.0"
 ]
 build-backend = "hatchling.build"
@@ -34,7 +34,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "ipywidgets>=7.6.0,<9",
+    "ipywidgets<9,>=7.6",
     "graphlib_backport>=1.0.0"
 ]
 version = "0.6.11"
@@ -120,7 +120,7 @@ build-function = "hatch_jupyter_builder.npm_builder"
 path = "."
 build_cmd = "build"
 npm = [
-    "npm",
+    "jlpm",
 ]
 
 [tool.isort]
