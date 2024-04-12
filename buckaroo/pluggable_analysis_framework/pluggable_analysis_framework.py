@@ -8,10 +8,9 @@ class ColAnalysis:
 
     this is the pandas based implementation
     """
-    requires_raw = False
     requires_summary:List[str] = [] # What summary stats does this analysis provide
 
-    provides_series_stats:List[str] = [] # what does this provide at a series level
+    #provides_series_stats:List[str] = [] # what does this provide at a series level
     provides_defaults:Mapping[str, any] = {}
 
 
@@ -25,10 +24,9 @@ class ColAnalysis:
     def full_provides(kls):
         if not isinstance(kls.provides_defaults, dict):
             raise Exception("no provides Defaults for %r" %kls)
-        a = kls.provides_series_stats.copy()
-        #I can't figure out why the property won't work here
-        a.extend(list(kls.provides_defaults.keys()))
-        return a
+
+        #a = kls.provides_series_stats.copy()
+        return list(kls.provides_defaults.keys())
 
     summary_stats_display:Union[List[str], None] = None
     quiet = False
@@ -42,18 +40,11 @@ class ColAnalysis:
     def computed_summary(summary_dict):
         return {}
 
-    @staticmethod
-    def column_order(sampled_ser, summary_ser):
-        pass
-
-    @staticmethod
-    def column_config(summary_dict): # -> ColumnConfig partial without col_name
-        pass
-
     @classmethod
     def cname(kls):
         return kls.__qualname__
 
+    #polars methods
     select_clauses:List[Any] = []
     column_ops: Mapping[str, Tuple[List[Any], Callable[[Any], Any]]] = {}
 
