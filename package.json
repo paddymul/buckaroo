@@ -79,7 +79,7 @@
     "@babel/core": "^7.6.3",
     "@babel/preset-env": "^7.6.11",
     "@babel/preset-typescript": "7.16.7",
-    "@jupyterlab/builder": "^3.0.1",
+    "@jupyterlab/builder": "^4.0.5",
     "@types/jest": "^28",
     "@types/node": "^10.11.6",
     "@types/react": "^18.0.0",
