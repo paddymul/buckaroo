@@ -4,112 +4,66 @@
 Pluggable analysis framework
 ============================
 
-The pluggable analysis framework is built to allow the different bits of analysis done by buckaroo to be mixed and matched as configuration, without requiring editting the core of buckaroo.  Pieces of analysis can build on each other, and errors are flagged intelligently.
+
+The pluggable analysis framework is built to make it easy to add custom analysis to table applications built with Buckaroo.  It powers summary stats and styling for buckaroo.
+
+Why
+---
+when writing analysis code, I frequently wrote code that iterated over columns and built a resulting summary dataframe.  This is initially simple.  First you write transformations inline, then you probably iterate over functions that operate on each column.  Eventually this type of code becomes difficult to maintain.  A single error is hard to track down because it will be in the middle of nested for loops.  For pandas in particular you face the problem of either repeating expenesive analyses over and over (value counts) or depending on state in an adhoc way.  Your simple functions become complex and dependent on order of execution.
 
 
-Analysis In Action
-==================
+How
+---
 
-The most obvious piece of analysis is adding a new measure/fact to summary stats.
+The pluggable analysis framework improves these problems by
+1. Writing analysis into classes that extend `ColAnalysis`
+2. Requiring each analysis class to recieve previously computed values, specify which keys it depends on, and specify keys it provides along with defaults
+3. Ordering analysis classes into a DAG so users don't have to manually order dependent classes.  If the DAG contains cycles or the required keys aren't provided, an error is thrown before execution with a more understandable message.
+4. If an error occurs during excution, sensible error messages are displayed along with explicit steps to reproduce.  No more navigating through nested for loop stack traces and wondering what the state passed into functions was.
 
-A monolithic summary_stats would look like this
+There are 3 main areas that the pluggable analysis framework is responsible for powering
+1. Summary stats.  A dictionary of measures about each column.  These can be independently computed on a per column basis.
+2. Column styling.  This is a function that takes the "required" measures about an individual column and returns a column_config.  Once again this can be computed indepently per column.  Styling also can generally be agnostic to pandas vs polars, as long as the other analysis classes provide similar measures
+3. Transform functions.  Transform functions operate on the entire dataframe, and return extra summary_stats.  This is the only place you can operate on related columns.
 
-.. code-block:: python
-
-    def summarize_string(ser):
-        l = len(ser)
-        val_counts = ser.value_counts()
-        distinct_count= len(val_counts)
-    
-        return dict(
-            dtype=ser.dtype,
-            length=l,
-            min='',
-            distinct_count= distinct_count,
-            distinct_percent = distinct_count/l)
-    
-    def summarize_df(df):
-        summary_df = pd.DataFrame({col:summarize_string(df[col]) for col in df})
-        return summary_df
-    
-    
-If you wanted to enhance that simple summary_stat by adding nan_count and nan_percent, you would have to rewrite the entire function and get buckaroo to use your new function.  Instead, imagine that the existing ``sumarize_string`` was already built into Buckaroo and you wanted to add to it. Here's what the code looks like.
-    
-    
-.. code-block:: python
-
-    bw = BuckarooWidget(df)
-    @bw.add_analysis
-    class NanStats(ColAnalysis):
-        provided_summary = [
-            'nan_count', 'nan_percent']
-        requires_summary = ['length']
-    
-        @staticmethod
-        def summary(sampled_ser, summary_ser, ser):
-            l = summary_ser.loc['min']
-            nan_count = l - len(ser.dropna())
-            return dict(
-    	    nan_count = nan_count,
-                nan_percent = nan_count/l)
-    bw  #render the buckaroo widget
-    
-
-
-
-Now buckaroo will be displayed with the new summary stats of 'nan_count' and 'nan_percent'.  Buckaroo knows that ``NanStats`` must be called after the ``ColAnalysis`` object that provides ``length`` and that ordering is handled for you automatically (via a DAG).
-
-You can then iteratively and interactively update your analysis in the jupyter notebook focussing on the core of your business logic without worrying about how to structure your code.  When ``add_analysis`` is called, a set of simple unit tests are run that catch common errors with weird datashapes.  This means you can focus on coding and not worry about all the edge cases.
-
-
-Features of the Pluggable Analysis Framework
-============================================
-
-Every aspect of the interactive experience of buckaroo can be manipulated through Analysis objects
-
-summary_stats
-    different facts can be added to the summary stats view... This is the most basic type of analysis to add
-
-table_hints
-    # used for styling hints like coloring or font.  The frontend currently doesn't do much with table_hints
-
-column_ordering
-    Allows a custom ordering of columns
-
-    .. code-block:: python
-    		
-        class NumbersFirst(ColAnalysis):
-            requires_summary = ['is_numeric']
-        
-            @staticmethod
-            def column_ordering(summary_df):
-	        # I know that this could be done in pure pandas on the summary_df
-                col_dicts = []
-                for i, col in enumerate(df.columns):
-        	    col_facts = {
-		        'name':col,
-			'existing_order_score': i/len(df.columns)}
-                    if summary_df[col]['is_numeric']:
-        	        col_facts['numeric_boost'] = 2
-        	    else:
-                        col_facts['numeric_boost'] = 0
-        	    col_facts['total_score'] = col_facts['existing_order_score'] + col_facts['numeric_boost']
-                    return [cd['name'] for cd in sorted(col_dicts, key=lambda x: x['total_score'])]
-
-    
-summary_stats_display
-    a list of which rows from summary stats to display.  Currently only the last added summary_stats_set is used
-
-
-multiple column_orderings and summary_stats_facts can be added.  Then the UI allows the user to toggle through the different column orderings to see the view of the table they want.
-
-Order of Operations
+Methods to override
 ===================
 
+* Pandas / Polars specific methods to produce raw facts (covered separately)
+* ``style_column``  return a column_config given column_metadata
+* ``post_process_df``  modify the entire dataframe
 
-The pluggable analysis framework runs different functions on analysis functions in a specific order.  First the DAG for all of the analysis objects and verifies that all of the needed facts can be computed. once all of the analysis objects are ordered the computations start.
+Properties to override
+======================
 
-1. Compute the order of analysis objects.  This builds a DAG and makes sure all of the facts can be computed.
-2. Run all of the ``summary`` methods and build the ``summary_df``
-3. extract table_hints from the ``summary_df``
+* ``post_processing_method``  name of the post_processing function for display in the UI
+* ``pinned_rows``   Ordered list of pinned_row configs that will be show before any main data
+* ``df_display_name``  Name of the display view that is visible in the UI
+* ``data_key``         Which key to read the non_pinned rows from, use "main" or "empty"
 
+Shared Summary stats properties
+===============================
+
+* ``requires_summary``    a list of keys that must be provided for this analysis to compute
+* ``provides_defaults``   a dictionary from measure_key to measure of defaults that this analysis provides
+* ``computed_summary``   passed the dictionary of measures, returns extra measures computed off of these, will include any measures computed by series_summary
+   
+Pandas specific methods
+=======================
+1. ``series_summary``  Passed the series and sampled series, returns a dictionary of measures
+The `extending-pandas <https://github.com/paddymul/buckaroo/blob/main/example-notebooks/Extending-pandas.ipynb>`_ notebook shows all of these methods being used
+
+Polars specific methods
+=======================
+1. ``select_clauses``  A list of polars expressions to be called on the dataframe.  Try to use this as much as possible, select queries are optimized heavily by polars.
+2. ``column_ops``  a dictionary from measure_key to  tuple of polars selector, and a function to apply to the polars series object of each matching series.  There are some polars operations that only can be called on series and not executed as a select query.
+
+The `extending-polars <https://github.com/paddymul/buckaroo/blob/main/example-notebooks/Extending.ipynb>`_ notebook shows all of these methods being used
+
+
+
+Future Improvements
+===================
+
+1. Future releases of Buckaroo should include pydantic for better typing of summary stats methods
+2. Better error messages.  The error messages in pluggable analysis framework seek to give you a one line reproduction fo the error found.  through some refactorings, the method names have changed.
