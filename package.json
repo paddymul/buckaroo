@@ -59,8 +59,13 @@
     "dev": "webpack-cli serve --config docs/webpack.typescript.localdev.ts  --mode=development --env development --open"
   },
   "dependencies": {
-    "@jupyter-widgets/base": "^2 || ^3 || ^4 || ^6.0.0",
-    "@jupyterlab/apputils": "^3.0.2",
+    "@jupyter-widgets/base": "6.0.6",
+    "@jupyterlab/apputils": "^3 || ^4",
+    "@lumino/application": "^1 || ^2",
+    "@lumino/coreutils": "2.1.2",
+    "@lumino/widgets": "2.3.2",
+    "@types/backbone": "^1.4.19",
+    "@types/lodash": "^4.17.0",
     "ag-grid-community": "^31.0.3",
     "ag-grid-react": "^31.0.3",
     "lodash": "^4.17.21",
