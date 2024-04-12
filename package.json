@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@jupyter-widgets/base": "^2 || ^3 || ^4 || ^6.0.0",
-    "@jupyterlab/apputils": "^3.0.2",
+    "@jupyterlab/apputils": "^4.0.0",
     "ag-grid-community": "^31.0.3",
     "ag-grid-react": "^31.0.3",
     "lodash": "^4.17.21",
