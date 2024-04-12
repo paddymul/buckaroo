@@ -16,15 +16,17 @@ How
 ---
 
 The pluggable analysis framework improves these problems by
-1. Writing analysis into classes that extend `ColAnalysis`
-2. Requiring each analysis class to recieve previously computed values, specify which keys it depends on, and specify keys it provides along with defaults
-3. Ordering analysis classes into a DAG so users don't have to manually order dependent classes.  If the DAG contains cycles or the required keys aren't provided, an error is thrown before execution with a more understandable message.
-4. If an error occurs during excution, sensible error messages are displayed along with explicit steps to reproduce.  No more navigating through nested for loop stack traces and wondering what the state passed into functions was.
+
+#. Writing analysis into classes that extend `ColAnalysis`
+#. Requiring each analysis class to recieve previously computed values, specify which keys it depends on, and specify keys it provides along with defaults
+#. Ordering analysis classes into a DAG so users don't have to manually order dependent classes.  If the DAG contains cycles or the required keys aren't provided, an error is thrown before execution with a more understandable message.
+#. If an error occurs during excution, sensible error messages are displayed along with explicit steps to reproduce.  No more navigating through nested for loop stack traces and wondering what the state passed into functions was.
 
 There are 3 main areas that the pluggable analysis framework is responsible for powering
-1. Summary stats.  A dictionary of measures about each column.  These can be independently computed on a per column basis.
-2. Column styling.  This is a function that takes the "required" measures about an individual column and returns a column_config.  Once again this can be computed indepently per column.  Styling also can generally be agnostic to pandas vs polars, as long as the other analysis classes provide similar measures
-3. Transform functions.  Transform functions operate on the entire dataframe, and return extra summary_stats.  This is the only place you can operate on related columns.
+
+#. Summary stats.  A dictionary of measures about each column.  These can be independently computed on a per column basis.
+#. Column styling.  This is a function that takes the "required" measures about an individual column and returns a column_config.  Once again this can be computed indepently per column.  Styling also can generally be agnostic to pandas vs polars, as long as the other analysis classes provide similar measures
+#. Transform functions.  Transform functions operate on the entire dataframe, and return extra summary_stats.  This is the only place you can operate on related columns.
 
 Methods to override
 ===================
