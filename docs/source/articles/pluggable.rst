@@ -61,7 +61,6 @@ Polars specific methods
 The `extending-polars <https://github.com/paddymul/buckaroo/blob/main/example-notebooks/Extending.ipynb>`_ notebook shows all of these methods being used
 
 
-
 Future Improvements
 ===================
 
