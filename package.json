@@ -180,6 +180,5 @@
       "react": false,
       "react-dom": false
     }
-  },
-  "packageManager": "yarn@3.7.0"
+  }
 }
