@@ -77,7 +77,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Setup buckaroo ui test
         run: pip install `echo dist/*.whl`[ui-test] -r requirements-ui-test.txt
