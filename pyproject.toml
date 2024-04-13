@@ -32,9 +32,9 @@ classifiers = [
 ]
 dependencies = [
     "ipywidgets>=7.6.0,<9",
-    "graphlib_backport>=1.0.0"
 ]
-version = "0.6.11"
+
+version = "0.6.12"
 
 [project.license]
 file = "LICENSE.txt"

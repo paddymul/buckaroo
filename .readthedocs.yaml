@@ -4,18 +4,21 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
-    nodejs: "18"
+    nodejs: "20"
   apt_packages:
     - graphviz
     - npm
+    - git
   jobs:
     post_build:
       - echo "Command run at 'post_build' step"
       - echo `date`
       - echo "$READTHEDOCS_OUTPUT/html"
-      - node --version
-      - npm install
-      - npm run build:examples
       - pwd
-      - ls
+      - git rev-parse HEAD
+      - node --version
+      - npm install -g yarn@1.22.19
+      - yarn --version
+      - yarn install
+      - yarn run build:examples
       - cp -r docs/build/html/examples "$READTHEDOCS_OUTPUT/html"
