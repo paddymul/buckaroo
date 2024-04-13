@@ -17,7 +17,7 @@ build:
       - pwd
       - git rev-parse HEAD
       - node --version
-      - sudo npm install -g yarn@1.22.19
+      - npm install -g yarn@1.22.19
       - yarn --version
       - yarn install
       - yarn run build:examples
