@@ -8,14 +8,15 @@ build:
   apt_packages:
     - graphviz
     - npm
+    - yarn
   jobs:
     post_build:
       - echo "Command run at 'post_build' step"
       - echo `date`
       - echo "$READTHEDOCS_OUTPUT/html"
       - node --version
-      - npm install
-      - npm run build:examples
+      - yarn
+      - yarn run build:examples
       - pwd
       - ls
       - cp -r docs/build/html/examples "$READTHEDOCS_OUTPUT/html"
