@@ -36,7 +36,7 @@ test_df = pl.DataFrame({
 
 
 
-def Xtest_polars_all_stats():
+def test_polars_all_stats():
     """
     FIXME temporarily disabled to test other build stuff
     the all_stats verify that PolarsBuckarooWidget produces the
@@ -58,8 +58,8 @@ def Xtest_polars_all_stats():
     assert spbw.merged_sd == expected
 
     assert spbw.df_data_dict['all_stats'] == [
-        {'index': 'mean', 'normal_int_series': 2.5},
         {'index': 'null_count', 'normal_int_series': 0.0},
+        {'index': 'mean', 'normal_int_series': 2.5},
         {'index': 'quin99', 'normal_int_series': 4.0}]
     assert spbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
