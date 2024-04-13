@@ -15,7 +15,7 @@ build:
       - echo `date`
       - echo "$READTHEDOCS_OUTPUT/html"
       - node --version
-      - yarn
+      - yarn install
       - yarn run build:examples
       - pwd
       - ls
