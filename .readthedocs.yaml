@@ -8,7 +8,6 @@ build:
   apt_packages:
     - graphviz
     - npm
-    - yarn
     - git
   jobs:
     post_build:
@@ -19,9 +18,8 @@ build:
       - git rev-parse HEAD
       - node --version
       - which yarn
-      - ls
-      - npm install
+      - sudo npm install -g yarn@1.22.19
+      - yarn --version
+      - yarn install
       - yarn run build:examples
-      - pwd
-      - ls
       - cp -r docs/build/html/examples "$READTHEDOCS_OUTPUT/html"
