@@ -9,13 +9,17 @@ build:
     - graphviz
     - npm
     - yarn
+    - git
   jobs:
     post_build:
       - echo "Command run at 'post_build' step"
       - echo `date`
       - echo "$READTHEDOCS_OUTPUT/html"
+      - pwd
+      - git rev-parse HEAD
       - node --version
       - which yarn
+      - ls
       - npm install
       - yarn run build:examples
       - pwd
