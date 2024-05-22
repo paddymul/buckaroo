@@ -79,6 +79,17 @@ class TypingStats(ColAnalysis):
             _type = "string"
         return dict(_type=_type)
 
+def get_value_counts(ser):
+    major, minor, unused = pd.__version__.split('.')
+    if int(major) > 2 and int(minor) >= 1:
+        return ser.value_counts()
+    elif pd.api.types.is_object_dtype(ser):
+        #pandas segfaults on value_counts of an object series with a datetime
+        #https://github.com/pandas-dev/pandas/issues/58160
+        return 0
+    else:
+        return ser.value_counts()
+
 class DefaultSummaryStats(ColAnalysis):
     provides_defaults = {
         'length':0, 'min':0, 'max':0, 'mean':0, 'nan_count':0,
@@ -86,7 +97,7 @@ class DefaultSummaryStats(ColAnalysis):
     @staticmethod
     def series_summary(sampled_ser, ser):
         l = len(ser)
-        value_counts = ser.value_counts()
+        value_counts = get_value_counts(ser)
         nan_count = l - len(ser.dropna())
         is_numeric = pd.api.types.is_numeric_dtype(ser)
         is_bool = pd.api.types.is_bool_dtype(ser)

@@ -78,3 +78,14 @@ def xtest_interpreter_errors():
         [{"symbol":"dropcol"},{"symbol":"df"},"int_col"]]
     assert w.operation_results['transform_error'] == '''"['int_col'] not found in axis"'''
 
+def test_fast_f1():
+    """
+    fast_f1 extends pd.DataFrame and sometimes it causes bucakroo to crash
+    """
+
+    import fastf1
+
+    #ev2020 is a subclassed dataframe
+    ev2020 = fastf1.get_event_schedule(2020)
+
+    BuckarooWidget(ev2020)
