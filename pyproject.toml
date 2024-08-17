@@ -52,7 +52,7 @@ test = [
     "polars[timezone]",
     "pydantic>=2.5.2",
     "pyarrow",
-    "geopandas"
+    "geopandas<1.0"
 ]
 polars = ["polars>=0.20.7",
        "polars[timezone]"
