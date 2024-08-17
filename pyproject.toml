@@ -154,6 +154,8 @@ exclude = [
     "dist",
     "node_modules",
     "venv",
+
+    "*.ipynb"
 ]
 
 # Same as Black.
