@@ -153,8 +153,8 @@ def normalize_polars_histogram_ser(ser):
     raw_hist = meat_df.hist(bin_count=10, include_breakpoint=True)
     print("cols")
     print(raw_hist.columns)
-    hist_df = raw_hist.select(pl.col("breakpoint"), pl.selectors.ends_with("count").alias("count"))
-    edges = hist_df['breakpoint'].to_list()
+    hist_df = raw_hist.select(pl.col("break_point"), pl.selectors.ends_with("count").alias("count"))
+    edges = hist_df['break_point'].to_list()
     edges[0], edges[-1] = smallest, largest
     counts = hist_df['count'][1:]
     norm_counts = counts/counts.sum()

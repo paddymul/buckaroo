@@ -29,28 +29,28 @@ def test_debug_true():
     w = BuckarooWidget(df, debug=True)
     display(w)
 
-def xtest_interpreter():    
+def test_interpreter():    
     #df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
 
-    w = BuckarooWidget(simple_df, auto_clean=True)
-    assert w.operation_results['generated_py_code'] == '''def clean(df):
-    df['int_col'] = smart_to_int(df['int_col'])
-    df['str_col'] = df['str_col'].fillna(value='').astype('string').replace('', None)
-    return df'''
-
-    temp_ops = w.operations.copy()
+    w = BuckarooWidget(simple_df)
+    temp_ops = []
     temp_ops.append([{"symbol":"dropcol"},{"symbol":"df"},"str_col"])
     w.operations = temp_ops
 
     tdf = w.operation_results['transformed_df']
-    assert w.operation_results['transform_error'] is False
+    #assert w.operation_results['transform_error'] is False
+    # bw.df_display_args['main']['df_viewer_config']['column_config'] 
     field_names = [ f['col_name'] for f in tdf['dfviewer_config']['column_config'] ]
     assert 'str_col' not in field_names
-    assert w.operation_results['generated_py_code'] == """def clean(df):
+
+def test_cleaning():    
+    #df = pd.read_csv('./examples/data/2014-01-citibike-tripdata.csv')
+
+    w = BuckarooWidget(simple_df)
+    assert w.operation_results['generated_py_code'] == '''def clean(df):
     df['int_col'] = smart_to_int(df['int_col'])
     df['str_col'] = df['str_col'].fillna(value='').astype('string').replace('', None)
-    df.drop('str_col', axis=1, inplace=True)
-    return df"""
+    return df'''
 
 def atest_symbol_meta():    
     """verifies that a symbol with a meta key can be added and

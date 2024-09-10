@@ -14,8 +14,8 @@ from buckaroo.customizations.polars_commands import (
 # autocleaning doesn't currently work either, so diabling
 dirty_df = pl.DataFrame(
     {'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
-     'b':["3", "4", "a", "5", "5",  "b", "b", None, None, None]},
-    strict=False)
+     'b':["3", "4", "a", "5", "5",  "b", "b", None, None, None]})
+
 
 
 def make_default_analysis(**kwargs):

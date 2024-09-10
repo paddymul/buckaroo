@@ -98,7 +98,6 @@ class Autocleaning:
 
     DFStatsKlass = DfStats
     def __init__(self, ac_configs):
-
         self.config_dict = {}
         for conf in ac_configs:
             self.config_dict[conf.name] = conf
