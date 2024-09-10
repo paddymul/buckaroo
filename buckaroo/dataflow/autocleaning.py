@@ -97,7 +97,7 @@ class Autocleaning:
     #     self.setup_from_command_kls_list()
 
     DFStatsKlass = DfStats
-    def __init__(self, ac_configs):
+    def __init__(self, ac_configs=tuple([AutocleaningConfig()])):
 
         self.config_dict = {}
         for conf in ac_configs:
@@ -144,6 +144,9 @@ class Autocleaning:
     def handle_ops_and_clean(self, df, cleaning_method, existing_operations):
         if df is None:
             return None
+        if cleaning_method == "":
+            #no cleaning method was specified, just return the bare minimum
+            return [df, {},  "#empty generated code", merge_ops(existing_operations, [])]
         self._setup_from_command_kls_list(cleaning_method)
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
