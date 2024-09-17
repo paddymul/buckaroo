@@ -24,7 +24,7 @@ from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalys
 from .serialization_utils import EMPTY_DF_WHOLE
 from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis, exception_protect
 from .dataflow.dataflow_extras import (Sampling)
-from .dataflow.autocleaning import Autocleaning
+from .dataflow.autocleaning import PandasAutocleaning
 
 class BuckarooProjectWidget(DOMWidget):
     """
@@ -57,7 +57,7 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
     #END DOMWidget Boilerplate
 
     sampling_klass = PdSampling
-    autocleaning_klass = Autocleaning
+    autocleaning_klass = PandasAutocleaning
 
     operations = List().tag(sync=True)
     operation_results = Dict(

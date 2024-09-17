@@ -89,7 +89,7 @@ class AutocleaningConfig:
     name = 'default'
     
 
-class Autocleaning:
+class PandasAutocleaning:
     # def add_command(self, incomingCommandKls):
     #     without_incoming = [x for x in self.command_classes if not x.__name__ == incomingCommandKls.__name__]
     #     without_incoming.append(incomingCommandKls)

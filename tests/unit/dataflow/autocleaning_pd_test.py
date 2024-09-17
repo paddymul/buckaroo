@@ -1,21 +1,19 @@
-import polars as pl
-from buckaroo.customizations.polars_analysis import (
-    VCAnalysis, PLCleaningStats, BasicAnalysis)
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
+import pandas as pd
+from buckaroo.customizations.pandas_analysis import (
+    VCAnalysis, BasicAnalysis)
+from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, make_origs, AutocleaningConfig
-from buckaroo.polars_buckaroo import PolarsAutocleaning
+from buckaroo.dataflow.autocleaning import PandasAutocleaning
 from buckaroo.customizations.polars_commands import (
     PlSafeInt, DropCol, FillNA, GroupBy, NoOp
 )
 
 
-# this dataframe instantiation doesn't work with Polars 1.0, but
-# autocleaning doesn't currently work either, so diabling
-dirty_df = pl.DataFrame(
+dirty_df = pd.DataFrame(
     {'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
-     'b':["3", "4", "a", "5", "5",  "b", "b", None, None, None]},
-    strict=False)
+     'b':["3", "4", "a", "5", "5",  "b", "b", None, None, None]})
+
 
 
 def make_default_analysis(**kwargs):
@@ -38,7 +36,7 @@ class CleaningGenOps(ColAnalysis):
 
 
 def test_cleaning_stats():
-    dfs = PlDfStats(dirty_df, [VCAnalysis, PLCleaningStats, BasicAnalysis])
+    dfs = DfStats(dirty_df, [VCAnalysis, PLCleaningStats, BasicAnalysis])
 
     # "3", "4", "5", "5"   4 out of 10
     assert dfs.sdf['b']['int_parse'] == 0.4
