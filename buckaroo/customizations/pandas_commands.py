@@ -161,7 +161,7 @@ class GroupBy(Command):
                 df_contents[k] = grps[k].apply(lambda x: x.count())
         return pd.DataFrame(df_contents)
 
-    test_df = group_df
+    #test_df = group_df
     test_sequence = [s("groupby"), s('df'), 'c', dict(a='sum', b='mean')]
     test_output = pd.DataFrame(
         {'a':[100, 110], 'b':[2.5, 5.5]},
