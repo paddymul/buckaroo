@@ -1,6 +1,6 @@
 import pandas as pd
 from buckaroo.customizations.analysis import (
-    DefaultSummaryStats)
+    DefaultSummaryStats, PdCleaningStats)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, make_origs, AutocleaningConfig
@@ -86,9 +86,9 @@ def test_merge_ops():
     assert merge_ops(existing_ops, cleaning_ops) == expected_merged
 
 class ACConf(AutocleaningConfig):
-    autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps]
+    autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
     #command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
-    command_klasses = [DropCol, FillNA, GroupBy, NoOp]
+    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt]
     name="default"
 
 

@@ -128,6 +128,8 @@ class SafeInt(Command):
 
     @staticmethod 
     def transform(df, col):
+        if col == 'index':
+            return df
         ser = df[col]
         try:
             df[col] = smart_to_int(ser)

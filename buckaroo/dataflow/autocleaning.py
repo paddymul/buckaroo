@@ -72,14 +72,13 @@ def format_ops(column_meta):
     return ret_ops
 
 def make_origs(raw_df, cleaned_df):
-    clauses = []
+    cols = {}
+    
     for col in raw_df.columns:
-        clauses.append(cleaned_df[col])
-        clauses.append(raw_df[col].alias(col+"_orig"))
-        # clauses.append(
-        #     pl.when((raw_df[col] - cleaned_df[col]).eq(0)).then(None).otherwise(raw_df[col]).alias(col+"_orig"))
-    ret_df = cleaned_df.select(clauses)
-    return ret_df
+        cols[col] = cleaned_df[col]
+        cols[col + "_orig"] = raw_df[col]
+    return pd.DataFrame(cols)
+
 
 
 class AutocleaningConfig:
