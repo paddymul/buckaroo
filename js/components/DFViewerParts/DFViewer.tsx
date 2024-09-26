@@ -65,17 +65,25 @@ export function DFViewer({
   const gridOptions: GridOptions = {
     rowSelection: 'single',
 
-      enableCellTextSelection: true,
-      onRowClicked: (event) => {
-	  // console.log('A row was clicked')
-	  // console.log("event", event)
-          const sel = document.getSelection();
-          const range = document.createRange();
-	  const el = event.event.target ;
-          range.selectNodeContents(el);
-          sel.removeAllRanges();
-          sel.addRange(range);
-      },
+    enableCellTextSelection: true,
+    onRowClicked: (event) => {
+      // console.log('A row was clicked')
+      // console.log("event", event)
+      const sel = document.getSelection();
+      if (sel === null) {
+        return;
+      }
+      const range = document.createRange();
+      const el = event?.event?.target;
+      if (el === null || el === undefined) {
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      range.selectNodeContents(el);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    },
     tooltipShowDelay: 0,
 
     // defaultColDef needs to be specifically passed in as a prop to the component, not defined here,
