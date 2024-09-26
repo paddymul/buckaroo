@@ -3,7 +3,7 @@ from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PLCleaningStats, BasicAnalysis)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
-from buckaroo.dataflow.autocleaning import merge_ops, format_ops, make_origs, AutocleaningConfig
+from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
 from buckaroo.polars_buckaroo import PolarsAutocleaning
 from buckaroo.customizations.polars_commands import (
     PlSafeInt, DropCol, FillNA, GroupBy, NoOp
@@ -134,7 +134,7 @@ def desired_test_make_origs():
          pl.Series("b_orig", [None, None, None, None], dtype=pl.Int64)],
     )
 
-    assert make_origs(df_a, df_b).to_dicts() == expected.to_dicts()
+    assert PolarsAutocleaning.make_origs(df_a, df_b).to_dicts() == expected.to_dicts()
 
 def test_make_origs_different_dtype():
     raw = pl.DataFrame({'a': [30, "40"]}, strict=False)
@@ -144,7 +144,7 @@ def test_make_origs_different_dtype():
             'a': [30, 40],
             'a_orig': [30,  "40"]},
         strict=False)
-    assert make_origs(raw, cleaned).to_dicts() == expected.to_dicts()
+    assert PolarsAutocleaning.make_origs(raw, cleaned).to_dicts() == expected.to_dicts()
 
 def test_handle_clean_df():
     ac = PolarsAutocleaning([ACConf])
