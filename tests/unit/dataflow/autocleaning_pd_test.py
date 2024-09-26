@@ -119,22 +119,6 @@ def test_handle_user_ops():
     ]
 
 
-def desired_test_make_origs():
-    # I can't make this work in a sensible way because it is not
-    # possible to quickly run comparisons against different dtype
-    # columns, and object dtypes are serverely limited
-    df_a = pd.DataFrame({'a': [10, 20, 30, 40], 'b': [1, 2, 3, 4]})
-    df_b = pdn.DataFrame({'a': [10, 20,  0, 40], 'b': [1, 2, 3, 4]})    
-
-    expected = pl.DataFrame(
-        [pl.Series("a",      [  10,   20,    0,   40], dtype=pl.Int64),
-         pl.Series("a_orig", [None, None,   30, None], dtype=pl.Int64),
-         pl.Series("b",      [   1,    2,    3,    4], dtype=pl.Int64),
-         pl.Series("b_orig", [None, None, None, None], dtype=pl.Int64)],
-    )
-
-    assert make_origs(df_a, df_b).to_dicts() == expected.to_dicts()
-
 def test_make_origs_different_dtype():
     raw = pd.DataFrame({'a': [30, "40"]})
     cleaned = pd.DataFrame({'a': [30,  40]})
@@ -142,7 +126,7 @@ def test_make_origs_different_dtype():
         {
             'a': [30, 40],
             'a_orig': [30,  "40"]})
-    assert make_origs(raw, cleaned).to_dict() == expected.to_dict()
+    assert PandasAutocleaning.make_origs(raw, cleaned).to_dict() == expected.to_dict()
 
 def test_handle_clean_df():
     ac = PandasAutocleaning([ACConf])

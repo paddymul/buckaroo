@@ -73,16 +73,6 @@ def format_ops(column_meta):
             ret_ops.append(temp_ops)
     return ret_ops
 
-def make_origs(raw_df, cleaned_df):
-    cols = {}
-    
-    for col in raw_df.columns:
-        cols[col] = cleaned_df[col]
-        cols[col + "_orig"] = raw_df[col]
-    return pd.DataFrame(cols)
-
-
-
 class AutocleaningConfig:
     command_klasses = [DefaultCommandKlsList]
     autocleaning_analysis_klasses = []
@@ -142,6 +132,15 @@ class PandasAutocleaning:
         cleaning_sd = {}
         return gen_ops, cleaning_sd
 
+    @staticmethod
+    def make_origs(raw_df, cleaned_df):
+        cols = {}
+        
+        for col in raw_df.columns:
+            cols[col] = cleaned_df[col]
+            cols[col + "_orig"] = raw_df[col]
+        return pd.DataFrame(cols)
+
     def handle_ops_and_clean(self, df, cleaning_method, existing_operations):
         if df is None:
             return None
@@ -152,6 +151,9 @@ class PandasAutocleaning:
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
-        merged_cleaned_df = make_origs(df, cleaned_df)
+        merged_cleaned_df = self.make_origs(df, cleaned_df)
         generated_code = self._run_code_generator(merged_operations)
+        print(f"{merged_cleaned_df=}, {type(merged_cleaned_df)=}")
+        #        1/0
+
         return [merged_cleaned_df, cleaning_sd, generated_code, merged_operations]
