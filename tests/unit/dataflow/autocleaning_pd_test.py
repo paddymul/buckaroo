@@ -87,12 +87,10 @@ def test_merge_ops():
 
 class ACConf(AutocleaningConfig):
     autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
-    #command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
     command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt]
     name="default"
 
 
-    
 def test_handle_user_ops():
 
     ac = PandasAutocleaning([ACConf])
@@ -144,7 +142,7 @@ def test_make_origs_different_dtype():
         {
             'a': [30, 40],
             'a_orig': [30,  "40"]})
-    assert make_origs(raw, cleaned).to_dicts() == expected.to_dicts()
+    assert make_origs(raw, cleaned).to_dict() == expected.to_dict()
 
 def test_handle_clean_df():
     ac = PandasAutocleaning([ACConf])
@@ -154,10 +152,10 @@ def test_handle_clean_df():
     expected = pd.DataFrame({
         'a': [30, 40],
         'a_orig': ["30",  "40"]})
-    assert cleaned_df.to_dicts() == expected.to_dicts()
+    assert cleaned_df.to_dict() == expected.to_dict()
 
 EXPECTED_GEN_CODE = """def clean(df):
-    df = df.with_columns(pl.col('a').cast(pl.Int64, strict=False))
+    df['a'] = smart_to_int(df['a'])
     return df"""
 
 def test_autoclean_codegen():

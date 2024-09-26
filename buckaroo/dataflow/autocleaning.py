@@ -64,6 +64,8 @@ def merge_ops(existing_ops, cleaning_ops):
 def format_ops(column_meta):
     ret_ops = []
     for k,v in column_meta.items():
+        if k == 'index':
+            continue
         ops = v['cleaning_ops']
         if len(ops) > 0:
             temp_ops = ops.copy()
