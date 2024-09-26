@@ -12,12 +12,11 @@ from ipywidgets import DOMWidget
 from traitlets import Unicode, List, Dict, observe
 
 from ._frontend import module_name, module_version
-from .customizations.all_transforms import DefaultCommandKlsList
 
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from .customizations.histogram import (Histogram)
-from .customizations.pd_autoclean_conf import (ACConf)
+from .customizations.pd_autoclean_conf import (CleaningConf, NoCleaningConf)
 from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyling)
 from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
@@ -63,9 +62,9 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
 
     sampling_klass = PdSampling
     autocleaning_klass = PandasAutocleaning #override the base CustomizableDataFlow klass
-    autoclean_conf = tuple([ACConf]) #override the base CustomizableDataFlow conf
+    DFStatsClass = DfStats # Pandas Specific
+    autoclean_conf = tuple([CleaningConf, NoCleaningConf]) #override the base CustomizableDataFlow conf
 
-    operations = List().tag(sync=True)
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
     ).tag(sync=True)
@@ -99,7 +98,7 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
 
         
     #widget config.  Change these via inheritance to alter core behaviors of buckaroo
-    command_klasses = DefaultCommandKlsList
+    #command_klasses = DefaultCommandKlsList
     analysis_klasses = [TypingStats, DefaultSummaryStats,
                         Histogram,
                         ComputedDefaultSummaryStats,
@@ -107,8 +106,6 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
                         DefaultSummaryStats,
                         DefaultSummaryStatsStyling, DefaultMainStyling]
 
-
-    DFStatsClass = DfStats
 
 
     def add_analysis(self, analysis_klass):

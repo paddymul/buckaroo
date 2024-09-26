@@ -54,15 +54,14 @@ class DataFlow(HasTraits):
     sample_method = Unicode('default')
     sampled_df = Any('')
 
-    cleaning_method = Unicode('')
-    cleaning_operations = Any()
+    cleaning_method = Unicode('NoCleaning')
+    #cleaning_operations = Any()
 
-    existing_operations = Any([])
+    #existing_operations = Any([])
+    operations = Any([]).tag(sync=True)
 
     cleaned = Any().tag(default=None)
     
-    lowcode_operations = Any()
-
     post_processing_method = Unicode('').tag(default='')
     processed_result = Any().tag(default=None)
 
@@ -93,11 +92,12 @@ class DataFlow(HasTraits):
     def _sampled_df(self, change):
         self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
 
-    @observe('sampled_df', 'cleaning_method', 'existing_operations')
+    @observe('sampled_df', 'cleaning_method', 'operations')
     @exception_protect('operation_result-protector')
     def _operation_result(self, change):
         result = self.ac_obj.handle_ops_and_clean(
-            self.sampled_df, self.cleaning_method, self.existing_operations)
+            self.sampled_df, self.cleaning_method, self.operations)
+        print("_operation_result", result)
         if result is None:
             return
         else:

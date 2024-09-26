@@ -192,6 +192,7 @@ class DropCol(Command):
     @staticmethod 
     def transform(df, col):
         df.drop(col, axis=1, inplace=True)
+        print("dropcol.transform")
         return df
 
     @staticmethod 

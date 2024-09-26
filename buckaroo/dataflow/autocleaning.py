@@ -1,6 +1,5 @@
 import pandas as pd
 from buckaroo.jlisp.lisp_utils import split_operations
-#from buckaroo.pluggable_analysis_framework.polars_analysis_management import PlDfStats
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
@@ -68,6 +67,8 @@ def format_ops(column_meta):
     ret_ops = []
     for k,v in column_meta.items():
         if k == 'index':
+            continue
+        if 'cleaning_ops' not in v:
             continue
         ops = v['cleaning_ops']
         if len(ops) > 0:
@@ -149,7 +150,7 @@ class PandasAutocleaning:
     def handle_ops_and_clean(self, df, cleaning_method, existing_operations):
         if df is None:
             return None
-        if cleaning_method == "":
+        if cleaning_method == "" and len(existing_operations) == 0:
             #no cleaning method was specified, just return the bare minimum
             return [df, {},  "#empty generated code", merge_ops(existing_operations, [])]
         self._setup_from_command_kls_list(cleaning_method)
