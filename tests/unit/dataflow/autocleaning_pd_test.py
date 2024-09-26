@@ -30,7 +30,8 @@ class CleaningGenOps(ColAnalysis):
     @classmethod
     def computed_summary(kls, column_metadata):
         if column_metadata['int_parse'] > kls.int_parse_threshhold:
-            return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}]}
+            return {'cleaning_ops': [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}],
+                    'add_orig': True}
         else:
             return {'cleaning_ops': []}
 
@@ -117,7 +118,9 @@ def test_make_origs_different_dtype():
         {
             'a': [30, 40],
             'a_orig': [30,  "40"]})
-    assert PandasAutocleaning.make_origs(raw, cleaned).to_dict() == expected.to_dict()
+    combined = PandasAutocleaning.make_origs(
+        raw, cleaned, {'a':{'add_orig': True}})
+    assert combined.to_dict() == expected.to_dict()
 
 def test_handle_clean_df():
     ac = PandasAutocleaning([ACConf])
