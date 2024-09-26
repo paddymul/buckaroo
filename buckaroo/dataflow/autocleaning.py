@@ -32,6 +32,9 @@ SENTINEL_DF_4 = pd.DataFrame({'vvv'  :[12, 49], 'oo':   [ 'ccc', 'www']})
 
 class SentinelAutocleaning:
 
+    def __init__(self, confs):
+        self.commandConfig = {}
+    
     def handle_ops_and_clean(self, df, cleaning_method, existing_operations):
         cleaning_ops = []
         generated_code = ""
@@ -88,11 +91,13 @@ class PandasAutocleaning:
     #     self.setup_from_command_kls_list()
 
     DFStatsKlass = DfStats
-    def __init__(self, ac_configs=tuple([AutocleaningConfig()])):
+    #until we plumb in swapping configs, just stick with default
+    def __init__(self, ac_configs=tuple([AutocleaningConfig()]), conf_name="default"):
 
         self.config_dict = {}
         for conf in ac_configs:
             self.config_dict[conf.name] = conf
+        self._setup_from_command_kls_list(conf_name)
 
     ### start code interpreter block
     def _setup_from_command_kls_list(self, name):

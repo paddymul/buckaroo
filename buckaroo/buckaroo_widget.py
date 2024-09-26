@@ -17,6 +17,7 @@ from .customizations.all_transforms import DefaultCommandKlsList
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from .customizations.histogram import (Histogram)
+from .customizations.pd_autoclean_conf import (ACConf)
 from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyling)
 from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
@@ -40,8 +41,8 @@ class BuckarooProjectWidget(DOMWidget):
 
 
 class PdSampling(Sampling):
-        #pre_limit = 500_000
-        pre_limit = False
+        pre_limit = 20_000
+        #pre_limit = False
 
 def sym(name):
     return {'symbol':name}
@@ -61,28 +62,12 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
     #END DOMWidget Boilerplate
 
     sampling_klass = PdSampling
-    autocleaning_klass = PandasAutocleaning
+    autocleaning_klass = PandasAutocleaning #override the base CustomizableDataFlow klass
+    autoclean_conf = tuple([ACConf]) #override the base CustomizableDataFlow conf
 
     operations = List().tag(sync=True)
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
-    ).tag(sync=True)
-
-    commandConfig = Dict(
-        dict(
-            argspecs=dict(
-                dropcol=[None],
-                fillna=[[3, 'fillVal', 'type', 'integer']],
-                resample= [
-                    [3, 'frequency', 'enum', ['daily', 'weekly', 'monthly']],
-                    [4, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'count']],
-                ],
-            ),
-            defaultArgs=dict(
-                dropcol= [sym('dropcol'), symDf, 'col'],
-                fillna= [sym('fillna'), symDf, 'col', 8],
-                resample= [sym('resample'), symDf, 'col', 'monthly', {}])
-            )
     ).tag(sync=True)
 
     df_meta = Dict({

@@ -12,6 +12,8 @@ from .dataflow_extras import (
     Sampling)
 
 
+
+
 class DataFlow(HasTraits):
     """This class is meant to only represent the dataflow through
     buckaroo with no accomodation for widget particulars
@@ -34,13 +36,19 @@ class DataFlow(HasTraits):
         super().__init__()
         self.summary_sd = {}
         self.existing_operations = []
-        self.ac_obj = self.autocleaning_klass()
+        self.ac_obj = self.autocleaning_klass(self.autoclean_conf)
+        #self.ac_obj._setup_from_command_kls_list("default")
+        self.commandConfig = self.ac_obj.commandConfig
         try:
             self.raw_df = raw_df
         except Exception:
             six.reraise(self.exception[0], self.exception[1], self.exception[2])
 
     autocleaning_klass = SentinelAutocleaning
+    autoclean_conf = tuple()
+
+    commandConfig = Dict({}).tag(sync=True)
+
 
     raw_df = Any('')
     sample_method = Unicode('default')
