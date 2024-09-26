@@ -43,6 +43,10 @@ class PdSampling(Sampling):
         #pre_limit = 500_000
         pre_limit = False
 
+def sym(name):
+    return {'symbol':name}
+
+symDf = SymbolDf = {'symbol': 'df'}
 class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
     """Extends CustomizableDataFlow and DOMWIdget
 
@@ -62,6 +66,23 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
     operations = List().tag(sync=True)
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
+    ).tag(sync=True)
+
+    commandConfig = Dict(
+        dict(
+            argspecs=dict(
+                dropcol=[None],
+                fillna=[[3, 'fillVal', 'type', 'integer']],
+                resample= [
+                    [3, 'frequency', 'enum', ['daily', 'weekly', 'monthly']],
+                    [4, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'count']],
+                ],
+            ),
+            defaultArgs=dict(
+                dropcol= [sym('dropcol'), symDf, 'col'],
+                fillna= [sym('fillna'), symDf, 'col', 8],
+                resample= [sym('resample'), symDf, 'col', 'monthly', {}])
+            )
     ).tag(sync=True)
 
     df_meta = Dict({
