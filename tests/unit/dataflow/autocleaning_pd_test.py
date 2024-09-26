@@ -44,15 +44,6 @@ def xtest_cleaning_stats():
 
 
 SAFE_INT_TOKEN = [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}]
-def xtest_ops_gen():
-
-    dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.4, int_parse_fail=.6),
-                               CleaningGenOps], debug=True)
-    assert dfs.sdf['b']['cleaning_ops'] == SAFE_INT_TOKEN
-    dfs = PlDfStats(dirty_df, [make_default_analysis(int_parse=.2, int_parse_fail=.8),
-                               CleaningGenOps])
-    assert dfs.sdf['b']['cleaning_ops'] == []
-
 
 
 def test_format_ops():

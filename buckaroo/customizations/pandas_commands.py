@@ -59,12 +59,6 @@ class OneHot(Command):
             "    df = df.join(one_hot)"]
         return "\n".join(commands)
 
-def safe_int(x):
-    try:
-        return int(x)
-    except:
-        return np.nan
-
 
 def smart_to_int(ser):
 
