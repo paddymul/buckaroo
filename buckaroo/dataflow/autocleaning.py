@@ -144,6 +144,8 @@ class PandasAutocleaning:
 
         changed = 0
         for col, sd in cleaning_sd.items():
+            if col not in cleaned_df.columns:
+                continue
             if col == 'index':
                 continue
             if "add_orig" in sd:

@@ -1,4 +1,5 @@
 import pandas as pd
+from buckaroo import BuckarooWidget
 from buckaroo.customizations.analysis import (
     DefaultSummaryStats, PdCleaningStats)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
@@ -143,3 +144,14 @@ def test_autoclean_codegen():
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
     assert generated_code == EXPECTED_GEN_CODE
+
+def test_drop_col():
+    """make sure we can that make_origs doesn't throw an error when
+    drop_col is called. It might depend on columns existing
+
+    """
+    df = pd.DataFrame({
+        'a':[10,20,20, 10, 10, None],
+        'b':['20',10,None,'5',10, 'asdf']})
+    bw = BuckarooWidget(df)
+    bw.operations = [[{'symbol': 'dropcol'}, {'symbol': 'df'}, 'a']]
