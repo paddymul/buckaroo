@@ -43,7 +43,7 @@ def test_scheme_macros():
     base_eval, lisp_eval = make_interpreter()
 
     
-    res = lisp_eval("""(begin
+    lisp_eval("""(begin
     (define-macro and (lambda args 
        (if (null? args) #t
            (if (= (length args) 1) (car args)
@@ -74,3 +74,24 @@ def test_functions():
     _eval, _parse = make_interpreter()
     assert _eval([s('always5')], {'always5':always5, 'add5':add5} ) == 5
 
+def test_assignment():
+    jl_eval, sc_eval = make_interpreter()
+    assert sc_eval("(begin (define var 1) (set! var (* var 10)) var)") == 10
+    jl_form = [s("begin"),
+               [s("define"), s("var"), 2],
+               [s("set!"), s("var"), [s("*"), s("var"), 10]],
+               s("var")]
+    assert jl_eval(jl_form) == 20
+
+def test_assign_env():
+    jl_eval, sc_eval = make_interpreter()
+
+    jl_form = [s("begin"),
+               [s("set!"), s("var"), [s("*"), s("var"), 10]],
+               s("var")]
+    assert jl_eval(jl_form, {'var':3}) == 30
+    
+
+
+        
+    
