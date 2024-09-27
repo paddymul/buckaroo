@@ -169,6 +169,7 @@ class PandasAutocleaning:
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
+        print("len(cleaned_df)", len(cleaned_df))
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
         generated_code = self._run_code_generator(merged_operations)
         print(f"{merged_cleaned_df=}, {type(merged_cleaned_df)=}")

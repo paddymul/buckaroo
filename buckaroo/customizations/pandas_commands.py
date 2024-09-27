@@ -137,6 +137,55 @@ class SafeInt(Command):
     def transform_to_py(df, col):
         return "    df['%s'] = smart_to_int(df['%s'])" % (col, col)
 
+class RemoveOutliers(Command):
+    command_default = [s('remove_outliers'), s('df'), "col", 1]
+    #command_pattern = [[3, 'remove_outliers_99', 'type', 'float']]
+    command_pattern = [[3, 'remove_outliers', 'type', 'integer']]
+
+
+    @staticmethod 
+    def transform(df, col, int_tail):
+        if col == 'index':
+            return df
+        ser = df[col]
+        tail = int_tail / 100
+        new_df = df[(ser > np.quantile(ser, tail)) & (ser < np.quantile(ser, 1-tail ))]
+        print("pre_filter", len(df), "post_filter", len(new_df))
+        return new_df
+
+    @staticmethod 
+    def transform_to_py(df, col, int_tail):
+        C = f"df['{col}']"
+        tail = int_tail / 100
+        low_tail = tail
+        high_tail = 1-tail
+        return f"    df[({C} > np.quantile({C}, {low_tail})) & ({C} < np.quantile({C}, {high_tail}))]" 
+
+
+class OnlyOutliers(Command):
+    command_default = [s('only_outliers'), s('df'), "col", 1]
+    #command_pattern = [[3, 'remove_outliers_99', 'type', 'float']]
+    command_pattern = [[3, 'only_outliers', 'type', 'integer']]
+
+
+    @staticmethod 
+    def transform(df, col, int_tail):
+        if col == 'index':
+            return df
+        ser = df[col]
+        tail = int_tail / 100
+        new_df = df[(ser < np.quantile(ser, tail)) | (ser > np.quantile(ser, 1-tail ))]
+        print("pre_filter", len(df), "post_filter", len(new_df))
+        return new_df
+
+    @staticmethod 
+    def transform_to_py(df, col, int_tail):
+        C = f"df['{col}']"
+        tail = int_tail / 100
+        low_tail = tail
+        high_tail = 1-tail
+        return f"    df[({C} < np.quantile({C}, {low_tail})) | ({C} > np.quantile({C}, {high_tail}))]" 
+
 
 
 class GroupBy(Command):
