@@ -155,3 +155,14 @@ def test_drop_col():
         'b':['20',10,None,'5',10, 'asdf']})
     bw = BuckarooWidget(df)
     bw.operations = [[{'symbol': 'dropcol'}, {'symbol': 'df'}, 'a']]
+
+
+def test_stacked_filters():
+    """make sure that filters apply combinatorially not just last one first
+
+    fixing this requires replacing the progn with some type of
+    threading macro. or making every operation in place. and adding a
+    copy() at the beginning
+
+    """
+    

@@ -70,7 +70,7 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
     ).tag(sync=True)
 
     df_meta = Dict({
-        'columns': 5,
+        'columns': 5, # dummy data
         'rows_shown': 20,
         'total_rows': 877}).tag(sync=True)
 

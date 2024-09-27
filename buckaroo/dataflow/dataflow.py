@@ -102,6 +102,11 @@ class DataFlow(HasTraits):
             return
         else:
             self.cleaned = result
+        self.operation_results = {'transformed_df':None,
+                                  'generated_py_code': self.generated_code,
+                                  #'transform_error': None
+                                  }
+
     @property
     def cleaned_df(self):
         if self.cleaned is not None:
@@ -131,6 +136,7 @@ class DataFlow(HasTraits):
     def _processed_result(self, change):
         #for now this is a no-op because I don't have a post_processing_function or mechanism
         self.processed_result = self._compute_processed_result(self.cleaned_df, self.post_processing_method)
+        self.populate_df_meta()
 
     @property
     def processed_df(self):
@@ -224,9 +230,9 @@ class CustomizableDataflow(DataFlow):
 
     def populate_df_meta(self):
         self.df_meta = {
-            'columns': len(self.raw_df.columns),
+            'columns': len(self.processed_df.columns),
             # I need to recompute this when sampling changes
-            'rows_shown': len(self.sampled_df),  
+            'rows_shown': len(self.processed_df),  
             'total_rows': len(self.raw_df)}
 
     buckaroo_options = Dict({

@@ -58,12 +58,15 @@ def merge_ops(existing_ops, cleaning_ops):
     """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
     old_cleaning_ops, user_gen_ops = split_operations(existing_ops)
     merged = cleaning_ops.copy()
-    merged.extend(user_gen_ops)
+    merged.extend(user_gen_ops)  # we want the user cleaning ops to come last
     return merged
 
 
 
 def format_ops(column_meta):
+    """
+    translate summary_dict with cleaning_ops to real, usable instructions
+    """
     ret_ops = []
     for k,v in column_meta.items():
         if k == 'index':
@@ -124,6 +127,7 @@ class PandasAutocleaning:
         print("*"*80)
         if len(full_ops) == 1:
             return df
+        
         return self.df_interpreter(full_ops , df)
 
     def _run_code_generator(self, operations):
