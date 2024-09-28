@@ -185,6 +185,7 @@ export const OperationViewer = ({
           return c;
         }
       });
+      console.log('about to call setOperations', key, newOperation);
       setOperations(nextOperations);
     };
   }
@@ -199,10 +200,11 @@ export const OperationViewer = ({
           return c;
         }
       });
-      const newIdx = Math.max(0, index - 1);
+      //const newIdx = Math.max(0, index - 1);
       const newOps = _.filter(nextOperations) as Operation[];
+      console.log('getDeleteOperations', operations.length, newOps.length);
       setOperations(newOps);
-      setActiveKey(opToKey(newIdx, newOps[newIdx]));
+      //setActiveKey(opToKey(newIdx, newOps[newIdx]));
       //setActiveKey('');
     };
   }

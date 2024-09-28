@@ -53,6 +53,7 @@ export const ArgGetters = ({
   setCommand: OperationEventFunc;
   columns: string[];
 }) => {
+  /* reads the argspec and sets up the proper getters/setters */
   const makeArgGetter = (pattern: ActualArg) => {
     const idx = pattern[0];
     const val = command[idx] as SettableArg;
@@ -65,6 +66,7 @@ export const ArgGetters = ({
       <div key={idx}>
         <ArgGetter
           argProps={pattern}
+          renderKey={idx}
           val={val}
           setter={valSetter}
           columns={columns}
@@ -80,11 +82,13 @@ const ArgGetter = ({
   val,
   setter,
   columns,
+  renderKey,
 }: {
   argProps: ActualArg;
   val: SettableArg;
   setter: (arg: SettableArg) => void;
   columns: string[];
+  renderKey: number;
 }) => {
   const [_argPos, label, argType, lastArg] = argProps;
 
@@ -92,7 +96,7 @@ const ArgGetter = ({
     setter(event.target.value);
   if (argType === 'enum' && _.isArray(lastArg)) {
     return (
-      <fieldset>
+      <fieldset key={renderKey}>
         <label> {label} </label>
         <select defaultValue={val as string} onChange={defaultShim}>
           {lastArg.map((optionVal) => (
@@ -108,7 +112,7 @@ const ArgGetter = ({
       const valSetterShim = (event: { target: { value: string } }) =>
         setter(parseInt(event.target.value));
       return (
-        <fieldset>
+        <fieldset key={renderKey}>
           <label> {label} </label>
           <input
             type="number"
@@ -120,9 +124,9 @@ const ArgGetter = ({
       );
     } else if (lastArg === 'float') {
       const valSetterShim = (event: { target: { value: string } }) =>
-        setter(parseInt(event.target.value));
+        setter(parseFloat(event.target.value));
       return (
-        <fieldset>
+        <fieldset key={renderKey}>
           <label> {label} </label>
           <input
             type="number"
@@ -134,9 +138,9 @@ const ArgGetter = ({
       );
     } else if (lastArg === 'string') {
       const valSetterShim = (event: { target: { value: string } }) =>
-        setter(parseInt(event.target.value));
+        setter(event.target.value);
       return (
-        <fieldset>
+        <fieldset key={renderKey}>
           <label> {label} </label>
           <input
             type="text"
@@ -147,7 +151,7 @@ const ArgGetter = ({
       );
     } else {
       return (
-        <fieldset>
+        <fieldset key={renderKey}>
           <label> {label} </label>
           <input value="dont know" />
         </fieldset>
@@ -171,7 +175,7 @@ const ArgGetter = ({
         return <h3> arg error</h3>;
       }
       return (
-        <td>
+        <td key={renderKey + colName}>
           <select defaultValue={colVal} onChange={colSetter}>
             {lastArg.map((optionVal) => (
               <option key={optionVal} value={optionVal}>
@@ -184,12 +188,12 @@ const ArgGetter = ({
     });
 
     return (
-      <div className="col-enum">
+      <div className="col-enum" key={renderKey}>
         <table>
           <thead>
             <tr>
               {columns.map((colName) => (
-                <th>{colName}</th>
+                <th key={colName}>{colName}</th>
               ))}
             </tr>
           </thead>
