@@ -97,7 +97,6 @@ class DataFlow(HasTraits):
     def _operation_result(self, change):
         result = self.ac_obj.handle_ops_and_clean(
             self.sampled_df, self.cleaning_method, self.operations)
-        print("_operation_result", result)
         if result is None:
             return
         else:

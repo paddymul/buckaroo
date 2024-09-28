@@ -63,8 +63,10 @@ def test_scheme_macros():
     assert base_eval([s('+'), s('foo'), 1]) == 6
 
 
-
 def test_functions():
+    """
+    verify that functions passed into the environment can be called
+    """
     def always5():
         return 5
 
@@ -75,6 +77,9 @@ def test_functions():
     assert _eval([s('always5')], {'always5':always5, 'add5':add5} ) == 5
 
 def test_assignment():
+    """
+    show assignment for defined variables
+    """
     jl_eval, sc_eval = make_interpreter()
     assert sc_eval("(begin (define var 1) (set! var (* var 10)) var)") == 10
     jl_form = [s("begin"),
@@ -84,14 +89,12 @@ def test_assignment():
     assert jl_eval(jl_form) == 20
 
 def test_assign_env():
+    """
+    verify that we can set a variable that was passed in"
+    """
     jl_eval, sc_eval = make_interpreter()
 
     jl_form = [s("begin"),
                [s("set!"), s("var"), [s("*"), s("var"), 10]],
                s("var")]
     assert jl_eval(jl_form, {'var':3}) == 30
-    
-
-
-        
-    

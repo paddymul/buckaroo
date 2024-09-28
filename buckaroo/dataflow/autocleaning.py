@@ -1,23 +1,9 @@
 import pandas as pd
 from buckaroo.jlisp.lisp_utils import split_operations
+from buckaroo.jlisp.lispy import s
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
-
-'''
-
-
-    def handle_ops_and_clean_orig(self, df, cleaning_method, existing_operations):
-        if self.sampled_df is None:
-            return None
-        cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
-        merged_operations = merge_ops(existing_operations, cleaning_operations)
-        cleaned_df = self._run_df_interpreter(df, merged_operations)
-        generated_code = self._run_code_generator(merged_operations)
-        self.cleaned [cleaned_df, cleaning_sd, generated_code, merged_operations]
-
-
-'''
 def dumb_merge_ops(existing_ops, cleaning_ops):
     """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
     a = existing_ops.copy()
@@ -121,10 +107,14 @@ class PandasAutocleaning:
 
     def _run_df_interpreter(self, df, operations):
         full_ops = [{'symbol': 'begin'}]
-        full_ops.extend(operations)
-        print("*"*80)
-        print(full_ops)
-        print("*"*80)
+
+        def wrap_set_df(form):
+            """
+            wrap each passed in form with a set! call to update the df symbol
+            """
+            return [s("set!"), s("df"), form]
+        full_ops.extend(map(wrap_set_df, operations))
+        full_ops.append(s("df"))
         if len(full_ops) == 1:
             return df
         
@@ -165,6 +155,7 @@ class PandasAutocleaning:
 
     def handle_ops_and_clean(self, df, cleaning_method, existing_operations):
         if df is None:
+            #on first instantiation df is likely to be None,  do nothing and return
             return None
         if cleaning_method == "" and len(existing_operations) == 0:
             #no cleaning method was specified, just return the bare minimum
@@ -173,10 +164,9 @@ class PandasAutocleaning:
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
         merged_operations = merge_ops(existing_operations, cleaning_operations)
         cleaned_df = self._run_df_interpreter(df, merged_operations)
-        print("len(cleaned_df)", len(cleaned_df))
+        #print("len(cleaned_df)", len(cleaned_df))
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
         generated_code = self._run_code_generator(merged_operations)
-        print(f"{merged_cleaned_df=}, {type(merged_cleaned_df)=}")
-        #        1/0
+        #print(f"{merged_cleaned_df=}, {type(merged_cleaned_df)=}")
 
         return [merged_cleaned_df, cleaning_sd, generated_code, merged_operations]
