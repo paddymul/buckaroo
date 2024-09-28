@@ -137,6 +137,29 @@ const ArgGetter = ({
           />
         </fieldset>
       );
+    } else if (lastArg === 'float') {
+      const valSetterShim = (event: { target: { value: string } }) =>
+        setter(parseInt(event.target.value));
+      return (
+        <fieldset>
+          <label> {label} </label>
+          <input
+            type="number"
+            step="0.01"
+            defaultValue={val as number}
+            onChange={valSetterShim}
+          />
+        </fieldset>
+      );
+    } else if (lastArg === 'string') {
+      const valSetterShim = (event: { target: { value: string } }) =>
+        setter(parseInt(event.target.value));
+      return (
+        <fieldset>
+          <label> {label} </label>
+          <input type="text" defaultValue={val} onChange={valSetterShim} />
+        </fieldset>
+      );
     } else {
       return (
         <fieldset>
