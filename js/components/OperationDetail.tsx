@@ -1,10 +1,5 @@
 import _ from 'lodash';
-import {
-  Operation,
-  SettableArg,
-  OperationEventFunc,
-  NoArgEventFunc,
-} from './OperationUtils';
+import { Operation, SettableArg, OperationEventFunc } from './OperationUtils';
 import { ActualArg, CommandArgSpec } from './CommandUtils';
 import { objWithoutNull, replaceAtIdx, replaceAtKey } from './utils';
 import React from 'react';
@@ -12,18 +7,16 @@ import React from 'react';
 export const OperationDetail = ({
   command,
   setCommand,
-  deleteCB,
   columns,
   commandPatterns,
 }: {
   command: Operation;
   setCommand: OperationEventFunc;
-  deleteCB: NoArgEventFunc;
   columns: string[];
   commandPatterns: CommandArgSpec;
 }) => {
   if (command === undefined) {
-    return <h2> error undefined command </h2>;
+    return <span></span>;
   }
   const commandName = command[0]['symbol'];
   const pattern = commandPatterns[commandName];
@@ -32,11 +25,7 @@ export const OperationDetail = ({
     //we shouldn't get here
     return <h2>unknown command {commandName}</h2>;
   } else if (_.isEqual(pattern, [null])) {
-    return (
-      <div className="operation-detail">
-        <button onClick={deleteCB}>X</button>
-      </div>
-    );
+    return <div className="operation-detail"></div>;
   } else {
     const fullPattern = pattern as ActualArg[];
     return (
@@ -46,7 +35,6 @@ export const OperationDetail = ({
           fullPattern={fullPattern}
           setCommand={setCommand}
           columns={columns}
-          deleteCB={deleteCB}
         />
       </div>
     );
@@ -59,13 +47,11 @@ export const ArgGetters = ({
   fullPattern,
   setCommand,
   columns,
-  deleteCB,
 }: {
   command: Operation;
   fullPattern: ActualArg[];
   setCommand: OperationEventFunc;
   columns: string[];
-  deleteCB: () => void;
 }) => {
   const makeArgGetter = (pattern: ActualArg) => {
     const idx = pattern[0];
@@ -86,12 +72,7 @@ export const ArgGetters = ({
       </div>
     );
   };
-  return (
-    <div className="arg-getters">
-      <button onClick={deleteCB}>X</button>
-      {fullPattern.map(makeArgGetter)}
-    </div>
-  );
+  return <div className="arg-getters">{fullPattern.map(makeArgGetter)}</div>;
 };
 
 const ArgGetter = ({
@@ -157,7 +138,11 @@ const ArgGetter = ({
       return (
         <fieldset>
           <label> {label} </label>
-          <input type="text" defaultValue={val} onChange={valSetterShim} />
+          <input
+            type="text"
+            defaultValue={val as string}
+            onChange={valSetterShim}
+          />
         </fieldset>
       );
     } else {
