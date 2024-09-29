@@ -55,9 +55,6 @@ class DataFlow(HasTraits):
     sampled_df = Any('')
 
     cleaning_method = Unicode('NoCleaning')
-    #cleaning_operations = Any()
-
-    #existing_operations = Any([])
     operations = Any([]).tag(sync=True)
 
     cleaned = Any().tag(default=None)
@@ -129,6 +126,9 @@ class DataFlow(HasTraits):
 
     def _compute_processed_result(self, cleaned_df, post_processing_method):
         return [cleaned_df, {}]
+
+    def populate_df_meta(self):
+        pass
 
     @observe('cleaned', 'post_processing_method')
     @exception_protect('processed_result-protector')
@@ -203,7 +203,7 @@ class CustomizableDataflow(DataFlow):
     df_display_klasses = {}
 
 
-    def __init__(self, df, debug=False,
+    def __init__(self, orig_df, debug=False,
                  column_config_overrides=None,
                  pinned_rows=None, extra_grid_config=None,
                  component_config=None):
@@ -221,8 +221,9 @@ class CustomizableDataflow(DataFlow):
         self.df_name = "placeholder"
         self.df_display_args = {}
         self.setup_options_from_analysis()
-        super().__init__(self.sampling_klass.pre_stats_sample(df))
-
+        self.orig_df = orig_df
+        # I don't like this seapration of 
+        super().__init__(self.sampling_klass.pre_stats_sample(orig_df))
         self.populate_df_meta()
         #self.raw_df = df
         warnings.filterwarnings('default')
@@ -231,8 +232,9 @@ class CustomizableDataflow(DataFlow):
         self.df_meta = {
             'columns': len(self.processed_df.columns),
             # I need to recompute this when sampling changes
-            'rows_shown': len(self.processed_df),  
-            'total_rows': len(self.raw_df)}
+            'filtered_rows': len(self.processed_df),
+            'rows_shown': min(len(self.processed_df), self.sampling_klass.serialize_limit),  
+            'total_rows': len(self.orig_df)}
 
     buckaroo_options = Dict({
         'sampled': ['random'],

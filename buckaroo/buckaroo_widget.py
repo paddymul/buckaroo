@@ -40,8 +40,8 @@ class BuckarooProjectWidget(DOMWidget):
 
 
 class PdSampling(Sampling):
-        pre_limit = 20_000
-        #pre_limit = False
+    pre_limit = 1_000_000
+
 
 def sym(name):
     return {'symbol':name}

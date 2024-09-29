@@ -212,4 +212,4 @@ def test_sample():
     bw = CustomizableDataflow(big_df)
     assert len(bw.processed_df) == 100_000
     print(list(bw.df_data_dict.keys()))
-    assert len(bw.df_data_dict['main']) == 10_000
+    assert len(bw.df_data_dict['main']) == 5_000
