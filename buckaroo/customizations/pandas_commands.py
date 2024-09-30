@@ -161,28 +161,37 @@ class RemoveOutliers(Command):
 
 
 class OnlyOutliers(Command):
-    command_default = [s('only_outliers'), s('df'), "col", 1]
-    #command_pattern = [[3, 'remove_outliers_99', 'type', 'float']]
-    command_pattern = [[3, 'only_outliers', 'type', 'integer']]
-
+    command_default = [s('only_outliers'), s('df'), "col", .01]
+    command_pattern = [[3, 'only_outliers', 'type', 'float']]
 
     @staticmethod 
-    def transform(df, col, int_tail):
+    def transform(df, col, tail):
         if col == 'index':
             return df
         ser = df[col]
-        tail = int_tail / 100
-        new_df = df[(ser < np.quantile(ser, tail)) | (ser > np.quantile(ser, 1-tail ))]
-        print("pre_filter", len(df), "post_filter", len(new_df))
+        if(pd.api.types.is_integer_dtype(ser)):
+            mean = int(ser.mean())
+        else:
+            mean = ser.mean()
+        f_ser = ser.fillna(mean) # fill_series don't care about null rows, fill with mean
+        
+        new_df = df[(f_ser < np.quantile(f_ser, tail)) | (f_ser > np.quantile(f_ser, 1-tail ))]
+
         return new_df
 
     @staticmethod 
-    def transform_to_py(df, col, int_tail):
+    def transform_to_py(df, col, tail):
         C = f"df['{col}']"
-        tail = int_tail / 100
         low_tail = tail
         high_tail = 1-tail
-        return f"    df[({C} < np.quantile({C}, {low_tail})) | ({C} > np.quantile({C}, {high_tail}))]" 
+        
+        py_lines = [f"    if(pd.api.types.is_integer_dtype({C})):",
+                    f"        mean = int({C}.mean())",
+                    "    else:",
+                    f"        mean = {C}.mean()",
+                    f"    f_ser = {C}.fillna(mean)  # fill series with mean",
+                    f"    df = df[(f_ser < np.quantile(f_ser, {tail})) | (f_ser > np.quantile(f_ser, {high_tail} ))]"]
+        return "\n".join(py_lines)
 
 class LinearRegression(Command):
 
@@ -199,10 +208,9 @@ class LinearRegression(Command):
                 continue
             elif v == "basic":
                 cols.append(k)
-            elif v == "median":
-                df_contents[k] = grps[k].apply(lambda x: x.median())
-            elif v == "count":
-                df_contents[k] = grps[k].apply(lambda x: x.count())
+            elif v == "one_hot":
+                #do one hot stuff
+                pass
 
         pdf.dropna(axis=0, inplace=True)
 
@@ -222,7 +230,7 @@ class LinearRegression(Command):
 
 class GroupBy(Command):
     command_default = [s("groupby"), s('df'), 'col', {}]
-    command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count']]]
+    command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count', 'count_null']]]
     @staticmethod 
     def transform(df, col, col_spec):
         grps = df.groupby(col)
@@ -236,6 +244,8 @@ class GroupBy(Command):
                 df_contents[k] = grps[k].apply(lambda x: x.median())
             elif v == "count":
                 df_contents[k] = grps[k].apply(lambda x: x.count())
+            elif v == "count_null":
+                df_contents[k] = grps[k].apply(lambda x: x.isna().count())
         return pd.DataFrame(df_contents)
 
     #test_df = group_df
@@ -259,6 +269,8 @@ class GroupBy(Command):
                 commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.median())" % (k, k))
             elif v == "count":
                 commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.count())" % (k, k))
+            elif v == "count_null":
+                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.isna().count())" % (k, k))
         #print("commands", commands)
         commands.append("    df = pd.DataFrame(df_contents)")
         return "\n".join(commands)
@@ -327,15 +339,15 @@ def search_df_str(df, needle:str):
 
 class Search(Command):
     #argument_names = ["df", "col", "fill_val"]
-    command_default = [s('Search'), s('df'), "col", ""]
+    command_default = [s('search'), s('df'), "col", ""]
     command_pattern = [[3, 'term', 'type', 'string']]
 
     @staticmethod 
     def transform(df, col, val):
         
-        print("search_df", val)
+        #print("search_df", val)
         if val is None or val == "":
-            print("no search term set")
+            #print("no search term set")
             return df
         return search_df_str(df, val)
 
@@ -343,4 +355,33 @@ class Search(Command):
     @staticmethod 
     def transform_to_py(df, col, val):
         return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
+
+
+def search_col_str(df, col, needle:str):
+    existing_bool = pd.Series(False, index=np.arange(len(df)), dtype='boolean')
+    str_cols = [col]
+    for col in str_cols:
+        bool_result = ~(df[col].str.find(needle).fillna(-1) == -1).fillna(False)
+        existing_bool = existing_bool | bool_result
+    return df[existing_bool]    
+
+
+class SearchCol(Command):
+    #argument_names = ["df", "col", "fill_val"]
+    command_default = [s('search_col'), s('df'), "col", ""]
+    command_pattern = [[3, 'term', 'type', 'string']]
+
+    @staticmethod 
+    def transform(df, col, val):
+        
+        #print("search_df", val)
+        if val is None or val == "":
+            #print("no search term set")
+            return df
+        return search_col_str(df, col, val)
+
+
+    @staticmethod 
+    def transform_to_py(df, col, needle):
+        return f"    df = df[~(df['{col}'].str.find('{needle}').fillna(-1) == -1).fillna(False)]"
 
