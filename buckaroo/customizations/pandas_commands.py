@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 from ..jlisp.lispy import s
 
 class Command(object):
@@ -182,7 +183,6 @@ class OnlyOutliers(Command):
     @staticmethod 
     def transform_to_py(df, col, tail):
         C = f"df['{col}']"
-        low_tail = tail
         high_tail = 1-tail
         
         py_lines = [f"    if(pd.api.types.is_integer_dtype({C})):",
@@ -200,32 +200,74 @@ class LinearRegression(Command):
     command_pattern = [[3, 'x_cols', 'colEnum', ['null', 'basic', 'one_hot']]]
     @staticmethod 
     def transform(df, col, col_spec):
+        from sklearn.linear_model import LinearRegression
+        # Evaluate the model
+        #r2_score = model.score(x, y)
+        #print(f"R-squared value: {r2_score}")
 
-        df_contents = {}
-        prediction_cols = [col] # include y
+        all_cols = [col] # include y
+        x_cols = [] 
         for k, v in col_spec.items():
             if v == "null":
                 continue
             elif v == "basic":
-                cols.append(k)
+                all_cols.append(k)
+                x_cols.append(k)
+            elif v == "one_hot":
+                #do one hot stuff
+                pass
+        pdf = df[all_cols].dropna(axis=0)
+        
+        model = LinearRegression()
+        model.fit(pdf[x_cols], pdf[col])
+
+
+        prediction = model.predict(pdf[x_cols])
+        pdf['predicted'] = prediction
+        pdf['err'] = pdf['predicted'] - pdf[col]
+
+
+        existing_cols = list(df.columns)
+        existing_cols.remove(col)
+        df[col + '_predicted'] = pdf['predicted']
+        df[col + '_pred_err'] = pdf['err']
+        
+        new_cols = [col, col + '_predicted', col + '_pred_err']
+        new_cols.extend(existing_cols)
+        return df[new_cols].copy()
+
+    @staticmethod 
+    def transform_to_py(df, col, col_spec):
+
+        commands = [
+            "    from sklearn.linear_model import LinearRegression",
+            f"    all_cols = ['{col}'] # include y",
+            "    x_cols = []"]
+        for k, v in col_spec.items():
+            if v == "null":
+                continue
+            elif v == "basic":
+                commands.append(f"    all_cols.append('{k}')")
+                commands.append(f"    x_cols.append('{k}')")
             elif v == "one_hot":
                 #do one hot stuff
                 pass
 
-        pdf.dropna(axis=0, inplace=True)
+        pred_col = col+"_predicted"
+        pred_err_col = col+"_pred_err"
+        commands.extend([
+            "    pdf = df[all_cols].dropna(axis=0)",
+            "    model = LinearRegression()",
+            f"    model.fit(pdf[x_cols], pdf['{col}'])",
+            "    ",
+            "    prediction = model.predict(pdf[x_cols])",
+            "    pdf['predicted'] = prediction",
+            f"    pdf['err'] = pdf['predicted'] - pdf['{col}']",
 
-        
-        model = LinearRegression()
-        model.fit(x, y)
+            f"    df['{pred_col}'] = pdf['predicted']",
+            f"    df['{pred_err_col}'] = pdf['err']"])
+        return "\n".join(commands)
 
-        # Evaluate the model
-        #r2_score = model.score(x, y)
-        print(f"R-squared value: {r2_score}")
-
-        prediction = model.predict(x)
-        pdf['predicted_wall_remaining'] = prediction
-        pdf['err'] = pdf['predicted_wall_remaining'] - pdf['wall_seconds_remaining']
-        return pdf
 
 
 class GroupBy(Command):
