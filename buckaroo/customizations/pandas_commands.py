@@ -184,6 +184,40 @@ class OnlyOutliers(Command):
         high_tail = 1-tail
         return f"    df[({C} < np.quantile({C}, {low_tail})) | ({C} > np.quantile({C}, {high_tail}))]" 
 
+class LinearRegression(Command):
+
+
+    command_default = [s("linear_regression"), s('df'), 'col', {}]
+    command_pattern = [[3, 'x_cols', 'colEnum', ['null', 'basic', 'one_hot']]]
+    @staticmethod 
+    def transform(df, col, col_spec):
+
+        df_contents = {}
+        prediction_cols = [col] # include y
+        for k, v in col_spec.items():
+            if v == "null":
+                continue
+            elif v == "basic":
+                cols.append(k)
+            elif v == "median":
+                df_contents[k] = grps[k].apply(lambda x: x.median())
+            elif v == "count":
+                df_contents[k] = grps[k].apply(lambda x: x.count())
+
+        pdf.dropna(axis=0, inplace=True)
+
+        
+        model = LinearRegression()
+        model.fit(x, y)
+
+        # Evaluate the model
+        #r2_score = model.score(x, y)
+        print(f"R-squared value: {r2_score}")
+
+        prediction = model.predict(x)
+        pdf['predicted_wall_remaining'] = prediction
+        pdf['err'] = pdf['predicted_wall_remaining'] - pdf['wall_seconds_remaining']
+        return pdf
 
 
 class GroupBy(Command):
@@ -309,3 +343,4 @@ class Search(Command):
     @staticmethod 
     def transform_to_py(df, col, val):
         return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
+
