@@ -317,6 +317,47 @@ class GroupBy(Command):
         commands.append("    df = pd.DataFrame(df_contents)")
         return "\n".join(commands)
 
+class GroupByTransform(Command):
+    command_default = [s("groupby_transform"), s('df'), 'col', {}]
+    command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count',
+                                                 #'count_null',
+                                                 'min', 'max'
+                                                 ]]]
+    @staticmethod 
+    def transform(df, col, col_spec):
+        grps = df.groupby(col)
+        extra_cols = {}
+        print("col_spec", col_spec)
+        for k, v in col_spec.items():
+            if v == "sum":
+                extra_cols[k + "_sum"] = grps[k].transform('sum')
+            elif v == "mean":
+                extra_cols[k + "_mean"] = grps[k].transform('mean')
+            elif v == "median":
+                extra_cols[k + "_median"] = grps[k].transform('median')
+            elif v == "count":
+                extra_cols[k + "_count"] = grps[k].transform('count')
+            # elif v == "count_null":  # don't know how to write this
+            #     extra_cols[k] = grps[k].apply(lambda x: x.isna().count())
+            elif v == "min":
+                extra_cols[k + "_min"] = grps[k].transform('min')
+            elif v == "max":
+                extra_cols[k + "_max"] = grps[k].transform('max')
+
+        for k,v in extra_cols.items():
+            print("k", k)
+            df[k] = v
+        return df
+
+
+    @staticmethod 
+    def transform_to_py(df, col, col_spec):
+        commands = [f"    grps = df.groupby('{col}')"]
+        for k, v in col_spec.items():
+            new_col_name = k + "_" + v
+            commands.append(f"    df['{new_col_name}'] = grps['{k}'].transform('{v}')")
+        return "\n".join(commands)
+
 
 
 class DropCol(Command):
