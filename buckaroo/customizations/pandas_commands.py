@@ -270,24 +270,69 @@ class LinearRegression(Command):
 
 
 
+AGG_METHODS_WITH_HELP = [  # ordered in aproximate frequency of use
+('null', "Don't aggregate this column"),
+('mean', 'Return the mean value.'),
+('median', 'Return the median value.'),
+('min', 'Return the minimum value.'),
+('max', 'Return the maximum value.'),
+('sum', 'Return the sum of the series.'),
+('count', 'Returns count of non-missing values.'),
+('count_null', 'Returns count of missing values.'),
+('std', 'Return the standard deviation of the data.'),
+
+('empty', "True if no values in series."),
+('hasnans' 'True if missing values in series.'),
+('nunique', 'Return the count of unique values.'),
+
+
+('is_monotonic', 'True if values always increase.'),
+('is_monotonic_decreasing', 'True if values always decrease.'),
+('is_monotonic_increasing', 'True if values always increase.'),
+
+
+('all', 'Returns True if every value is truthy.'),
+('any', 'Returns True if any value is truthy.'),
+
+('autocorr', 'Returns Pearson correlation of series with shifted self. Can override lag as keyword argument(default is 1).'),
+
+('kurt', 'Return ”excess” kurtosis (0 is normal distribution). Values greater than 0 have more outliers than normal.'),
+('mad', 'Return the mean absolute deviation.'),
+
+('sem', 'Return the unbiased standard error.'),
+('skew', 'Return the unbiased skew of the data. Negative indicates tail is on the left side.'),
+
+('idxmax' "Returns index value of maximum value."),
+('idxmin', 'Returns index value of minimum value.'),
+
+('dtype', 'Type of the series.'),
+('dtypes', 'Type of the series.'),
+('nbytes', 'Return the number of bytes of the data.'),
+('ndim', 'Return the number of dimensions (1) of the data.'),
+('size', 'Return the size of the data.'),
+# These aggregations exist, but need an extra argument
+#('cov', 'Return covariance of series with other series. Need to specify other.'),
+#('corr', 'Returns Pearson correlation of series with other series. Need to specify other.'),
+#('quantile', 'Return the median value. Can override q to specify other quantile.'),
+]
+
+
+AGG_METHOD_NAMES = [x[0] for x in AGG_METHODS_WITH_HELP]
+
 class GroupBy(Command):
     command_default = [s("groupby"), s('df'), 'col', {}]
-    command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count', 'count_null']]]
+    command_pattern = [[3, 'colMap', 'colEnum', AGG_METHOD_NAMES]]
     @staticmethod 
     def transform(df, col, col_spec):
         grps = df.groupby(col)
         df_contents = {}
         for k, v in col_spec.items():
-            if v == "sum":
-                df_contents[k] = grps[k].apply(lambda x: x.sum())
-            elif v == "mean":
-                df_contents[k] = grps[k].apply(lambda x: x.mean())
-            elif v == "median":
-                df_contents[k] = grps[k].apply(lambda x: x.median())
-            elif v == "count":
-                df_contents[k] = grps[k].apply(lambda x: x.count())
-            elif v == "count_null":
-                df_contents[k] = grps[k].apply(lambda x: x.isna().count())
+            if v == "null":
+                continue
+            elif v == 'count_null':
+                df_contents[k] = grps[k].agg('size') - grps[k].agg('count')
+            else:
+                df_contents[k] = grps[k].agg(v)
         return pd.DataFrame(df_contents)
 
     #test_df = group_df
@@ -303,61 +348,49 @@ class GroupBy(Command):
             "    df_contents = {}"
         ]
         for k, v in col_spec.items():
-            if v == "sum":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.sum())" % (k, k))
-            elif v == "mean":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.mean())" % (k, k))
-            elif v == "median":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.median())" % (k, k))
-            elif v == "count":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.count())" % (k, k))
-            elif v == "count_null":
-                commands.append("    df_contents['%s'] = grps['%s'].apply(lambda x: x.isna().count())" % (k, k))
-        #print("commands", commands)
+            if v == "null":
+                continue
+            elif v == 'count_null':
+                commands.append(f"    df_contents['{k}'] = grps['{k}'].agg('size') - grps['{k}'].agg('count') #count_null")
+            else:
+                commands.append(f"    df_contents['{k}'] = grps['{k}'].agg('{v}')")
         commands.append("    df = pd.DataFrame(df_contents)")
         return "\n".join(commands)
 
 class GroupByTransform(Command):
     command_default = [s("groupby_transform"), s('df'), 'col', {}]
-    command_pattern = [[3, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'median', 'count',
-                                                 #'count_null',
-                                                 'min', 'max'
-                                                 ]]]
+    command_pattern = [[3, 'colMap', 'colEnum', AGG_METHOD_NAMES]]
+
+
+
     @staticmethod 
     def transform(df, col, col_spec):
         grps = df.groupby(col)
-        extra_cols = {}
-        print("col_spec", col_spec)
         for k, v in col_spec.items():
-            if v == "sum":
-                extra_cols[k + "_sum"] = grps[k].transform('sum')
-            elif v == "mean":
-                extra_cols[k + "_mean"] = grps[k].transform('mean')
-            elif v == "median":
-                extra_cols[k + "_median"] = grps[k].transform('median')
-            elif v == "count":
-                extra_cols[k + "_count"] = grps[k].transform('count')
-            # elif v == "count_null":  # don't know how to write this
-            #     extra_cols[k] = grps[k].apply(lambda x: x.isna().count())
-            elif v == "min":
-                extra_cols[k + "_min"] = grps[k].transform('min')
-            elif v == "max":
-                extra_cols[k + "_max"] = grps[k].transform('max')
-
-        for k,v in extra_cols.items():
-            print("k", k)
-            df[k] = v
+            new_col_name = k + "_" + v
+            if v == "null":
+                continue
+            elif v == 'count_null':
+                df[new_col_name] = grps[k].transform('size') - grps[k].transform('count')
+            else:
+                df[new_col_name] = grps[k].transform(v)
         return df
 
 
     @staticmethod 
     def transform_to_py(df, col, col_spec):
-        commands = [f"    grps = df.groupby('{col}')"]
+        commands = [
+            f"    grps = df.groupby('{col}')"
+        ]
         for k, v in col_spec.items():
             new_col_name = k + "_" + v
-            commands.append(f"    df['{new_col_name}'] = grps['{k}'].transform('{v}')")
+            if v == "null":
+                continue
+            elif v == 'count_null':
+                commands.append(f"    df['{new_col_name}'] = grps['{k}'].agg('size') - grps['{k}'].agg('count') #count_null")
+            else:
+                commands.append(f"    df['{new_col_name}'] = grps['{k}'].agg('{v}')")
         return "\n".join(commands)
-
 
 
 class DropCol(Command):
