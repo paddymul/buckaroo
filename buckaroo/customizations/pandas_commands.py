@@ -136,10 +136,28 @@ class SafeInt(Command):
     def transform_to_py(df, col):
         return "    df['%s'] = smart_to_int(df['%s'])" % (col, col)
 
+class MakeCategory(Command):
+    command_default = [s('make_category'), s('df'), "col"]
+    command_pattern = [None]
+
+
+    @staticmethod 
+    def transform(df, col):
+        if col == 'index':
+            return df
+        # maybe check for str or int
+        df[col] = df[col].astype('category')
+        return df
+
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return f"    df['{col}'] = df['{col}'].astype('category')"
+
 class RemoveOutliers(Command):
-    command_default = [s('remove_outliers'), s('df'), "col", 1]
+    command_default = [s('remove_outliers'), s('df'), "col", .01]
     #command_pattern = [[3, 'remove_outliers_99', 'type', 'float']]
-    command_pattern = [[3, 'remove_outliers', 'type', 'integer']]
+    command_pattern = [[3, 'remove_outliers', 'type', 'float']]
 
 
     @staticmethod 
@@ -394,7 +412,6 @@ class GroupByTransform(Command):
 
 
 class DropCol(Command):
-    #argument_names = ["df", "col"]
     command_default = [s('dropcol'), s('df'), "col"]
     command_pattern = [None]
 
@@ -411,7 +428,6 @@ class DropCol(Command):
 
 
 class ato_datetime(Command):
-    #argument_names = ["df", "col"]
     command_default = [s('to_datetime'), s('df'), "col"]
     command_pattern = [None]
 
@@ -454,7 +470,6 @@ def search_df_str(df, needle:str):
 
 
 class Search(Command):
-    #argument_names = ["df", "col", "fill_val"]
     command_default = [s('search'), s('df'), "col", ""]
     command_pattern = [[3, 'term', 'type', 'string']]
 
@@ -483,7 +498,6 @@ def search_col_str(df, col, needle:str):
 
 
 class SearchCol(Command):
-    #argument_names = ["df", "col", "fill_val"]
     command_default = [s('search_col'), s('df'), "col", ""]
     command_pattern = [[3, 'term', 'type', 'string']]
 
@@ -500,4 +514,84 @@ class SearchCol(Command):
     @staticmethod 
     def transform_to_py(df, col, needle):
         return f"    df = df[~(df['{col}'].str.find('{needle}').fillna(-1) == -1).fillna(False)]"
+
+
+
+class DropDuplicates(Command):
+    command_default = [s("drop_duplicates"), s('df'), 'col', "first"]
+    command_pattern = [[3, 'keep', 'enum', ["first", "last", "False"]]]
+    
+
+    @staticmethod 
+    def transform(df, col, val):
+        if val == "False":
+            return df[col].drop_duplicates(keep=False)
+        else:
+            return df[col].drop_duplicates(keep=val)
+
+
+    @staticmethod 
+    def transform_to_py(df, col, val):
+        if val == "False":
+            keep_arg = "False"
+        else:
+            keep_arg = f"'{val}'"
+        return f"    df = df['{col}'].drop_duplicates(keep={keep_arg})"
+
+class Rank(Command):
+    command_default = [s("rank"), s('df'), 'col', "None", False]
+    command_pattern = [[3, 'method', 'enum', ["None", "min", "dense"]],
+                       [4, 'new_col', 'bool']
+                       ]
+    
+
+    @staticmethod 
+    def transform(df, col, method, new_col):
+        arg_values = {"None":None, "min":"min", "dense":"dense"}
+        method_arg = arg_values[method]
+        if new_col:
+            new_col_name = f"{col}_rank"
+            assert new_col_name not in df.columns
+            df[new_col_name] = df[col].rank(method=method_arg)
+            return df
+        else:
+            df[col] = df[col].rank(method=method_arg)
+            return df
+
+    @staticmethod 
+    def transform_to_py(df, col, val, new_col):
+        arg_values = {"None":'None', "min":"'min'", "dense":"'dense'"}
+        method_arg = arg_values[val]
+        if new_col:
+            new_col_name = f"{col}_rank"
+            return f"    df = df['{col}'].rank(method={method_arg})"
+        else:
+            return f"    df = df['{new_col_name}'].rank(method={method_arg})"
+
+
+                       
+
+class Replace(Command):
+    command_default = [s("replace"), s('df'), 'col', "", ""]
+    command_pattern = [[3, 'old', 'type', 'string'],
+                       [4, 'new_', 'type', 'string']
+                       ]
+
+    @staticmethod 
+    def transform(df, col, prev, new_):
+        df[col] = df[col].replace(prev, new_)
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col, prev, new_):
+        return f"    df['{col}'] = df['{col}'].replace('{prev}', '{new_}')"
+
+# string commands to add
+#split
+# age = pd.Series(['0-10', '11-15', '11-15', '61-65', '46-50'])
+# (age
+# .str.split('-', expand=True) .iloc[:,0]
+# .astype(int)
+# )
+
 
