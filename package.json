@@ -1,6 +1,6 @@
 {
   "name": "buckaroo",
-  "version": "0.7.4",
+  "version": "0.7.5-test",
   "description": "Fast Datagrid widget for the Jupyter Notebook and JupyterLab",
   "keywords": [
     "jupyter",
@@ -10,9 +10,11 @@
   ],
   "files": [
     "lib/**/*.js",
+    "lib/**/*.css",
     "lib/**/*.js.map",
     "lib/**/*.ts",
     "dist/*.js",
+    "dist/*.css",
     "dist/*.js.map",
     "dist/*.png",
     "style/**/*.*"
@@ -38,7 +40,7 @@
     "build:dev": "yarn run build:lib && yarn run build:nbextension && yarn run build:labextension:dev",
     "build:labextension": "jupyter labextension build .",
     "build:labextension:dev": "which jupyter && jupyter labextension build --development True .",
-    "build:lib": "tsc",
+      "build:lib": "tsc ",
     "build:nbextension": "webpack --mode=production --no-devtool",
     "build:widget-examples": "cd widget-examples/basic && webpack --mode=production",
     "build:examples": "webpack --mode=production --config docs/webpack.typescript.localdev.ts --env production",
