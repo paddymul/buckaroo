@@ -19,10 +19,27 @@ const  performance = {
 };
 
 // Custom webpack rules
+
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const devMode = process.env.NODE_ENV !== "production";
+
+module.exports = {
+  module: {
+    rules: [
+
+    ],
+  },
+  plugins: [].concat(devMode ? [] : [new MiniCssExtractPlugin()]),
+};
 const baseRules = [
 
-  { test: /\.js$/, loader: 'source-map-loader' },
-  { test: /\.css$/, use: ['style-loader', 'css-loader'] },
+    { test: /\.css$/, use: [ 'css-loader'],
+      assert: { type: "css" },
+
+      options: {
+          exportType: "css-style-sheet",
+      },
+    },
                 {
                     test: /\.scss$/,
                     use: [
@@ -33,6 +50,8 @@ const baseRules = [
                         {
                             loader: "postcss-loader",
                             options: {
+
+
                                 postcssOptions: {
                                     plugins: [
                                         ["postcss-preset-env"],
@@ -70,7 +89,20 @@ const baseRules = [
 ];
 
 
-const rules = [...baseRules,   { test: /\.tsx?$/, loader: 'ts-loader' }];
+const rules = [...baseRules,   { test: /\.tsx?$/, loader: 'ts-loader'
+      {
+        // If you enable `experiments.css` or `experiments.futureDefaults`, please uncomment line below
+        // type: "javascript/auto",
+        test: /\.(sa|sc|c)ss$/i,
+        use: [
+          devMode ? "style-loader" : MiniCssExtractPlugin.loader,
+          "css-loader",
+          "postcss-loader",
+          "sass-loader",
+        ],
+      },
+
+ }];
 const demoRules = [...baseRules,
                 {
                     test: /\.tsx?$/,
@@ -81,13 +113,13 @@ const demoRules = [...baseRules,
                     }
                 }]
 
-		   
+
 // Packages that shouldn't be bundled but loaded at runtime
 const externals = ['@jupyter-widgets/base'];
 
 const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
-  extensions: ['.webpack.js', '.web.js', '.ts', '.js', '.tsx'],
+    extensions: ['.webpack.js', '.web.js', '.ts', '.js', '.tsx', 'css'],
     plugins: [new TsconfigPathsPlugin()],
   fallback: { crypto: false },
 };
@@ -149,7 +181,7 @@ module.exports = [
             port: 8030
         },
       performance
-      
+
   },
 
   /**
