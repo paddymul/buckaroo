@@ -17,11 +17,23 @@ crypto.createHash = (algorithm) =>
 const performance = {
   maxAssetSize: 100_000_000,
 };
-
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const devMode = process.env.NODE_ENV !== 'production';
 // Custom webpack rules
 const baseRules = [
   { test: /\.js$/, loader: 'source-map-loader' },
-  { test: /\.css$/, use: ['style-loader', 'css-loader'] },
+  {
+    test: /\.css$/,
+    use: [
+      MiniCssExtractPlugin.loader, // instead of style-loader
+      'css-loader',
+    ],
+  },
+  {
+    test: /\.md$/,
+    use: ['html-loader', 'markdown-loader'],
+  },
+  /*
   {
     test: /\.scss$/,
     use: [
@@ -40,6 +52,9 @@ const baseRules = [
       'sass-loader',
     ],
   },
+  */
+
+  /*
   {
     test: luminoThemeImages,
     issuer: /\.css$/,
@@ -52,10 +67,7 @@ const baseRules = [
     exclude: luminoThemeImages,
     use: ['file-loader'],
   },
-  {
-    test: /\.md$/,
-    use: ['html-loader', 'markdown-loader'],
-  },
+
   {
     test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
     issuer: /\.css$/,
@@ -63,6 +75,22 @@ const baseRules = [
       loader: 'svg-url-loader',
       options: { encoding: 'none', limit: 10000 },
     },
+  },
+  */
+  {
+    test: /\.svg$/,
+    use: 'file-loader',
+  },
+  {
+    test: /\.png$/,
+    use: [
+      {
+        loader: 'url-loader',
+        options: {
+          mimetype: 'image/png',
+        },
+      },
+    ],
   },
 ];
 
@@ -85,7 +113,9 @@ const externals = ['@jupyter-widgets/base'];
 const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
   extensions: ['.webpack.js', '.web.js', '.ts', '.js', '.tsx'],
-  plugins: [new TsconfigPathsPlugin()],
+
+  plugins: [new TsconfigPathsPlugin(), new MiniCssExtractPlugin()],
+
   fallback: { crypto: false },
 };
 
@@ -96,6 +126,7 @@ module.exports = [
    * This bundle only contains the part of the JavaScript that is run on load of
    * the notebook.
    */
+  /*
   {
     entry: './js/extension.ts',
     output: {
@@ -114,7 +145,7 @@ module.exports = [
     //       })]
     performance,
   },
-
+*/
   /**
    * Embeddable buckaroo bundle
    *
@@ -151,6 +182,7 @@ module.exports = [
    *
    * This bundle is used to embed widgets in the package documentation.
    */
+  /*
   {
     entry: './js/index.ts',
     output: {
@@ -167,4 +199,5 @@ module.exports = [
     resolve,
     performance,
   },
+  */
 ];
