@@ -17,6 +17,7 @@ crypto.createHash = (algorithm) =>
 const performance = {
   maxAssetSize: 100_000_000,
 };
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const devMode = process.env.NODE_ENV !== 'production';
 // Custom webpack rules
@@ -37,6 +38,10 @@ const rules = [
     use: ['file-loader'],
   },
   {
+    test: /\.md$/,
+    use: ['html-loader', 'markdown-loader'],
+  },
+  {
     test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
     issuer: /\.css$/,
     use: {
@@ -44,36 +49,9 @@ const rules = [
       options: { encoding: 'none', limit: 10000 },
     },
   },
-  */
-  {
-    test: /\.svg$/,
-    use: 'file-loader',
-  },
-  {
-    test: /\.png$/,
-    use: [
-      {
-        loader: 'url-loader',
-        options: {
-          mimetype: 'image/png',
-        },
-      },
-    ],
-  },
 ];
 
 const rules = [...baseRules, { test: /\.tsx?$/, loader: 'ts-loader' }];
-const demoRules = [
-  ...baseRules,
-  {
-    test: /\.tsx?$/,
-    loader: 'ts-loader',
-    options: {
-      transpileOnly: true,
-      configFile: 'examples/tsconfig.json',
-    },
-  },
-];
 
 // Packages that shouldn't be bundled but loaded at runtime
 const externals = ['@jupyter-widgets/base'];
@@ -86,6 +64,7 @@ const resolve = {
 };
 
 module.exports = [
+  /**
    * Embeddable buckaroo bundle
    *
    * This bundle is almost identical to the notebook extension bundle. The only
@@ -115,5 +94,4 @@ module.exports = [
     },
     performance,
   },
-
 ];
