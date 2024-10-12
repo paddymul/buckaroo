@@ -51,7 +51,6 @@ const rules = [
   },
 ];
 
-const rules = [...baseRules, { test: /\.tsx?$/, loader: 'ts-loader' }];
 
 // Packages that shouldn't be bundled but loaded at runtime
 const externals = ['@jupyter-widgets/base'];

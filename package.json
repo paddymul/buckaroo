@@ -42,6 +42,7 @@
     "build:lib": "tsc",
     "build:examples": "webpack --mode=production --config docs/webpack.typescript.localdev.ts --env production",
     "build:all": "yarn run build:labextension",
+      "bundle": "yarn webpack --config ./webpack.config.js",
     "clean": "rimraf dist && yarn run clean:lib && yarn run clean:labextension",
     "clean:lib": "rimraf lib",
     "clean:labextension": "rimraf buckaroo/labextension",
