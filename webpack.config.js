@@ -48,7 +48,7 @@ const baseRules = [
   },
 ];
 
-const rules = [...baseRules, { test: /\.tsx?$/, loader: 'ts-loader' }];
+const rules = [{ test: /\.tsx?$/, loader: 'ts-loader' }, ...baseRules ];
 const demoRules = [
   ...baseRules,
   {
