@@ -58,7 +58,7 @@ const externals = ['@jupyter-widgets/base'];
 const resolve = {
   // Add '.ts' and '.tsx' as resolvable extensions.
   extensions: ['.webpack.js', '.web.js', '.ts', '.js', '.tsx'],
-  plugins: [new TsconfigPathsPlugin(), new MiniCssExtractPlugin()],
+    plugins: [new TsconfigPathsPlugin()],
   fallback: { crypto: false },
 };
 
@@ -88,6 +88,9 @@ module.exports = [
     },
     externals,
     resolve,
+    plugins: [
+      new MiniCssExtractPlugin()
+    ],
     devServer: {
       port: 8030,
     },
