@@ -1,6 +1,6 @@
 {
   "name": "buckaroo",
-  "version": "0.7.5-test4",
+  "version": "0.7.5-test8",
   "description": "Fast Datagrid widget for the Jupyter Notebook and JupyterLab",
   "keywords": [
     "jupyter",
@@ -68,8 +68,8 @@
     "lodash": "^4.17.21",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-smooth": "^2.0.3",
-    "recharts": "^2.7.3"
+    "recharts": "^2.7.3",
+    "react-transition-group": "^4.4.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.3",
@@ -139,7 +139,7 @@
     "outputDir": "./buckaroo/labextension",
     "sharedPackages": {
       "@jupyter-widgets/base": {
-        "bundled": false,
+        "bundled": true,
         "singleton": true
       },
       "@lumino/algorithm": {
