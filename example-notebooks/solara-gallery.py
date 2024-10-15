@@ -2,20 +2,25 @@ import json
 import pandas as pd
 import numpy as np
 import solara
-from pathlib import Path
 from buckaroo.solara_buckaroo import SolaraDFViewer
 
-obj_df = pd.DataFrame({
-    'bools':[True, True, False, False, True, False],
-    'ints': [   5,   20,    30,   -10, 7772, 5],
-    #'timestamp':["2020-01-01 01:00Z", "2020-01-01 02:00Z", "2020-02-28 02:00Z", "2020-03-15 02:00Z", None, None],
-    #'dicts': [ {'a':10, 'b':20, 'c':'some string'}, None, None, None, None, None], #polars
-    #'nested_dicts': [{'level_1': {'a':10, 'b':20, 'c':'some string'}}, None, None, None, None, None],
-    #'lists': [['a','b'], [1,2], None, None, None, None],
-    #'lists-string': [['a','b'], ['foo', 'bar'], None, None, None, None],
-    #'lists-int': [[10, 20], [100, 500], [8], None, None, None]
-    }
-)
+float_col = [5, -8, 13.23, -8.01, -999.345245234, None]
+float_df = pd.DataFrame({
+    'float_obj_displayer': float_col,
+    'float_float_displayer_1__3': float_col,
+    'float_float_displayer_0__3': float_col,
+    'float_float_displayer_3__3': float_col,
+    'float_float_displayer_3_13': float_col})
+
+def float_col_conf(min_digits, max_digits):
+    return {'displayer_args': { 'displayer': 'float', 'min_fraction_digits':min_digits, 'max_fraction_digits': max_digits}}
+
+float_config = {
+        'float_obj_displayer':  {'displayer_args': {'displayer': 'obj'}},      
+        'float_float_displayer_1__3' : float_col_conf(1,3),
+        'float_float_displayer_0__3' : float_col_conf(0,3),
+        'float_float_displayer_3__3' : float_col_conf(3,3),
+        'float_float_displayer_3_13' : float_col_conf(3,13)}
 
 
 base_str_col = ["asdf", "qwerty", "really long string, much  much longer",
@@ -32,25 +37,6 @@ str_config =  {
         'strings_string_displayer': {'displayer_args': {'displayer': 'string'}},
     }
 
-
-
-
-float_col = [5, -8, 13.23, -8.01, -999.345245234, None]
-float_df = pd.DataFrame({
-    'float_obj_displayer': float_col,
-    'float_float_displayer_1__3': float_col,
-    'float_float_displayer_0__3': float_col,
-    'float_float_displayer_3__3': float_col,
-    'float_float_displayer_3_13': float_col})
-
-def float_col_conf(min_digits, max_digits):
-    return {'displayer_args': { 'displayer': 'float', 'min_fraction_digits':min_digits, 'max_fraction_digits': max_digits}}
-float_config = {
-        'float_obj_displayer':  {'displayer_args': {'displayer': 'obj'}},      
-        'float_float_displayer_1__3' : float_col_conf(1,3),
-        'float_float_displayer_0__3' : float_col_conf(0,3),
-        'float_float_displayer_3__3' : float_col_conf(3,3),
-        'float_float_displayer_3_13' : float_col_conf(3,13)}
 
 ts_col = ["2020-01-01 01:00Z", "2020-01-01 02:00Z", "2020-02-28 02:00Z", "2020-03-15 02:00Z", None]
 datetime_df = pd.DataFrame(
@@ -166,7 +152,7 @@ configs = {"str_config" : (str_df, str_config),
            
            }
 
-active_config = solara.reactive("str_config")
+active_config = solara.reactive("float_config")
 
 gallery_css = """
 .dfviewer-widget {min-width:50vw}
