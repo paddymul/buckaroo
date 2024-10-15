@@ -1,5 +1,5 @@
 // https://plnkr.co/edit/QTNwBb2VEn81lf4t?open=index.tsx
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import _ from 'lodash';
 import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
 import { ColDef, GridOptions } from 'ag-grid-community';
@@ -8,33 +8,6 @@ import { DFMeta } from './WidgetTypes';
 import { BuckarooOptions } from './WidgetTypes';
 import { BuckarooState, BKeys } from './WidgetTypes';
 export type setColumFunc = (newCol: string) => void;
-
-const getSearchForm = (initialVal: string, setSearchVal: any) => {
-  return function MyForm() {
-    function handleSubmit(e: any) {
-      // Prevent the browser from reloading the page
-      e.preventDefault();
-      // Read the form data
-      const form = e.target;
-      const formData = new FormData(form);
-
-      const entries = Array.from(formData.entries());
-
-      const formDict = _.fromPairs(entries) as Record<string, string>;
-
-      console.log('formDict', formDict);
-      setSearchVal(formDict['search']);
-    }
-
-    return (
-      <form method="post" onSubmit={handleSubmit}>
-        <label>
-          <input name="search" defaultValue={initialVal} />
-        </label>
-      </form>
-    );
-  };
-};
 
 const helpCell = function (params: any) {
   return (
@@ -59,6 +32,14 @@ export function StatusBar({
   setBuckarooState: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckarooOptions: BuckarooOptions;
 }) {
+  /*
+      AgGridReact
+        rowData={rowData}
+        columnDefs={columns}
+        singleClickEdit={true}
+        stopEditingWhenCellsLoseFocus={true}
+*/
+
   console.log('initial buckarooState', buckarooState);
   //   const optionCycles = _.fromPairs(
   // //    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
@@ -100,21 +81,25 @@ export function StatusBar({
     }
   };
   const showSearch = false;
-  const localSetSearchString = (search_query: string) => {
-    setBuckarooState({ ...buckarooState, search_string: search_query });
-  };
+
+  const handleCellChange = useCallback((params) => {
+    const { oldValue, newValue } = params;
+
+    if (oldValue !== newValue) {
+      console.log('Edited cell:', newValue);
+      setBuckarooState({ ...buckarooState, search_string: newValue });
+    }
+  }, []);
 
   const columnDefs: ColDef[] = [
     {
       field: 'search',
+      headerName: 'search',
       width: 200,
-      cellRenderer: getSearchForm(
-        buckarooState.search_string,
-        localSetSearchString
-      ),
-      hide: !showSearch,
+      editable: true,
+      onCellValueChanged: handleCellChange,
+      //hide: !showSearch,
     },
-
     {
       field: 'df_display',
       headerName: 'Σ', //note the greek symbols instead of icons which require buildchain work
@@ -169,6 +154,7 @@ export function StatusBar({
       filtered_rows: basicIntFormatter.format(dfMeta.filtered_rows),
       post_processing: buckarooState.post_processing,
       show_commands: buckarooState.show_commands || '0',
+      search: buckarooState.search_string,
     },
   ];
 

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { BuckarooState, extraComponents, BuckarooOptions, DFMeta } from 'buckaroo';
+import {
+  BuckarooState,
+  extraComponents,
+  BuckarooOptions,
+  DFMeta,
+} from 'buckaroo';
 
 export default function StatusBarEx() {
   const dfm: DFMeta = {
@@ -27,12 +32,14 @@ export default function StatusBarEx() {
   };
 
   return (
-    <extraComponents.StatusBar
-      dfMeta={dfm}
-      buckarooState={bState}
-      setBuckarooState={setBState}
-      buckarooOptions={bOptions}
-    />
-    );
-
+    <div>
+      <extraComponents.StatusBar
+        dfMeta={dfm}
+        buckarooState={bState}
+        setBuckarooState={setBState}
+        buckarooOptions={bOptions}
+      />
+      <pre> {JSON.stringify(bState, null, 2)}</pre>
+    </div>
+  );
 }
