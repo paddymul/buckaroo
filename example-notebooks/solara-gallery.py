@@ -1,4 +1,5 @@
 import json
+import re
 import pandas as pd
 import numpy as np
 import solara
@@ -32,7 +33,7 @@ str_df = pd.DataFrame({
         'strings_string_displayer': base_str_col,
 })
 str_config =  {
-        'strings_string_displayer_max_len': {'displayer_args': {'displayer': 'string', 'max_length':15}},
+        'strings_string_displayer_max_len': {'displayer_args': {'displayer': 'string', 'max_length':35}},
         'strings_obj_displayer':  {'displayer_args': {'displayer': 'obj'}},      
         'strings_string_displayer': {'displayer_args': {'displayer': 'string'}},
     }
@@ -155,11 +156,23 @@ configs = {"str_config" : (str_df, str_config),
 active_config = solara.reactive("float_config")
 
 gallery_css = """
-.dfviewer-widget {min-width:50vw}
+.dfviewer-widget {min-width:70vw}
 span.span { background: red;}
 .config-select {width:300px; }
 """
 
+
+def format_json(obj):
+    """
+      Formats obj to json  string to remove unnecessary whitespace.
+      Returns:
+          The formatted JSON string.
+    """
+    json_string = json.dumps(obj, indent=4)
+    # Remove whitespace before closing curly braces
+    formatted_string = re.sub(r'\s+}', '}', json_string)
+
+    return formatted_string
 
 @solara.component
 def Page():
@@ -180,7 +193,7 @@ Select a config, and view the output.  Each dataframe has multiple columns with 
     )
 
     conf = configs[active_config.value]
-    formatted_conf = json.dumps(conf[1], indent=4)
+    formatted_conf = format_json(conf[1]) #json.dumps(conf[1], indent=4)
 
     json_code = f"""
 ```python
@@ -192,7 +205,7 @@ Select a config, and view the output.  Each dataframe has multiple columns with 
 
         with solara.Column(gap="10px"):
             solara.Text("Column Config")
-            solara.Markdown(json_code)
+            solara.Markdown(json_code, style="min-width:400px;")
         with solara.Column(gap="10px"):
             solara.Text("Buckaroo Widget")
 
@@ -200,4 +213,5 @@ Select a config, and view the output.  Each dataframe has multiple columns with 
                 column_config_overrides = conf[1],
                 pinned_rows=[]
             )
+
 
