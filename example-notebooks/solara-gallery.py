@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import numpy as np
 import solara
+from pathlib import Path
 from buckaroo.solara_buckaroo import SolaraDFViewer
 
 obj_df = pd.DataFrame({
@@ -167,14 +168,30 @@ configs = {"str_config" : (str_df, str_config),
 
 active_config = solara.reactive("str_config")
 
+gallery_css = """
+.dfviewer-widget {min-width:50vw}
+span.span { background: red;}
+.config-select {width:300px; }
+"""
 
 
 @solara.component
 def Page():
+    #solara.Style(Path("gallery.css"))
+    solara.Style(gallery_css)
+    solara.Markdown("""
+# Buckaroo Styling Gallery
 
-    solara.Select(label="Config", 
-    value=active_config, 
-    values=list(configs.keys()))
+Select a config, and view the output.  Each dataframe has multiple columns with the exact same values. The display differs because of the column config applied.
+
+    
+    """)
+    solara.Select(label="Config",
+        value=active_config, 
+        values=list(configs.keys()),
+        dense=True,
+        classes=["config-select"]
+    )
 
     conf = configs[active_config.value]
     formatted_conf = json.dumps(conf[1], indent=4)
@@ -183,7 +200,18 @@ def Page():
 ```python
 {formatted_conf}
 ```"""
-    solara.Markdown(json_code)
-    bw = SolaraDFViewer(df=conf[0],
-        column_config_overrides = conf[1]
-    )
+
+    with solara.HBox() as main:
+
+
+        with solara.Column(gap="10px"):
+            solara.Text("Column Config")
+            solara.Markdown(json_code)
+        with solara.Column(gap="10px"):
+            solara.Text("Buckaroo Widget")
+
+            bw = SolaraDFViewer(df=conf[0],
+                column_config_overrides = conf[1],
+                pinned_rows=[]
+            )
+
