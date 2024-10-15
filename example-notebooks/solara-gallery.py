@@ -200,7 +200,7 @@ Select a config, and view the output.  Each dataframe has multiple columns with 
 {formatted_conf}
 ```"""
 
-    with solara.HBox() as main:
+    with solara.HBox():
 
 
         with solara.Column(gap="10px"):
@@ -209,7 +209,7 @@ Select a config, and view the output.  Each dataframe has multiple columns with 
         with solara.Column(gap="10px"):
             solara.Text("Buckaroo Widget")
 
-            bw = SolaraDFViewer(df=conf[0],
+            SolaraDFViewer(df=conf[0],
                 column_config_overrides = conf[1],
                 pinned_rows=[]
             )
