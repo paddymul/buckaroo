@@ -5,7 +5,7 @@ from buckaroo.customizations.analysis import (
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
-from buckaroo.dataflow.autocleaning import PandasAutocleaning
+from buckaroo.dataflow.autocleaning import PandasAutocleaning, generate_quick_ops
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 from buckaroo.customizations.pandas_commands import (
     Command,
@@ -90,7 +90,8 @@ def test_handle_user_ops():
 
     ac = PandasAutocleaning([ACConf])
     df = pd.DataFrame({'a': [10, 20, 30]})
-    cleaning_result = ac.handle_ops_and_clean(df, cleaning_method='default', existing_operations=[])
+    cleaning_result = ac.handle_ops_and_clean(
+        df, cleaning_method='default', quick_command_args={}, existing_operations=[])
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
     assert merged_operations == [
         [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
@@ -98,7 +99,7 @@ def test_handle_user_ops():
     existing_ops = [
         [{'symbol': 'old_safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
     cleaning_result2 = ac.handle_ops_and_clean(
-        df, cleaning_method='default', existing_operations=existing_ops)
+        df, cleaning_method='default', quick_command_args={}, existing_operations=existing_ops)
     cleaned_df, cleaning_sd, generated_code, merged_operations2 = cleaning_result2
     assert merged_operations2 == [
         [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']]
@@ -106,7 +107,7 @@ def test_handle_user_ops():
     user_ops = [
         [{'symbol': 'noop'}, {'symbol': 'df'}, 'b']]
     cleaning_result3 = ac.handle_ops_and_clean(
-        df, cleaning_method='default', existing_operations=user_ops)
+        df, cleaning_method='default', quick_command_args={}, existing_operations=user_ops)
     cleaned_df, cleaning_sd, generated_code, merged_operations3 = cleaning_result3
     assert merged_operations3 == [
         [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a'],
@@ -128,7 +129,8 @@ def test_make_origs_different_dtype():
 def test_handle_clean_df():
     ac = PandasAutocleaning([ACConf])
     df = pd.DataFrame({'a': ["30", "40"]})
-    cleaning_result = ac.handle_ops_and_clean(df, cleaning_method='default', existing_operations=[])
+    cleaning_result = ac.handle_ops_and_clean(
+        df, cleaning_method='default', quick_command_args={}, existing_operations=[])
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
     expected = pd.DataFrame({
         'a': [30, 40],
@@ -142,7 +144,8 @@ EXPECTED_GEN_CODE = """def clean(df):
 def test_autoclean_codegen():
     ac = PandasAutocleaning([ACConf])
     df = pd.DataFrame({'a': ["30", "40"]})
-    cleaning_result = ac.handle_ops_and_clean(df, cleaning_method='default', existing_operations=[])
+    cleaning_result = ac.handle_ops_and_clean(
+        df, cleaning_method='default', quick_command_args={}, existing_operations=[])
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
     assert generated_code == EXPECTED_GEN_CODE
@@ -167,34 +170,6 @@ def test_stacked_filters():
     copy() at the beginning
 
     """
-    
-class WrongFrontendQuickArgs(Exception):
-    pass
-
-def generate_quick_ops(command_list, quick_args):
-    ret_ops = []
-    for c in command_list:
-        sym_name = c.command_default[0]['symbol']
-        if sym_name not in quick_args:
-            continue
-        val = quick_args[sym_name]
-        if len(val) == 1:
-            v1 = val[0]
-            if v1 == "" or v1 is None:
-                #this is an empty result sent from the frontend.
-                #the frontend for quick_args is pretty dumb
-                continue 
-        if not len(val) == len(c.quick_args_pattern):
-            raise WrongFrontendQuickArgs(f"Frontend passed in wrong quick_arg format for {sym_name} expected {c.quick_args_pattern} got {val}.  Full quick_args obj {quick_args}")
-        op = c.command_default.copy()
-        for form, arg  in zip(c.quick_args_pattern, val):
-            arg_pos = form[0]
-            op[arg_pos] = arg
-        op[0] = qc_sym(sym_name)
-        ret_ops.append(op)
-    return ret_ops
-
-            
 
 def test_quick_commands():
     """ simulate the data structure sent from the frontend to autocleaning that should generate
