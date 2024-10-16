@@ -166,3 +166,9 @@ def test_stacked_filters():
 
     """
     
+
+
+def test_quick_commands():
+    """ simulate the data structure sent from the frontend to autocleaning that should generate
+    filtering commands"""
+    

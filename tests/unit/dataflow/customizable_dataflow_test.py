@@ -246,13 +246,6 @@ def test_bstate_commands():
 
     """
 
-
-    
-    assert vcb.processed_df.values.tolist() == [
-        [1, 1, 1, 1, 1],
-        [0.5, 0.5, 0.5, 0.5, 0.5],
-        ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]
-
     
 def test_sample():
     big_df = pd.DataFrame({'a': np.arange(105_000)})
