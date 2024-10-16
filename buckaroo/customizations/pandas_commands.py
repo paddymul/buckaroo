@@ -182,6 +182,7 @@ class RemoveOutliers(Command):
 class OnlyOutliers(Command):
     command_default = [s('only_outliers'), s('df'), "col", .01]
     command_pattern = [[3, 'only_outliers', 'type', 'float']]
+    quick_args = [[2, 'term', 'type', 'col']]
 
     @staticmethod 
     def transform(df, col, tail):

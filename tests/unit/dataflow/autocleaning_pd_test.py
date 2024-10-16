@@ -167,10 +167,33 @@ def test_stacked_filters():
 
     """
     
-
+class WrongFrontendQuickArgs(Exception):
+    pass
 
 def emit_quick_commands(command_list, quick_args):
-    pass
+    ret_ops = []
+    for c in command_list:
+        sym_name = c.command_default[0]['symbol']
+        if sym_name not in quick_args:
+            continue
+        val = quick_args[sym_name]
+        if len(val) == 1:
+            v1 = val[0]
+            if v1 == "" or v1 is None:
+                #this is an empty result sent from the frontend.
+                #the frontend for quick_args is pretty dumb
+                continue 
+        if not len(val) == len(c.quick_args):
+            raise WrongFrontendQuickArgs(f"Frontend passed in wrong quick_arg format for {sym_name} expected {c.quick_args} got {val}.  Full quick_args obj {quick_args}")
+        op = c.command_default.copy()
+        for form, arg  in zip(c.quick_args, val):
+            arg_pos = form[0]
+            op[arg_pos] = arg
+        op[0] = qc_sym(sym_name)
+        ret_ops.append(op)
+    return ret_ops
+
+            
 
 def test_quick_commands():
     """ simulate the data structure sent from the frontend to autocleaning that should generate
@@ -182,28 +205,30 @@ def test_quick_commands():
     quick_commands = [Search, OnlyOutliers]
 
     #start with empty
-    empty_produced_commands = emit_quick_commands(quick_commands, {"search": "", "only_outliers": ""})
+    empty_produced_commands = emit_quick_commands(quick_commands, {"search": [""], "only_outliers": [""]})
     assert empty_produced_commands == []
 
-    empty_produced_commands2 = emit_quick_commands(quick_commands, {"search": None, "only_outliers": ""})
+    empty_produced_commands2 = emit_quick_commands(quick_commands, {"search": [None], "only_outliers": [""]})
     assert empty_produced_commands2 == []
 
     #verify that both quick_args aren't necessary
-    empty_produced_commands3 = emit_quick_commands(quick_commands, {"search": None})
+    empty_produced_commands3 = emit_quick_commands(quick_commands, {"search": [None]})
     assert empty_produced_commands3 == []
 
     #assertRaises emit_quick_commands(quick_commands, {"non_matching_command": ""})
     #assertRaises emit_quick_commands(quick_commands, {"non_matching_command": "", "search":""})
 
 
-    #note only_outliers needs quick_command to substitute into the col place, not the last arg
-    oo_produced_commands = emit_quick_commands(quick_commands, {"only_outliers": "col_B"})
-    assert oo_produced_commands == [[qc_sym('only_outliers'), s('df'), "col_B", .01]]
 
-    search_only_produced_commands = emit_quick_commands(quick_commands, {"search": "asdf"})
+    search_only_produced_commands = emit_quick_commands(quick_commands, {"search": ["asdf"]})
     assert search_only_produced_commands == [[qc_sym('search'), s('df'), "col", "asdf"]]
 
-    both_produced_commands = emit_quick_commands(quick_commands, {"search": "asdf", "only_outliers": "col_B"})
+    #note only_outliers needs quick_command to substitute into the col place, not the last arg
+    oo_produced_commands = emit_quick_commands(quick_commands, {"only_outliers": ["col_B"]})
+    assert oo_produced_commands == [[qc_sym('only_outliers'), s('df'), "col_B", .01]]
+
+    both_produced_commands = emit_quick_commands(
+        quick_commands, {"search": ["asdf"], "only_outliers": ["col_B"]})
     assert both_produced_commands == [
         [qc_sym('search'), s('df'), "col", "asdf"],
         [qc_sym('only_outliers'), s('df'), "col_B", .01]
@@ -212,10 +237,10 @@ def test_quick_commands():
 
     #note the order of produced commands depends on the order of command_list passed into emit_quick_commands
     both_produced_commands_reversed = emit_quick_commands(
-        quick_commands[::-1], {"search": "asdf", "only_outliers": "col_B"})
+        quick_commands[::-1], {"search": ["asdf"], "only_outliers": ["col_B"]})
     assert both_produced_commands_reversed == [
-        [qc_sym('search'), s('df'), "col", "asdf"],
-        [qc_sym('only_outliers'), s('df'), "col_B", .01]]
+        [qc_sym('only_outliers'), s('df'), "col_B", .01],
+        [qc_sym('search'), s('df'), "col", "asdf"]]
 
 
     
