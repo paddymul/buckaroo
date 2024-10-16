@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from buckaroo.jlisp.lispy import s
+from buckaroo.jlisp.lisp_utils import s
 from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.all_transforms import (
     DropCol, FillNA, OneHot, GroupBy, reindex )

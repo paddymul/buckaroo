@@ -1,6 +1,5 @@
 import pandas as pd
-from buckaroo.jlisp.lisp_utils import split_operations
-from buckaroo.jlisp.lispy import s
+from buckaroo.jlisp.lisp_utils import split_operations, s
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 

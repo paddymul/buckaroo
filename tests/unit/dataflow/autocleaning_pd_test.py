@@ -6,7 +6,7 @@ from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
-from bucakroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 from buckaroo.customizations.pandas_commands import (
     SafeInt, DropCol, FillNA, GroupBy, NoOp, Search, OnlyOutliers
 )

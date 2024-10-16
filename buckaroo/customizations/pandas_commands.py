@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-from ..jlisp.lispy import s
+from ..jlisp.lisp_utils import s
 
 class Command(object):
     @staticmethod 
