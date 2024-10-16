@@ -171,7 +171,7 @@ def test_stacked_filters():
 class WrongFrontendQuickArgs(Exception):
     pass
 
-def emit_quick_commands(command_list, quick_args):
+def generate_quick_ops(command_list, quick_args):
     ret_ops = []
     for c in command_list:
         sym_name = c.command_default[0]['symbol']
@@ -184,10 +184,10 @@ def emit_quick_commands(command_list, quick_args):
                 #this is an empty result sent from the frontend.
                 #the frontend for quick_args is pretty dumb
                 continue 
-        if not len(val) == len(c.quick_args):
-            raise WrongFrontendQuickArgs(f"Frontend passed in wrong quick_arg format for {sym_name} expected {c.quick_args} got {val}.  Full quick_args obj {quick_args}")
+        if not len(val) == len(c.quick_args_pattern):
+            raise WrongFrontendQuickArgs(f"Frontend passed in wrong quick_arg format for {sym_name} expected {c.quick_args_pattern} got {val}.  Full quick_args obj {quick_args}")
         op = c.command_default.copy()
-        for form, arg  in zip(c.quick_args, val):
+        for form, arg  in zip(c.quick_args_pattern, val):
             arg_pos = form[0]
             op[arg_pos] = arg
         op[0] = qc_sym(sym_name)
@@ -206,29 +206,29 @@ def test_quick_commands():
     quick_commands = [Search, OnlyOutliers]
 
     #start with empty
-    empty_produced_commands = emit_quick_commands(quick_commands, {"search": [""], "only_outliers": [""]})
+    empty_produced_commands = generate_quick_ops(quick_commands, {"search": [""], "only_outliers": [""]})
     assert empty_produced_commands == []
 
-    empty_produced_commands2 = emit_quick_commands(quick_commands, {"search": [None], "only_outliers": [""]})
+    empty_produced_commands2 = generate_quick_ops(quick_commands, {"search": [None], "only_outliers": [""]})
     assert empty_produced_commands2 == []
 
     #verify that both quick_args aren't necessary
-    empty_produced_commands3 = emit_quick_commands(quick_commands, {"search": [None]})
+    empty_produced_commands3 = generate_quick_ops(quick_commands, {"search": [None]})
     assert empty_produced_commands3 == []
 
-    #assertRaises emit_quick_commands(quick_commands, {"non_matching_command": ""})
-    #assertRaises emit_quick_commands(quick_commands, {"non_matching_command": "", "search":""})
+    #assertRaises generate_quick_ops(quick_commands, {"non_matching_command": ""})
+    #assertRaises generate_quick_ops(quick_commands, {"non_matching_command": "", "search":""})
 
 
 
-    search_only_produced_commands = emit_quick_commands(quick_commands, {"search": ["asdf"]})
+    search_only_produced_commands = generate_quick_ops(quick_commands, {"search": ["asdf"]})
     assert search_only_produced_commands == [[qc_sym('search'), s('df'), "col", "asdf"]]
 
     #note only_outliers needs quick_command to substitute into the col place, not the last arg
-    oo_produced_commands = emit_quick_commands(quick_commands, {"only_outliers": ["col_B"]})
+    oo_produced_commands = generate_quick_ops(quick_commands, {"only_outliers": ["col_B"]})
     assert oo_produced_commands == [[qc_sym('only_outliers'), s('df'), "col_B", .01]]
 
-    both_produced_commands = emit_quick_commands(
+    both_produced_commands = generate_quick_ops(
         quick_commands, {"search": ["asdf"], "only_outliers": ["col_B"]})
     assert both_produced_commands == [
         [qc_sym('search'), s('df'), "col", "asdf"],
@@ -236,8 +236,8 @@ def test_quick_commands():
     ]
 
 
-    #note the order of produced commands depends on the order of command_list passed into emit_quick_commands
-    both_produced_commands_reversed = emit_quick_commands(
+    #note the order of produced commands depends on the order of command_list passed into generate_quick_ops
+    both_produced_commands_reversed = generate_quick_ops(
         quick_commands[::-1], {"search": ["asdf"], "only_outliers": ["col_B"]})
     assert both_produced_commands_reversed == [
         [qc_sym('only_outliers'), s('df'), "col_B", .01],
@@ -248,17 +248,17 @@ class TwoArgSearch(Command):
     command_default = [s('search_two'), s('df'), "col", "", 888]
     command_pattern = [[3, 'term', 'type', 'string'],
                        [4, 'term', 'type', 'int']]
-    quick_args = [[3, 'term', 'type', 'string'],
+    quick_args_pattern = [[3, 'term', 'type', 'string'],
                   [4, 'term', 'type', 'int']]
 
 
 def test_two_arg_quick_command():
     """
-    verify that emit_quick_commands works for a command that has two quick_args
+    verify that generate_quick_ops works for a command that has two quick_args
     """
     
 
-    two_arg_search_produced_commands = emit_quick_commands([TwoArgSearch], {"search_two": ["FFFasdf", 9]})
+    two_arg_search_produced_commands = generate_quick_ops([TwoArgSearch], {"search_two": ["FFFasdf", 9]})
     assert two_arg_search_produced_commands == [[qc_sym('search_two'), s('df'), "col", "FFFasdf", 9]]
     
 
