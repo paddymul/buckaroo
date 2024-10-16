@@ -8,6 +8,7 @@ from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningCo
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 from buckaroo.customizations.pandas_commands import (
+    Command,
     SafeInt, DropCol, FillNA, GroupBy, NoOp, Search, OnlyOutliers
 )
 
@@ -243,8 +244,22 @@ def test_quick_commands():
         [qc_sym('search'), s('df'), "col", "asdf"]]
 
 
+class TwoArgSearch(Command):
+    command_default = [s('search_two'), s('df'), "col", "", 888]
+    command_pattern = [[3, 'term', 'type', 'string'],
+                       [4, 'term', 'type', 'int']]
+    quick_args = [[3, 'term', 'type', 'string'],
+                  [4, 'term', 'type', 'int']]
+
+
+def test_two_arg_quick_command():
+    """
+    verify that emit_quick_commands works for a command that has two quick_args
+    """
     
 
+    two_arg_search_produced_commands = emit_quick_commands([TwoArgSearch], {"search_two": ["FFFasdf", 9]})
+    assert two_arg_search_produced_commands == [[qc_sym('search_two'), s('df'), "col", "FFFasdf", 9]]
     
 
 
