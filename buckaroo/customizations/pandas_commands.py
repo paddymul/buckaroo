@@ -472,6 +472,7 @@ def search_df_str(df, needle:str):
 class Search(Command):
     command_default = [s('search'), s('df'), "col", ""]
     command_pattern = [[3, 'term', 'type', 'string']]
+    quick_args = [[3, 'term', 'type', 'string']]
 
     @staticmethod 
     def transform(df, col, val):

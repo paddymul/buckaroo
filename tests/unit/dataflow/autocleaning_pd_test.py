@@ -6,8 +6,9 @@ from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
+from bucakroo.jlisp.lisp_utils import (s, qc_sym)
 from buckaroo.customizations.pandas_commands import (
-    SafeInt, DropCol, FillNA, GroupBy, NoOp
+    SafeInt, DropCol, FillNA, GroupBy, NoOp, Search, OnlyOutliers
 )
 
 
@@ -168,64 +169,9 @@ def test_stacked_filters():
     
 
 
-
-class Search(Command):
-    # Note "col" isn't really a needed argument for this function
-    command_default = [s('search'), s('df'), "col", ""]
-    command_pattern = [[3, 'term', 'type', 'string']]
-    quick_args = [[3, 'term', 'type', 'string']]
-
-
-    @staticmethod 
-    def transform(df, col, val):
-        #print("search_df", val)
-        if val is None or val == "":
-            #print("no search term set")
-            return df
-        return search_df_str(df, val)
-
-
-    @staticmethod 
-    def transform_to_py(df, col, val):
-        return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
-
-class OnlyOutliers(Command):
-    command_default = [s('only_outliers'), s('df'), "col", .01]
-    command_pattern = [[3, 'only_outliers', 'type', 'float']]
-
-    @staticmethod 
-    def transform(df, col, tail):
-        if col == 'index':
-            return df
-        ser = df[col]
-        if(pd.api.types.is_integer_dtype(ser)):
-            mean = int(ser.mean())
-        else:
-            mean = ser.mean()
-        f_ser = ser.fillna(mean) # fill_series don't care about null rows, fill with mean
-        
-        new_df = df[(f_ser < np.quantile(f_ser, tail)) | (f_ser > np.quantile(f_ser, 1-tail ))]
-
-        return new_df
-
-    @staticmethod 
-    def transform_to_py(df, col, tail):
-        C = f"df['{col}']"
-        high_tail = 1-tail
-        
-        py_lines = [f"    if(pd.api.types.is_integer_dtype({C})):",
-                    f"        mean = int({C}.mean())",
-                    "    else:",
-                    f"        mean = {C}.mean()",
-                    f"    f_ser = {C}.fillna(mean)  # fill series with mean",
-                    f"    df = df[(f_ser < np.quantile(f_ser, {tail})) | (f_ser > np.quantile(f_ser, {high_tail} ))]"]
-
-
 def emit_quick_commands(command_list, quick_args):
     pass
 
-def qc_sym(symbol_name):
-    return {'symbol':symbol_name, 'meta':{'auto_clean': True, 'quick_command':True}}
 def test_quick_commands():
     """ simulate the data structure sent from the frontend to autocleaning that should generate
     filtering commands
@@ -237,14 +183,14 @@ def test_quick_commands():
 
     #start with empty
     empty_produced_commands = emit_quick_commands(quick_commands, {"search": "", "only_outliers": ""})
-    assert produced_commands == []
+    assert empty_produced_commands == []
 
-    empty_produced_commands2 = emit_quick_commands(quick_commands, {"search": null, "only_outliers": ""})
-    assert produced_commands == []
+    empty_produced_commands2 = emit_quick_commands(quick_commands, {"search": None, "only_outliers": ""})
+    assert empty_produced_commands2 == []
 
     #verify that both quick_args aren't necessary
-    empty_produced_commands3 = emit_quick_commands(quick_commands, {"search": null})
-    assert produced_commands == []
+    empty_produced_commands3 = emit_quick_commands(quick_commands, {"search": None})
+    assert empty_produced_commands3 == []
 
     #assertRaises emit_quick_commands(quick_commands, {"non_matching_command": ""})
     #assertRaises emit_quick_commands(quick_commands, {"non_matching_command": "", "search":""})
@@ -252,13 +198,13 @@ def test_quick_commands():
 
     #note only_outliers needs quick_command to substitute into the col place, not the last arg
     oo_produced_commands = emit_quick_commands(quick_commands, {"only_outliers": "col_B"})
-    assert oo_produced_commands = [[qc_sym('only_outliers'), s('df'), "col_B", .01]]
+    assert oo_produced_commands == [[qc_sym('only_outliers'), s('df'), "col_B", .01]]
 
     search_only_produced_commands = emit_quick_commands(quick_commands, {"search": "asdf"})
-    assert produced_commands == [[qc_sym('search'), s('df'), "col", "asdf"]]
+    assert search_only_produced_commands == [[qc_sym('search'), s('df'), "col", "asdf"]]
 
     both_produced_commands = emit_quick_commands(quick_commands, {"search": "asdf", "only_outliers": "col_B"})
-    assert produced_commands == [
+    assert both_produced_commands == [
         [qc_sym('search'), s('df'), "col", "asdf"],
         [qc_sym('only_outliers'), s('df'), "col_B", .01]
     ]
@@ -267,7 +213,7 @@ def test_quick_commands():
     #note the order of produced commands depends on the order of command_list passed into emit_quick_commands
     both_produced_commands_reversed = emit_quick_commands(
         quick_commands[::-1], {"search": "asdf", "only_outliers": "col_B"})
-    assert produced_commands == [
+    assert both_produced_commands_reversed == [
         [qc_sym('search'), s('df'), "col", "asdf"],
         [qc_sym('only_outliers'), s('df'), "col_B", .01]]
 
