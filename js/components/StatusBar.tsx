@@ -80,16 +80,21 @@ export function StatusBar({
       setBuckarooState(nbstate);
     }
   };
-  const showSearch = false;
 
-  const handleCellChange = useCallback((params) => {
-    const { oldValue, newValue } = params;
+  const handleCellChange = useCallback(
+    (params: { oldValue: any; newValue: any }) => {
+      const { oldValue, newValue } = params;
 
-    if (oldValue !== newValue) {
-      console.log('Edited cell:', newValue);
-      setBuckarooState({ ...buckarooState, search_string: newValue });
-    }
-  }, []);
+      if (oldValue !== newValue) {
+        console.log('Edited cell:', newValue);
+        setBuckarooState({
+          ...buckarooState,
+          quick_command_args: { search: [newValue] },
+        });
+      }
+    },
+    []
+  );
 
   const columnDefs: ColDef[] = [
     {
@@ -143,6 +148,7 @@ export function StatusBar({
     { field: 'columns', width: 75 },
   ];
 
+  //const extractQuickArg = (foo:Record<string,
   const rowData = [
     {
       total_rows: basicIntFormatter.format(dfMeta.total_rows),
@@ -154,7 +160,7 @@ export function StatusBar({
       filtered_rows: basicIntFormatter.format(dfMeta.filtered_rows),
       post_processing: buckarooState.post_processing,
       show_commands: buckarooState.show_commands || '0',
-      search: buckarooState.search_string,
+      search: buckarooState.quick_command_args?.search || '',
     },
   ];
 
