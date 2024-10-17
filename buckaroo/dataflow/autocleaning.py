@@ -131,6 +131,7 @@ class PandasAutocleaning:
         self.df_interpreter, self.gencode_interpreter = df_interpreter, gencode_interpreter
         self.commandConfig = dict(argspecs=c_patterns, defaultArgs=c_defaults)
         self.quick_command_klasses = conf.quick_command_klasses
+        print("quick_command_klasses", quick_command_klasses)
 
     def _run_df_interpreter(self, df, operations):
         full_ops = [{'symbol': 'begin'}]
