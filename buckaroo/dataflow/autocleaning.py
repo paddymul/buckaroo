@@ -109,7 +109,7 @@ class PandasAutocleaning:
 
     DFStatsKlass = DfStats
     #until we plumb in swapping configs, just stick with default
-    def __init__(self, ac_configs=tuple([AutocleaningConfig()]), conf_name="default"):
+    def __init__(self, ac_configs=tuple([AutocleaningConfig()]), conf_name="NoCleaning"):
 
         self.config_dict = {}
         for conf in ac_configs:

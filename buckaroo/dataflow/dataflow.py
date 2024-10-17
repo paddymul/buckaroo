@@ -37,7 +37,6 @@ class DataFlow(HasTraits):
         self.summary_sd = {}
         self.existing_operations = []
         self.ac_obj = self.autocleaning_klass(self.autoclean_conf)
-        #self.ac_obj._setup_from_command_kls_list("default")
         self.commandConfig = self.ac_obj.commandConfig
         try:
             self.raw_df = raw_df

@@ -5,7 +5,8 @@ from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget
-         
+from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)         
+from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 
 EMPTY_DF_JSON = {
             'dfviewer_config': {
@@ -225,16 +226,22 @@ def test_bstate_commands():
     base_a_klasses = BuckarooWidget.analysis_klasses.copy()
     base_a_klasses.extend([TransposeProcessing])
 
+    bw = BuckarooWidget(typed_df)
+    assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
+    assert bw.cleaning_method == 'NoCleaning'
     class VCBuckarooWidget(BuckarooWidget):
-        analysis_klasses = base_a_klasses
+        #analysis_klasses = base_a_klasses
+        autoclean_conf = tuple([NoCleaningConf]) 
 
     vcb = VCBuckarooWidget(typed_df, debug=False)
     temp_buckaroo_state = vcb.buckaroo_state.copy()
-    temp_buckaroo_state['search'] = 'needle'
+    temp_buckaroo_state['quick_command_args'] = {'search': ['needle']}
     vcb.buckaroo_state = temp_buckaroo_state
 
     #probably something in autocleaning config should be responsible for generating these commands
-    assert vcb.operations == [[{'symbol': 'search'}, {'symbol': 'df'}, 'unused' 'needle']]
+    assert vcb.merged_operations == [
+        [qc_sym('search'), s('df'), "col", "needle"]]
+
 
     """
     add an additional test that accounts for arbitrary, configurable status bar command args
