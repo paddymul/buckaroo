@@ -12,6 +12,7 @@ from buckaroo.customizations.pandas_commands import (
     Command,
     SafeInt, DropCol, FillNA, GroupBy, NoOp, Search, OnlyOutliers
 )
+from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
 
 
 dirty_df = pd.DataFrame(
@@ -178,26 +179,15 @@ def test_handle_clean_df():
         'a_orig': ["30",  "40"]})
     assert cleaned_df.to_dict() == expected.to_dict()
 
-
-def test_no_autocleaning():
-    ac = PandasAutocleaning([ACConf])
-    df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
-    cleaning_result = ac.handle_ops_and_clean(
-        df, cleaning_method="", quick_command_args={'search':['aa']}, existing_operations=[])
-    cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
-    expected = df
-
-    assert cleaned_df.to_dict() == expected.to_dict()
-    assert merged_operations == []
     
 def test_quick_commands_run():
     """
     test that quick_commands work with autocleaning disabled
     """
-    ac = PandasAutocleaning([ACConf])
+    ac = PandasAutocleaning([ACConf, NoCleaningConf])
     df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
     cleaning_result = ac.handle_ops_and_clean(
-        df, cleaning_method="", quick_command_args={'search':['aa']}, existing_operations=[])
+        df, cleaning_method="NoCleaning", quick_command_args={'search':['aa']}, existing_operations=[])
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
     expected = pd.DataFrame({

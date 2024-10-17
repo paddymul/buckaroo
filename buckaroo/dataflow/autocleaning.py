@@ -131,7 +131,7 @@ class PandasAutocleaning:
         self.df_interpreter, self.gencode_interpreter = df_interpreter, gencode_interpreter
         self.commandConfig = dict(argspecs=c_patterns, defaultArgs=c_defaults)
         self.quick_command_klasses = conf.quick_command_klasses
-        print("quick_command_klasses", quick_command_klasses)
+
 
     def _run_df_interpreter(self, df, operations):
         full_ops = [{'symbol': 'begin'}]
@@ -185,13 +185,18 @@ class PandasAutocleaning:
         if df is None:
             #on first instantiation df is likely to be None,  do nothing and return
             return None
-        if cleaning_method == "" and len(existing_operations) == 0:
-            #no cleaning method was specified, just return the bare minimum
-            return [df, {},  "#empty generated code", merge_ops(existing_operations, [])]
+
+        quick_ops = generate_quick_ops(self.quick_command_klasses, quick_command_args)
+        if cleaning_method == "":
+
+            if (len(existing_operations) + len(quick_ops)) == 0:
+                #no cleaning method was specified, just return the bare minimum
+                return [df, {},  "#empty generated code", merge_ops(existing_operations, [])]
         self._setup_from_command_kls_list(cleaning_method)
 
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
-        quick_ops = generate_quick_ops(self.quick_command_klasses, quick_command_args)
+        print("quick_command_klasses2", self.quick_command_klasses)
+
 
         cleaning_operations.extend(quick_ops)
         #merged_operations = merge_ops(merged_operations, quick_ops)
