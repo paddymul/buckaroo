@@ -91,11 +91,16 @@ class ACConf(AutocleaningConfig):
     command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
     name = "default"
 
+class NoCleaning(AutocleaningConfig):
+    autocleaning_analysis_klasses = []
+    command_klasses = [PlSafeInt, DropCol, FillNA, GroupBy, NoOp]
+    name = "NoCleaning"
+
 
     
 def test_handle_user_ops():
 
-    ac = PolarsAutocleaning([ACConf])
+    ac = PolarsAutocleaning([ACConf, NoCleaning])
     df = pl.DataFrame({'a': [10, 20, 30]})
     cleaning_result = ac.handle_ops_and_clean(
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])
@@ -153,7 +158,7 @@ def test_make_origs_different_dtype():
     assert combined.to_dicts() == expected.to_dicts()
 
 def test_handle_clean_df():
-    ac = PolarsAutocleaning([ACConf])
+    ac = PolarsAutocleaning([ACConf, NoCleaning])
     df = pl.DataFrame({'a': ["30", "40"]})
     cleaning_result = ac.handle_ops_and_clean(
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])
@@ -169,7 +174,7 @@ EXPECTED_GEN_CODE = """def clean(df):
     return df"""
 
 def test_autoclean_codegen():
-    ac = PolarsAutocleaning([ACConf])
+    ac = PolarsAutocleaning([ACConf, NoCleaning])
     df = pl.DataFrame({'a': ["30", "40"]})
     cleaning_result = ac.handle_ops_and_clean(
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])

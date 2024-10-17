@@ -6,8 +6,6 @@ from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.all_transforms import (
     DropCol, FillNA, OneHot, GroupBy, reindex,  )
 
-from buckaroo.customizations.pandas_commands import (
-    Search)
 
 def result_from_exec(code_str, df_input):
     CODE_PREAMBLE = "import pandas as pd\nimport numpy as np\n"

@@ -91,7 +91,7 @@ class ACConf(AutocleaningConfig):
 
 def test_handle_user_ops():
 
-    ac = PandasAutocleaning([ACConf])
+    ac = PandasAutocleaning([ACConf, NoCleaningConf])
     df = pd.DataFrame({'a': [10, 20, 30]})
     cleaning_result = ac.handle_ops_and_clean(
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])
@@ -169,7 +169,7 @@ def test_make_origs_disable():
     assert combined.to_dict() == expected.to_dict()
 
 def test_handle_clean_df():
-    ac = PandasAutocleaning([ACConf])
+    ac = PandasAutocleaning([ACConf, NoCleaningConf])
     df = pd.DataFrame({'a': ["30", "40"]})
     cleaning_result = ac.handle_ops_and_clean(
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])
@@ -224,7 +224,7 @@ EXPECTED_GEN_CODE = """def clean(df):
     return df"""
 
 def test_autoclean_codegen():
-    ac = PandasAutocleaning([ACConf])
+    ac = PandasAutocleaning([ACConf, NoCleaningConf])
     df = pd.DataFrame({'a': ["30", "40"]})
     cleaning_result = ac.handle_ops_and_clean(
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])
