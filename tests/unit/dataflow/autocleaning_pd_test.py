@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from buckaroo import BuckarooWidget
 from buckaroo.customizations.analysis import (
     DefaultSummaryStats, PdCleaningStats)
@@ -82,7 +83,8 @@ def test_merge_ops():
 
 class ACConf(AutocleaningConfig):
     autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
-    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt]
+    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
+    quick_command_klasses = [Search]
     name="default"
 
 
@@ -126,6 +128,45 @@ def test_make_origs_different_dtype():
         raw, cleaned, {'a':{'add_orig': True}})
     assert combined.to_dict() == expected.to_dict()
 
+def Xtest_make_origs_preserve():
+    """
+    I keep seeing nan's pop up.  We should be using the better Pandas nullable types
+    """
+    raw = pd.DataFrame({'a': [30, "40", "not_used"]})
+    cleaned = pd.DataFrame({'a': [30, 40]})
+    expected = pd.DataFrame(
+        {
+            'a': pd.Series([30, 40, None], dtype='Int64'),
+            'a_orig': [30,  "40", "not_used"]})
+    combined = PandasAutocleaning.make_origs(
+        raw, cleaned, {'a':{'add_orig': True, 'preserve_orig_index':True}})
+    assert combined.to_dict() == expected.to_dict()
+
+def Xtest_make_origs_filtered_new():
+    """
+    When the operations remove rows.  those should be removed fromm origs too.  Filter ops are generally explicit
+    """
+    raw = pd.DataFrame({'a': [30, "40", "not_used"]})
+    cleaned = pd.DataFrame({'a': [30, 40]})
+    expected = pd.DataFrame(
+        {
+            'a': [30, 40],
+            'a_orig': [30,  "40"]})
+    combined = PandasAutocleaning.make_origs(
+        raw, cleaned, {'a':{'add_orig': True, 'preserve_orig_index':True}})
+    assert combined.to_dict() == expected.to_dict()
+
+def test_make_origs_disable():
+    """
+    Verify that make_origs doesn't run by default
+    """
+    raw = pd.DataFrame({'a': [30, "40", "not_used"]})
+    cleaned = pd.DataFrame({'a': [30, 40]})
+    expected = pd.DataFrame({'a': [30, 40]})
+    combined = PandasAutocleaning.make_origs(
+        raw, cleaned, {})
+    assert combined.to_dict() == expected.to_dict()
+
 def test_handle_clean_df():
     ac = PandasAutocleaning([ACConf])
     df = pd.DataFrame({'a': ["30", "40"]})
@@ -135,6 +176,57 @@ def test_handle_clean_df():
     expected = pd.DataFrame({
         'a': [30, 40],
         'a_orig': ["30",  "40"]})
+    assert cleaned_df.to_dict() == expected.to_dict()
+
+
+def test_no_autocleaning():
+    ac = PandasAutocleaning([ACConf])
+    df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
+    cleaning_result = ac.handle_ops_and_clean(
+        df, cleaning_method="", quick_command_args={'search':['aa']}, existing_operations=[])
+    cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
+    expected = df
+
+    assert cleaned_df.to_dict() == expected.to_dict()
+    assert merged_operations == []
+    
+def test_quick_commands_run():
+    """
+    test that quick_commands work with autocleaning disabled
+    """
+    ac = PandasAutocleaning([ACConf])
+    df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
+    cleaning_result = ac.handle_ops_and_clean(
+        df, cleaning_method="", quick_command_args={'search':['aa']}, existing_operations=[])
+    cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
+
+    expected = pd.DataFrame({
+        'a': ["30"],
+        'b': ['aa']})
+
+    assert merged_operations == [[qc_sym('search'), s('df'), "col", "aa"]]
+    assert cleaned_df.to_dict() == expected.to_dict()
+
+
+def Xtest_origs_quick_commands():
+    """
+    Test that quick_commands work with autocleaning add_origs.  this needs a better make_origs
+    or a cleaning method that doesn't call make_origs
+    """
+    
+    ac = PandasAutocleaning([ACConf])
+    df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
+    cleaning_result = ac.handle_ops_and_clean(
+        df, cleaning_method='default', quick_command_args={'search':['aa']}, existing_operations=[])
+    cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
+    expected = pd.DataFrame({
+        'a': [30.0, np.nan],
+        'a_orig': ["30", "40"],
+        'b': ['aa', None],
+        'b_orig': ['aa', 'bb']})
+    print("merged_operations", merged_operations)
+    print("cleaned_df", cleaned_df.to_dict())
+        
     assert cleaned_df.to_dict() == expected.to_dict()
 
 EXPECTED_GEN_CODE = """def clean(df):

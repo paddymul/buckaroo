@@ -477,7 +477,6 @@ class Search(Command):
 
     @staticmethod 
     def transform(df, col, val):
-        
         #print("search_df", val)
         if val is None or val == "":
             #print("no search term set")
