@@ -40,7 +40,7 @@ export function StatusBar({
         stopEditingWhenCellsLoseFocus={true}
 */
 
-  console.log('initial buckarooState', buckarooState);
+  //console.log('initial buckarooState', buckarooState);
   //   const optionCycles = _.fromPairs(
   // //    _.map(buckarooOptions, (v: any, k) => [k, ( k==='df_display' ? v :  _.concat([false], v) ) ])
   //     _.map(buckarooOptions, (v: any, k) => [k, ( k==='post_processing' ? v :  _.concat([false], v) ) ])
@@ -72,7 +72,7 @@ export function StatusBar({
   };
   const updateDict = (event: any) => {
     const colName = event.column.getColId();
-    if (colName === 'search') {
+    if (colName === 'quick_command_args' || colName === 'search') {
       return;
     }
     if (_.includes(_.keys(buckarooState), colName)) {
@@ -85,12 +85,14 @@ export function StatusBar({
     (params: { oldValue: any; newValue: any }) => {
       const { oldValue, newValue } = params;
 
-      if (oldValue !== newValue) {
-        console.log('Edited cell:', newValue);
-        setBuckarooState({
+      if (oldValue !== newValue && newValue !== null) {
+        //console.log('Edited cell:', newValue);
+        const newState = {
           ...buckarooState,
           quick_command_args: { search: [newValue] },
-        });
+        };
+        //console.log('handleCellChange', buckarooState, newState);
+        setBuckarooState(newState);
       }
     },
     []
@@ -149,6 +151,9 @@ export function StatusBar({
   ];
 
   //const extractQuickArg = (foo:Record<string,
+  const searchArg = buckarooState.quick_command_args?.search;
+  const searchStr = searchArg && searchArg.length == 1 ? searchArg[0] : '';
+
   const rowData = [
     {
       total_rows: basicIntFormatter.format(dfMeta.total_rows),
@@ -160,7 +165,7 @@ export function StatusBar({
       filtered_rows: basicIntFormatter.format(dfMeta.filtered_rows),
       post_processing: buckarooState.post_processing,
       show_commands: buckarooState.show_commands || '0',
-      search: buckarooState.quick_command_args?.search || '',
+      search: searchStr,
     },
   ];
 

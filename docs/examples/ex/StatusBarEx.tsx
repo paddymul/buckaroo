@@ -7,6 +7,7 @@ import {
 } from 'buckaroo';
 
 export default function StatusBarEx() {
+  console.clear();
   const dfm: DFMeta = {
     columns: 5,
     rows_shown: 20,
@@ -20,7 +21,7 @@ export default function StatusBarEx() {
     df_display: 'main',
     post_processing: 'asdf',
     show_commands: false,
-    search_string: '',
+    quick_command_args: {},
   });
 
   const bOptions: BuckarooOptions = {
