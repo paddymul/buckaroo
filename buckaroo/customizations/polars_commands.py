@@ -121,3 +121,19 @@ class GroupBy(Command):
     df = q.collect()
         """
         return command_template % (col, full_agg_text, col)
+
+
+
+class Search(Command):
+    command_default = [s('search'), s('df'), "col", ""]
+    command_pattern = [[3, 'term', 'type', 'string']]
+    quick_args_pattern = [[3, 'term', 'type', 'string']]
+
+    @staticmethod 
+    def transform(df, col, val):
+        return df.filter(pl.any_horizontal(pl.col(pl.String).str.contains(val)))
+
+
+    @staticmethod 
+    def transform_to_py(df, col, val):
+        return f"    df = df.filter(pl.any_horizontal(pl.col(pl.String).str.contains('{val}')))"
