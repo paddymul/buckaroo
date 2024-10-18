@@ -150,9 +150,8 @@ export function StatusBar({
     { field: 'columns', width: 75 },
   ];
 
-  //const extractQuickArg = (foo:Record<string,
   const searchArg = buckarooState.quick_command_args?.search;
-  const searchStr = searchArg && searchArg.length == 1 ? searchArg[0] : '';
+  const searchStr = searchArg && searchArg.length === 1 ? searchArg[0] : '';
 
   const rowData = [
     {

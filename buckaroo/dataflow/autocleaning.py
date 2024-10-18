@@ -195,13 +195,7 @@ class PandasAutocleaning:
         self._setup_from_command_kls_list(cleaning_method)
 
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
-        print("quick_command_klasses2", self.quick_command_klasses)
-
-
         cleaning_operations.extend(quick_ops)
-        #merged_operations = merge_ops(merged_operations, quick_ops)
-
-
         merged_operations = merge_ops(existing_operations, cleaning_operations)
         
         cleaned_df = self._run_df_interpreter(df, merged_operations)

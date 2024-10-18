@@ -13,8 +13,8 @@ export interface BuckarooOptions {
   show_commands: string[];
 }
 
-export type QuickAtom = number|string;
-export type QuickArg = QuickAtom[]
+export type QuickAtom = number | string;
+export type QuickArg = QuickAtom[];
 export interface BuckarooState {
   sampled: string | false;
   auto_clean: string | false;
