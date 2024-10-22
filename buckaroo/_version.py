@@ -13,4 +13,4 @@ except Exception:
         __version__ = json.loads(open(full_path / "../package.json").read())['version']
     except Exception:
         #Jupyter lite can't read this file for some reason
-        __version__ = "0.7.jupyterlite"
+        __version__ = "0.7.8"
