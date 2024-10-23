@@ -31,7 +31,6 @@ jobs:
       - name: Build the JupyterLite site
         shell: bash -l {0}
         run: |
-          cd docs
           jupyter lite build --contents docs/example-notebooks --output-dir docs/_output
 
       - name: Upload artifact
