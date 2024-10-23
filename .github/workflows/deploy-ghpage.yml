@@ -4,10 +4,9 @@ on:
   push:
     branches:
       - main
-      - feat/jupyterlite-gh-page
-  # pull_request:
-  #   branches:
-  #     - '*'
+  pull_request:
+    branches:
+      - '*'
 
 jobs:
   build:
@@ -41,7 +40,7 @@ jobs:
 
   deploy:
     needs: build
-#    if: github.ref == 'refs/heads/feat/jupyterlite-gh-page'
+    if: github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
