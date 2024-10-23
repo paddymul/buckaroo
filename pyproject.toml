@@ -152,7 +152,7 @@ exclude = [
     "dist",
     "node_modules",
     "venv",
-
+    "docs/example-notebooks",
     "*.ipynb"
 ]
 
