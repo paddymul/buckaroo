@@ -41,12 +41,23 @@ class DefaultMainStyling(StylingAnalysis):
 class DefaultSummaryStatsStyling(StylingAnalysis):
     pinned_rows = [
         obj_('dtype'),
-        float_('min'),
+        float_('non_null_count', 0),
+        float_('null_count', 0),
         float_('mean'),
+        float_('std'),
+        float_('min'),
+        float_('25th'),
+        float_('median'),
+        float_('75th'),
         float_('max'),
         float_('unique_count', 0),
         float_('distinct_count', 0),
-        float_('empty_count', 0)]
+        obj_('most_freq'),
+        obj_('2nd_freq'),
+        obj_('3rd_freq'),
+        obj_('4th_freq'),
+        obj_('5th_freq')
+    ]
 
     df_display_name = "summary"
     data_key = "empty"
