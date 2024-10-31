@@ -3,7 +3,7 @@
 
 import { ColumnsEditor } from './components/ColumnsEditor';
 import { DFViewer } from './components/DFViewerParts/DFViewer';
-import {WidgetDCFCell} from './components/DCFCell';
+import { WidgetDCFCell } from './components/DCFCell';
 import { HistogramCell } from './components/DFViewerParts/HistogramCell';
 import { DependentTabs } from './components/DependentTabs';
 import { OperationViewer } from './components/Operations';
@@ -15,7 +15,6 @@ import { StatusBar } from './components/StatusBar';
 export * from './version';
 export * from './dcefwidget';
 
-
 export const extraComponents = {
   ColumnsEditor,
   DependentTabs,
@@ -25,6 +24,5 @@ export const extraComponents = {
   StatusBar,
   HistogramCell,
   CommandUtils,
-  utils
-
+  utils,
 };
