@@ -1,7 +1,7 @@
 import React from 'react';
-import {DFViewer} from './DFViewer';
-import {DFWhole} from './DFWhole';
-import {ITooltipParams} from 'ag-grid-community';
+import { DFViewer } from './DFViewer';
+import { DFWhole } from './DFWhole';
+import { ITooltipParams } from 'ag-grid-community';
 
 export function getBakedDFViewer(seriesDf: DFWhole) {
     const retFunc = (props: ITooltipParams) => {
@@ -18,3 +18,17 @@ export function getBakedDFViewer(seriesDf: DFWhole) {
     };
     return retFunc;
 }
+export const simpleTooltip = (props: ITooltipParams) => {
+    // displaying the tooltip for histograms is distracting.  
+    // This should be possible with the tooltipValueGetter, but that 
+    // wasn't working for some reason
+
+    // console.log("simpleTooltip props", props);
+    // console.log("props.colId", props.column.colId, "pinned",
+    // 		props.column.pinned, "node.id", props.node.id, "rowIndex", props.rowIndex)
+    if (props.data.index == "histogram") {
+        return;
+    }
+    return (
+        <div className="ag-tooltip">{props.valueFormatted}</div>);
+};

@@ -23,7 +23,7 @@ import {getTextCellRenderer} from './OtherRenderers';
 import {DFData, SDFMeasure, SDFT} from './DFWhole';
 
 import {CellRendererArgs, FormatterArgs, PinnedRowConfig} from './DFWhole';
-import {getBakedDFViewer} from './SeriesSummaryTooltip';
+import {getBakedDFViewer, simpleTooltip} from './SeriesSummaryTooltip';
 import {getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter} from './Displayer';
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
@@ -142,7 +142,9 @@ export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
 export function getTooltip(ttc: TooltipConfig, single_series_summary_df: DFWhole): Partial<ColDef> {
     switch (ttc.tooltip_type) {
         case 'simple':
-            return {tooltipField: ttc.val_column};
+            return {tooltipField: ttc.val_column,
+		    tooltipComponent: simpleTooltip,
+        };
 
         case 'summary_series':
             return {
@@ -205,6 +207,7 @@ export function dfToAgrid(
         };
         return colDef;
     });
+    console.log("retColumns", retColumns);
     return [retColumns, tdf];
 }
 
@@ -226,7 +229,6 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
                 return anyRenderer;
             }
             const prc: PinnedRowConfig = maybePrc;
-            console.log('params', params);
             const currentCol = params.column?.getColId();
             if (
                 (prc.default_renderer_columns === undefined && currentCol === 'index') ||

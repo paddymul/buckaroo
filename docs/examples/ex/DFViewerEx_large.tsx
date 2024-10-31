@@ -188,13 +188,15 @@ export default function DFViewerExString() {
                     primary_key_val: 'dtype',
                     displayer_args: {
                         displayer: 'obj'
-                    }
+                    },
+
+		    
                 },
                 {
                     primary_key_val: 'histogram',
                     displayer_args: {
                         displayer: 'histogram'
-                    }
+                    },
                 }
             ],
             component_config: {height_fraction: 1.15},
@@ -216,7 +218,10 @@ export default function DFViewerExString() {
                     col_name: 'b',
                     displayer_args: {
                         displayer: 'obj'
-                    }
+                    },
+		    "tooltip_config": {
+			"tooltip_type": "simple",
+			"val_column": "b"}
                 },
                 {
                     col_name: 'c',
