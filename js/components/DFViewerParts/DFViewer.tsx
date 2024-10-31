@@ -30,27 +30,19 @@ export function DFViewer({
   activeCol?: string;
   setActiveCol?: setColumFunc;
 }) {
-  /* = {
-    df: EmptyDf.data,
-    df_viewer_config: EmptyDf.dfviewer_config,
-    summary_stats_data: [],
-    style: { height: '300px' },
-    setActiveCol: () => null,
-  }*/
-  //console.log("dfviewer df_viewer_config", df_viewer_config);
-  //  console.log("summary_stats_data", summary_stats_data);
-  //  console.log("full_object", {'df':df, 'df_viewer_config':df_viewer_config, 'summary_stats_data': summary_stats_data})
   const [agColsPure, agData] = dfToAgrid(
     df,
     df_viewer_config,
     summary_stats_data || []
   );
-
+  const selectBackground =
+    df_viewer_config?.component_config?.selectionBackground ||
+    'var(--ag-range-selection-background-color-3)';
   const styledColumns = replaceAtMatch(
     _.clone(agColsPure),
     activeCol || '___never',
     {
-      cellStyle: { background: 'var(--ag-range-selection-background-color-3)' },
+      cellStyle: { background: selectBackground },
     }
   );
 
@@ -127,12 +119,12 @@ export function DFViewer({
     rowHeight: df_viewer_config?.extra_grid_config?.rowHeight,
   });
 
+  const divClass =
+    df_viewer_config?.component_config?.className || 'ag-theme-alpine-dark';
+
   return (
     <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-      <div
-        style={hs.applicableStyle}
-        className="theme-hanger ag-theme-alpine-dark "
-      >
+      <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
         <AgGridReact
           ref={gridRef}
           domLayout={hs.domLayout}
