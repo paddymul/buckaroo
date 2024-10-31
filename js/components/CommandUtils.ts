@@ -1,4 +1,4 @@
-import { OperationDefaultArgs } from './OperationUtils';
+import {OperationDefaultArgs} from './OperationUtils';
 
 export type TypeSpec = [number, string, 'type', 'integer' | 'float' | 'string'];
 export type EnumSpec = [number, string, 'enum', string[]];
@@ -9,32 +9,32 @@ export type ActualArg = TypeSpec | EnumSpec | ColEnumSpec;
 export type ArgSpec = TypeSpec | EnumSpec | ColEnumSpec | NoArgs;
 
 export interface SymbolT {
-  symbol: string;
+    symbol: string;
 }
 
 export interface SymbolDf {
-  symbol: 'df';
+    symbol: 'df';
 }
 
 export const symDf: SymbolDf = {
-  symbol: 'df',
+    symbol: 'df'
 };
 
 export type ColEnumArgs = Record<string, string>;
 
 export type CommandArgSpec = Record<string, ArgSpec[]>;
 export const bakedArgSpecs: CommandArgSpec = {
-  dropcol: [null],
-  fillna: [[3, 'fillVal', 'type', 'integer']],
-  remove_outliers: [[3, 'tail', 'type', 'float']],
-  search: [[3, 'needle', 'type', 'string']],
-  resample: [
-    [3, 'frequency', 'enum', ['daily', 'weekly', 'monthly']],
-    [4, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'count']],
-  ],
+    dropcol: [null],
+    fillna: [[3, 'fillVal', 'type', 'integer']],
+    remove_outliers: [[3, 'tail', 'type', 'float']],
+    search: [[3, 'needle', 'type', 'string']],
+    resample: [
+        [3, 'frequency', 'enum', ['daily', 'weekly', 'monthly']],
+        [4, 'colMap', 'colEnum', ['null', 'sum', 'mean', 'count']]
+    ]
 };
 
 export type CommandConfigT = {
-  argspecs: CommandArgSpec;
-  defaultArgs: OperationDefaultArgs;
+    argspecs: CommandArgSpec;
+    defaultArgs: OperationDefaultArgs;
 };
