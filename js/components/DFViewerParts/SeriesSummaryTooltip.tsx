@@ -26,7 +26,7 @@ export const simpleTooltip = (props: ITooltipParams) => {
   // console.log("simpleTooltip props", props);
   // console.log("props.colId", props.column.colId, "pinned",
   // 		props.column.pinned, "node.id", props.node.id, "rowIndex", props.rowIndex)
-  if (props.data.index == 'histogram') {
+  if (props.data.index === 'histogram') {
     return;
   }
   return <div className="ag-tooltip">{props.valueFormatted}</div>;
