@@ -67,7 +67,8 @@ def test_string_column_handling():
     #we want the column to be named the string '10' not the number t10
     assert bw.df_display_args['main']['df_viewer_config']['column_config'][1]['col_name'] == '10'
     assert bw.df_data_dict['main'] == [{'index': 0, '10': 'a', '20': 'b', '30': 'c'}]
-
+    assert bw.df_display_args['main']['df_viewer_config']['column_config'][1]['tooltip_config']['val_column'] == '10'
+    
 def atest_symbol_meta():    
     """verifies that a symbol with a meta key can be added and
     properly interpretted.  This should probably be a lower level

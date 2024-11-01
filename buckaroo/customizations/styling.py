@@ -34,10 +34,10 @@ class DefaultMainStyling(StylingAnalysis):
             disp = {'displayer': 'datetimeLocaleString','locale': 'en-US',  'args': {}}
         elif t == 'string':
             disp = {'displayer': 'string', 'max_length': 35}
-            base_config['tooltip_config'] = {'tooltip_type':'simple', 'val_column': col}
+            base_config['tooltip_config'] = {'tooltip_type':'simple', 'val_column': str(col)}
         else:
             disp = {'displayer': 'obj'}
-            base_config['tooltip_config'] = {'tooltip_type':'simple', 'val_column': col}
+            base_config['tooltip_config'] = {'tooltip_type':'simple', 'val_column': str(col)}
         base_config['displayer_args'] = disp 
         return base_config
 
