@@ -55,6 +55,19 @@ def test_interpreter():
     return df"""
     '''
 
+def test_string_column_handling():
+    """
+    If the front end is passed numeric column names, nothing works, and no error is thrown
+    """
+    
+    df = pd.DataFrame([["a","b","c"]], columns=[10,20,30])
+    bw = BuckarooWidget(df)
+    # print(bw.df_data_dict['main'])
+    # print(bw.df_display_args['main']['df_viewer_config']['column_config'])
+    #we want the column to be named the string '10' not the number t10
+    assert bw.df_display_args['main']['df_viewer_config']['column_config'][1]['col_name'] == '10'
+    assert bw.df_data_dict['main'] == [{'index': 0, '10': 'a', '20': 'b', '30': 'c'}]
+
 def atest_symbol_meta():    
     """verifies that a symbol with a meta key can be added and
     properly interpretted.  This should probably be a lower level

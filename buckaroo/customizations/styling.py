@@ -25,7 +25,7 @@ class DefaultMainStyling(StylingAnalysis):
 
         digits = 3
         t = column_metadata['_type']
-        base_config = {'col_name':col}
+        base_config = {'col_name':str(col)}
         if t == 'integer':
             disp = {'displayer': 'float', 'min_fraction_digits':0, 'max_fraction_digits':0}
         elif t == 'float':
