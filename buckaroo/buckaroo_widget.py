@@ -134,6 +134,49 @@ export default function DFViewerExString() {{
 """
         return code_str
 
+    def to_widgetdcfecell_ex(self):
+        code_str = f"""
+import React, {{useState}} from 'react';
+import {{extraComponents}} from 'buckaroo';
+
+const df_meta = {json.dumps(self.df_meta, indent=4)}
+
+const df_display_args = {json.dumps(self.df_display_args, indent=4)}
+
+const df_data_dict = {json.dumps(self.df_data_dict, indent=4)}
+
+const buckaroo_options = {json.dumps(self.buckaroo_options, indent=4)}
+
+const buckaroo_state = {json.dumps(self.buckaroo_state, indent=4)}
+
+const commandConfig = {json.dumps(self.commandConfig, indent=4)}
+
+const w_operations = {json.dumps(self.operations, indent=4)}
+
+const operation_results = {json.dumps(self.operation_results, indent=4)}
+        
+export default function  WidgetDCFCellExample() {{
+     const [bState, setBState] = React.useState<BuckarooState>(buckaroo_state);
+    const [operations, setOperations] = useState<Operation[]>(w_operations);
+    return (
+        <extraComponents.WidgetDCFCell
+            df_meta={{df_meta}}
+            df_display_args={{df_display_args}}
+            df_data_dict={{df_data_dict}}
+            buckaroo_options={{buckaroo_options}}
+            buckaroo_state={{bState}}
+            on_buckaroo_state={{setBState}}
+            commandConfig={{commandConfig}}
+            operations={{operations}}
+            on_operations={{setOperations}}
+            operation_results={{operation_results}}
+        />
+    );
+}}
+
+"""
+        return code_str
+
 
 
     @observe('buckaroo_state')
