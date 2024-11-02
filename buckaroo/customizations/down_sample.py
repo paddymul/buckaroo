@@ -1,6 +1,46 @@
 import pandas as pd
 import numpy as np
+from pandas._libs.tslibs import timezones
+from pandas.core.dtypes.dtypes import DatetimeTZDtype
 
+def is_col_dt_safe(col_or_index):
+    if isinstance(col_or_index.dtype, DatetimeTZDtype):
+        dt = col_or_index.dtype
+        if timezones.is_utc(dt.tz):
+            return True
+        elif hasattr(dt.tz, 'zone'):
+            return True
+        return False
+    return True
+
+def is_dataframe_datetime_safe(df):
+    for col in df:
+        if not is_col_dt_safe(df[col]):
+            return False
+    if not is_col_dt_safe(df.index):
+        return False
+    return True
+
+def fix_df_dates(df):
+    for col in df:
+        if not is_col_dt_safe(df[col]):
+            print("col", col)
+            df[col] = df[col].tz_convert('UTC')
+    if not is_col_dt_safe(df.index):
+        df.index = df.index.tz_convert('UTC')
+    return df
+
+class DuplicateColumnsException(Exception):
+    pass
+
+
+def check_and_fix_df(df):
+    if not df.columns.is_unique:
+        raise DuplicateColumnsException("Your dataframe has duplicate columns. Buckaroo requires distinct column names")
+    if not is_dataframe_datetime_safe(df):
+        print("your dataframe has a column or index with a datetime series without atimezone.  Setting a default UTC timezone to proceed with display. https://github.com/paddymul/buckaroo/issues/277")
+        return fix_df_dates(df)
+    return df
 
 def get_outlier_idxs(ser):
     if not pd.api.types.is_numeric_dtype(ser.dtype):
@@ -15,6 +55,10 @@ def polars_sample(df, sample_size=500, include_outliers=False):
     return df.sample(min(len(df), sample_size))
 
 def sample(df, sample_size=500, include_outliers=False):
+    # sampling is a very poor places for this, it should come in an explicit check step.
+    # but for now, this will work
+    df = check_and_fix_df(df)
+
     include_outliers = False
     if len(df) <= sample_size:
         return df
