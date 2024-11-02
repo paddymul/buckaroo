@@ -9,6 +9,7 @@ TODO: Add module docstring
 """
 
 from ipywidgets import DOMWidget
+import json
 import pandas as pd
 from traitlets import Unicode, List, Dict, observe
 
@@ -101,6 +102,38 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
         'search_string': '',
         'quick_command_args': {}
     }).tag(sync=True)
+
+    def to_dfviewer_ex(self):
+        df_data_json = json.dumps(self.df_data_dict['main'], indent=4)
+        summary_stats_data_json = json.dumps(self.df_data_dict['all_stats'], indent=4)
+        df_config_json = json.dumps(self.df_display_args['main']['df_viewer_config'], indent=4)
+        code_str = f"""
+import React, {{useState}} from 'react';
+import {{extraComponents}} from 'buckaroo';
+
+
+export const df_data = {df_data_json}
+
+export const summary_stats_data = {summary_stats_data_json}
+
+export const dfv_config = {df_config_json}
+        
+export default function DFViewerExString() {{
+
+    const [activeCol, setActiveCol] = useState('tripduration');
+    return (
+        <extraComponents.DFViewer
+        df_data={{df_data}}
+        df_viewer_config={{dfv_config}}
+        summary_stats_data={{summary_stats_data}}
+        activeCol={{activeCol}}
+        setActiveCol={{setActiveCol}}
+            />
+    );
+}}
+"""
+        return code_str
+
 
 
     @observe('buckaroo_state')
