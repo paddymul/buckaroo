@@ -4,13 +4,13 @@ import { ComponentConfig, DFData, DFViewerConfig } from './DFWhole';
 
 import { dfToAgrid, extractPinnedRows } from './gridUtils';
 import { replaceAtMatch } from '../utils';
-import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
+import { AgGridReact } from '@ag-grid-community/react'; // the AG Grid React Component
 import {
   DomLayoutType,
   GridOptions,
   SizeColumnsToContentStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
-} from 'ag-grid-community';
+} from '@ag-grid-community/core';
 import { getCellRendererSelector } from './gridUtils';
 
 export type setColumFunc = (newCol: string) => void;

@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 
 import { Bar, BarChart, Tooltip } from 'recharts';
 
-import {} from 'recharts';
 
 export interface HistogramNode {
   name: string;

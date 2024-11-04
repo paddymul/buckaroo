@@ -16,9 +16,9 @@ import * as ReactDOMClient from 'react-dom/client';
 import { MODULE_NAME, MODULE_VERSION } from './version';
 
 // Import the CSS
+import "@ag-grid-community/styles/ag-grid.css";
+import "@ag-grid-community/styles/ag-theme-alpine.css";
 
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
 import '../js/style/dcf-npm.css';
 import { DFViewer } from './components/DFViewerParts/DFViewer';
 
