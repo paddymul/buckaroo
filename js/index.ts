@@ -5,7 +5,10 @@ import { ColumnsEditor } from './components/ColumnsEditor';
 import { DFViewer } from './components/DFViewerParts/DFViewer';
 import { WidgetDCFCell } from './components/DCFCell';
 import { HistogramCell } from './components/DFViewerParts/HistogramCell';
+import { InfiniteEx } from './components/DFViewerParts/TableInfinite';
+
 import { DependentTabs } from './components/DependentTabs';
+
 import { OperationViewer } from './components/Operations';
 import * as CommandUtils from './components/CommandUtils';
 import * as utils from './components/utils';
@@ -25,4 +28,6 @@ export const extraComponents = {
   HistogramCell,
   CommandUtils,
   utils,
+  InfiniteEx
+
 };
