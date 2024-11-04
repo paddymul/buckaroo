@@ -5,7 +5,7 @@ import { HashRouter as Router, Route, Link } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 
 import './app.css';
-import { InfiniteEx } from '../../js/components/DFViewerParts/TableInfinite';
+
 
 const examples = {
   WidgetDCFCellEx: {
