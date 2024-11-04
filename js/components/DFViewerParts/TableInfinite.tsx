@@ -11,9 +11,6 @@ import "@ag-grid-community/styles/ag-grid.css";
 import "@ag-grid-community/styles/ag-theme-quartz.css";
 import React, { useCallback, useMemo, useState } from "react";
 
-//import { GridReadyEvent } from "@ag-grid-community/core";
-
-
 import { GridOptions } from "@ag-grid-community/core";
 import { winners } from "../../baked_data/olympic-winners";
 import { DFData } from "./DFWhole";
@@ -94,41 +91,7 @@ const getPayloadKey = (payloadArgs: PayloadArgs): string => {
 
 const respCache: Record<string, PayloadResponse> = {};
 const sourceName = "paddy";
-
-export const PayloadGetter = ({ payloadArgs, on_PayloadArgs, payloadResponse, ds }: {
-    payloadArgs: PayloadArgs,
-    on_PayloadArgs: (pa: PayloadArgs) => void,
-    payloadResponse: PayloadResponse,
-    ds:IDatasource
-}) => {
-    respCache[getPayloadKey(payloadArgs)] = payloadResponse;
-    return <InfiniteViewer dataSource={ds} />
-}
-
-export const GetterWrapper = ({ payloadArgs, on_PayloadArgs }: {
-    payloadArgs: PayloadArgs,
-    on_PayloadArgs: (pa: PayloadArgs) => void,
-}) => {
-    console.log("GetterWrapper 164");
-    const paToResp = (pa: PayloadArgs): PayloadResponse => {
-        console.log("in paToResp", pa.start, pa.end)
-        return {
-            data: winners.slice(pa.start, pa.end),
-            key: pa
-        }
-    }
-    const resp: PayloadResponse = paToResp(payloadArgs);
-    const ds= getDs(on_PayloadArgs);
-
-
-    return (<PayloadGetter
-        payloadArgs={payloadArgs}
-        on_PayloadArgs={on_PayloadArgs}
-        payloadResponse={resp}
-        ds={ds}
-        />);
-}
-const getDs = (setPaState2: (pa: PayloadArgs) => void ): IDatasource => {
+const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
     const dsLoc: IDatasource = {
         rowCount: undefined,
         getRows: (params) => {
@@ -162,15 +125,39 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void ): IDatasource => {
     return dsLoc;
 }
 
+
+export const PayloadGetter = ({ payloadArgs, on_PayloadArgs, payloadResponse }: {
+    payloadArgs: PayloadArgs,
+    on_PayloadArgs: (pa: PayloadArgs) => void,
+    payloadResponse: PayloadResponse,
+
+}) => {
+    const ds = getDs(on_PayloadArgs);
+    respCache[getPayloadKey(payloadArgs)] = payloadResponse;
+    return <InfiniteViewer dataSource={ds} />
+}
+
 export const InfiniteEx = () => {
+
     // this is supposed to simulate the IPYwidgets backend
     const initialPA: PayloadArgs = { sourceName: sourceName, start: 0, end: 100 };
 
     const [paState, setPaState] = useState<PayloadArgs>(initialPA);
-    return (<GetterWrapper
-            payloadArgs={paState}
+    console.log("GetterWrapper 164");
+    const paToResp = (pa: PayloadArgs): PayloadResponse => {
+        console.log("in paToResp", pa.start, pa.end)
+        return {
+            data: winners.slice(pa.start, pa.end),
+            key: pa
+        }
+    }
+    const resp: PayloadResponse = paToResp(paState);
+
+
+    return (<PayloadGetter
+        payloadArgs={paState}
         on_PayloadArgs={setPaState}
+        payloadResponse={resp}
+
     />);
-
 }
-
