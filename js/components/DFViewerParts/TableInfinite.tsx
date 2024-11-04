@@ -2,7 +2,6 @@
 
 import {
   ColDef,
-  GridReadyEvent,
   IDatasource,
   ModuleRegistry,
 } from "@ag-grid-community/core";
@@ -12,10 +11,12 @@ import "@ag-grid-community/styles/ag-grid.css";
 import "@ag-grid-community/styles/ag-theme-quartz.css";
 import React, { useCallback, useMemo, useState } from "react";
 
-/*
+//import { GridReadyEvent } from "@ag-grid-community/core";
+
+
 import { GridOptions } from "@ag-grid-community/core";
 import {winners} from "../../baked_data/olympic-winners";
-*/
+
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
 export const InfiniteEx = () => {
@@ -52,7 +53,7 @@ export const InfiniteEx = () => {
       sortable: false,
     };
   }, []);
-    /*
+
 
   const dataSource: IDatasource = {
     rowCount: undefined,
@@ -81,37 +82,6 @@ export const InfiniteEx = () => {
   };
 
   const gridOptions: GridOptions = {datasource:dataSource};
-  const onGridReady = useCallback((params: GridReadyEvent) => {
-        params.api.setGridOption("datasource", dataSource);
-
-  }, []);
-*/
-const onGridReady = useCallback((params: GridReadyEvent) => {
-    fetch('https://www.ag-grid.com/example-assets/olympic-winners.json')
-        .then((resp) => resp.json())
-        .then((data) => {
-            const dataSource: IDatasource = {
-                rowCount: undefined,
-                getRows: (params) => {
-                    console.log('asking for ' + params.startRow + ' to ' + params.endRow);
-                    // At this point in your code, you would call the server.
-                    // To make the demo look real, wait for 500ms before returning
-                    setTimeout(function () {
-                        // take a slice of the total rows
-                        const rowsThisPage = data.slice(params.startRow, params.endRow);
-                        // if on or after the last page, work out the last row.
-                        let lastRow = -1;
-                        if (data.length <= params.endRow) {
-                            lastRow = data.length;
-                        }
-                        // call the success callback
-                        params.successCallback(rowsThisPage, lastRow);
-                    }, 500);
-                },
-            };
-            params.api.setGridOption('datasource', dataSource);
-        });
-}, []);
 
   return (
     <div style={containerStyle}>
@@ -126,7 +96,7 @@ const onGridReady = useCallback((params: GridReadyEvent) => {
           maxConcurrentDatasourceRequests={1}
           infiniteInitialRowCount={1000}
           maxBlocksInCache={10}
-            onGridReady={onGridReady}
+          gridOptions={gridOptions}
         />
       </div>
     </div>
