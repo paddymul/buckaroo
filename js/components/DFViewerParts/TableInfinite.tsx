@@ -2,10 +2,13 @@
 
 import {
     ColDef,
+    GridApi,
     IDatasource,
+    IGetRowsParams,
     INumberFilterParams,
     ITextFilterParams,
     ModuleRegistry,
+    SortChangedEvent,
 } from "@ag-grid-community/core";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
 import { AgGridReact, CustomCellRendererProps } from "@ag-grid-community/react";
@@ -18,16 +21,6 @@ import { winners } from "../../baked_data/olympic-winners";
 import { DFData } from "./DFWhole";
 
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
-
-interface PayloadArgs {
-    sourceName: string;
-    start: number;
-    end: number
-}
-interface PayloadResponse {
-    key: PayloadArgs;
-    data: DFData;
-}
 
 export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
     const containerStyle = useMemo(() => ({ width: "100%", height: "500px", border: "2px solid red" }), []);
@@ -78,7 +71,26 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
         };
     }, []);
 
-    const gridOptions: GridOptions = { datasource: dataSource };
+    const gridOptions: GridOptions = { datasource: dataSource ,
+        /*
+        onModelUpdated: (event:ModelUpdatedEvent) => {
+            console.log("modelUpdated");
+            console.log(event);
+        }
+        */
+       onSortChanged: (event:SortChangedEvent) => {
+        const api: GridApi = event.api;
+        console.log("sortChanged",
+            api.getFirstDisplayedRowIndex(),
+            api.getLastDisplayedRowIndex(),
+            event)
+        api.ensureIndexVisible(0);
+       }
+       
+
+
+
+    };
 
     return (
         <div style={containerStyle}>
@@ -101,7 +113,19 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
 };
 
 const getPayloadKey = (payloadArgs: PayloadArgs): string => {
-    return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}`;
+    return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}`;
+}
+
+interface PayloadArgs {
+    sourceName: string;
+    start: number;
+    end: number;
+    sort?: string;
+    sort_direction?: string;
+}
+interface PayloadResponse {
+    key: PayloadArgs;
+    data: DFData;
 }
 
 
@@ -111,7 +135,7 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
 
     const dsLoc: IDatasource = {
         rowCount: undefined,
-        getRows: (params) => {
+        getRows: (params:IGetRowsParams) => {
             /*
             console.log(
                 "asking for " + params.startRow + " to " + params.endRow
@@ -123,24 +147,38 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
 
             // At this point in your code, you would call the server.
             // To make the demo look real, wait for 500ms before returning
-            const dsPayloadArgs = { sourceName: sourceName, start: params.startRow, end: params.endRow };
-
+            const sm = params.sortModel
+            const dsPayloadArgs = { sourceName: sourceName, start: params.startRow, end: params.endRow,
+                sort: sm.length === 1 ? sm[0].colId : undefined, sort_direction: sm.length === 1 ? sm[0].sort : undefined
+             };
+            console.log("dsPayloadArgs", dsPayloadArgs, getPayloadKey(dsPayloadArgs))
             const resp = respCache[getPayloadKey(dsPayloadArgs)];
             if (resp === undefined) {
+
                 setTimeout(function () {
                     const toResp = respCache[getPayloadKey(dsPayloadArgs)];
                     if (toResp === undefined) {
                         console.log("didn't find the data inside of respCache after waiting");
                     } else {
                         //endRow is possibly wrong
-                        console.log("calling success callback", getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key), dsPayloadArgs, toResp.key);
+                        const expectedPayload = getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key);
+                        console.log("calling success callback", expectedPayload, dsPayloadArgs, toResp.key);
+                        if(!expectedPayload) {
+                            console.log("got back the wrong payload");
+                            debugger;
+                        }
                         params.successCallback(toResp.data, -1);
                     }
                 }, 100);
                 console.log("after setTimeout, about to call setPayloadArgs")
                 setPaState2(dsPayloadArgs);
             } else {
-                console.log("data already in cache", getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key), dsPayloadArgs, resp.key);
+                const expectedPayload = getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
+                console.log("data already in cache", expectedPayload, dsPayloadArgs, resp.key);
+                if(!expectedPayload) {
+                    console.log("got back the wrong payload");
+                    debugger;
+                }
                 params.successCallback(resp.data, -1);
             }
         }

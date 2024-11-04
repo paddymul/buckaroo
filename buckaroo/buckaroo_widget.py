@@ -188,9 +188,13 @@ class RawDFViewerWidget(BuckarooProjectWidget):
 
     def _payloadArgsHandler(self, change):
         start, end = self.payloadArgs['start'], self.payloadArgs['end']
-        print("payloadArgsHandler", start, end)
-        
-        slice_df = pd_to_obj(self.df[start:end])
+        print(self.payloadArgs)
+        if self.payloadArgs.get('sort'):
+            sort_dir = self.payloadArgs.get('sort_direction')
+            ascending = sort_dir == 'asc'
+            slice_df = pd_to_obj(df.sort_values(by=[self.payloadArgs.get('sort')], ascending=ascending)[start:end])
+        else:
+            slice_df = pd_to_obj(self.df[start:end])
         self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
 
 
@@ -217,12 +221,14 @@ class InfiniteViewerWidget(BuckarooProjectWidget):
     #### DOMWidget Boilerplate
     # _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
     # _view_name = Unicode('InfiniteViewerView').tag(sync=True)
-    _model_name = Unicode('DFViewerModel').tag(sync=True)
-    _view_name = Unicode('DFViewerView').tag(sync=True)
-    _model_id =  Unicode('paddy').tag(sync=True)
+    _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
+    _view_name = Unicode('InfiniteViewerView').tag(sync=True)
     #END DOMWidget Boilerplate
 
+
     def __init__(self, df):
+        super().__init__()
+        print("InfiniteViewerWidget 231")
         self.df = df
 
     payloadArgs = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
@@ -232,11 +238,14 @@ class InfiniteViewerWidget(BuckarooProjectWidget):
 
     #    @exception_protect('payloadArgsHandler')    
     @observe('payloadArgs')
-
     def _payloadArgsHandler(self, change):
         start, end = self.payloadArgs['start'], self.payloadArgs['end']
-        print("payloadArgsHandler", start, end)
-        
-        slice_df = pd_to_obj(self.df[start:end])
+        print(self.payloadArgs)
+        if self.payloadArgs.get('sort'):
+            sort_dir = self.payloadArgs.get('sort_direction')
+            ascending = sort_dir == 'asc'
+            slice_df = pd_to_obj(self.df.sort_values(by=[self.payloadArgs.get('sort')], ascending=ascending)[start:end])
+        else:
+            slice_df = pd_to_obj(self.df[start:end])
         self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
 
