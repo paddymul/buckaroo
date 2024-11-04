@@ -22,9 +22,9 @@ from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyl
 from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
-from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df
-from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis, exception_protect
-from .dataflow.dataflow_extras import (Sampling)
+from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj
+from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis
+from .dataflow.dataflow_extras import (Sampling, exception_protect)
 from .dataflow.autocleaning import PandasAutocleaning
 
 
@@ -166,31 +166,77 @@ class RawDFViewerWidget(BuckarooProjectWidget):
     """
 
     #### DOMWidget Boilerplate
+    # _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
+    # _view_name = Unicode('InfiniteViewerView').tag(sync=True)
     _model_name = Unicode('DFViewerModel').tag(sync=True)
     _view_name = Unicode('DFViewerView').tag(sync=True)
+    #_model_id =  Unicode('paddy').tag(sync=True)
     #END DOMWidget Boilerplate
 
+    def __init__(self, df):
+        super().__init__()
+        print("RawDFViewerWidget 177")
+        self.df = df
 
-
-    df_data = List([
-        {'a':  5  , 'b':20, 'c': 'Paddy'},
-        {'a': 58.2, 'b': 9, 'c': 'Margaret'}]).tag(sync=True)
-
-    df_viewer_config = Dict({
-        'column_config': [
-            { 'col_name': 'a',
-              'displayer_args': { 'displayer': 'float',   'min_fraction_digits': 2, 'max_fraction_digits': 8 }},
-            { 'col_name': 'b',
-              'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }},
-            { 'col_name': 'c',
-              'displayer_args': { 'displayer': 'string',  'min_digits': 3, 'max_digits': 5 }}],
-        'pinned_rows': [
-            { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' }},
-            { 'primary_key_val': 'mean', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}]}
+    payloadArgs = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
+    payloadResponse = Dict({'key': {'sourceName':'paddy', 'start':0, 'end':49},
+                            'data': []}
                             ).tag(sync=True)
 
-    summary_stats_data = List([
-        { 'index': 'mean',  'a':      28,   'b':      14, 'c': 'Padarget' },
-        { 'index': 'dtype', 'a': 'float64', 'b': 'int64', 'c': 'object' }]).tag(sync=True)
+    #    @exception_protect('payloadArgsHandler')    
+    @observe('payloadArgs')
 
+    def _payloadArgsHandler(self, change):
+        start, end = self.payloadArgs['start'], self.payloadArgs['end']
+        print("payloadArgsHandler", start, end)
+        
+        slice_df = pd_to_obj(self.df[start:end])
+        self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
+
+
+"""
+interface PayloadArgs {
+    sourceName: string;
+    start: number;
+    end: number
+}
+interface PayloadResponse {
+    key: PayloadArgs;
+    data: DFData;
+}
+"""
+
+class InfiniteViewerWidget(BuckarooProjectWidget):
+    """
+
+    A very raw way of instaniating just the DFViewer, not meant for use by enduers
+
+    instead use DFViewer, or PolarsDFViewer which have better convience methods
+    """
+
+    #### DOMWidget Boilerplate
+    # _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
+    # _view_name = Unicode('InfiniteViewerView').tag(sync=True)
+    _model_name = Unicode('DFViewerModel').tag(sync=True)
+    _view_name = Unicode('DFViewerView').tag(sync=True)
+    _model_id =  Unicode('paddy').tag(sync=True)
+    #END DOMWidget Boilerplate
+
+    def __init__(self, df):
+        self.df = df
+
+    payloadArgs = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
+    payloadResponse = Dict({'key': {'sourceName':'paddy', 'start':0, 'end':49},
+                            'data': []}
+                            ).tag(sync=True)
+
+    #    @exception_protect('payloadArgsHandler')    
+    @observe('payloadArgs')
+
+    def _payloadArgsHandler(self, change):
+        start, end = self.payloadArgs['start'], self.payloadArgs['end']
+        print("payloadArgsHandler", start, end)
+        
+        slice_df = pd_to_obj(self.df[start:end])
+        self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
 
