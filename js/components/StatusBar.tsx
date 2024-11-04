@@ -1,8 +1,8 @@
 // https://plnkr.co/edit/QTNwBb2VEn81lf4t?open=index.tsx
 import React, { useRef, useCallback } from 'react';
 import _ from 'lodash';
-import { AgGridReact } from 'ag-grid-react'; // the AG Grid React Component
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { AgGridReact } from '@ag-grid-community/react'; // the AG Grid React Component
+import { ColDef, GridOptions } from '@ag-grid-community/core';
 import { basicIntFormatter } from './DFViewerParts/Displayer';
 import { DFMeta } from './WidgetTypes';
 import { BuckarooOptions } from './WidgetTypes';

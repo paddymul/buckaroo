@@ -3,7 +3,7 @@ import {
   CellRendererSelectorResult,
   ColDef,
   ICellRendererParams,
-} from 'ag-grid-community';
+} from '@ag-grid-community/core';
 import {
   BLUE_TO_YELLOW,
   DIVERGING_RED_WHITE_BLUE,

@@ -1,4 +1,4 @@
-import { ValueFormatterFunc, ValueFormatterParams } from 'ag-grid-community';
+import { ValueFormatterFunc, ValueFormatterParams } from '@ag-grid-community/core';
 import {
   DisplayerArgs,
   cellRendererDisplayers,
