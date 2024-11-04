@@ -58,7 +58,7 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
         return {
             flex: 1,
             minWidth: 100,
-            sortable: false,
+            //sortable: false,
         };
     }, []);
 
@@ -92,12 +92,14 @@ const getPayloadKey = (payloadArgs: PayloadArgs): string => {
 const respCache: Record<string, PayloadResponse> = {};
 const sourceName = "paddy";
 const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
+
     const dsLoc: IDatasource = {
         rowCount: undefined,
         getRows: (params) => {
             console.log(
                 "asking for " + params.startRow + " to " + params.endRow
             );
+            console.log("params", params);
             // At this point in your code, you would call the server.
             // To make the demo look real, wait for 500ms before returning
             const dsPayloadArgs = { sourceName: sourceName, start: params.startRow, end: params.endRow };
