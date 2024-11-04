@@ -30,36 +30,6 @@ interface PayloadResponse {
     data: DFData;
 }
 
-
-export const InfiniteExSimple = () => {
-
-    const dataSource: IDatasource = {
-        rowCount: undefined,
-        getRows: (params) => {
-            console.log(
-                "asking for " + params.startRow + " to " + params.endRow
-            );
-            // At this point in your code, you would call the server.
-            // To make the demo look real, wait for 500ms before returning
-            setTimeout(function () {
-                // take a slice of the total rows
-                console.log("timeoutFunc", params.startRow, params.endRow)
-                console.log("params", params)
-
-                const rowsThisPage = winners.slice(params.startRow, params.endRow);
-                // if on or after the last page, work out the last row.
-                let lastRow = -1;
-                if (winners.length <= params.endRow) {
-                    lastRow = winners.length;
-                }
-                // call the success callback
-                console.log("about to call successCallback");
-                params.successCallback(rowsThisPage, lastRow);
-            }, 500);
-        },
-    };
-    return <InfiniteViewer dataSource={dataSource} />
-}
 export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
     const containerStyle = useMemo(() => ({ width: "100%", height: "500px", border: "2px solid red" }), []);
     const gridStyle = useMemo(() => ({ height: "100%", width: "100%", border: "2px solid green" }), []);
@@ -156,13 +126,7 @@ export const GetterWrapper = ({ payloadArgs, on_PayloadArgs, ds }: {
         ds={ds}
         />);
 }
-
-
-export const InfiniteEx = () => {
-    // this is supposed to simulate the IPYwidgets backend
-    const initialPA: PayloadArgs = { sourceName: sourceName, start: 0, end: 100 };
-
-    const [paState, setPaState] = useState<PayloadArgs>(initialPA);
+const getDs = (setPaState2: (pa: PayloadArgs) => void ): IDatasource => {
     const globalDS: IDatasource = {
         rowCount: undefined,
         getRows: (params) => {
@@ -184,17 +148,26 @@ export const InfiniteEx = () => {
                         console.log("calling success callback", getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key), dsPayloadArgs, toResp.key);
                         params.successCallback(toResp.data, -1);
                     }
-                }, 3000);
+                }, 100);
                 console.log("after setTimeout, about to call setPayloadArgs")
-                setPaState(dsPayloadArgs);
+                setPaState2(dsPayloadArgs);
             } else {
                 console.log("data already in cache", getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key), dsPayloadArgs, resp.key);
                 params.successCallback(resp.data, -1);
             }
         }
     };
+    return globalDS;
+}
+
+export const InfiniteEx = () => {
+    // this is supposed to simulate the IPYwidgets backend
+    const initialPA: PayloadArgs = { sourceName: sourceName, start: 0, end: 100 };
+
+    const [paState, setPaState] = useState<PayloadArgs>(initialPA);
+    const globalDS = getDs(setPaState);
     return (<GetterWrapper
-        payloadArgs={paState}
+            payloadArgs={paState}
         on_PayloadArgs={setPaState}
         ds={globalDS}
     />);
