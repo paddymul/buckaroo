@@ -3,6 +3,8 @@
 import {
     ColDef,
     IDatasource,
+    INumberFilterParams,
+    ITextFilterParams,
     ModuleRegistry,
 } from "@ag-grid-community/core";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
@@ -49,8 +51,20 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
                 }
             },
         },
-        { field: "athlete", minWidth: 150 },
-        { field: "age" },
+        { field: "athlete", minWidth: 150,
+            filterParams: {
+                filterOptions: ["contains", "startsWith", "endsWith"],
+                defaultOption: "startsWith",
+              } as ITextFilterParams,
+
+         },
+        { field: "age",
+            filter: "agNumberColumnFilter",
+            filterParams: {
+              numAlwaysVisibleConditions: 2,
+              defaultJoinOperator: "OR",
+            } as INumberFilterParams,
+        },
         { field: "total" }
     ]);
     console.log("setColumnDefs", setColumnDefs, useCallback);
@@ -59,6 +73,8 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
             flex: 1,
             minWidth: 100,
             //sortable: false,
+            filter: true,
+
         };
     }, []);
 
@@ -96,10 +112,15 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
     const dsLoc: IDatasource = {
         rowCount: undefined,
         getRows: (params) => {
+            /*
             console.log(
                 "asking for " + params.startRow + " to " + params.endRow
             );
+            */
             console.log("params", params);
+            console.log("params.filter", params.filterModel)
+            console.log("params.filter", params.sortModel)
+
             // At this point in your code, you would call the server.
             // To make the demo look real, wait for 500ms before returning
             const dsPayloadArgs = { sourceName: sourceName, start: params.startRow, end: params.endRow };
@@ -128,13 +149,13 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
 }
 
 
-export const PayloadGetter = ({ payloadArgs, on_PayloadArgs, payloadResponse }: {
+export const InfiniteWrapper = ({ payloadArgs, on_payloadArgs, payloadResponse }: {
     payloadArgs: PayloadArgs,
-    on_PayloadArgs: (pa: PayloadArgs) => void,
+    on_payloadArgs: (pa: PayloadArgs) => void,
     payloadResponse: PayloadResponse,
 
 }) => {
-    const ds = getDs(on_PayloadArgs);
+    const ds = getDs(on_payloadArgs);
     respCache[getPayloadKey(payloadArgs)] = payloadResponse;
     return <InfiniteViewer dataSource={ds} />
 }
@@ -156,9 +177,9 @@ export const InfiniteEx = () => {
     const resp: PayloadResponse = paToResp(paState);
 
 
-    return (<PayloadGetter
+    return (<InfiniteWrapper
         payloadArgs={paState}
-        on_PayloadArgs={setPaState}
+        on_payloadArgs={setPaState}
         payloadResponse={resp}
 
     />);

@@ -13,6 +13,10 @@ import {
 } from '@ag-grid-community/core';
 import { getCellRendererSelector } from './gridUtils';
 
+import { ModuleRegistry } from '@ag-grid-community/core';
+import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
+
+ModuleRegistry.registerModules([ ClientSideRowModelModule ]);
 export type setColumFunc = (newCol: string) => void;
 
 export function DFViewer({
