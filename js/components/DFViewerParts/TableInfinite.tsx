@@ -105,10 +105,9 @@ export const PayloadGetter = ({ payloadArgs, on_PayloadArgs, payloadResponse, ds
     return <InfiniteViewer dataSource={ds} />
 }
 
-export const GetterWrapper = ({ payloadArgs, on_PayloadArgs, ds }: {
+export const GetterWrapper = ({ payloadArgs, on_PayloadArgs }: {
     payloadArgs: PayloadArgs,
     on_PayloadArgs: (pa: PayloadArgs) => void,
-    ds:IDatasource
 }) => {
     console.log("GetterWrapper 164");
     const paToResp = (pa: PayloadArgs): PayloadResponse => {
@@ -119,6 +118,9 @@ export const GetterWrapper = ({ payloadArgs, on_PayloadArgs, ds }: {
         }
     }
     const resp: PayloadResponse = paToResp(payloadArgs);
+    const ds= getDs(on_PayloadArgs);
+
+
     return (<PayloadGetter
         payloadArgs={payloadArgs}
         on_PayloadArgs={on_PayloadArgs}
@@ -127,7 +129,7 @@ export const GetterWrapper = ({ payloadArgs, on_PayloadArgs, ds }: {
         />);
 }
 const getDs = (setPaState2: (pa: PayloadArgs) => void ): IDatasource => {
-    const globalDS: IDatasource = {
+    const dsLoc: IDatasource = {
         rowCount: undefined,
         getRows: (params) => {
             console.log(
@@ -157,7 +159,7 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void ): IDatasource => {
             }
         }
     };
-    return globalDS;
+    return dsLoc;
 }
 
 export const InfiniteEx = () => {
@@ -165,11 +167,9 @@ export const InfiniteEx = () => {
     const initialPA: PayloadArgs = { sourceName: sourceName, start: 0, end: 100 };
 
     const [paState, setPaState] = useState<PayloadArgs>(initialPA);
-    const globalDS = getDs(setPaState);
     return (<GetterWrapper
             payloadArgs={paState}
         on_PayloadArgs={setPaState}
-        ds={globalDS}
     />);
 
 }
