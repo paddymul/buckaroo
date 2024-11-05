@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import _ from 'lodash';
 import { OperationResult } from './DependentTabs';
 import { ColumnsEditor } from './ColumnsEditor';
@@ -16,7 +16,6 @@ import {
   IDisplayArgs,
   PayloadArgs,
   PayloadResponse,
-  respCache,
 } from './DFViewerParts/gridUtils';
 import {
   DatasourceOrRaw,
@@ -73,7 +72,7 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  const mainDs = getDs(on_payload_args);
+  const [mainDs, respCache] = useMemo(() => getDs(on_payload_args), []);
   const cacheKey = getPayloadKey(payload_response.key);
   console.log('setting respCache', cacheKey, payload_response);
   respCache[cacheKey] = payload_response;
