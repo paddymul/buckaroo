@@ -28,6 +28,5 @@ export const extraComponents = {
   HistogramCell,
   CommandUtils,
   utils,
-  InfiniteEx
-
+  InfiniteEx,
 };
