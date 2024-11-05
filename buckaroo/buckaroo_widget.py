@@ -173,30 +173,26 @@ class RawDFViewerWidget(BuckarooProjectWidget):
     #_model_id =  Unicode('paddy').tag(sync=True)
     #END DOMWidget Boilerplate
 
-    def __init__(self, df):
-        super().__init__()
-        print("RawDFViewerWidget 177")
-        self.df = df
+    df_data = List([
+        {'a':  5  , 'b':20, 'c': 'Paddy'},
+        {'a': 58.2, 'b': 9, 'c': 'Margaret'}]).tag(sync=True)
 
-    payloadArgs = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
-    payloadResponse = Dict({'key': {'sourceName':'paddy', 'start':0, 'end':49},
-                            'data': []}
+    df_viewer_config = Dict({
+        'column_config': [
+            { 'col_name': 'a',
+              'displayer_args': { 'displayer': 'float',   'min_fraction_digits': 2, 'max_fraction_digits': 8 }},
+            { 'col_name': 'b',
+              'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }},
+            { 'col_name': 'c',
+              'displayer_args': { 'displayer': 'string',  'min_digits': 3, 'max_digits': 5 }}],
+        'pinned_rows': [
+            { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' }},
+            { 'primary_key_val': 'mean', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}]}
                             ).tag(sync=True)
 
-    #    @exception_protect('payloadArgsHandler')    
-    @observe('payloadArgs')
-
-    def _payloadArgsHandler(self, change):
-        start, end = self.payloadArgs['start'], self.payloadArgs['end']
-        print(self.payloadArgs)
-        if self.payloadArgs.get('sort'):
-            sort_dir = self.payloadArgs.get('sort_direction')
-            ascending = sort_dir == 'asc'
-            slice_df = pd_to_obj(df.sort_values(by=[self.payloadArgs.get('sort')], ascending=ascending)[start:end])
-        else:
-            slice_df = pd_to_obj(self.df[start:end])
-        self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
-
+    summary_stats_data = List([
+        { 'index': 'mean',  'a':      28,   'b':      14, 'c': 'Padarget' },
+        { 'index': 'dtype', 'a': 'float64', 'b': 'int64', 'c': 'object' }]).tag(sync=True)
 
 """
 interface PayloadArgs {
