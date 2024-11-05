@@ -3,6 +3,8 @@ import {
   CellRendererSelectorResult,
   ColDef,
   ICellRendererParams,
+  IDatasource,
+  IGetRowsParams,
 } from '@ag-grid-community/core';
 import {
   BLUE_TO_YELLOW,
@@ -33,6 +35,8 @@ import {
   objFormatter,
   getFormatter,
 } from './Displayer';
+import { Dispatch, SetStateAction } from 'react';
+import { CommandConfigT } from '../CommandUtils';
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
 // as implementations grow large or with many implmentations, they should move to separate files
@@ -297,3 +301,96 @@ export function extractSDFT(summaryStatsDf: DFData): SDFT {
   });
   return zipObject(allColumns, vals) as SDFT;
 }
+export interface PayloadArgs {
+  sourceName: string;
+  start: number;
+  end: number;
+  sort?: string;
+  sort_direction?: string;
+}
+export interface PayloadResponse {
+  key: PayloadArgs;
+  data: DFData;
+}
+export const getPayloadKey = (payloadArgs: PayloadArgs): string => {
+  return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}`;
+};
+export type CommandConfigSetterT = (
+  setter: Dispatch<SetStateAction<CommandConfigT>>
+) => void;
+
+export interface IDisplayArgs {
+  data_key: string;
+  df_viewer_config: DFViewerConfig;
+  summary_stats_key: string;
+}
+export const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
+  const dsLoc: IDatasource = {
+    rowCount: undefined,
+    getRows: (params: IGetRowsParams) => {
+      /*
+            console.log(
+                "asking for " + params.startRow + " to " + params.endRow
+            );
+            */
+      console.log('params', params);
+      console.log('params.filterModel', params.filterModel);
+      console.log('params.sortModel', params.sortModel);
+
+      // At this point in your code, you would call the server.
+      // To make the demo look real, wait for 500ms before returning
+      const sm = params.sortModel;
+      const dsPayloadArgs = {
+        sourceName: sourceName,
+        start: params.startRow,
+        end: params.endRow,
+        sort: sm.length === 1 ? sm[0].colId : undefined,
+        sort_direction: sm.length === 1 ? sm[0].sort : undefined,
+      };
+      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
+      const resp = respCache[getPayloadKey(dsPayloadArgs)];
+      if (resp === undefined) {
+        setTimeout(() => {
+          const toResp = respCache[getPayloadKey(dsPayloadArgs)];
+          if (toResp === undefined) {
+            console.log(
+              "didn't find the data inside of respCache after waiting"
+            );
+          } else {
+            //endRow is possibly wrong
+            const expectedPayload =
+              getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key);
+            console.log(
+              'calling success callback',
+              expectedPayload,
+              dsPayloadArgs,
+              toResp.key
+            );
+            if (!expectedPayload) {
+              console.log('got back the wrong payload');
+            }
+            params.successCallback(toResp.data, -1);
+          }
+        }, 100);
+        console.log('after setTimeout, about to call setPayloadArgs');
+        setPaState2(dsPayloadArgs);
+      } else {
+        const expectedPayload =
+          getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
+        console.log(
+          'data already in cache',
+          expectedPayload,
+          dsPayloadArgs,
+          resp.key
+        );
+        if (!expectedPayload) {
+          console.log('got back the wrong payload');
+        }
+        params.successCallback(resp.data, -1);
+      }
+    },
+  };
+  return dsLoc;
+};
+export const respCache: Record<string, PayloadResponse> = {};
+export const sourceName = 'paddy';
