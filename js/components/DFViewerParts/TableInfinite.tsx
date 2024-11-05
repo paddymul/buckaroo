@@ -4,6 +4,7 @@ import {
     ColDef,
     GridApi,
     IDatasource,
+    IFilterOptionDef,
     IGetRowsParams,
     INumberFilterParams,
     ITextFilterParams,
@@ -25,7 +26,44 @@ ModuleRegistry.registerModules([InfiniteRowModelModule]);
 export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
     const containerStyle = useMemo(() => ({ width: "100%", height: "500px", border: "2px solid red" }), []);
     const gridStyle = useMemo(() => ({ height: "100%", width: "100%", border: "2px solid green" }), []);
-
+    const filterParams: INumberFilterParams = {
+        filterOptions: [
+          "empty",
+          {
+            displayKey: "evenNumbers",
+            displayName: "Even Numbers",
+//            predicate: (_, cellValue) => cellValue != null && cellValue % 2 === 0,
+            numberOfInputs: 0,
+          },
+          {
+            displayKey: "oddNumbers",
+            displayName: "Odd Numbers",
+            predicate: (_, cellValue) => cellValue != null && cellValue % 2 !== 0,
+            numberOfInputs: 0,
+          },
+          {
+            displayKey: "blanks",
+            displayName: "Blanks",
+            predicate: (_, cellValue) => cellValue == null,
+            numberOfInputs: 0,
+          },
+          {
+            displayKey: "age5YearsAgo",
+            displayName: "Age 5 Years Ago",
+            predicate: ([fv1]: any[], cellValue) =>
+              cellValue == null || cellValue - 5 === fv1,
+            numberOfInputs: 1,
+          },
+          {
+            displayKey: "betweenExclusive",
+            displayName: "Between (Exclusive)",
+            predicate: ([fv1, fv2], cellValue) =>
+              cellValue == null || (fv1 < cellValue && fv2 > cellValue),
+            numberOfInputs: 2,
+          },
+        ] as IFilterOptionDef[],
+        maxNumConditions: 1,
+      };
     const [columnDefs, setColumnDefs] = useState<ColDef[]>([
         // this row shows the row index, doesn't use any data from the row
         {
@@ -49,16 +87,18 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
                 filterOptions: ["contains", "startsWith", "endsWith"],
                 defaultOption: "startsWith",
               } as ITextFilterParams,
-
          },
         { field: "age",
+            filter: "agNumberColumnFilter",
+            filterParams: filterParams,
+        },
+        { field: "total",
             filter: "agNumberColumnFilter",
             filterParams: {
               numAlwaysVisibleConditions: 2,
               defaultJoinOperator: "OR",
             } as INumberFilterParams,
-        },
-        { field: "total" }
+         }
     ]);
     console.log("setColumnDefs", setColumnDefs, useCallback);
     const defaultColDef = useMemo<ColDef>(() => {
@@ -84,12 +124,10 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
             api.getFirstDisplayedRowIndex(),
             api.getLastDisplayedRowIndex(),
             event)
+        // every time the sort is changed, scroll back to the top row.
+        // Setting a sort and being in the middle of it makes no sense
         api.ensureIndexVisible(0);
        }
-       
-
-
-
     };
 
     return (
@@ -142,8 +180,8 @@ const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
             );
             */
             console.log("params", params);
-            console.log("params.filter", params.filterModel)
-            console.log("params.filter", params.sortModel)
+            console.log("params.filterModel", params.filterModel)
+            console.log("params.sortModel", params.sortModel)
 
             // At this point in your code, you would call the server.
             // To make the demo look real, wait for 500ms before returning
