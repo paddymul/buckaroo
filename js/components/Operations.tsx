@@ -16,9 +16,8 @@ import { ColDef, GridOptions } from '@ag-grid-community/core';
 
 import { updateAtMatch } from './utils';
 
-import "@ag-grid-community/styles/ag-grid.css";
-import "@ag-grid-community/styles/ag-theme-alpine.css";
-
+import '@ag-grid-community/styles/ag-grid.css';
+import '@ag-grid-community/styles/ag-theme-alpine.css';
 
 export const OperationsList = ({
   operations,

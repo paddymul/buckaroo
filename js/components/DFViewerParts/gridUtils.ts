@@ -196,10 +196,9 @@ export function extractSingleSeriesSummary(
 }
 
 export function dfToAgrid(
-  tdf: DFData,
   dfviewer_config: DFViewerConfig,
   full_summary_stats_df: DFData
-): [ColDef[], unknown[]] {
+): ColDef[] {
   //more convienient df format for some formatters
   const hdf = extractSDFT(full_summary_stats_df || []);
 
@@ -231,7 +230,7 @@ export function dfToAgrid(
     }
   );
   console.log('retColumns', retColumns);
-  return [retColumns, tdf];
+  return retColumns;
 }
 
 // this is very similar to the colDef parts of dfToAgrid
