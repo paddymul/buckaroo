@@ -332,10 +332,10 @@ export const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
             console.log(
                 "asking for " + params.startRow + " to " + params.endRow
             );
-            */
       console.log('params', params);
       console.log('params.filterModel', params.filterModel);
       console.log('params.sortModel', params.sortModel);
+            */
 
       // At this point in your code, you would call the server.
       // To make the demo look real, wait for 500ms before returning
@@ -347,32 +347,36 @@ export const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
-      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
+      //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
       const resp = respCache[getPayloadKey(dsPayloadArgs)];
+
       if (resp === undefined) {
-        setTimeout(() => {
-          const toResp = respCache[getPayloadKey(dsPayloadArgs)];
-          if (toResp === undefined) {
-            console.log(
-              "didn't find the data inside of respCache after waiting"
-            );
-          } else {
-            //endRow is possibly wrong
-            const expectedPayload =
-              getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key);
-            console.log(
-              'calling success callback',
-              expectedPayload,
-              dsPayloadArgs,
-              toResp.key
-            );
-            if (!expectedPayload) {
-              console.log('got back the wrong payload');
+        const tryFetching = (attempt: number) => {
+          const retryWait = 30 * Math.pow(1.7, attempt);
+          setTimeout(() => {
+            const toResp = respCache[getPayloadKey(dsPayloadArgs)];
+            if (toResp === undefined && attempt < 5) {
+              console.log(
+                `Attempt ${
+                  attempt + 1
+                }: Data not found in cache, retrying... in ${retryWait}`
+              );
+              tryFetching(attempt + 1);
+            } else if (toResp !== undefined) {
+              const expectedPayload =
+                getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key);
+              if (!expectedPayload) {
+                console.log('got back the wrong payload');
+              }
+              params.successCallback(toResp.data, -1);
+            } else {
+              console.log('Failed to fetch data after 5 attempts');
             }
-            params.successCallback(toResp.data, -1);
-          }
-        }, 100);
+          }, retryWait); // Increase timeout exponentially
+        };
+
         console.log('after setTimeout, about to call setPayloadArgs');
+        tryFetching(0);
         setPaState2(dsPayloadArgs);
       } else {
         const expectedPayload =
@@ -385,6 +389,7 @@ export const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
         );
         if (!expectedPayload) {
           console.log('got back the wrong payload');
+          return;
         }
         params.successCallback(resp.data, -1);
       }
