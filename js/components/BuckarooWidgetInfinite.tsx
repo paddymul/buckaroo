@@ -44,10 +44,10 @@ export const getDataWrapper = (
   }
 };
 
-export function InfiniteWidgetDCFCell({
-  payloadArgs,
-  on_payloadArgs,
-  payloadResponse,
+export function BuckarooWidgetInfinite({
+  payload_args,
+  on_payload_args,
+  payload_response,
   df_data_dict,
   df_display_args,
   df_meta,
@@ -59,9 +59,9 @@ export function InfiniteWidgetDCFCell({
   on_buckaroo_state,
   buckaroo_options,
 }: {
-  payloadArgs: PayloadArgs;
-  on_payloadArgs: (pa: PayloadArgs) => void;
-  payloadResponse: PayloadResponse;
+  payload_args: PayloadArgs;
+  on_payload_args: (pa: PayloadArgs) => void;
+  payload_response: PayloadResponse;
   df_meta: DFMeta;
   df_data_dict: Record<string, DFData>;
   df_display_args: Record<string, IDisplayArgs>;
@@ -73,8 +73,8 @@ export function InfiniteWidgetDCFCell({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  const mainDs = getDs(on_payloadArgs);
-  respCache[getPayloadKey(payloadResponse.key)] = payloadResponse;
+  const mainDs = getDs(on_payload_args);
+  respCache[getPayloadKey(payload_response.key)] = payload_response;
 
   const [activeCol, setActiveCol] = useState('stoptime');
 

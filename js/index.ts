@@ -6,7 +6,7 @@ import { DFViewer } from './components/DFViewerParts/DFViewer';
 import { DFViewerInfinite } from './components/DFViewerParts/DFViewerInfinite';
 
 import { WidgetDCFCell } from './components/DCFCell';
-import { InfiniteWidgetDCFCell } from './components/BuckarooWidgetInfinite';
+import { BuckarooWidgetInfinite } from './components/BuckarooWidgetInfinite';
 
 import { HistogramCell } from './components/DFViewerParts/HistogramCell';
 import { InfiniteEx } from './components/DFViewerParts/TableInfinite';
@@ -33,6 +33,6 @@ export const extraComponents = {
   HistogramCell,
   CommandUtils,
   utils,
-  InfiniteWidgetDCFCell,
+  InfiniteWidgetDCFCell: BuckarooWidgetInfinite,
   InfiniteEx,
 };
