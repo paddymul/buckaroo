@@ -23,7 +23,6 @@ import {
   getPayloadKey,
   PayloadArgs,
   PayloadResponse,
-  respCache,
   sourceName,
 } from './gridUtils';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
@@ -179,7 +178,7 @@ export const InfiniteWrapper = ({
   on_payloadArgs: (pa: PayloadArgs) => void;
   payloadResponse: PayloadResponse;
 }) => {
-  const ds = getDs(on_payloadArgs);
+  const [ds, respCache] = useMemo(() => getDs(on_payloadArgs), []);
   respCache[getPayloadKey(payloadResponse.key)] = payloadResponse;
   return <InfiniteViewer dataSource={ds} />;
 };

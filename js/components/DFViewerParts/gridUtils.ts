@@ -324,7 +324,11 @@ export interface IDisplayArgs {
   df_viewer_config: DFViewerConfig;
   summary_stats_key: string;
 }
-export const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
+export type RespCache = Record<string, PayloadResponse>;
+export const getDs = (
+  setPaState2: (pa: PayloadArgs) => void
+): [IDatasource, RespCache] => {
+  const respCache: RespCache = {};
   const dsLoc: IDatasource = {
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
@@ -395,7 +399,6 @@ export const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
       }
     },
   };
-  return dsLoc;
+  return [dsLoc, respCache];
 };
-export const respCache: Record<string, PayloadResponse> = {};
 export const sourceName = 'paddy';
