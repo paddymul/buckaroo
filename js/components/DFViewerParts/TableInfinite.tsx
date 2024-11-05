@@ -5,7 +5,6 @@ import {
   GridApi,
   IDatasource,
   IFilterOptionDef,
-  IGetRowsParams,
   INumberFilterParams,
   ITextFilterParams,
   ModuleRegistry,
@@ -19,7 +18,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { GridOptions } from '@ag-grid-community/core';
 import { winners } from '../../baked_data/olympic-winners';
-import { DFData } from './DFWhole';
+import {
+  getDs,
+  getPayloadKey,
+  PayloadArgs,
+  PayloadResponse,
+  respCache,
+  sourceName,
+} from './gridUtils';
 
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
@@ -160,93 +166,6 @@ export const InfiniteViewer = ({ dataSource }: { dataSource: IDatasource }) => {
       </div>
     </div>
   );
-};
-
-const getPayloadKey = (payloadArgs: PayloadArgs): string => {
-  return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}`;
-};
-
-interface PayloadArgs {
-  sourceName: string;
-  start: number;
-  end: number;
-  sort?: string;
-  sort_direction?: string;
-}
-interface PayloadResponse {
-  key: PayloadArgs;
-  data: DFData;
-}
-
-const respCache: Record<string, PayloadResponse> = {};
-const sourceName = 'paddy';
-const getDs = (setPaState2: (pa: PayloadArgs) => void): IDatasource => {
-  const dsLoc: IDatasource = {
-    rowCount: undefined,
-    getRows: (params: IGetRowsParams) => {
-      /*
-            console.log(
-                "asking for " + params.startRow + " to " + params.endRow
-            );
-            */
-      console.log('params', params);
-      console.log('params.filterModel', params.filterModel);
-      console.log('params.sortModel', params.sortModel);
-
-      // At this point in your code, you would call the server.
-      // To make the demo look real, wait for 500ms before returning
-      const sm = params.sortModel;
-      const dsPayloadArgs = {
-        sourceName: sourceName,
-        start: params.startRow,
-        end: params.endRow,
-        sort: sm.length === 1 ? sm[0].colId : undefined,
-        sort_direction: sm.length === 1 ? sm[0].sort : undefined,
-      };
-      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      const resp = respCache[getPayloadKey(dsPayloadArgs)];
-      if (resp === undefined) {
-        setTimeout(() => {
-          const toResp = respCache[getPayloadKey(dsPayloadArgs)];
-          if (toResp === undefined) {
-            console.log(
-              "didn't find the data inside of respCache after waiting"
-            );
-          } else {
-            //endRow is possibly wrong
-            const expectedPayload =
-              getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key);
-            console.log(
-              'calling success callback',
-              expectedPayload,
-              dsPayloadArgs,
-              toResp.key
-            );
-            if (!expectedPayload) {
-              console.log('got back the wrong payload');
-            }
-            params.successCallback(toResp.data, -1);
-          }
-        }, 100);
-        console.log('after setTimeout, about to call setPayloadArgs');
-        setPaState2(dsPayloadArgs);
-      } else {
-        const expectedPayload =
-          getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
-        console.log(
-          'data already in cache',
-          expectedPayload,
-          dsPayloadArgs,
-          resp.key
-        );
-        if (!expectedPayload) {
-          console.log('got back the wrong payload');
-        }
-        params.successCallback(resp.data, -1);
-      }
-    },
-  };
-  return dsLoc;
 };
 
 export const InfiniteWrapper = ({
