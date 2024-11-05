@@ -26,6 +26,8 @@ import {
   respCache,
   sourceName,
 } from './gridUtils';
+import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
 

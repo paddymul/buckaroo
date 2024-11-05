@@ -44,7 +44,7 @@ export const getDataWrapper = (
   }
 };
 
-export function BuckarooWidgetInfinite({
+export function BuckarooInfiniteWidget({
   payload_args,
   on_payload_args,
   payload_response,
@@ -74,7 +74,9 @@ export function BuckarooWidgetInfinite({
   buckaroo_options: BuckarooOptions;
 }) {
   const mainDs = getDs(on_payload_args);
-  respCache[getPayloadKey(payload_response.key)] = payload_response;
+  const cacheKey = getPayloadKey(payload_response.key);
+  console.log('setting respCache', cacheKey, payload_response);
+  respCache[cacheKey] = payload_response;
 
   const [activeCol, setActiveCol] = useState('stoptime');
 

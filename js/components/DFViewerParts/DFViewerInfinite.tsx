@@ -83,14 +83,18 @@ export function DFViewerInfinite({
 
   const divClass =
     df_viewer_config?.component_config?.className || 'ag-theme-alpine-dark';
-  const gridOptions = getGridOptions(
-    setActiveCol as SetColumFunc,
-    df_viewer_config,
-    defaultColDef,
-    _.cloneDeep(styledColumns),
-    hs.domLayout,
-    getAutoSize(styledColumns.length)
-  );
+  const gridOptions: GridOptions = {
+    ...getGridOptions(
+      setActiveCol as SetColumFunc,
+      df_viewer_config,
+      defaultColDef,
+      _.cloneDeep(styledColumns),
+      hs.domLayout,
+      getAutoSize(styledColumns.length)
+    ),
+    rowModelType: 'clientSide',
+  };
+
   if (data_wrapper.data_type === 'Raw') {
     return (
       <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>

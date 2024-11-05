@@ -24,6 +24,7 @@ import '@ag-grid-community/styles/ag-theme-alpine.css';
 import '../js/style/dcf-npm.css';
 import { DFViewer } from './components/DFViewerParts/DFViewer';
 import { InfiniteWrapper } from './components/DFViewerParts/TableInfinite';
+import { BuckarooInfiniteWidget } from './components/BuckarooWidgetInfinite';
 
 function createModelAndView(
   model_name: string,
@@ -93,6 +94,13 @@ export const [DCEFWidgetModel, DCEFWidgetView] = createModelAndView(
   'DCEFWidgetView',
   WidgetDCFCell
 );
+
+export const [BuckarooInfiniteWidgetModel, BuckarooInfiniteWidgetView] =
+  createModelAndView(
+    'BuckarooInfiniteWidgetModel',
+    'BuckarooInfiniteWidgetView',
+    BuckarooInfiniteWidget
+  );
 
 export const [InfiniteViewerModel, InfiniteViewerView] = createModelAndView(
   'InfiniteViewerModel',
