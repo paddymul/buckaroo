@@ -322,6 +322,10 @@ class InfiniteViewerWidget(BuckarooProjectWidget):
         self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
 
 
+
+class InfinitePdSampling(PdSampling):
+    serialize_limit = -1 #this turns off rows shown in the UI
+    
 class BuckarooInfiniteWidget(BuckarooWidget):
     """Extends CustomizableDataFlow and DOMWIdget
 
@@ -334,6 +338,8 @@ class BuckarooInfiniteWidget(BuckarooWidget):
     _model_name = Unicode('BuckarooInfiniteWidgetModel').tag(sync=True)
     _view_name =  Unicode('BuckarooInfiniteWidgetView').tag(sync=True)
     #END DOMWidget Boilerplate
+
+    sampling_klass = InfinitePdSampling
     #final processing block
     @observe('widget_args_tuple')
     def _handle_widget_change(self, change):
@@ -377,8 +383,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
             temp_display_args['main']['df_viewer_config']['component_config'] = self.component_config
 
         self.df_display_args = temp_display_args
-
-
 
     payload_args = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
     payload_response = Dict({'key': {'sourceName':'paddy', 'start':0, 'end':49},
