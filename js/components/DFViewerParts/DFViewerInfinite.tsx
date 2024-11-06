@@ -1,4 +1,4 @@
-import React, { useRef, CSSProperties, useState } from 'react';
+import React, { useRef, CSSProperties, useState, useCallback } from 'react';
 import _ from 'lodash';
 import { DFData, DFDataRow, DFViewerConfig } from './DFWhole';
 
@@ -9,6 +9,7 @@ import { AgGridReact } from '@ag-grid-community/react'; // the AG Grid React Com
 import { getCellRendererSelector } from './gridUtils';
 
 import {
+  GetRowIdParams,
   GridApi,
   GridOptions,
   IDatasource,
@@ -89,6 +90,10 @@ export function DFViewerInfinite({
 
   const divClass =
     df_viewer_config?.component_config?.className || 'ag-theme-alpine-dark';
+  const getRowId = useCallback((params: GetRowIdParams) => {
+    const retVal = String(params?.data?.index);
+    return retVal;
+  }, []);
   const gridOptions: GridOptions = {
     ...getGridOptions(
       setActiveCol as SetColumFunc,
@@ -98,6 +103,7 @@ export function DFViewerInfinite({
       hs.domLayout,
       getAutoSize(styledColumns.length)
     ),
+    getRowId,
     rowModelType: 'clientSide',
   };
 
