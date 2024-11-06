@@ -1,4 +1,4 @@
-import React, { useRef, CSSProperties } from 'react';
+import React, { useRef, CSSProperties, useState } from 'react';
 import _ from 'lodash';
 import { DFData, DFDataRow, DFViewerConfig } from './DFWhole';
 
@@ -12,6 +12,7 @@ import {
   GridApi,
   GridOptions,
   IDatasource,
+  IGetRowsParams,
   ModuleRegistry,
   SortChangedEvent,
 } from '@ag-grid-community/core';
@@ -206,4 +207,43 @@ const getDsGridOptions = (
     infiniteInitialRowCount: 80,
   };
   return dsGridOptions;
+};
+
+export const StaticWrapDFViewerInfinite = ({
+  raw_data,
+  df_viewer_config,
+  summary_stats_data,
+}: {
+  raw_data: DFData;
+  df_viewer_config: DFViewerConfig;
+  summary_stats_data?: DFData;
+  style?: CSSProperties;
+}) => {
+  // used for demos to exercise DFViewerInfinite
+
+  const data_wrapper: DatasourceWrapper = {
+    length: 5,
+
+    data_type: 'DataSource',
+    datasource: {
+      getRows: (params: IGetRowsParams) => {
+        params.successCallback(
+          raw_data.slice(params.startRow, params.endRow),
+          -1
+        );
+      },
+    },
+  };
+
+  const [activeCol, setActiveCol] = useState('stoptime');
+
+  return (
+    <DFViewerInfinite
+      data_wrapper={data_wrapper}
+      df_viewer_config={df_viewer_config}
+      summary_stats_data={summary_stats_data}
+      activeCol={activeCol}
+      setActiveCol={setActiveCol}
+    />
+  );
 };
