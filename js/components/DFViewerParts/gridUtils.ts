@@ -324,11 +324,45 @@ export interface IDisplayArgs {
   df_viewer_config: DFViewerConfig;
   summary_stats_key: string;
 }
-export type RespCache = Record<string, PayloadResponse>;
+
+class LruCache<T> {
+  private values: Map<string, T> = new Map<string, T>();
+  private maxEntries = 10;
+
+  public get(key: string): T | undefined {
+    const hasKey = this.values.has(key);
+    if (hasKey) {
+      // peek the entry, re-insert for LRU strategy
+      const maybeEntry = this.values.get(key);
+      if (maybeEntry === undefined) {
+        throw new Error(`unexpected undefined for ${key}`);
+      }
+      const entry: T = maybeEntry;
+      this.values.delete(key);
+      this.values.set(key, entry);
+      return entry;
+    }
+    return undefined;
+  }
+
+  public put(key: string, value: T) {
+    if (this.values.size >= this.maxEntries) {
+      // least-recently used cache eviction strategy
+      const keyToDelete = this.values.keys().next().value;
+      console.log(`deleting ${keyToDelete}`);
+      this.values.delete(keyToDelete);
+    }
+
+    this.values.set(key, value);
+  }
+}
+export type RespCache = LruCache<PayloadResponse>;
+export const sourceName = 'paddy';
+
 export const getDs = (
   setPaState2: (pa: PayloadArgs) => void
 ): [IDatasource, RespCache] => {
-  const respCache: RespCache = {};
+  const respCache: LruCache<PayloadResponse> = new LruCache<PayloadResponse>();
   const dsLoc: IDatasource = {
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
@@ -352,13 +386,13 @@ export const getDs = (
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      const resp = respCache[getPayloadKey(dsPayloadArgs)];
+      const resp = respCache.get(getPayloadKey(dsPayloadArgs));
 
       if (resp === undefined) {
         const tryFetching = (attempt: number) => {
           const retryWait = 30 * Math.pow(1.7, attempt);
           setTimeout(() => {
-            const toResp = respCache[getPayloadKey(dsPayloadArgs)];
+            const toResp = respCache.get(getPayloadKey(dsPayloadArgs));
             if (toResp === undefined && attempt < 5) {
               console.log(
                 `Attempt ${
@@ -401,4 +435,3 @@ export const getDs = (
   };
   return [dsLoc, respCache];
 };
-export const sourceName = 'paddy';

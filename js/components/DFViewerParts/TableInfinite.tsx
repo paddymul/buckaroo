@@ -179,7 +179,7 @@ export const InfiniteWrapper = ({
   payloadResponse: PayloadResponse;
 }) => {
   const [ds, respCache] = useMemo(() => getDs(on_payloadArgs), []);
-  respCache[getPayloadKey(payloadResponse.key)] = payloadResponse;
+  respCache.put(getPayloadKey(payloadResponse.key), payloadResponse);
   return <InfiniteViewer dataSource={ds} />;
 };
 

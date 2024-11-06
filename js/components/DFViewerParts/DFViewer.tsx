@@ -154,7 +154,7 @@ interface HeightStyleArgs {
   rowHeight?: number;
   compC?: ComponentConfig;
 }
-interface HeightStyleI {
+export interface HeightStyleI {
   domLayout: DomLayoutType;
   inIframe: string;
   classMode: 'short-mode' | 'regular-mode';
