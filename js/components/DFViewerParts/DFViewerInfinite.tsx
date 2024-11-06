@@ -1,6 +1,6 @@
 import React, { useRef, CSSProperties } from 'react';
 import _ from 'lodash';
-import { DFData, DFViewerConfig } from './DFWhole';
+import { DFData, DFDataRow, DFViewerConfig } from './DFWhole';
 
 import { dfToAgrid, extractPinnedRows } from './gridUtils';
 import { replaceAtMatch } from '../utils';
@@ -20,6 +20,7 @@ import {
   getAutoSize,
   getGridOptions,
   getHeightStyle,
+  HeightStyleI,
   SetColumFunc,
 } from './DFViewer';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
@@ -75,9 +76,11 @@ export function DFViewerInfinite({
 
   const gridRef = useRef<AgGridReact<unknown>>(null);
   const pinned_rows = df_viewer_config.pinned_rows;
-  const topRowData = summary_stats_data
-    ? extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : [])
-    : [];
+  const topRowData = (
+    summary_stats_data
+      ? extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : [])
+      : []
+  ) as DFDataRow[];
 
   const hs = getHeightStyle(df_viewer_config, data_wrapper.length);
 
@@ -96,17 +99,32 @@ export function DFViewerInfinite({
   };
 
   if (data_wrapper.data_type === 'Raw') {
+    /*
+    if(gridRef !== undefined) {
+      setTimeout(() => {
+
+        console.log("found gridref, calling redraw")
+        gridRef.current?.api.redrawRows();
+        gridRef.current?.api.ensureIndexVisible(0);
+      }, 30);
+    } else {
+      console.log("couldn't find gridRef")
+    }
+    */
+    const rdGridOptions: GridOptions = {
+      ...gridOptions,
+      rowData: data_wrapper.data,
+      suppressNoRowsOverlay: true,
+    };
+
     return (
-      <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-        <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
-          <AgGridReact
-            ref={gridRef}
-            gridOptions={gridOptions}
-            rowData={data_wrapper.data}
-            pinnedTopRowData={topRowData}
-          ></AgGridReact>
-        </div>
-      </div>
+      <RowDataViewer
+        hs={hs}
+        divClass={divClass}
+        gridRef={gridRef}
+        rdGridOptions={rdGridOptions}
+        topRowData={topRowData}
+      />
     );
   } else if (data_wrapper.data_type === 'DataSource') {
     const dsGridOptions = getDsGridOptions(
@@ -128,6 +146,31 @@ export function DFViewerInfinite({
     return <div>Error</div>;
   }
 }
+const RowDataViewer = ({
+  hs,
+  divClass,
+  gridRef,
+  rdGridOptions,
+  topRowData,
+}: {
+  hs: HeightStyleI;
+  divClass: string;
+  gridRef: any; // AgGridReact<unknown>;
+  rdGridOptions: GridOptions;
+  topRowData: DFData;
+}): React.JSX.Element => {
+  console.log('gridRef');
+  return (
+    <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
+      <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
+        <AgGridReact
+          gridOptions={rdGridOptions}
+          pinnedTopRowData={topRowData}
+        ></AgGridReact>
+      </div>
+    </div>
+  );
+};
 
 const getDsGridOptions = (
   origGridOptions: GridOptions,
@@ -156,11 +199,11 @@ const getDsGridOptions = (
     },
     rowBuffer: 0,
     rowModelType: 'infinite',
-    cacheBlockSize: 100,
+    cacheBlockSize: 80,
     cacheOverflowSize: 2,
     maxConcurrentDatasourceRequests: 1,
-    maxBlocksInCache: 10,
-    infiniteInitialRowCount: 1000,
+    maxBlocksInCache: 5,
+    infiniteInitialRowCount: 80,
   };
   return dsGridOptions;
 };

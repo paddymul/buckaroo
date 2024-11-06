@@ -75,7 +75,7 @@ export function BuckarooInfiniteWidget({
   const [mainDs, respCache] = useMemo(() => getDs(on_payload_args), []);
   const cacheKey = getPayloadKey(payload_response.key);
   console.log('setting respCache', cacheKey, payload_response);
-  respCache[cacheKey] = payload_response;
+  respCache.put(getPayloadKey(payload_response.key), payload_response);
 
   const [activeCol, setActiveCol] = useState('stoptime');
 
@@ -88,8 +88,13 @@ export function BuckarooInfiniteWidget({
     );
   }
 
-  const data_wrapper = getDataWrapper(cDisp.data_key, df_data_dict, mainDs);
-  const summaryStatsData = df_data_dict[cDisp.summary_stats_key];
+  const [data_wrapper, summaryStatsData] = useMemo(
+    () => [
+      getDataWrapper(cDisp.data_key, df_data_dict, mainDs),
+      df_data_dict[cDisp.summary_stats_key],
+    ],
+    [[cDisp]]
+  );
 
   return (
     <div
