@@ -166,29 +166,61 @@ export const HistogramCell = (props: any) => {
             </svg>
           </pattern>
         </defs>
-        <Bar dataKey="population" stroke="#000" fill="gray" stackId="stack" />
-        <Bar dataKey="tail" stroke="#000" fill="gray" stackId="stack" />
-        <Bar dataKey="true" stroke="#00f" fill="#00f" stackId="stack" />
-        <Bar dataKey="false" stroke="#000" fill="#fff" stackId="stack" />
+        <Bar
+          dataKey="population"
+          stroke="#000"
+          fill="gray"
+          stackId="stack"
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="tail"
+          stroke="#000"
+          fill="gray"
+          stackId="stack"
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="true"
+          stroke="#00f"
+          fill="#00f"
+          stackId="stack"
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="false"
+          stroke="#000"
+          fill="#fff"
+          stackId="stack"
+          isAnimationActive={false}
+        />
         <Bar
           dataKey="cat_pop"
           stroke="pink"
           fill="url(#circles)"
           stackId="stack"
+          isAnimationActive={false}
         />
         <Bar
           dataKey="unique"
           stroke="#0f0"
           fill="url(#checkers)"
           stackId="stack"
+          isAnimationActive={false}
         />
         <Bar
           dataKey="longtail"
           stroke="teal"
           fill="url(#leafs)"
           stackId="stack"
+          isAnimationActive={false}
         />
-        <Bar dataKey="NA" fill="url(#stripe)" stackId="stack" />
+        <Bar
+          dataKey="NA"
+          fill="url(#stripe)"
+          stackId="stack"
+          isAnimationActive={false}
+        />
         <Tooltip
           formatter={formatter}
           allowEscapeViewBox={{ x: true, y: true }}
