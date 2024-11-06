@@ -15,6 +15,7 @@ import {
   IGetRowsParams,
   ModuleRegistry,
   SortChangedEvent,
+  ViewportChangedEvent,
 } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import {
@@ -72,6 +73,7 @@ export function DFViewerInfinite({
   const defaultColDef = {
     sortable: true,
     type: 'rightAligned',
+    enableCellChangeFlash: false,
     cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
   };
 
@@ -198,11 +200,22 @@ const getDsGridOptions = (
       // Setting a sort and being in the middle of it makes no sense
       api.ensureIndexVisible(0);
     },
-    rowBuffer: 0,
+    /*
+    onBodyScroll: (event:BodyScrollEvent<any,any>) => {
+      // this is where I want to trigger the next request
+      console.log("scrollStart", event.direction,event.top)
+      //event.top is in pixels
+    },
+    */
+    onViewportChanged: (event: ViewportChangedEvent<any>) => {
+      console.log('onVieweportChanged', event.firstRow, event.lastRow);
+    },
+
+    rowBuffer: 5,
     rowModelType: 'infinite',
     cacheBlockSize: 80,
     cacheOverflowSize: 2,
-    maxConcurrentDatasourceRequests: 1,
+    maxConcurrentDatasourceRequests: 2,
     maxBlocksInCache: 5,
     infiniteInitialRowCount: 80,
   };
