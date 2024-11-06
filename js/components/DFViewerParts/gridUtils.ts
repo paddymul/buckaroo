@@ -385,15 +385,24 @@ export const getDs = (
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
+      const dsPayloadArgsNext = {
+        sourceName: sourceName,
+        start: params.endRow,
+        end: params.endRow + (params.endRow - params.startRow),
+        sort: sm.length === 1 ? sm[0].colId : undefined,
+        sort_direction: sm.length === 1 ? sm[0].sort : undefined,
+      };
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
       const resp = respCache.get(getPayloadKey(dsPayloadArgs));
 
       if (resp === undefined) {
         const tryFetching = (attempt: number) => {
-          const retryWait = 30 * Math.pow(1.7, attempt);
+          //const retryWait = 30 * Math.pow(1.7, attempt);
+          //fetching is really cheap.  I'm going to go every 10ms up until 400 ms
+          const retryWait = 15;
           setTimeout(() => {
             const toResp = respCache.get(getPayloadKey(dsPayloadArgs));
-            if (toResp === undefined && attempt < 5) {
+            if (toResp === undefined && attempt < 30) {
               console.log(
                 `Attempt ${
                   attempt + 1
@@ -407,6 +416,8 @@ export const getDs = (
                 console.log('got back the wrong payload');
               }
               params.successCallback(toResp.data, -1);
+              // after the first success, prepopulate the cache for the following request
+              setPaState2(dsPayloadArgsNext);
             } else {
               console.log('Failed to fetch data after 5 attempts');
             }
@@ -421,6 +432,8 @@ export const getDs = (
           getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
         console.log(
           'data already in cache',
+          dsPayloadArgs.start,
+          dsPayloadArgs.end,
           expectedPayload,
           dsPayloadArgs,
           resp.key
@@ -430,6 +443,8 @@ export const getDs = (
           return;
         }
         params.successCallback(resp.data, -1);
+        // after the first success, prepopulate the cache for the following request
+        setPaState2(dsPayloadArgsNext);
       }
     },
   };
