@@ -1,4 +1,10 @@
-import React, { useRef, CSSProperties, useState, useCallback } from 'react';
+import React, {
+  useRef,
+  CSSProperties,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import _ from 'lodash';
 import { DFData, DFDataRow, DFViewerConfig } from './DFWhole';
 
@@ -59,18 +65,20 @@ export function DFViewerInfinite({
   activeCol?: string;
   setActiveCol?: SetColumFunc;
 }) {
-  const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
-  const selectBackground =
-    df_viewer_config?.component_config?.selectionBackground ||
-    'var(--ag-range-selection-background-color-3)';
-  const styledColumns = replaceAtMatch(
-    _.clone(agColsPure),
-    activeCol || '___never',
-    {
-      cellStyle: { background: selectBackground },
-    }
-  );
-
+  const styledColumns = useMemo(() => {
+    const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
+    const selectBackground =
+      df_viewer_config?.component_config?.selectionBackground ||
+      'var(--ag-range-selection-background-color-3)';
+    const styledColumns = replaceAtMatch(
+      _.clone(agColsPure),
+      activeCol || '___never',
+      {
+        cellStyle: { background: selectBackground },
+      }
+    );
+    return styledColumns;
+  }, [df_viewer_config, summary_stats_data, activeCol]);
   const defaultColDef = {
     sortable: true,
     type: 'rightAligned',
@@ -147,6 +155,7 @@ export function DFViewerInfinite({
             ref={gridRef}
             gridOptions={dsGridOptions}
             pinnedTopRowData={topRowData}
+            columnDefs={_.cloneDeep(styledColumns)}
           ></AgGridReact>
         </div>
       </div>
@@ -156,7 +165,7 @@ export function DFViewerInfinite({
   }
 }
 // used to make sure there is a different element returned when
-// Raw is used, so the component properly swaps over.  
+// Raw is used, so the component properly swaps over.
 // Otherwise pinnedRows appear above the last scrolled position
 // of the InfiniteRowSource vs having an empty data set.
 
@@ -180,6 +189,7 @@ const RowDataViewer = ({
         <AgGridReact
           gridOptions={rdGridOptions}
           pinnedTopRowData={topRowData}
+          columnDefs={_.cloneDeep(rdGridOptions.columnDefs)}
         ></AgGridReact>
       </div>
     </div>
@@ -251,7 +261,7 @@ export const StaticWrapDFViewerInfinite = ({
     data_type: 'DataSource',
     datasource: {
       getRows: (params: IGetRowsParams) => {
-        console.log("StaticWrapDFViewerInfinite", params);
+        console.log('StaticWrapDFViewerInfinite', params);
         params.successCallback(
           df_data.slice(params.startRow, params.endRow),
           df_data.length
@@ -262,14 +272,15 @@ export const StaticWrapDFViewerInfinite = ({
 
   const [activeCol, setActiveCol] = useState('stoptime');
 
-  return (<div style={{height:500}}>
-    <DFViewerInfinite
-      data_wrapper={data_wrapper}
-      df_viewer_config={df_viewer_config}
-      summary_stats_data={summary_stats_data}
-      activeCol={activeCol}
-      setActiveCol={setActiveCol}
-    />
+  return (
+    <div style={{ height: 500 }}>
+      <DFViewerInfinite
+        data_wrapper={data_wrapper}
+        df_viewer_config={df_viewer_config}
+        summary_stats_data={summary_stats_data}
+        activeCol={activeCol}
+        setActiveCol={setActiveCol}
+      />
     </div>
   );
 };
