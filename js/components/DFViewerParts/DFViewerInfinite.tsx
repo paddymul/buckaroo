@@ -229,11 +229,11 @@ const getDsGridOptions = (
 };
 
 export const StaticWrapDFViewerInfinite = ({
-  raw_data,
+  df_data,
   df_viewer_config,
   summary_stats_data,
 }: {
-  raw_data: DFData;
+  df_data: DFData;
   df_viewer_config: DFViewerConfig;
   summary_stats_data?: DFData;
   style?: CSSProperties;
@@ -246,9 +246,10 @@ export const StaticWrapDFViewerInfinite = ({
     data_type: 'DataSource',
     datasource: {
       getRows: (params: IGetRowsParams) => {
+        console.log("StaticWrapDFViewerInfinite", params);
         params.successCallback(
-          raw_data.slice(params.startRow, params.endRow),
-          -1
+          df_data.slice(params.startRow, params.endRow),
+          df_data.length
         );
       },
     },
@@ -256,7 +257,7 @@ export const StaticWrapDFViewerInfinite = ({
 
   const [activeCol, setActiveCol] = useState('stoptime');
 
-  return (
+  return (<div style={{height:500}}>
     <DFViewerInfinite
       data_wrapper={data_wrapper}
       df_viewer_config={df_viewer_config}
@@ -264,5 +265,6 @@ export const StaticWrapDFViewerInfinite = ({
       activeCol={activeCol}
       setActiveCol={setActiveCol}
     />
+    </div>
   );
 };
