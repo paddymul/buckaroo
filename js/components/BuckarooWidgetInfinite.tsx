@@ -72,7 +72,10 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  const [mainDs, respCache] = useMemo(() => getDs(on_payload_args), [operations]);
+  const [mainDs, respCache] = useMemo(
+    () => getDs(on_payload_args),
+    [operations]
+  );
   const cacheKey = getPayloadKey(payload_response.key);
   console.log('setting respCache', cacheKey, payload_response);
   respCache.put(getPayloadKey(payload_response.key), payload_response);

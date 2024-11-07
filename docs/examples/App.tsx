@@ -37,7 +37,7 @@ const examples = {
   DFViewerInfiniteEx_large: {
     title: 'DFViewerInfinite large',
     file: 'DFViewerInfiniteEx_large',
-    layout: 'HBox',
+    layout: 'VBox',
   },
 
   DFViewerEx_real_summary: {
