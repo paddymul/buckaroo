@@ -3,7 +3,7 @@
 
 import { ColumnsEditor } from './components/ColumnsEditor';
 import { DFViewer } from './components/DFViewerParts/DFViewer';
-import { DFViewerInfinite } from './components/DFViewerParts/DFViewerInfinite';
+import { DFViewerInfinite, StaticWrapDFViewerInfinite } from './components/DFViewerParts/DFViewerInfinite';
 
 import { WidgetDCFCell } from './components/DCFCell';
 import { BuckarooInfiniteWidget } from './components/BuckarooWidgetInfinite';
@@ -29,6 +29,7 @@ export const extraComponents = {
   WidgetDCFCell,
   DFViewer,
   DFViewerInfinite,
+  StaticWrapDFViewerInfinite,
   StatusBar,
   HistogramCell,
   CommandUtils,

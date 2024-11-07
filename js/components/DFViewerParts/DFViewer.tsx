@@ -60,6 +60,7 @@ export const getGridOptions = (
 
     onCellClicked: (event) => {
       const colName = event.column.getColId();
+      console.log("onCellClicked", event)
       if (setActiveCol === undefined || colName === undefined) {
         return;
       } else {
