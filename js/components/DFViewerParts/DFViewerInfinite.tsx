@@ -155,6 +155,11 @@ export function DFViewerInfinite({
     return <div>Error</div>;
   }
 }
+// used to make sure there is a different element returned when
+// Raw is used, so the component properly swaps over.  
+// Otherwise pinnedRows appear above the last scrolled position
+// of the InfiniteRowSource vs having an empty data set.
+
 const RowDataViewer = ({
   hs,
   divClass,
@@ -241,7 +246,7 @@ export const StaticWrapDFViewerInfinite = ({
   // used for demos to exercise DFViewerInfinite
 
   const data_wrapper: DatasourceWrapper = {
-    length: 5,
+    length: df_data.length,
 
     data_type: 'DataSource',
     datasource: {
