@@ -308,8 +308,8 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
         self.df_display_args = temp_display_args
 
-    payload_args = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
-    payload_response = Dict({'key': {'sourceName':'paddy', 'start':0, 'end':49},
+    payload_args = Dict({'sourceName':'unused', 'start':0, 'end':50}).tag(sync=True)
+    payload_response = Dict({'key': {'sourceName':'unused', 'start':0, 'end':49},
                             'data': []}
                             ).tag(sync=True)
 
