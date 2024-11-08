@@ -192,6 +192,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
 
   const shortMode =
     compC?.shortMode || (belowMinRows && rowHeight === undefined);
+    /*
   console.log(
     'shortMode',
     shortMode,
@@ -202,6 +203,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     'inIframe',
     inIframe
   );
+  */
   const inIframeClass = inIframe ? 'inIframe' : '';
   if (isGoogleColab || inIframe) {
     return {
