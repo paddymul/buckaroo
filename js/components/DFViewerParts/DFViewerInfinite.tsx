@@ -22,7 +22,7 @@ import {
   IGetRowsParams,
   ModuleRegistry,
   SortChangedEvent,
-  ViewportChangedEvent,
+//  ViewportChangedEvent,
 } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import {
@@ -33,6 +33,7 @@ import {
   SetColumFunc,
 } from './DFViewer';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
+import { Operation } from '../OperationUtils';
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
@@ -56,14 +57,18 @@ export function DFViewerInfinite({
   df_viewer_config,
   summary_stats_data,
   activeCol,
+  operations,
   setActiveCol,
+  ds_creation_time
 }: {
   data_wrapper: DatasourceOrRaw;
   df_viewer_config: DFViewerConfig;
+  operations:Operation[]
   summary_stats_data?: DFData;
   style?: CSSProperties;
   activeCol?: string;
   setActiveCol?: SetColumFunc;
+  ds_creation_time:Date
 }) {
   const styledColumns = useMemo(() => {
     const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
@@ -102,6 +107,31 @@ export function DFViewerInfinite({
     const retVal = String(params?.data?.index);
     return retVal;
   }, []);
+  const purgeCache = ()=> {
+    console.log("purge cache called")
+    if(gridRef !== undefined){
+      console.log("purging infinite cache", ds_creation_time);
+      //@ts-ignore
+      window.gridApi = gridRef?.current?.api;
+      gridRef?.current?.api?.purgeInfiniteCache()
+      gridRef?.current?.api?.purgeInfiniteCache()
+      gridRef?.current?.api.ensureIndexVisible(0);
+
+    }
+  }
+  useCallback(()=> {
+    console.log("purge Cache ds_creation_time")
+    purgeCache();
+  }, [ds_creation_time])
+  useCallback(()=> {
+    console.log("purge Cache gridRef")
+    purgeCache();
+  }, [gridRef])
+  useCallback(()=> {
+    console.log("purge Cache operations")
+    purgeCache();
+  }, [ds_creation_time])
+
   const gridOptions: GridOptions = {
     ...getGridOptions(
       setActiveCol as SetColumFunc,
@@ -116,18 +146,6 @@ export function DFViewerInfinite({
   };
 
   if (data_wrapper.data_type === 'Raw') {
-    /*
-    if(gridRef !== undefined) {
-      setTimeout(() => {
-
-        console.log("found gridref, calling redraw")
-        gridRef.current?.api.redrawRows();
-        gridRef.current?.api.ensureIndexVisible(0);
-      }, 30);
-    } else {
-      console.log("couldn't find gridRef")
-    }
-    */
     const rdGridOptions: GridOptions = {
       ...gridOptions,
       rowData: data_wrapper.data,
@@ -156,6 +174,7 @@ export function DFViewerInfinite({
             gridOptions={dsGridOptions}
             pinnedTopRowData={topRowData}
             columnDefs={_.cloneDeep(styledColumns)}
+            context={{operations}}
           ></AgGridReact>
         </div>
       </div>
@@ -227,18 +246,18 @@ const getDsGridOptions = (
       console.log("scrollStart", event.direction,event.top)
       //event.top is in pixels
     },
-    */
     onViewportChanged: (event: ViewportChangedEvent<any>) => {
       console.log('onVieweportChanged', event.firstRow, event.lastRow);
     },
+    */
 
     rowBuffer: 5,
     rowModelType: 'infinite',
-    cacheBlockSize: 80,
+    cacheBlockSize: 49,
     cacheOverflowSize: 2,
-    maxConcurrentDatasourceRequests: 2,
+    maxConcurrentDatasourceRequests: 1,
     maxBlocksInCache: 5,
-    infiniteInitialRowCount: 80,
+    infiniteInitialRowCount: 49,
   };
   return dsGridOptions;
 };
@@ -280,6 +299,8 @@ export const StaticWrapDFViewerInfinite = ({
         summary_stats_data={summary_stats_data}
         activeCol={activeCol}
         setActiveCol={setActiveCol}
+        operations={[]}
+        ds_creation_time={new Date()}
       />
     </div>
   );

@@ -72,31 +72,33 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  const [mainDs, respCache] = useMemo(
-    () => getDs(on_payload_args),
-    [operations]
-  );
-  const cacheKey = getPayloadKey(payload_response.key);
+
+  const [mainDs, respCache, dsCreationTime] = useMemo(() => {
+    const t = new Date();
+//    console.log("recreating data source because operations changed", t)
+    return [ ...getDs(on_payload_args), t]
+    // setting on operation_results instead of operations, because 
+    // operation_results garuntees that the processing has finished
+
+    }, [
+      //operation_results
+
+    ]); 
+  const cacheKey = getPayloadKey(payload_response.key, operations);
   console.log('setting respCache', cacheKey, payload_response);
-  respCache.put(getPayloadKey(payload_response.key), payload_response);
+  respCache.put(getPayloadKey(payload_response.key, operations), payload_response);
 
   const [activeCol, setActiveCol] = useState('stoptime');
 
   const cDisp = df_display_args[buckaroo_state.df_display];
-  if (cDisp === undefined) {
-    console.log(
-      'cDisp undefined',
-      buckaroo_state.df_display,
-      buckaroo_options.df_display
-    );
-  }
+  
 
   const [data_wrapper, summaryStatsData] = useMemo(
     () => [
       getDataWrapper(cDisp.data_key, df_data_dict, mainDs),
       df_data_dict[cDisp.summary_stats_key],
     ],
-    [[cDisp]]
+    [cDisp, operations]
   );
 
   return (
@@ -121,6 +123,8 @@ export function BuckarooInfiniteWidget({
           data_wrapper={data_wrapper}
           df_viewer_config={cDisp.df_viewer_config}
           summary_stats_data={summaryStatsData}
+          ds_creation_time={dsCreationTime}
+          operations={operations}
           activeCol={activeCol}
           setActiveCol={setActiveCol}
         />
