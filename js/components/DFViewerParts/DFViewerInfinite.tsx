@@ -22,7 +22,7 @@ import {
   IGetRowsParams,
   ModuleRegistry,
   SortChangedEvent,
-//  ViewportChangedEvent,
+  //  ViewportChangedEvent,
 } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import {
@@ -59,16 +59,16 @@ export function DFViewerInfinite({
   activeCol,
   operations,
   setActiveCol,
-  ds_creation_time
+  ds_creation_time,
 }: {
   data_wrapper: DatasourceOrRaw;
   df_viewer_config: DFViewerConfig;
-  operations:Operation[]
+  operations: Operation[];
   summary_stats_data?: DFData;
   style?: CSSProperties;
   activeCol?: string;
   setActiveCol?: SetColumFunc;
-  ds_creation_time:Date
+  ds_creation_time: Date;
 }) {
   const styledColumns = useMemo(() => {
     const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
@@ -107,30 +107,29 @@ export function DFViewerInfinite({
     const retVal = String(params?.data?.index);
     return retVal;
   }, []);
-  const purgeCache = ()=> {
-    console.log("purge cache called")
-    if(gridRef !== undefined){
-      console.log("purging infinite cache", ds_creation_time);
+  const purgeCache = () => {
+    console.log('purge cache called');
+    if (gridRef !== undefined) {
+      console.log('purging infinite cache', ds_creation_time);
       //@ts-ignore
       window.gridApi = gridRef?.current?.api;
-      gridRef?.current?.api?.purgeInfiniteCache()
-      gridRef?.current?.api?.purgeInfiniteCache()
+      gridRef?.current?.api?.purgeInfiniteCache();
+      gridRef?.current?.api?.purgeInfiniteCache();
       gridRef?.current?.api.ensureIndexVisible(0);
-
     }
-  }
-  useCallback(()=> {
-    console.log("purge Cache ds_creation_time")
+  };
+  useCallback(() => {
+    console.log('purge Cache ds_creation_time');
     purgeCache();
-  }, [ds_creation_time])
-  useCallback(()=> {
-    console.log("purge Cache gridRef")
+  }, [ds_creation_time]);
+  useCallback(() => {
+    console.log('purge Cache gridRef');
     purgeCache();
-  }, [gridRef])
-  useCallback(()=> {
-    console.log("purge Cache operations")
+  }, [gridRef]);
+  useCallback(() => {
+    console.log('purge Cache operations');
     purgeCache();
-  }, [ds_creation_time])
+  }, [ds_creation_time]);
 
   const gridOptions: GridOptions = {
     ...getGridOptions(
@@ -174,7 +173,7 @@ export function DFViewerInfinite({
             gridOptions={dsGridOptions}
             pinnedTopRowData={topRowData}
             columnDefs={_.cloneDeep(styledColumns)}
-            context={{operations}}
+            context={{ operations }}
           ></AgGridReact>
         </div>
       </div>

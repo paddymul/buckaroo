@@ -192,7 +192,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
 
   const shortMode =
     compC?.shortMode || (belowMinRows && rowHeight === undefined);
-    /*
+  /*
   console.log(
     'shortMode',
     shortMode,

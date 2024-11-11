@@ -72,26 +72,28 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-
-  const [mainDs, respCache, dsCreationTime] = useMemo(() => {
-    const t = new Date();
-//    console.log("recreating data source because operations changed", t)
-    return [ ...getDs(on_payload_args), t]
-    // setting on operation_results instead of operations, because 
-    // operation_results garuntees that the processing has finished
-
-    }, [
+  const [mainDs, respCache, dsCreationTime] = useMemo(
+    () => {
+      const t = new Date();
+      //    console.log("recreating data source because operations changed", t)
+      return [...getDs(on_payload_args), t];
+      // setting on operation_results instead of operations, because
+      // operation_results garuntees that the processing has finished
+    },
+    [
       //operation_results
-
-    ]); 
+    ]
+  );
   const cacheKey = getPayloadKey(payload_response.key, operations);
   console.log('setting respCache', cacheKey, payload_response);
-  respCache.put(getPayloadKey(payload_response.key, operations), payload_response);
+  respCache.put(
+    getPayloadKey(payload_response.key, operations),
+    payload_response
+  );
 
   const [activeCol, setActiveCol] = useState('stoptime');
 
   const cDisp = df_display_args[buckaroo_state.df_display];
-  
 
   const [data_wrapper, summaryStatsData] = useMemo(
     () => [

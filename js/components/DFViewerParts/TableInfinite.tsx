@@ -178,8 +178,11 @@ export const InfiniteWrapper = ({
   on_payloadArgs: (pa: PayloadArgs) => void;
   payloadResponse: PayloadResponse;
 }) => {
+  //@ts-ignore
+  const key = getPayloadKey(payloadResponse.key, undefined);
   const [ds, respCache] = useMemo(() => getDs(on_payloadArgs), []);
-  respCache.put(getPayloadKey(payloadResponse.key, []), payloadResponse);
+  respCache.put(key, payloadResponse);
+  console.log(`found ${payloadResponse.data.length} rows for `, key);
   return <InfiniteViewer dataSource={ds} />;
 };
 
@@ -188,7 +191,7 @@ export const InfiniteEx = () => {
   const initialPA: PayloadArgs = { sourceName: sourceName, start: 0, end: 100 };
 
   const [paState, setPaState] = useState<PayloadArgs>(initialPA);
-  console.log('GetterWrapper 164');
+  console.log('GetterWrapper 164', winners);
   const paToResp = (pa: PayloadArgs): PayloadResponse => {
     console.log('in paToResp', pa.start, pa.end);
     return {

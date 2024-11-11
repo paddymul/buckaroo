@@ -312,8 +312,13 @@ export interface PayloadResponse {
   key: PayloadArgs;
   data: DFData;
 }
-export const getPayloadKey = (payloadArgs: PayloadArgs, operations:Operation[]): string => {
-  return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}-${JSON.stringify(operations)}`;
+export const getPayloadKey = (
+  payloadArgs: PayloadArgs,
+  operations: Operation[]
+): string => {
+  return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${
+    payloadArgs.sort
+  }-${payloadArgs.sort_direction}-${JSON.stringify(operations)}`;
 };
 export type CommandConfigSetterT = (
   setter: Dispatch<SetStateAction<CommandConfigT>>
@@ -399,8 +404,9 @@ export const getDs = (
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      const resp = respCache.get(getPayloadKey(dsPayloadArgs, params.context?.operations
-      ));
+      const resp = respCache.get(
+        getPayloadKey(dsPayloadArgs, params.context?.operations)
+      );
 
       if (resp === undefined) {
         const tryFetching = (attempt: number) => {
@@ -408,17 +414,23 @@ export const getDs = (
           //fetching is really cheap.  I'm going to go every 10ms up until 400 ms
           const retryWait = 15;
           setTimeout(() => {
-            const toResp = respCache.get(getPayloadKey(dsPayloadArgs, params.context?.operations));
+            const key = getPayloadKey(
+              dsPayloadArgs,
+              params.context?.operations
+            );
+            const toResp = respCache.get(key);
             if (toResp === undefined && attempt < 30) {
               console.log(
                 `Attempt ${
                   attempt + 1
-                }: Data not found in cache, retrying... in ${retryWait}`
+                }: Data not found in cache, retrying... in ${retryWait} tried`,
+                key
               );
               tryFetching(attempt + 1);
             } else if (toResp !== undefined) {
               const expectedPayload =
-                getPayloadKey(dsPayloadArgs, params.context?.operations) === getPayloadKey(toResp.key, params.context?.operations);
+                getPayloadKey(dsPayloadArgs, params.context?.operations) ===
+                getPayloadKey(toResp.key, params.context?.operations);
               if (!expectedPayload) {
                 console.log('got back the wrong payload');
               }
@@ -436,7 +448,8 @@ export const getDs = (
         setPaState2(dsPayloadArgs);
       } else {
         const expectedPayload =
-          getPayloadKey(dsPayloadArgs, params.context?.operations) === getPayloadKey(resp.key, params.context?.operations);
+          getPayloadKey(dsPayloadArgs, params.context?.operations) ===
+          getPayloadKey(resp.key, params.context?.operations);
         console.log(
           'data already in cache',
           dsPayloadArgs.start,
