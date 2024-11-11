@@ -87,6 +87,8 @@ export const HistogramCell = (props: any) => {
     console.log('dumbClickHandler', rechartsArgs);
   };
 
+  // used to prevent duplicate IDs which lead to a nasty bug where patterns aren't applied
+  // https://github.com/paddymul/buckaroo/issues/292
   const gensym = (base: string) => {
     const id = `${base}-${crypto.randomUUID()}`;
     return [id, `url(#${id})`];
