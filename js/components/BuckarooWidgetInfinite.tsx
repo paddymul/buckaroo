@@ -72,18 +72,13 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  const [mainDs, respCache, dsCreationTime] = useMemo(
-    () => {
-      const t = new Date();
-      //    console.log("recreating data source because operations changed", t)
-      return [...getDs(on_payload_args), t];
-      // setting on operation_results instead of operations, because
-      // operation_results garuntees that the processing has finished
-    },
-    [
-      //operation_results
-    ]
-  );
+  const [mainDs, respCache] = useMemo(() => {
+    const t = new Date();
+    console.log('recreating data source because operations changed', t);
+    return getDs(on_payload_args);
+    // setting on operation_results instead of operations, because
+    // operation_results garuntees that the processing has finished
+  }, [operations]);
   const cacheKey = getPayloadKey(payload_response.key, operations);
   console.log('setting respCache', cacheKey, payload_response);
   respCache.put(
@@ -125,7 +120,6 @@ export function BuckarooInfiniteWidget({
           data_wrapper={data_wrapper}
           df_viewer_config={cDisp.df_viewer_config}
           summary_stats_data={summaryStatsData}
-          ds_creation_time={dsCreationTime}
           operations={operations}
           activeCol={activeCol}
           setActiveCol={setActiveCol}

@@ -400,13 +400,17 @@ class BuckarooInfiniteWidget(BuckarooWidget):
             return
 
         print(self.payload_args)
-        if self.payload_args.get('sort'):
-            sort_dir = self.payload_args.get('sort_direction')
-            ascending = sort_dir == 'asc'
-            slice_df = pd_to_obj(processed_df.sort_values(by=[self.payload_args.get('sort')], ascending=ascending)[start:end])
-        else:
-            slice_df = pd_to_obj(processed_df[start:end])
-        self.payload_response = {'key':self.payload_args, 'data':slice_df}
+        try:
+            if self.payload_args.get('sort'):
+                sort_dir = self.payload_args.get('sort_direction')
+                ascending = sort_dir == 'asc'
+                slice_df = pd_to_obj(processed_df.sort_values(by=[self.payload_args.get('sort')], ascending=ascending)[start:end])
+            else:
+                slice_df = pd_to_obj(processed_df[start:end])
+            self.payload_response = {'key':self.payload_args, 'data':slice_df}
+        except Exception as e:
+            print(e)
+            raise
 
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(df)

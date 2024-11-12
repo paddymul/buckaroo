@@ -59,7 +59,6 @@ export function DFViewerInfinite({
   activeCol,
   operations,
   setActiveCol,
-  ds_creation_time,
 }: {
   data_wrapper: DatasourceOrRaw;
   df_viewer_config: DFViewerConfig;
@@ -68,7 +67,6 @@ export function DFViewerInfinite({
   style?: CSSProperties;
   activeCol?: string;
   setActiveCol?: SetColumFunc;
-  ds_creation_time: Date;
 }) {
   const styledColumns = useMemo(() => {
     const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
@@ -107,6 +105,7 @@ export function DFViewerInfinite({
     const retVal = String(params?.data?.index);
     return retVal;
   }, []);
+  /*
   const purgeCache = () => {
     console.log('purge cache called');
     if (gridRef !== undefined) {
@@ -130,7 +129,7 @@ export function DFViewerInfinite({
     console.log('purge Cache operations');
     purgeCache();
   }, [ds_creation_time]);
-
+  */
   const gridOptions: GridOptions = {
     ...getGridOptions(
       setActiveCol as SetColumFunc,
@@ -161,16 +160,14 @@ export function DFViewerInfinite({
       />
     );
   } else if (data_wrapper.data_type === 'DataSource') {
-    const dsGridOptions = getDsGridOptions(
-      gridOptions,
-      data_wrapper.datasource
-    );
+    const dsGridOptions = getDsGridOptions(gridOptions);
     return (
       <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
         <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
           <AgGridReact
             ref={gridRef}
             gridOptions={dsGridOptions}
+            datasource={data_wrapper.datasource}
             pinnedTopRowData={topRowData}
             columnDefs={_.cloneDeep(styledColumns)}
             context={{ operations }}
@@ -214,19 +211,9 @@ const RowDataViewer = ({
   );
 };
 
-const getDsGridOptions = (
-  origGridOptions: GridOptions,
-  datasource: IDatasource
-): GridOptions => {
+const getDsGridOptions = (origGridOptions: GridOptions): GridOptions => {
   const dsGridOptions: GridOptions = {
     ...origGridOptions,
-    datasource: datasource,
-    /*
-    onModelUpdated: (event:ModelUpdatedEvent) => {
-        console.log("modelUpdated");
-        console.log(event);
-    }
-    */
     onSortChanged: (event: SortChangedEvent) => {
       const api: GridApi = event.api;
       console.log(
@@ -299,7 +286,6 @@ export const StaticWrapDFViewerInfinite = ({
         activeCol={activeCol}
         setActiveCol={setActiveCol}
         operations={[]}
-        ds_creation_time={new Date()}
       />
     </div>
   );

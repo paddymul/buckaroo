@@ -6,14 +6,14 @@ import {
   GridApi,
   IDatasource,
   ModuleRegistry,
-//  RedrawRowsParams,
+  //  RedrawRowsParams,
   SortChangedEvent,
 } from '@ag-grid-community/core';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
 import { AgGridReact } from '@ag-grid-community/react';
 import '@ag-grid-community/styles/ag-grid.css';
 import '@ag-grid-community/styles/ag-theme-quartz.css';
-import React, {  useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
 import { GridOptions } from '@ag-grid-community/core';
 
@@ -39,7 +39,7 @@ export const InfiniteViewer = ({
       // when the row is loaded) then the cell is refreshed.
       valueGetter: 'node.id',
     },
-    {field:'agIdx'},
+    { field: 'agIdx' },
     {
       field: 'athlete',
       minWidth: 150,
@@ -57,28 +57,28 @@ export const InfiniteViewer = ({
   const purgeCache = () => {
     console.log('purge cache called');
     if (gridRef !== undefined && gridRef.current !== undefined) {
-        if(gridRef?.current?.api !== undefined ) {
-            const api = gridRef.current.api;
-            //const result = api.getDisplayedRowAtIndex("1-Tennis");
-            api.purgeInfiniteCache();
-            api.ensureIndexVisible(0);
-            api.refreshInfiniteCache() 
-            const insertedRows = [
-                //@ts-ignore
-                api.getDisplayedRowAtIndex(0),
-                //@ts-ignore
-                api.getDisplayedRowAtIndex(1)];
-            console.log("insertedRows", insertedRows);
-            //@ts-ignore
-            api.redrawRows({rowNodes: insertedRows})
+      if (gridRef?.current?.api !== undefined) {
+        const api = gridRef.current.api;
+        //const result = api.getDisplayedRowAtIndex("1-Tennis");
+        api.purgeInfiniteCache();
+        api.ensureIndexVisible(0);
+        api.refreshInfiniteCache();
+        const insertedRows = [
+          //@ts-ignore
+          api.getDisplayedRowAtIndex(0),
+          //@ts-ignore
+          api.getDisplayedRowAtIndex(1),
+        ];
+        console.log('insertedRows', insertedRows);
+        //@ts-ignore
+        api.redrawRows({ rowNodes: insertedRows });
 
-
-            console.log("api", api); //, result);
-        }
+        console.log('api', api); //, result);
+      }
     }
   };
   const gridOptions: GridOptions = {
-    //datasource: dataSource,
+    datasource: dataSource,
     /*
         onModelUpdated: (event:ModelUpdatedEvent) => {
             console.log("modelUpdated");
@@ -105,27 +105,27 @@ export const InfiniteViewer = ({
     maxConcurrentDatasourceRequests: 1,
     maxBlocksInCache: 10,
     infiniteInitialRowCount: 10,
-    getRowId: (params:GetRowIdParams) => {
-        return String(params?.data?.agIdx);
-    }
+    getRowId: (params: GetRowIdParams) => {
+      return String(params?.data?.agIdx);
+    },
   };
 
   return (
     <div style={{ width: '100%', height: '500px', border: '2px solid red' }}>
-        <button onClick={purgeCache}>Purge Cache</button>
-        <pre>{JSON.stringify(operations)}</pre>
+      <button onClick={purgeCache}>Purge Cache</button>
+      <pre>{JSON.stringify(operations)}</pre>
       <div
         style={{ height: '100%', width: '100%', border: '2px solid green' }}
         className={'ag-theme-quartz-dark'}
       >
-     < AgGridReact
-    columnDefs={columnDefs}
-    ref={gridRef}
-    context={{operations}}
-    datasource={dataSource}
-    gridOptions={gridOptions}
-  />;
-
+        <AgGridReact
+          columnDefs={columnDefs}
+          ref={gridRef}
+          context={{ operations }}
+          datasource={dataSource}
+          gridOptions={gridOptions}
+        />
+        ;
       </div>
     </div>
   );

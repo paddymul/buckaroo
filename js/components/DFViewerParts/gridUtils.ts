@@ -377,7 +377,6 @@ export const getDs = (
     createTime: new Date(),
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
-
       const sm = params.sortModel;
       const dsPayloadArgs = {
         sourceName: sourceName,
@@ -396,10 +395,9 @@ export const getDs = (
       };
       */
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      console.log("gridUtils context operations", params.context?.operations);
-      const origKey =  getPayloadKey(dsPayloadArgs, params.context?.operations);
+      console.log('gridUtils context operations', params.context?.operations);
+      const origKey = getPayloadKey(dsPayloadArgs, params.context?.operations);
       const resp = respCache.get(origKey);
-
 
       if (resp === undefined) {
         const tryFetching = (attempt: number) => {
@@ -432,7 +430,10 @@ export const getDs = (
           }, retryWait); // Increase timeout exponentially
         };
 
-        console.log('after setTimeout, about to call setPayloadArgs');
+        console.log(
+          'after setTimeout, about to call setPayloadArgs',
+          dsPayloadArgs
+        );
         tryFetching(0);
         setPaState2(dsPayloadArgs);
       } else {
