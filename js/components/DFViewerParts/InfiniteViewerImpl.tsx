@@ -2,9 +2,11 @@
 
 import {
   ColDef,
+  GetRowIdParams,
   GridApi,
   IDatasource,
   ModuleRegistry,
+  RedrawRowsParams,
   SortChangedEvent,
 } from '@ag-grid-community/core';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
@@ -37,6 +39,7 @@ export const InfiniteViewer = ({
       // when the row is loaded) then the cell is refreshed.
       valueGetter: 'node.id',
     },
+    {field:'agIdx'},
     {
       field: 'athlete',
       minWidth: 150,
@@ -53,19 +56,31 @@ export const InfiniteViewer = ({
 
   const purgeCache = () => {
     console.log('purge cache called');
-    if (gridRef !== undefined) {
-      console.log('purging infinite cache', operations);
-      //@ts-ignore
-      window.gridApi = gridRef?.current?.api;
-      gridRef?.current?.api?.purgeInfiniteCache();
-      gridRef?.current?.api?.purgeInfiniteCache();
-      gridRef?.current?.api.ensureIndexVisible(0);
+    if (gridRef !== undefined && gridRef.current !== undefined) {
+        if(gridRef?.current?.api !== undefined ) {
+            const api = gridRef.current.api;
+            //const result = api.getDisplayedRowAtIndex("1-Tennis");
+            api.purgeInfiniteCache();
+            api.ensureIndexVisible(0);
+            api.refreshInfiniteCache() 
+            const insertedRows = [
+                //@ts-ignore
+                api.getDisplayedRowAtIndex(0),
+                //@ts-ignore
+                api.getDisplayedRowAtIndex(1)];
+            console.log("insertedRows", insertedRows);
+            //@ts-ignore
+            api.redrawRows({rowNodes: insertedRows})
+
+
+            console.log("api", api); //, result);
+        }
     }
   };
   useCallback(() => {
     console.log('purge Cache ds_creation_time');
     purgeCache();
-  }, [operations, gridRef]);
+  }, [operations, gridRef,dataSource]);
   const gridOptions: GridOptions = {
     datasource: dataSource,
     /*
@@ -93,10 +108,14 @@ export const InfiniteViewer = ({
     maxConcurrentDatasourceRequests: 1,
     maxBlocksInCache: 10,
     infiniteInitialRowCount: 10,
+    getRowId: (params:GetRowIdParams) => {
+        return String(params?.data?.agIdx);
+    }
   };
 
   return (
     <div style={{ width: '100%', height: '500px', border: '2px solid red' }}>
+        <button onClick={purgeCache}>Purge Cache</button>
       <div
         style={{ height: '100%', width: '100%', border: '2px solid green' }}
         className={'ag-theme-quartz-dark'}

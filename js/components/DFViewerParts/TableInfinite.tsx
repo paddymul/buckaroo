@@ -55,12 +55,22 @@ function addSequentialIndex(list: Record<string, any>[]) {
   }));
 }
 
+function addUniqueIndex(list: Record<string, any>[]) {
+  return _.map(list, (item, index) => ({
+    ...item,  agIdx:`${item.idx}-${item.sport}`,
+  }));
+}
+
+
 function filterBySport(list: any[], sport: string): any[] {
   return _.filter(list, { sport: sport });
 }
 
 const getDataset = (sportName: string) => {
-  return addSequentialIndex(filterBySport(winners, sportName));
+  const retVal = addUniqueIndex(
+    addSequentialIndex(filterBySport(winners, sportName)));
+    console.log("dataset retval", retVal);
+    return retVal;  
 };
 
 export const InfiniteWrapper = ({
