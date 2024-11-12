@@ -7,7 +7,7 @@ import {
   getPayloadKey,
   PayloadArgs,
   PayloadResponse,
-  sourceName,
+//  sourceName,
 } from './gridUtils';
 import { InfiniteViewer } from './InfiniteViewerImpl';
 import { Operation } from '../OperationUtils';
@@ -23,14 +23,18 @@ const data: [string, Operation[]][] = [
 const MySelect = ({
   selectedCategory,
   setSelectedCategory,
+  setOperations
 }: {
   selectedCategory: string;
   setSelectedCategory: any;
+  setOperations:any
 }) => {
   const handleCategoryChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     setSelectedCategory(event.target.value);
+    setOperations([[{ symbol: 'sport' }, { symbol: 'df' }, event.target.value]]);
+
   };
   return (
     <div>
@@ -57,7 +61,7 @@ function addSequentialIndex(list: Record<string, any>[]) {
 
 function addUniqueIndex(list: Record<string, any>[]) {
   return _.map(list, (item, index) => ({
-    ...item,  agIdx:`${item.idx}-${item.sport}`,
+    ...item, agIdx: `${item.idx}-${item.sport}`,
   }));
 }
 
@@ -69,8 +73,8 @@ function filterBySport(list: any[], sport: string): any[] {
 const getDataset = (sportName: string) => {
   const retVal = addUniqueIndex(
     addSequentialIndex(filterBySport(winners, sportName)));
-    console.log("dataset retval", retVal);
-    return retVal;  
+  console.log("dataset retval", retVal);
+  return retVal;
 };
 
 export const InfiniteWrapper = ({
@@ -80,47 +84,59 @@ export const InfiniteWrapper = ({
   operations,
 }: {
   payloadArgs: PayloadArgs;
-  on_payloadArgs: (pa: PayloadArgs) => void;
+  on_payloadArgs: (pa: PayloadArgs) => void;  
   payloadResponse: PayloadResponse;
   operations: Operation[];
 }) => {
   //@ts-ignore
-  const key = getPayloadKey(payloadResponse.key, undefined);
+  const key = getPayloadKey(payloadResponse.key, operations);
   const [ds, respCache] = useMemo(() => {
-    console.log("recreating ds") 
+    console.log("recreating ds")
     return getDs(on_payloadArgs)
-  }, []);
+  }, [operations]);
   respCache.put(key, payloadResponse);
-  console.log(`found ${payloadResponse.data.length} rows for `, key);
-  return <InfiniteViewer dataSource={ds} operations={operations} />;
+  console.log(`tableinfinite 94 found ${payloadResponse.data.length} rows for `, key);
+  return <div>
+    <pre>{JSON.stringify(operations)}</pre>
+
+    <InfiniteViewer dataSource={ds} operations={operations} />
+  </div>
 };
 
 export const InfiniteEx = () => {
   // this is supposed to simulate the IPYwidgets backend
   const [selectedSport, setSelectedSport] = useState<string>('Tennis');
-  const initialPA: PayloadArgs = { sourceName: selectedSport, start: 0, end: 100 };
+  const initialPA: PayloadArgs = { sourceName: "paddy", start: 0, end: 100 };
   const [paState, setPaState] = useState<PayloadArgs>(initialPA);
 
   const paToResp = (pa: PayloadArgs): PayloadResponse => {
-    return {
-//      data: getDataset(pa.sourceName).slice(pa.start, pa.end),
-      data: getDataset(selectedSport).slice(pa.start, pa.end),
+    // this simulates what python does
 
-      key: pa,
+    const dataResp = getDataset(selectedSport)
+    const dataSliced = dataResp.slice(pa.start, pa.end);
+    console.log("infinite ex", selectedSport, dataResp, pa.start, pa.end);
+    return {
+      //      data: getDataset(pa.sourceName).slice(pa.start, pa.end),
+      data: dataSliced,
+      key: pa
     };
   };
+  const [operations, setOperations] = useState<Operation[]>([[{ symbol: 'sport' }, { symbol: 'df' }, selectedSport]]);
+
   const resp: PayloadResponse = paToResp(paState);
   return (
     <div>
       <MySelect
         selectedCategory={selectedSport}
         setSelectedCategory={setSelectedSport}
+        setOperations={setOperations}
       />
+
       <InfiniteWrapper
         payloadArgs={paState}
         on_payloadArgs={setPaState}
         payloadResponse={resp}
-        operations={[[{ symbol: 'sport' }, { symbol: 'df' }, selectedSport]]}
+        operations={operations}
       />
     </div>
   );

@@ -355,6 +355,7 @@ class LruCache<T> {
       // least-recently used cache eviction strategy
       const keyToDelete = this.values.keys().next().value;
       console.log(`deleting ${keyToDelete}`);
+      //@ts-ignore
       this.values.delete(keyToDelete);
     }
 
@@ -376,17 +377,6 @@ export const getDs = (
     createTime: new Date(),
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
-      /*
-            console.log(
-                "asking for " + params.startRow + " to " + params.endRow
-            );
-      console.log('params', params);
-      console.log('params.filterModel', params.filterModel);
-      console.log('params.sortModel', params.sortModel);
-            */
-
-      // At this point in your code, you would call the server.
-      // To make the demo look real, wait for 500ms before returning
 
       const sm = params.sortModel;
       const dsPayloadArgs = {
@@ -396,6 +386,7 @@ export const getDs = (
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
+      /*
       const dsPayloadArgsNext = {
         sourceName: sourceName,
         start: params.endRow,
@@ -403,10 +394,12 @@ export const getDs = (
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
+      */
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      const resp = respCache.get(
-        getPayloadKey(dsPayloadArgs, params.context?.operations)
-      );
+      console.log("gridUtils context operations", params.context?.operations);
+      const origKey =  getPayloadKey(dsPayloadArgs, params.context?.operations);
+      const resp = respCache.get(origKey);
+
 
       if (resp === undefined) {
         const tryFetching = (attempt: number) => {
@@ -414,17 +407,13 @@ export const getDs = (
           //fetching is really cheap.  I'm going to go every 10ms up until 400 ms
           const retryWait = 15;
           setTimeout(() => {
-            const key = getPayloadKey(
-              dsPayloadArgs,
-              params.context?.operations
-            );
-            const toResp = respCache.get(key);
+            const toResp = respCache.get(origKey);
             if (toResp === undefined && attempt < 30) {
               console.log(
                 `Attempt ${
                   attempt + 1
                 }: Data not found in cache, retrying... in ${retryWait} tried`,
-                key
+                origKey
               );
               tryFetching(attempt + 1);
             } else if (toResp !== undefined) {
@@ -436,7 +425,7 @@ export const getDs = (
               }
               params.successCallback(toResp.data, -1);
               // after the first success, prepopulate the cache for the following request
-              setPaState2(dsPayloadArgsNext);
+              //setPaState2(dsPayloadArgsNext);
             } else {
               console.log('Failed to fetch data after 5 attempts');
             }
@@ -464,7 +453,7 @@ export const getDs = (
         }
         params.successCallback(resp.data, -1);
         // after the first success, prepopulate the cache for the following request
-        setPaState2(dsPayloadArgsNext);
+        //setPaState2(dsPayloadArgsNext);
       }
     },
   };

@@ -6,14 +6,14 @@ import {
   GridApi,
   IDatasource,
   ModuleRegistry,
-  RedrawRowsParams,
+//  RedrawRowsParams,
   SortChangedEvent,
 } from '@ag-grid-community/core';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
 import { AgGridReact } from '@ag-grid-community/react';
 import '@ag-grid-community/styles/ag-grid.css';
 import '@ag-grid-community/styles/ag-theme-quartz.css';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, {  useMemo, useRef, useState } from 'react';
 
 import { GridOptions } from '@ag-grid-community/core';
 
@@ -77,18 +77,15 @@ export const InfiniteViewer = ({
         }
     }
   };
-  useCallback(() => {
-    console.log('purge Cache ds_creation_time');
-    purgeCache();
-  }, [operations, gridRef,dataSource]);
   const gridOptions: GridOptions = {
-    datasource: dataSource,
+    //datasource: dataSource,
     /*
         onModelUpdated: (event:ModelUpdatedEvent) => {
             console.log("modelUpdated");
             console.log(event);
         }
         */
+
     onSortChanged: (event: SortChangedEvent) => {
       const api: GridApi = event.api;
       console.log(
@@ -116,15 +113,19 @@ export const InfiniteViewer = ({
   return (
     <div style={{ width: '100%', height: '500px', border: '2px solid red' }}>
         <button onClick={purgeCache}>Purge Cache</button>
+        <pre>{JSON.stringify(operations)}</pre>
       <div
         style={{ height: '100%', width: '100%', border: '2px solid green' }}
         className={'ag-theme-quartz-dark'}
       >
-        <AgGridReact
-          columnDefs={columnDefs}
-          ref={gridRef}
-          gridOptions={gridOptions}
-        />
+     < AgGridReact
+    columnDefs={columnDefs}
+    ref={gridRef}
+    context={{operations}}
+    datasource={dataSource}
+    gridOptions={gridOptions}
+  />;
+
       </div>
     </div>
   );
