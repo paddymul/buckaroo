@@ -93,7 +93,9 @@ export const InfiniteEx = () => {
 
   const paToResp = (pa: PayloadArgs): PayloadResponse => {
     return {
-      data: getDataset(pa.sourceName).slice(pa.start, pa.end),
+//      data: getDataset(pa.sourceName).slice(pa.start, pa.end),
+      data: getDataset(selectedSport).slice(pa.start, pa.end),
+
       key: pa,
     };
   };
