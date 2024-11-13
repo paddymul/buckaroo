@@ -37,7 +37,6 @@ import {
 } from './Displayer';
 import { Dispatch, SetStateAction } from 'react';
 import { CommandConfigT } from '../CommandUtils';
-import { Operation } from '../OperationUtils';
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
 // as implementations grow large or with many implmentations, they should move to separate files
@@ -315,11 +314,11 @@ export interface PayloadResponse {
 }
 export const getPayloadKey = (
   payloadArgs: PayloadArgs,
-  operations: Operation[]
+  outside_params: any
 ): string => {
   return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${
     payloadArgs.sort
-  }-${payloadArgs.sort_direction}-${JSON.stringify(operations)}`;
+  }-${payloadArgs.sort_direction}`; //-${JSON.stringify(outside_params)}`;
 };
 export type CommandConfigSetterT = (
   setter: Dispatch<SetStateAction<CommandConfigT>>
@@ -364,7 +363,7 @@ export class LruCache<T> {
   }
 }
 export type RespCache = LruCache<PayloadResponse>;
-export const sourceName = 'paddy';
+
 
 export interface TimedIDatasource extends IDatasource {
   createTime: Date;
@@ -379,9 +378,9 @@ export const getDs = (
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
       const sm = params.sortModel;
-      const opsString = JSON.stringify(params.context?.operations);
+      const outside_params_string = JSON.stringify(params.context?.outside_df_params);
       const dsPayloadArgs = {
-        sourceName: opsString,
+        sourceName: outside_params_string,
         start: params.startRow,
         end: params.endRow,
         sort: sm.length === 1 ? sm[0].colId : undefined,
@@ -389,15 +388,15 @@ export const getDs = (
       };
 
       const dsPayloadArgsNext = {
-        sourceName: sourceName,
+        sourceName: outside_params_string,
         start: params.endRow,
         end: params.endRow + (params.endRow - params.startRow),
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      console.log('gridUtils context operations', params.context?.operations);
-      const origKey = getPayloadKey(dsPayloadArgs, params.context?.operations);
+      console.log('gridUtils context outside_df_params', params.context?.outside_df_params);
+      const origKey = getPayloadKey(dsPayloadArgs, params.context?.outside_df_params);
       const resp = respCache.get(origKey);
 
       if (resp === undefined) {
@@ -417,8 +416,8 @@ export const getDs = (
               tryFetching(attempt + 1);
             } else if (toResp !== undefined) {
               const expectedPayload =
-                getPayloadKey(dsPayloadArgs, params.context?.operations) ===
-                getPayloadKey(toResp.key, params.context?.operations);
+                getPayloadKey(dsPayloadArgs, params.context?.outside_df_params) ===
+                getPayloadKey(toResp.key, params.context?.outside_df_params);
               if (!expectedPayload) {
                 console.log('got back the wrong payload');
               }
@@ -440,8 +439,8 @@ export const getDs = (
         setPaState2(dsPayloadArgs);
       } else {
         const expectedPayload =
-          getPayloadKey(dsPayloadArgs, params.context?.operations) ===
-          getPayloadKey(resp.key, params.context?.operations);
+          getPayloadKey(dsPayloadArgs, params.context?.outside_df_params) ===
+          getPayloadKey(resp.key, params.context?.outside_df_params);
         console.log(
           'data already in cache',
           dsPayloadArgs.start,

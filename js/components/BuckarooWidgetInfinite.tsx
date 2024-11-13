@@ -83,7 +83,7 @@ export function BuckarooInfiniteWidget({
     return getDs(on_payload_args, respCache);
     // setting on operation_results instead of operations, because
     // operation_results garuntees that the processing has finished
-  }, [operations]);
+  }, [operations, buckaroo_state])
   const cacheKey = getPayloadKey(payload_response.key, operations);
   console.log('setting respCache', cacheKey, payload_response);
   respCache.put(
@@ -100,9 +100,10 @@ export function BuckarooInfiniteWidget({
       getDataWrapper(cDisp.data_key, df_data_dict, mainDs),
       df_data_dict[cDisp.summary_stats_key],
     ],
-    [cDisp, operations]
+    [cDisp, operations, buckaroo_state.post_processing]
   );
 
+  const outsideDFParams = [operations, buckaroo_state.post_processing];
   return (
     <div
       className="dcf-root flex flex-col"
@@ -125,7 +126,7 @@ export function BuckarooInfiniteWidget({
           data_wrapper={data_wrapper}
           df_viewer_config={cDisp.df_viewer_config}
           summary_stats_data={summaryStatsData}
-          operations={operations}
+          outside_df_params={outsideDFParams}
           activeCol={activeCol}
           setActiveCol={setActiveCol}
           error_info={payload_response.error_info}

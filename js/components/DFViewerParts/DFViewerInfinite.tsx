@@ -33,7 +33,6 @@ import {
   SetColumFunc,
 } from './DFViewer';
 import { InfiniteRowModelModule } from '@ag-grid-community/infinite-row-model';
-import { Operation } from '../OperationUtils';
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
@@ -57,16 +56,19 @@ export function DFViewerInfinite({
   df_viewer_config,
   summary_stats_data,
   activeCol,
-  operations,
   setActiveCol,
+  outside_df_params,
   error_info,
 }: {
   data_wrapper: DatasourceOrRaw;
   df_viewer_config: DFViewerConfig;
-  operations: Operation[];
   summary_stats_data?: DFData;
   activeCol?: string;
   setActiveCol?: SetColumFunc;
+  // these are the parameters that could affect the table,
+  // dfviewer doesn't need to understand them, but it does need to use
+  // them as keys to get updated data
+  outside_df_params?: any;
   error_info?: string;
 }) {
   const styledColumns = useMemo(() => {
@@ -104,10 +106,10 @@ export function DFViewerInfinite({
     df_viewer_config?.component_config?.className || 'ag-theme-alpine-dark';
   const getRowId = useCallback(
     (params: GetRowIdParams) => {
-      const retVal = String(params?.data?.index);
+      const retVal = String(params?.data?.index) + params.context?.outside_df_params;
       return retVal;
     },
-    [operations]
+    [outside_df_params]
   );
 
   const gridOptions: GridOptions = {
@@ -149,7 +151,7 @@ export function DFViewerInfinite({
             datasource={data_wrapper.datasource}
             pinnedTopRowData={topRowData}
             columnDefs={_.cloneDeep(styledColumns)}
-            context={{ operations }}
+            context={{ outside_df_params}}
           ></AgGridReact>
         </div>
       </div>
@@ -251,7 +253,6 @@ export const StaticWrapDFViewerInfinite = ({
         summary_stats_data={summary_stats_data}
         activeCol={activeCol}
         setActiveCol={setActiveCol}
-        operations={[]}
       />
     </div>
   );
