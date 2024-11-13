@@ -387,7 +387,7 @@ export const getDs = (
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
-      /*
+
       const dsPayloadArgsNext = {
         sourceName: sourceName,
         start: params.endRow,
@@ -395,7 +395,6 @@ export const getDs = (
         sort: sm.length === 1 ? sm[0].colId : undefined,
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
-      */
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
       console.log('gridUtils context operations', params.context?.operations);
       const origKey = getPayloadKey(dsPayloadArgs, params.context?.operations);
@@ -426,7 +425,7 @@ export const getDs = (
               console.log('found data for', origKey, toResp.data);
               params.successCallback(toResp.data, -1);
               // after the first success, prepopulate the cache for the following request
-              //setPaState2(dsPayloadArgsNext);
+              setPaState2(dsPayloadArgsNext);
             } else {
               console.log('Failed to fetch data after 5 attempts');
             }
@@ -457,7 +456,7 @@ export const getDs = (
         }
         params.successCallback(resp.data, -1);
         // after the first success, prepopulate the cache for the following request
-        //setPaState2(dsPayloadArgsNext);
+        setPaState2(dsPayloadArgsNext);
       }
     },
   };
