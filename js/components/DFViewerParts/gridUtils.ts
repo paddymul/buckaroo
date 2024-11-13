@@ -354,8 +354,7 @@ export class LruCache<T> {
       // least-recently used cache eviction strategy
       const keyToDelete = this.values.keys().next().value;
       console.log(`deleting ${keyToDelete}`);
-      //@ts-ignore
-      this.values.delete(keyToDelete);
+      this.values.delete(String(keyToDelete));
     }
 
     this.values.set(key, value);

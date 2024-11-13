@@ -91,7 +91,6 @@ export const InfiniteWrapper = ({
   payloadResponse: PayloadResponse;
   operations: Operation[];
 }) => {
-  //@ts-ignore
   const key = getPayloadKey(payloadResponse.key, operations);
   const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
 
