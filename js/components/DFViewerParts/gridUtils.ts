@@ -331,7 +331,7 @@ export interface IDisplayArgs {
   summary_stats_key: string;
 }
 
-class LruCache<T> {
+export class LruCache<T> {
   private values: Map<string, T> = new Map<string, T>();
   private maxEntries = 10;
 
@@ -371,9 +371,9 @@ export interface TimedIDatasource extends IDatasource {
 }
 
 export const getDs = (
-  setPaState2: (pa: PayloadArgs) => void
-): [TimedIDatasource, RespCache] => {
-  const respCache: LruCache<PayloadResponse> = new LruCache<PayloadResponse>();
+  setPaState2: (pa: PayloadArgs) => void,
+  respCache: LruCache<PayloadResponse>
+): TimedIDatasource => {
   const dsLoc: TimedIDatasource = {
     createTime: new Date(),
     rowCount: undefined,
@@ -461,5 +461,5 @@ export const getDs = (
       }
     },
   };
-  return [dsLoc, respCache];
+  return dsLoc;
 };

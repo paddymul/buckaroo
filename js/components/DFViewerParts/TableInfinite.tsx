@@ -5,6 +5,7 @@ import { winners } from '../../baked_data/olympic-winners';
 import {
   getDs,
   getPayloadKey,
+  LruCache,
   PayloadArgs,
   PayloadResponse,
   //  sourceName,
@@ -92,9 +93,11 @@ export const InfiniteWrapper = ({
 }) => {
   //@ts-ignore
   const key = getPayloadKey(payloadResponse.key, operations);
-  const [ds, respCache] = useMemo(() => {
+  const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
+
+  const ds = useMemo(() => {
     console.log('recreating ds');
-    return getDs(on_payloadArgs);
+    return getDs(on_payloadArgs, respCache);
   }, [operations]);
   respCache.put(key, payloadResponse);
   console.log(

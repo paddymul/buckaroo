@@ -14,6 +14,7 @@ import {
   getDs,
   getPayloadKey,
   IDisplayArgs,
+  LruCache,
   PayloadArgs,
   PayloadResponse,
 } from './DFViewerParts/gridUtils';
@@ -72,10 +73,14 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  const [mainDs, respCache] = useMemo(() => {
+  // We wonly want to create respCache once, there are some swapover 
+  // recreation of datasource where the old respCache gets incoming response
+  // only to be destroyed
+  const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
+  const mainDs = useMemo(() => {
     const t = new Date();
     console.log('recreating data source because operations changed', t);
-    return getDs(on_payload_args);
+    return getDs(on_payload_args, respCache);
     // setting on operation_results instead of operations, because
     // operation_results garuntees that the processing has finished
   }, [operations]);
