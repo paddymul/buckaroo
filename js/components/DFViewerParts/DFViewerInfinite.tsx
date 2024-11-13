@@ -1,5 +1,5 @@
 import React, {
-  useRef,
+  //  useRef,
   CSSProperties,
   useState,
   useCallback,
@@ -59,14 +59,15 @@ export function DFViewerInfinite({
   activeCol,
   operations,
   setActiveCol,
+  error_info,
 }: {
   data_wrapper: DatasourceOrRaw;
   df_viewer_config: DFViewerConfig;
   operations: Operation[];
   summary_stats_data?: DFData;
-  style?: CSSProperties;
   activeCol?: string;
   setActiveCol?: SetColumFunc;
+  error_info?: string;
 }) {
   const styledColumns = useMemo(() => {
     const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
@@ -89,7 +90,7 @@ export function DFViewerInfinite({
     cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
   };
 
-  const gridRef = useRef<AgGridReact<unknown>>(null);
+  //const gridRef = useRef<AgGridReact<unknown>>(null);
   const pinned_rows = df_viewer_config.pinned_rows;
   const topRowData = (
     summary_stats_data
@@ -101,35 +102,14 @@ export function DFViewerInfinite({
 
   const divClass =
     df_viewer_config?.component_config?.className || 'ag-theme-alpine-dark';
-  const getRowId = useCallback((params: GetRowIdParams) => {
-    const retVal = String(params?.data?.index);
-    return retVal;
-  }, []);
-  /*
-  const purgeCache = () => {
-    console.log('purge cache called');
-    if (gridRef !== undefined) {
-      console.log('purging infinite cache', ds_creation_time);
-      //@ts-ignore
-      window.gridApi = gridRef?.current?.api;
-      gridRef?.current?.api?.purgeInfiniteCache();
-      gridRef?.current?.api?.purgeInfiniteCache();
-      gridRef?.current?.api.ensureIndexVisible(0);
-    }
-  };
-  useCallback(() => {
-    console.log('purge Cache ds_creation_time');
-    purgeCache();
-  }, [ds_creation_time]);
-  useCallback(() => {
-    console.log('purge Cache gridRef');
-    purgeCache();
-  }, [gridRef]);
-  useCallback(() => {
-    console.log('purge Cache operations');
-    purgeCache();
-  }, [ds_creation_time]);
-  */
+  const getRowId = useCallback(
+    (params: GetRowIdParams) => {
+      const retVal = String(params?.data?.index);
+      return retVal;
+    },
+    [operations]
+  );
+
   const gridOptions: GridOptions = {
     ...getGridOptions(
       setActiveCol as SetColumFunc,
@@ -142,7 +122,7 @@ export function DFViewerInfinite({
     getRowId,
     rowModelType: 'clientSide',
   };
-
+  console.log('error_info', error_info);
   if (data_wrapper.data_type === 'Raw') {
     const rdGridOptions: GridOptions = {
       ...gridOptions,
@@ -154,7 +134,6 @@ export function DFViewerInfinite({
       <RowDataViewer
         hs={hs}
         divClass={divClass}
-        gridRef={gridRef}
         rdGridOptions={rdGridOptions}
         topRowData={topRowData}
       />
@@ -163,9 +142,9 @@ export function DFViewerInfinite({
     const dsGridOptions = getDsGridOptions(gridOptions);
     return (
       <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
+        <pre>{error_info ? error_info : ''}</pre>
         <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
           <AgGridReact
-            ref={gridRef}
             gridOptions={dsGridOptions}
             datasource={data_wrapper.datasource}
             pinnedTopRowData={topRowData}
@@ -187,13 +166,11 @@ export function DFViewerInfinite({
 const RowDataViewer = ({
   hs,
   divClass,
-  gridRef,
   rdGridOptions,
   topRowData,
 }: {
   hs: HeightStyleI;
   divClass: string;
-  gridRef: any; // AgGridReact<unknown>;
   rdGridOptions: GridOptions;
   topRowData: DFData;
 }): React.JSX.Element => {
@@ -226,17 +203,6 @@ const getDsGridOptions = (origGridOptions: GridOptions): GridOptions => {
       // Setting a sort and being in the middle of it makes no sense
       api.ensureIndexVisible(0);
     },
-    /*
-    onBodyScroll: (event:BodyScrollEvent<any,any>) => {
-      // this is where I want to trigger the next request
-      console.log("scrollStart", event.direction,event.top)
-      //event.top is in pixels
-    },
-    onViewportChanged: (event: ViewportChangedEvent<any>) => {
-      console.log('onVieweportChanged', event.firstRow, event.lastRow);
-    },
-    */
-
     rowBuffer: 5,
     rowModelType: 'infinite',
     cacheBlockSize: 49,

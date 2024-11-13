@@ -311,6 +311,7 @@ export interface PayloadArgs {
 export interface PayloadResponse {
   key: PayloadArgs;
   data: DFData;
+  error_info?: string;
 }
 export const getPayloadKey = (
   payloadArgs: PayloadArgs,
@@ -378,8 +379,9 @@ export const getDs = (
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
       const sm = params.sortModel;
+      const opsString = JSON.stringify(params.context?.operations);
       const dsPayloadArgs = {
-        sourceName: sourceName,
+        sourceName: opsString,
         start: params.startRow,
         end: params.endRow,
         sort: sm.length === 1 ? sm[0].colId : undefined,
@@ -421,6 +423,7 @@ export const getDs = (
               if (!expectedPayload) {
                 console.log('got back the wrong payload');
               }
+              console.log('found data for', origKey, toResp.data);
               params.successCallback(toResp.data, -1);
               // after the first success, prepopulate the cache for the following request
               //setPaState2(dsPayloadArgsNext);

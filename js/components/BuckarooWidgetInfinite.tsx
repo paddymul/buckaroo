@@ -123,6 +123,7 @@ export function BuckarooInfiniteWidget({
           operations={operations}
           activeCol={activeCol}
           setActiveCol={setActiveCol}
+          error_info={payload_response.error_info}
         />
       </div>
       {buckaroo_state.show_commands ? (

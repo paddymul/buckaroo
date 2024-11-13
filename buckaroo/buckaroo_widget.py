@@ -8,6 +8,7 @@
 TODO: Add module docstring
 """
 
+import traceback
 from ipywidgets import DOMWidget
 import json
 import pandas as pd
@@ -303,8 +304,8 @@ class InfiniteViewerWidget(BuckarooProjectWidget):
         print("InfiniteViewerWidget 231")
         self.df = df
 
-    payloadArgs = Dict({'sourceName':'paddy', 'start':0, 'end':50}).tag(sync=True)
-    payloadResponse = Dict({'key': {'sourceName':'paddy', 'start':0, 'end':49},
+    payloadArgs = Dict({'sourceName':'[]', 'start':0, 'end':50}).tag(sync=True)
+    payloadResponse = Dict({'key': {'sourceName':'[]', 'start':0, 'end':49},
                             'data': []}
                             ).tag(sync=True)
 
@@ -410,7 +411,10 @@ class BuckarooInfiniteWidget(BuckarooWidget):
             self.payload_response = {'key':self.payload_args, 'data':slice_df}
         except Exception as e:
             print(e)
+            stack_trace = traceback.format_exc()
+            self.payload_response = {'key':self.payload_args, 'data':[], 'error_info':stack_trace}
             raise
 
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(df)
+
