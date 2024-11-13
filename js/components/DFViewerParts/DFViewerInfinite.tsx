@@ -106,7 +106,8 @@ export function DFViewerInfinite({
     df_viewer_config?.component_config?.className || 'ag-theme-alpine-dark';
   const getRowId = useCallback(
     (params: GetRowIdParams) => {
-      const retVal = String(params?.data?.index) + params.context?.outside_df_params;
+      const retVal =
+        String(params?.data?.index) + params.context?.outside_df_params;
       return retVal;
     },
     [outside_df_params]
@@ -151,7 +152,7 @@ export function DFViewerInfinite({
             datasource={data_wrapper.datasource}
             pinnedTopRowData={topRowData}
             columnDefs={_.cloneDeep(styledColumns)}
-            context={{ outside_df_params}}
+            context={{ outside_df_params }}
           ></AgGridReact>
         </div>
       </div>

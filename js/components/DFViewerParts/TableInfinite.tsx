@@ -126,9 +126,9 @@ export const InfiniteEx = () => {
     const dataSliced = dataResp.slice(pa.start, pa.end);
     console.log('infinite ex', selectedSport, dataResp, pa.start, pa.end);
     return {
-      //      data: getDataset(pa.sourceName).slice(pa.start, pa.end),
       data: dataSliced,
       key: pa,
+      length: dataResp.length,
     };
   };
   const [operations, setOperations] = useState<Operation[]>([

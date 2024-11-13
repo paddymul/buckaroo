@@ -310,15 +310,14 @@ export interface PayloadArgs {
 export interface PayloadResponse {
   key: PayloadArgs;
   data: DFData;
+  length: number;
   error_info?: string;
 }
 export const getPayloadKey = (
   payloadArgs: PayloadArgs,
   outside_params: any
 ): string => {
-  return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${
-    payloadArgs.sort
-  }-${payloadArgs.sort_direction}`; //-${JSON.stringify(outside_params)}`;
+  return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}`; //-${JSON.stringify(outside_params)}`;
 };
 export type CommandConfigSetterT = (
   setter: Dispatch<SetStateAction<CommandConfigT>>
@@ -364,7 +363,6 @@ export class LruCache<T> {
 }
 export type RespCache = LruCache<PayloadResponse>;
 
-
 export interface TimedIDatasource extends IDatasource {
   createTime: Date;
 }
@@ -378,7 +376,9 @@ export const getDs = (
     rowCount: undefined,
     getRows: (params: IGetRowsParams) => {
       const sm = params.sortModel;
-      const outside_params_string = JSON.stringify(params.context?.outside_df_params);
+      const outside_params_string = JSON.stringify(
+        params.context?.outside_df_params
+      );
       const dsPayloadArgs = {
         sourceName: outside_params_string,
         start: params.startRow,
@@ -395,8 +395,14 @@ export const getDs = (
         sort_direction: sm.length === 1 ? sm[0].sort : undefined,
       };
       //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-      console.log('gridUtils context outside_df_params', params.context?.outside_df_params);
-      const origKey = getPayloadKey(dsPayloadArgs, params.context?.outside_df_params);
+      console.log(
+        'gridUtils context outside_df_params',
+        params.context?.outside_df_params
+      );
+      const origKey = getPayloadKey(
+        dsPayloadArgs,
+        params.context?.outside_df_params
+      );
       const resp = respCache.get(origKey);
 
       if (resp === undefined) {
@@ -416,13 +422,16 @@ export const getDs = (
               tryFetching(attempt + 1);
             } else if (toResp !== undefined) {
               const expectedPayload =
-                getPayloadKey(dsPayloadArgs, params.context?.outside_df_params) ===
+                getPayloadKey(
+                  dsPayloadArgs,
+                  params.context?.outside_df_params
+                ) ===
                 getPayloadKey(toResp.key, params.context?.outside_df_params);
               if (!expectedPayload) {
                 console.log('got back the wrong payload');
               }
               console.log('found data for', origKey, toResp.data);
-              params.successCallback(toResp.data, -1);
+              params.successCallback(toResp.data, toResp.length);
               // after the first success, prepopulate the cache for the following request
               setPaState2(dsPayloadArgsNext);
             } else {
@@ -453,7 +462,7 @@ export const getDs = (
           console.log('got back the wrong payload');
           return;
         }
-        params.successCallback(resp.data, -1);
+        params.successCallback(resp.data, resp.length);
         // after the first success, prepopulate the cache for the following request
         setPaState2(dsPayloadArgsNext);
       }

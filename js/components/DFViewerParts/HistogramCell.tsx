@@ -208,7 +208,7 @@ export const HistogramCell = (props: any) => {
         <Bar
           dataKey="cat_pop"
           stroke="pink"
-          fill={circleUrl} 
+          fill={circleUrl}
           stackId="stack"
           isAnimationActive={false}
         />
@@ -226,10 +226,16 @@ export const HistogramCell = (props: any) => {
           stackId="stack"
           isAnimationActive={false}
         />
-        <Bar dataKey="user1" stroke="teal" fill={starUrl} stackId="stack" isAnimationActive={false} />
+        <Bar
+          dataKey="user1"
+          stroke="teal"
+          fill={starUrl}
+          stackId="stack"
+          isAnimationActive={false}
+        />
         <Bar
           dataKey="NA"
-          fill={stripeUrl} 
+          fill={stripeUrl}
           stackId="stack"
           isAnimationActive={false}
         />

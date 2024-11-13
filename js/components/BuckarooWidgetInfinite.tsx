@@ -73,7 +73,7 @@ export function BuckarooInfiniteWidget({
   on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
   buckaroo_options: BuckarooOptions;
 }) {
-  // We wonly want to create respCache once, there are some swapover 
+  // We wonly want to create respCache once, there are some swapover
   // recreation of datasource where the old respCache gets incoming response
   // only to be destroyed
   const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
@@ -81,9 +81,13 @@ export function BuckarooInfiniteWidget({
     const t = new Date();
     console.log('recreating data source because operations changed', t);
     return getDs(on_payload_args, respCache);
-    // setting on operation_results instead of operations, because
-    // operation_results garuntees that the processing has finished
-  }, [operations, buckaroo_state])
+    // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
+    // updating via post-processing changes appropriately.
+    // forces re-render and dataload when not completely necessary if other
+    // buckaroo_state props change
+    //
+    // putting buckaroo_state.post_processing doesn't work properly
+  }, [operations, buckaroo_state]);
   const cacheKey = getPayloadKey(payload_response.key, operations);
   console.log('setting respCache', cacheKey, payload_response);
   respCache.put(
@@ -100,7 +104,7 @@ export function BuckarooInfiniteWidget({
       getDataWrapper(cDisp.data_key, df_data_dict, mainDs),
       df_data_dict[cDisp.summary_stats_key],
     ],
-    [cDisp, operations, buckaroo_state.post_processing]
+    [cDisp, operations, buckaroo_state]
   );
 
   const outsideDFParams = [operations, buckaroo_state.post_processing];
