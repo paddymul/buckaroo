@@ -134,10 +134,10 @@ module.exports = [
     entry: './js/index.ts',
     output: {
       filename: 'index.js',
-      path: path.resolve(__dirname, 'dist'),
+      path: path.resolve(__dirname, 'lib'),
       libraryTarget: 'amd',
       library: 'buckaroo',
-      publicPath: 'https://unpkg.com/buckaroo@' + version + '/dist/',
+      publicPath: 'https://unpkg.com/buckaroo@' + version + '/lib/',
     },
     devtool: 'source-map',
     module: {
