@@ -231,6 +231,56 @@ export default function  WidgetDCFCellExample() {{
         self.buckaroo_state = temp_buckaroo_state
 
 
+class IPYBuckaroo(buckaroo.buckaroo_widget.BuckarooWidget, ipyreact.ValueWidget):
+    _esm="""
+    export default function({value, setValue}) {
+    console.log("buckaroo", buckaroo);
+        return <button onClick={() => confetti() && setValue(value + 1)}>
+            {value || 0} times confetti
+        </button>
+    };
+    """
+ipyreact.define_import_map({
+    "buckaroo-js-core": "https://esm.sh/paddy-vite-demo@1.0.13?external=react,react-dom"
+})
+class IPYBuckaroo(buckaroo.buckaroo_widget.BuckarooWidget, ipyreact.ValueWidget):
+    _esm="""
+import * as React from "react";
+import { extraComponents } from "buckaroo-js-core";
+
+export default function({
+    df_meta, df_data_dict, df_display_args,
+    buckaroo_state, setBuckaroo_state,
+    buckaroo_options,
+    command_config,
+    operations, setOperations,
+    operation_results}) {
+      const set_buckaroo_state = setBuckaroo_state;
+      const on_operations = setOperations;
+      console.log("df_data_dict", df_data_dict);
+      console.log("buckaroo_state", buckaroo_state);
+      console.log("buckaroo_options", buckaroo_options);
+      console.log("df_display_args", df_display_args);
+	return (
+		<div className="buckaroo_anywidget">
+		    <extraComponents.WidgetDCFCell
+	                df_meta={df_meta}
+	                df_data_dict={df_data_dict}
+                        df_display_args={df_display_args}
+	                        buckaroo_state={buckaroo_state}
+				on_buckaroo_state={set_buckaroo_state}
+	                        buckaroo_options={buckaroo_options}
+				command_config={command_config}
+				operations={operations}
+				on_operations={on_operations}
+				operation_results={operation_results}
+			/>
+		</div>
+	);
+};
+    """
+        
+
 class RawDFViewerWidget(BuckarooProjectWidget):
     """
 

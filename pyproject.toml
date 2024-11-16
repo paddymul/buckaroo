@@ -31,7 +31,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "ipywidgets>=7.6.0,<9",
+    "anywidget >= 0.9.0",
+    "ipyreact",
     "graphlib_backport>=1.0.0",
     "packaging>=18"
 ]
