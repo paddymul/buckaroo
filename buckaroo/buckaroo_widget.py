@@ -147,7 +147,7 @@ const buckaroo_options = {json.dumps(self.buckaroo_options, indent=4)}
 
 const buckaroo_state = {json.dumps(self.buckaroo_state, indent=4)}
 
-const commandConfig = {json.dumps(self.commandConfig, indent=4)}
+const command_config = {json.dumps(self.command_config, indent=4)}
 
 const w_operations = {json.dumps(self.operations, indent=4)}
 
@@ -164,7 +164,7 @@ export default function  WidgetDCFCellExample() {{
             buckaroo_options={{buckaroo_options}}
             buckaroo_state={{bState}}
             on_buckaroo_state={{setBState}}
-            commandConfig={{commandConfig}}
+            command_config={{command_config}}
             operations={{operations}}
             on_operations={{setOperations}}
             operation_results={{operation_results}}

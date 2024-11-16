@@ -419,10 +419,10 @@ object-assign@^4.1.1:
   resolved "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz"
   integrity sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==
 
-paddy-vite-demo@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.npmjs.org/paddy-vite-demo/-/paddy-vite-demo-1.0.4.tgz"
-  integrity sha512-+oKagb+M78P6WH5Ip5dReWNbrd+XgCQ6OVfWrYMwX0v9YavucomEmBQS+7GWSy0aV7FWZYyfcr9EeeMAqm0G3g==
+paddy-vite-demo@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.npmjs.org/paddy-vite-demo/-/paddy-vite-demo-1.0.6.tgz"
+  integrity sha512-5EmYjUH0xd2mgCN/Q6z23gvFWiSuCodtw+ZQsNpc0H1boDH8OXFuLNzfSBq4O2+ggp6eNLIWzzfw5/+XyqG6cw==
   dependencies:
     "@ag-grid-community/client-side-row-model" "^32.3.2"
     "@ag-grid-community/core" "^32.3.2"
