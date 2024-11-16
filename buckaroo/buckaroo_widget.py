@@ -12,9 +12,9 @@ import traceback
 from ipywidgets import DOMWidget
 import json
 import pandas as pd
+import traitlets
 from traitlets import Unicode, List, Dict, observe
-
-from ._frontend import module_name, module_version
+import anywidget
 
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
@@ -28,19 +28,18 @@ from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj
 from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from .dataflow.dataflow_extras import (Sampling, exception_protect, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
+import importlib.metadata
+import pathlib
+
+import anywidget
 
 
-class BuckarooProjectWidget(DOMWidget):
+class BuckarooProjectWidget(anywidget.AnyWidget):
     """
     Repetitious code needed to make Jupyter communicate properly with any BuckarooWidget in this package
     
     """
-    _model_module = Unicode(module_name).tag(sync=True)
-    _view_module  = Unicode(module_name).tag(sync=True)
-
-    _model_module_version = Unicode(module_version).tag(sync=True)
-    _view_module_version  = Unicode(module_version).tag(sync=True)
-
+    pass
 
 
 class PdSampling(Sampling):
@@ -73,11 +72,9 @@ class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
+    _esm = pathlib.Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.js"
+    _css = pathlib.Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.css"
 
-    #### DOMWidget Boilerplate
-    _model_name = Unicode('DCEFWidgetModel').tag(sync=True)
-    _view_name = Unicode('DCEFWidgetView').tag(sync=True)
-    #END DOMWidget Boilerplate
 
     sampling_klass = PdSampling
     autocleaning_klass = PandasAutocleaning #override the base CustomizableDataFlow klass

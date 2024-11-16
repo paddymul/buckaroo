@@ -41,6 +41,7 @@ version = "0.7.12"
 file = "LICENSE.txt"
 
 [project.optional-dependencies]
+dev = ["watchfiles", "jupyterlab"]
 
 test = [
     "nbval>=0.9",
@@ -54,6 +55,7 @@ test = [
     "pyarrow",
     "geopandas<1.0",
     "ruff",
+    "anywidget",
     "nbstripout"
 ]
 polars = ["polars>=1.0,<1.6",
@@ -77,49 +79,51 @@ build = [
 [project.urls]
 Homepage = "https://github.com/paddymul/buckaroo"
 
+# [tool.hatch.build.targets.wheel.shared-data]
+# "buckaroo/labextension" = "share/jupyter/labextensions/buckaroo"
+# "buckaroo.json" = "etc/jupyter/nbconfig/notebook.d/buckaroo.json"
+
+# [tool.hatch.build.targets.sdist]
+# exclude = [
+#     ".github",
+#     "examples",
+#     "tests",
+#     "ui-tests*",
+#     "widget-examples",
+#     "binder",
+#     "*.yaml",
+#     ".npmignore",
+#     ".eslint*",
+#     "__mocks__",
+#     "*.yml",
+#     "*.ini",
+#     ".pre*",
+#     "jest*",
+# ]
+
+# [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+# path = "."
+# build_cmd = "build"
+# npm = [
+#     "yarn",
+# ]
+
+
 [tool.hatch.build]
-artifacts = [
-    "buckaroo/labextension",
-]
+only-packages = true
+artifacts = ["src/buckaroo_anywidget/static/*"]
 
-[tool.hatch.build.targets.wheel.shared-data]
-"buckaroo/labextension" = "share/jupyter/labextensions/buckaroo"
-"buckaroo.json" = "etc/jupyter/nbconfig/notebook.d/buckaroo.json"
 
-[tool.hatch.build.targets.sdist]
-exclude = [
-    ".github",
-    "examples",
-    "tests",
-    "ui-tests*",
-    "widget-examples",
-    "binder",
-    "*.yaml",
-    ".npmignore",
-    ".eslint*",
-    "__mocks__",
-    "*.yml",
-    "*.ini",
-    ".pre*",
-    "jest*",
-]
 
 [tool.hatch.build.hooks.jupyter-builder]
-
-ensured-targets = [
-    "buckaroo/labextension/package.json",
-]
-dependencies = ["hatch-jupyter-builder>=0.8.1"]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = ["src/buckaroo_anywidget/static/widget.js"]
+skip-if-exists = ["src/buckaroo_anywidget/static/widget.js"]
+dependencies = ["hatch-jupyter-builder>=0.5.0"]
 #dependencies = ["hatch-jupyter-builder@file:///Users/paddy/code/hatch-jupyter-builder"]
 
-build-function = "hatch_jupyter_builder.npm_builder"
 
-[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
-path = "."
-build_cmd = "build"
-npm = [
-    "yarn",
-]
+
 
 [tool.isort]
 profile = "black"
