@@ -10,56 +10,26 @@ import "paddy-vite-demo/dist/style.css";
 //import { OperationResult } from "paddy-vite-demo/dist/components/DependentTabs";
 //import { IDisplayArgs } from "paddy-vite-demo/dist/components/DFViewerParts/gridUtils";
 
-export const baseOperationResults: extraComponents.OperationResult = {
-	transformed_df: [],
-	generated_py_code: 'default py code',
-};
-export const sym = (symbolName: string) => {
-	return { symbol: symbolName };
-};
 
-
-export const symDf = {
-	symbol: 'df',
-};
-
-
-
-export const bakedOperations = [
-	[sym('dropcol'), symDf, 'col1'],
-	[sym('fillna'), symDf, 'col2', 5],
-	[sym('resample'), symDf, 'month', 'monthly', {}],
-];
-
-//export const bakedOperationDefaults: OperationDefaultArgs = {
-export const bakedOperationDefaults = {
-	dropcol: [sym('dropcol'), symDf, 'col'],
-	fillna: [sym('fillna'), symDf, 'col', 8],
-	remove_outliers: [sym('remove_outliers'), symDf, 'col', 0.02],
-	search: [sym('search'), symDf, 'col', 'term'],
-	resample: [sym('resample'), symDf, 'col', 'monthly', {}],
-};
-
-//export const bakedCommandConfig: CommandConfigT = {
-export const bakedCommandConfig = {
-	argspecs: extraComponents.CommandUtils.bakedArgSpecs,
-	defaultArgs: bakedOperationDefaults,
-};
 
 
 const render = createRender(() => {
-	const [value, setValue] = useModelState<number>("value");
-	const [operations, on_operations] = useModelState<Operation[]>("operations");
+    const [value, setValue] = useModelState<number>("value");
 
-        const [df_meta, _set_df_meta] = useModelState<any>('df_meta');
-        const [df_data_dict, _set_df_data_dict] = useModelState<any>('df_data_dict');
-        const [df_display_args, _set_df_display_args] = useModelState<any>('df_display_args')
-	const [buckaroo_state, set_buckaroo_state] = useModelState<BuckarooState>('buckaroo_state');
-    const [buckaroo_options, _set_buckaroo_options] = useModelState<BuckarooState>('buckaroo_options');
+    
+    const [df_meta, _set_df_meta] = useModelState<any>('df_meta');
+    const [df_data_dict, _set_df_data_dict] = useModelState<any>('df_data_dict');
+    const [df_display_args, _set_df_display_args] = useModelState<any>('df_display_args')
+    const [buckaroo_state, set_buckaroo_state] = useModelState<BuckarooState>('buckaroo_state');
+    const [buckaroo_options, _set_buckaroo_options] = useModelState<BuckarooOptions>('buckaroo_options');
+    const [commandConfig, _set_cc] = useModelState<any>('commandConfig');
+    const [operations, on_operations] = useModelState<Operation[]>("operations");
+    const [operation_results, _set_or] = useModelState<any>("operation_results");
     console.log("df_data_dict", df_data_dict);
     console.log("buckaroo_state", buckaroo_state);
     console.log("buckaroo_options", buckaroo_options);
     console.log("df_display_args", df_display_args);
+    console.log("widget.tsx, commandConfig", commandConfig);
 	return (
 		<div className="buckaroo_anywidget">
 		    <extraComponents.WidgetDCFCell
@@ -69,10 +39,10 @@ const render = createRender(() => {
 	                        buckaroo_state={buckaroo_state}
 				on_buckaroo_state={set_buckaroo_state}
 	                        buckaroo_options={buckaroo_options}
-				commandConfig={bakedCommandConfig}
+				commandConfig={commandConfig}
 				operations={operations}
 				on_operations={on_operations}
-				operation_results={baseOperationResults}
+				operation_results={operation_results}
 			/>
 			<button onClick={() => setValue(value + 1)}>
 				count is {value}
