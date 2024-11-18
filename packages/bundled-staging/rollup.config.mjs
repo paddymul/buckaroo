@@ -17,10 +17,11 @@ export default {
 			'process.env.NODE_ENV': JSON.stringify('production')
 		}),
 		nodeResolve({
-			browser: true,
+			browser: true, preferBuiltins: true
 		}),
 		commonjs({
 			namedExports: {
+                                axios: ['get'],
 				scheduler: [
 					'unstable_runWithPriority',
 					'unstable_IdlePriority',
