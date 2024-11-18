@@ -15,7 +15,7 @@ import pandas as pd
 import traitlets
 from traitlets import Unicode, List, Dict, observe
 import anywidget
-
+import ipyreact
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from .customizations.histogram import (Histogram)
@@ -230,20 +230,10 @@ export default function  WidgetDCFCellExample() {{
         temp_buckaroo_state['post_processing'] = proc_func_name
         self.buckaroo_state = temp_buckaroo_state
 
-
-class IPYBuckaroo(buckaroo.buckaroo_widget.BuckarooWidget, ipyreact.ValueWidget):
-    _esm="""
-    export default function({value, setValue}) {
-    console.log("buckaroo", buckaroo);
-        return <button onClick={() => confetti() && setValue(value + 1)}>
-            {value || 0} times confetti
-        </button>
-    };
-    """
 ipyreact.define_import_map({
     "buckaroo-js-core": "https://esm.sh/paddy-vite-demo@1.0.13?external=react,react-dom"
 })
-class IPYBuckaroo(buckaroo.buckaroo_widget.BuckarooWidget, ipyreact.ValueWidget):
+class IPYBuckaroo(BuckarooWidget, ipyreact.ValueWidget):
     _esm="""
 import * as React from "react";
 import { extraComponents } from "buckaroo-js-core";

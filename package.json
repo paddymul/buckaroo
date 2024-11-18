@@ -33,20 +33,20 @@
     "url": "https://github.com/paddymul/buckaroo"
   },
   "scripts": {
-      "dev": "npm run build -- --sourcemap=inline --watch",
-      "build": "esbuild js/widget.tsx --minify --format=esm --bundle --outdir=src/buckaroo_anywidget/static && esbuild js/widget2.tsx --minify --format=esm --bundle --outdir=src/buckaroo_anywidget/static ",
-      "typecheck": "tsc --noEmit"
+    "dev": "npm run build -- --sourcemap=inline --watch",
+    "build": "esbuild js/widget.tsx --minify --format=esm --bundle --outdir=src/buckaroo_anywidget/static && esbuild js/widget2.tsx --minify --format=esm --bundle --outdir=src/buckaroo_anywidget/static ",
+    "typecheck": "tsc --noEmit"
   },
-    "dependencies": {
-	"@anywidget/react": "^0.0.8",
-	"paddy-vite-demo": "^1.0.6",
-	"react": "^18.3.1",
-	"react-dom": "^18.3.1"
-    },
-    "devDependencies": {
-	"@types/react": "^18.3.11",
-	"@types/react-dom": "^18.3.1",
-	"typescript": "^5.6.3",
-	"esbuild": "^0.24.0"
-    }
+  "dependencies": {
+    "@anywidget/react": "^0.0.8",
+    "paddy-vite-demo": "^1.0.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3"
+  }
 }
