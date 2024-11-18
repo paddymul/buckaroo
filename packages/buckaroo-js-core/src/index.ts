@@ -23,9 +23,10 @@ import { StatusBar } from "./components/StatusBar";
 import '@ag-grid-community/styles/ag-grid.css'; 
 import '@ag-grid-community/styles/ag-theme-quartz.css';
 import './style/dcf-npm.css'
-export * from "./version";
+import * as versionInfo from "./version";
 
-export const extraComponents = {
+export default {
+    
     ColumnsEditor,
     DependentTabs,
     OperationViewer,
@@ -39,4 +40,5 @@ export const extraComponents = {
     utils,
     InfiniteWidgetDCFCell: BuckarooInfiniteWidget,
     InfiniteEx,
+    versionInfo
 };
