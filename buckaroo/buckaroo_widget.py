@@ -9,12 +9,10 @@ TODO: Add module docstring
 """
 
 import traceback
-from ipywidgets import DOMWidget
 import json
 import pandas as pd
 import traitlets
-from traitlets import Unicode, List, Dict, observe
-import anywidget
+from traitlets import List, Dict, observe
 import ipyreact
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
@@ -28,10 +26,8 @@ from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj
 from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from .dataflow.dataflow_extras import (Sampling, exception_protect, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
-import importlib.metadata
 from pathlib import Path
 
-import anywidget
 
 
 class PdSampling(Sampling):
