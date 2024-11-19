@@ -31,16 +31,18 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "ipywidgets>=7.6.0,<9",
+    "anywidget >= 0.9.0",
+    "ipyreact",
     "graphlib_backport>=1.0.0",
     "packaging>=18"
 ]
-version = "0.7.12"
+version = "0.7.13"
 
 [project.license]
 file = "LICENSE.txt"
 
 [project.optional-dependencies]
+dev = ["watchfiles", "jupyterlab"]
 
 test = [
     "nbval>=0.9",
@@ -54,6 +56,7 @@ test = [
     "pyarrow",
     "geopandas<1.0",
     "ruff",
+    "anywidget",
     "nbstripout"
 ]
 polars = ["polars>=1.0,<1.6",
@@ -69,57 +72,23 @@ docs = [
     "pytest-check-links"
 ]
 
-build = [
-"twine",
-"build",
-]
     
 [project.urls]
 Homepage = "https://github.com/paddymul/buckaroo"
 
-[tool.hatch.build]
-artifacts = [
-    "buckaroo/labextension",
+
+[tool.hatch.build.targets.wheel]
+include = [
+   "buckaroo/**/*.py",
+   "buckaroo/**/*.tsx",
+   "packages/bundled-staging/buckaroo-js-core.rollup.bundle.js"
 ]
+[tool.hatch.build.targets.wheel.force-include]
+   "packages/buckaroo-js-core/dist/style.css" = "packages/buckaroo-js-core/dist/style.css"
 
-[tool.hatch.build.targets.wheel.shared-data]
-"buckaroo/labextension" = "share/jupyter/labextensions/buckaroo"
-"buckaroo.json" = "etc/jupyter/nbconfig/notebook.d/buckaroo.json"
+# [tool.hatch.build]
+# only-packages = true
 
-[tool.hatch.build.targets.sdist]
-exclude = [
-    ".github",
-    "examples",
-    "tests",
-    "ui-tests*",
-    "widget-examples",
-    "binder",
-    "*.yaml",
-    ".npmignore",
-    ".eslint*",
-    "__mocks__",
-    "*.yml",
-    "*.ini",
-    ".pre*",
-    "jest*",
-]
-
-[tool.hatch.build.hooks.jupyter-builder]
-
-ensured-targets = [
-    "buckaroo/labextension/package.json",
-]
-dependencies = ["hatch-jupyter-builder>=0.8.1"]
-#dependencies = ["hatch-jupyter-builder@file:///Users/paddy/code/hatch-jupyter-builder"]
-
-build-function = "hatch_jupyter_builder.npm_builder"
-
-[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
-path = "."
-build_cmd = "build"
-npm = [
-    "yarn",
-]
 
 [tool.isort]
 profile = "black"
