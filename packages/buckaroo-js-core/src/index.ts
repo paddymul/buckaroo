@@ -24,6 +24,7 @@ import '@ag-grid-community/styles/ag-grid.css';
 import '@ag-grid-community/styles/ag-theme-quartz.css';
 import './style/dcf-npm.css'
 import * as versionInfo from "./version";
+import * as widgetUtils from "./widgetUtils";
 
 export default {
     
@@ -40,5 +41,6 @@ export default {
     utils,
     InfiniteWidgetDCFCell: BuckarooInfiniteWidget,
     InfiniteEx,
-    versionInfo
+    versionInfo,
+    widgetUtils
 };

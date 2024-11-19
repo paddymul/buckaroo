@@ -29,17 +29,9 @@ from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from .dataflow.dataflow_extras import (Sampling, exception_protect, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
 import importlib.metadata
-import pathlib
+from pathlib import Path
 
 import anywidget
-
-
-class BuckarooProjectWidget(anywidget.AnyWidget):
-    """
-    Repetitious code needed to make Jupyter communicate properly with any BuckarooWidget in this package
-    
-    """
-    pass
 
 
 class PdSampling(Sampling):
@@ -65,15 +57,16 @@ def sym(name):
     return {'symbol':name}
 
 symDf = SymbolDf = {'symbol': 'df'}
-class BuckarooWidget(CustomizableDataflow, BuckarooProjectWidget):
+
+class BuckarooWidgetBase(CustomizableDataflow):
     """Extends CustomizableDataFlow and DOMWIdget
 
     Replaces generic options in CustomizableDataFlow with Pandas implementations
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
-    _esm = pathlib.Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.js"
-    _css = pathlib.Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.css"
+    _esm = Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.js"
+    _css = Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.css"
 
 
     sampling_klass = PdSampling
@@ -229,63 +222,29 @@ export default function  WidgetDCFCellExample() {{
         temp_buckaroo_state = self.buckaroo_state.copy()
         temp_buckaroo_state['post_processing'] = proc_func_name
         self.buckaroo_state = temp_buckaroo_state
+    style_block = traitlets.Unicode(
+        (Path(__file__).parent.parent / "packages/buckaroo-js-core/dist/style.css").read_text()).tag(sync=True)
 
-ipyreact.define_import_map({
-    "buckaroo-js-core": "https://esm.sh/paddy-vite-demo@1.0.13?external=react,react-dom"
-})
-class IPYBuckaroo(BuckarooWidget, ipyreact.ValueWidget):
-    _esm="""
-import * as React from "react";
-import { extraComponents } from "buckaroo-js-core";
 
-export default function({
-    df_meta, df_data_dict, df_display_args,
-    buckaroo_state, setBuckaroo_state,
-    buckaroo_options,
-    command_config,
-    operations, setOperations,
-    operation_results}) {
-      const set_buckaroo_state = setBuckaroo_state;
-      const on_operations = setOperations;
-      console.log("df_data_dict", df_data_dict);
-      console.log("buckaroo_state", buckaroo_state);
-      console.log("buckaroo_options", buckaroo_options);
-      console.log("df_display_args", df_display_args);
-	return (
-		<div className="buckaroo_anywidget">
-		    <extraComponents.WidgetDCFCell
-	                df_meta={df_meta}
-	                df_data_dict={df_data_dict}
-                        df_display_args={df_display_args}
-	                        buckaroo_state={buckaroo_state}
-				on_buckaroo_state={set_buckaroo_state}
-	                        buckaroo_options={buckaroo_options}
-				command_config={command_config}
-				operations={operations}
-				on_operations={on_operations}
-				operation_results={operation_results}
-			/>
-		</div>
-	);
-};
-    """
-        
+buckaroo_bundle_path =     Path(__file__).parent.parent / "packages/bundled-staging/buckaroo-js-core.rollup.bundle.js"
+#print("buckaroo_bundle_path", buckaroo_bundle_path)
+ipyreact.define_module("buckaroo-js-core", buckaroo_bundle_path)
 
-class RawDFViewerWidget(BuckarooProjectWidget):
+
+class BuckarooWidget(BuckarooWidgetBase, ipyreact.ValueWidget):
+    _esm= Path(__file__).parent / "BuckarooWidget.tsx"
+
+
+class RawDFViewerWidget(BuckarooWidgetBase):
     """
 
     A very raw way of instaniating just the DFViewer, not meant for use by enduers
 
     instead use DFViewer, or PolarsDFViewer which have better convience methods
     """
-
-    #### DOMWidget Boilerplate
-    # _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
-    # _view_name = Unicode('InfiniteViewerView').tag(sync=True)
-    _model_name = Unicode('DFViewerModel').tag(sync=True)
-    _view_name = Unicode('DFViewerView').tag(sync=True)
-    #_model_id =  Unicode('paddy').tag(sync=True)
-    #END DOMWidget Boilerplate
+    _esm= Path(__file__).parent / "DFViewer.tsx"
+    style_block = traitlets.Unicode(
+        (Path(__file__).parent.parent / "packages/buckaroo-js-core/dist/style.css").read_text()).tag(sync=True)
 
     df_data = List([
         {'a':  5  , 'b':20, 'c': 'Paddy'},
@@ -320,7 +279,7 @@ interface PayloadResponse {
 }
 """
 
-class InfiniteViewerWidget(BuckarooProjectWidget):
+class InfiniteViewerWidget(BuckarooWidget):
     """
 
     A very raw way of instaniating just the DFViewer, not meant for use by enduers
@@ -328,12 +287,7 @@ class InfiniteViewerWidget(BuckarooProjectWidget):
     instead use DFViewer, or PolarsDFViewer which have better convience methods
     """
 
-    #### DOMWidget Boilerplate
-    # _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
-    # _view_name = Unicode('InfiniteViewerView').tag(sync=True)
-    _model_name = Unicode('InfiniteViewerModel').tag(sync=True)
-    _view_name = Unicode('InfiniteViewerView').tag(sync=True)
-    #END DOMWidget Boilerplate
+
 
 
     def __init__(self, df):
@@ -341,23 +295,25 @@ class InfiniteViewerWidget(BuckarooProjectWidget):
         print("InfiniteViewerWidget 231")
         self.df = df
 
-    payloadArgs = Dict({'sourceName':'[]', 'start':0, 'end':50}).tag(sync=True)
-    payloadResponse = Dict({'key': {'sourceName':'[]', 'start':0, 'end':49},
+    payload_args = Dict({'sourceName':'[]', 'start':0, 'end':50}).tag(sync=True)
+    payload_response = Dict({'key': {'sourceName':'[]', 'start':0, 'end':49},
                             'data': []}
                             ).tag(sync=True)
-
+    
+    _esm= Path(__file__).parent / "BuckarooInfiniteWidget.tsx"
     #    @exception_protect('payloadArgsHandler')    
-    @observe('payloadArgs')
-    def _payloadArgsHandler(self, change):
-        start, end = self.payloadArgs['start'], self.payloadArgs['end']
-        print(self.payloadArgs)
-        if self.payloadArgs.get('sort'):
-            sort_dir = self.payloadArgs.get('sort_direction')
+    @observe('payload_args')
+    def _payload_argsHandler(self, change):
+        start, end = self.payload_args['start'], self.payload_args['end']
+        print(self.payload_args)
+        sort = self.payload_args.get('sort')
+        if sort:
+            sort_dir = self.payload_args.get('sort_direction')
             ascending = sort_dir == 'asc'
-            slice_df = pd_to_obj(self.df.sort_values(by=[self.payloadArgs.get('sort')], ascending=ascending)[start:end])
+            slice_df = pd_to_obj(self.df.sort_values(by=[sort], ascending=ascending)[start:end])
         else:
             slice_df = pd_to_obj(self.df[start:end])
-        self.payloadResponse = {'key':self.payloadArgs, 'data':slice_df}
+        self.payload_response = {'key':self.payload_args, 'data':slice_df}
 
 
 
@@ -371,12 +327,8 @@ class BuckarooInfiniteWidget(BuckarooWidget):
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
-
-    #### DOMWidget Boilerplate
-    _model_name = Unicode('BuckarooInfiniteWidgetModel').tag(sync=True)
-    _view_name =  Unicode('BuckarooInfiniteWidgetView').tag(sync=True)
-    #END DOMWidget Boilerplate
-
+    _esm= Path(__file__).parent / "BuckarooInfiniteWidget.tsx"
+    
     sampling_klass = InfinitePdSampling
     #final processing block
     @observe('widget_args_tuple')
@@ -439,10 +391,11 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
         print(self.payload_args)
         try:
-            if self.payload_args.get('sort'):
+            sort = self.payload_args.get('sort')
+            if sort:
                 sort_dir = self.payload_args.get('sort_direction')
                 ascending = sort_dir == 'asc'
-                sorted_df = processed_df.sort_values(by=[self.payload_args.get('sort')], ascending=ascending)
+                sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
                 slice_df = pd_to_obj(sorted_df[start:end])
                 self.payload_response = {'key':self.payload_args, 'data':slice_df, 'length':len(sorted_df)}
             else:
