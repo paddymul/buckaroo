@@ -5,7 +5,7 @@ npm run build
 cd ../bundled-staging
 npm install
 npm run bundle
-
+time hatch build
 
 # set -e
 # #rm -rf node_modules 
