@@ -81,9 +81,10 @@ Homepage = "https://github.com/paddymul/buckaroo"
 include = [
    "buckaroo/**/*.py",
    "buckaroo/**/*.tsx",
-   "packages/buckaroo-js-core/dist/style.css",
    "packages/bundled-staging/buckaroo-js-core.rollup.bundle.js"
 ]
+[tool.hatch.build.targets.wheel.force-include]
+   "packages/buckaroo-js-core/dist/style.css" = "packages/buckaroo-js-core/dist/style.css"
 
 # [tool.hatch.build]
 # only-packages = true
