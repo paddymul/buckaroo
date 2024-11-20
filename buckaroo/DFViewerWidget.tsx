@@ -7,7 +7,7 @@ export default function (
         df_data, df_viewer_config,
         summary_stats_data, style_block
     }) {
-    extraComponents.default.injectBuckarooCSS(style_block)
+    extraComponents.default.widgetUtils.injectBuckarooCSS(style_block)
     console.log("df_data", df_data);
 
     return (

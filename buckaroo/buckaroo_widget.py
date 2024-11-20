@@ -231,14 +231,14 @@ class BuckarooWidget(BuckarooWidgetBase, ipyreact.ValueWidget):
     _esm= Path(__file__).parent / "BuckarooWidget.tsx"
 
 
-class RawDFViewerWidget(BuckarooWidgetBase):
+class RawDFViewerWidget(BuckarooWidgetBase, ipyreact.ValueWidget):
     """
 
     A very raw way of instaniating just the DFViewer, not meant for use by enduers
 
     instead use DFViewer, or PolarsDFViewer which have better convience methods
     """
-    _esm= Path(__file__).parent / "DFViewer.tsx"
+    _esm= Path(__file__).parent / "DFViewerWidget.tsx"
     style_block = traitlets.Unicode(
         (Path(__file__).parent.parent / "packages/buckaroo-js-core/dist/style.css").read_text()).tag(sync=True)
 
