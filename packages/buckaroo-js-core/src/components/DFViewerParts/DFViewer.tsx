@@ -1,4 +1,4 @@
-import { useRef, CSSProperties } from "react";
+import { CSSProperties } from "react";
 import _ from "lodash";
 import { ComponentConfig, DFData, DFViewerConfig } from "./DFWhole";
 
@@ -106,7 +106,8 @@ export function DFViewer({
         cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
     };
 
-    const gridRef = useRef<AgGridReact<unknown>>(null);
+    console.log("108 here");
+    //const gridRef = useRef<AgGridReact<unknown>>(null);
     const pinned_rows = df_viewer_config.pinned_rows;
     const topRowData = summary_stats_data
         ? extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : [])
@@ -127,7 +128,7 @@ export function DFViewer({
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
             <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
-                    ref={gridRef}
+
                     domLayout={hs.domLayout}
                     defaultColDef={defaultColDef}
                     gridOptions={gridOptions}

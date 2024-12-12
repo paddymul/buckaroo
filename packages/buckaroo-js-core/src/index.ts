@@ -23,9 +23,9 @@ import { StatusBar } from "./components/StatusBar";
 import '@ag-grid-community/styles/ag-grid.css'; 
 import '@ag-grid-community/styles/ag-theme-quartz.css';
 import './style/dcf-npm.css'
-import * as versionInfo from "./version";
 import * as widgetUtils from "./widgetUtils";
-
+import { SampleButton, HeaderNoArgs, Counter } from "./SampleComponent";
+import _ from "lodash";
 export default {
     
     ColumnsEditor,
@@ -41,6 +41,8 @@ export default {
     utils,
     InfiniteWidgetDCFCell: BuckarooInfiniteWidget,
     InfiniteEx,
-    versionInfo,
-    widgetUtils
+    widgetUtils,
+    SampleButton, HeaderNoArgs, Counter 
 };
+
+
