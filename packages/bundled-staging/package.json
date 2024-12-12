@@ -1,26 +1,19 @@
 {
-	"scripts": {
-		"dev": "npm run build -- --sourcemap=inline --watch",
-		"build": "esbuild js/widget.tsx --minify --format=esm --bundle --outdir=src/anyw2_react/static",
-		"typecheck": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@anywidget/react": "^0.0.8",
-	    "some-react-tsxlib": "./packages/some-react-tsxlib",
-		"react": "^18.3.1",
-	    "react-dom": "^18.3.1",
-    "@ag-grid-community/client-side-row-model": "^32.3.2",
-    "@ag-grid-community/core": "^32.3.2",
-    "@ag-grid-community/infinite-row-model": "^32.3.2",
-    "@ag-grid-community/react": "^32.3.2",
-    "@ag-grid-community/styles": "^32.3.2",
-    "lodash": "^4.17.21",
-    "recharts": "^2.13.1"
-	},
-	"devDependencies": {
-		"@types/react": "^18.3.12",
-		"@types/react-dom": "^18.3.1",
-		"typescript": "^5.7.2",
-		"esbuild": "^0.24.0"
-	}
+    "scripts": {
+	"dev": "npm run build -- --sourcemap=inline --watch",
+	"build": "esbuild js/widget.tsx --minify --format=esm --bundle --outdir=./",
+	"typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+	"@anywidget/react": "^0.0.8",
+	"buckaroo-js-core": "../buckaroo-js-core",
+	"react": "^18.3.1",
+	"react-dom": "^18.3.1"
+    },
+    "devDependencies": {
+	"@types/react": "^18.3.12",
+	"@types/react-dom": "^18.3.1",
+	"typescript": "^5.7.2",
+	"esbuild": "^0.24.0"
+    }
 }

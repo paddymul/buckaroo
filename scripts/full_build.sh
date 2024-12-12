@@ -4,7 +4,8 @@ npm install
 npm run build
 cd ../bundled-staging
 npm install
-npm run bundle
+npm run build
+cd ../../
 time hatch build
 
 # set -e
