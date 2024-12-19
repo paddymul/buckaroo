@@ -61,8 +61,8 @@ class BuckarooWidgetBase(CustomizableDataflow):
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
-    _esm = Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.js"
-    _css = Path(__file__).parent.parent / "src" / "buckaroo_anywidget" / "static" / "widget.css"
+    _esm = Path(__file__).parent / "static" / "widget.js"
+    _css = Path(__file__).parent / "static" / "widget.css"
 
 
     sampling_klass = PdSampling
