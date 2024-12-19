@@ -1,21 +1,12 @@
 #!/bin/bash
+ set -e
+rm -rf node_modules buckaroo/widget.js
+rm -rf  packages/buckaroo-js-core/dist packages/buckaroo-js-core/node_modules
 cd packages/buckaroo-js-core
-npm install
-npm run build
-cd ../bundled-staging
-npm install
-npm run build
-cd ../../
+npm install && npm run build
+cd ../..
+rm -rf packages/buckaroo-js-core/node_modules
+npm install && npm run build
+rm -rf dist
 time hatch build
-
-# set -e
-# #rm -rf node_modules 
-# rm -rf dist
-# pip install build polars
-# python -m build
-
-# twine check dist/*
-#python -m twine upload --repository testpypi dist/*
-#rm -f dist/index.js dist/index.js.LICENSE.txt
 #python -m twine upload --repository pypi dist/*.whl
-#npm publish
