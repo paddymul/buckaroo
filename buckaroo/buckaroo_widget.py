@@ -13,7 +13,7 @@ import json
 import pandas as pd
 import traitlets
 from traitlets import List, Dict, observe
-import ipyreact
+import anywidget
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from .customizations.histogram import (Histogram)
@@ -54,7 +54,7 @@ def sym(name):
 
 symDf = SymbolDf = {'symbol': 'df'}
 
-class BuckarooWidgetBase(CustomizableDataflow):
+class BuckarooWidgetBase(CustomizableDataflow, anywidget.AnyWidget):
     """Extends CustomizableDataFlow and DOMWIdget
 
     Replaces generic options in CustomizableDataFlow with Pandas implementations
@@ -218,29 +218,24 @@ export default function  WidgetDCFCellExample() {{
         temp_buckaroo_state = self.buckaroo_state.copy()
         temp_buckaroo_state['post_processing'] = proc_func_name
         self.buckaroo_state = temp_buckaroo_state
-    style_block = traitlets.Unicode(
-        (Path(__file__).parent.parent / "packages/buckaroo-js-core/dist/style.css").read_text()).tag(sync=True)
 
 
-buckaroo_bundle_path =     Path(__file__).parent.parent / "packages/bundled-staging/buckaroo-js-core.rollup.bundle.js"
-#print("buckaroo_bundle_path", buckaroo_bundle_path)
-ipyreact.define_module("buckaroo-js-core", buckaroo_bundle_path)
 
 
-class BuckarooWidget(BuckarooWidgetBase, ipyreact.ValueWidget):
-    _esm= Path(__file__).parent / "BuckarooWidget.tsx"
+class BuckarooWidget(BuckarooWidgetBase):
+    _esm = Path(__file__).parent / "static" / "widget.js"
+    #_esm= Path(__file__).parent / "BuckarooWidget.tsx"
 
 
-class RawDFViewerWidget(BuckarooWidgetBase, ipyreact.ValueWidget):
+class RawDFViewerWidget(BuckarooWidgetBase):
     """
 
     A very raw way of instaniating just the DFViewer, not meant for use by enduers
 
     instead use DFViewer, or PolarsDFViewer which have better convience methods
     """
-    _esm= Path(__file__).parent / "DFViewerWidget.tsx"
-    style_block = traitlets.Unicode(
-        (Path(__file__).parent.parent / "packages/buckaroo-js-core/dist/style.css").read_text()).tag(sync=True)
+    _esm = Path(__file__).parent / "static" / "widget.js"
+    #_esm= Path(__file__).parent / "DFViewerWidget.tsx"
 
     df_data = List([
         {'a':  5  , 'b':20, 'c': 'Paddy'},
