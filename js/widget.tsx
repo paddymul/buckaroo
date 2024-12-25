@@ -167,6 +167,35 @@ const renderDFV = createRender(() => {
  	);
  });
 
+const renderBuckarooWidget = createRender(() => {
+    console.log("renderBuckarooWidget")
+    const [df_data_dict, _set_df_data_dict] = useModelState('df_data_dict');
+    const [df_display_args, _set_dda] = useModelState('df_display_args')
+    const [df_meta, _set_df_meta] = useModelState('df_meta');
+
+    const [operations, on_operations] = useModelState('operations');
+    const [operation_results, _set_opr] = useModelState('operation_results');
+    const [commandConfig, _set_cc] = useModelState('commandConfig');
+    const [buckaroo_state, on_buckaroo_state] = useModelState('buckaroo_state');
+    const [buckaroo_options, _set_boptions] = useModelState('buckaroo_options');
+	return (
+	    <div className="buckaroo_anywidget">
+ 		<srt.WidgetDCFCell
+	    df_data_dict={df_dict}
+	    df_display_args={df_display_args}
+            df_meta={df_meta}
+	    operations={operations}
+	    on_operations={on_operations}
+	    operation_results={operation_results}
+	    commandConfig={commandConfig}
+	    buckaroo_state={buckaroo_state}
+	    on_buckaroo_state={on_buckaroo_state}
+	    buckaroo_options={buckaroo_options}
+					/>
+ 		</div>
+ 	);
+ });
+
 const renderBaked = createRender(() => {
     console.log("renderBaked")
 	return (
@@ -188,6 +217,9 @@ const render = ({ el, model, experimental }) => {
     console.log("render_func_name", render_func_name);
     if(render_func_name === "DFViewer") {
 	renderDFV({el, model, experimental})
+    } 
+    else if(render_func_name === "BuckarooWidget") {
+	renderBuckarooWidget({el, model, experimental})
     } else {
 	renderBaked({el, model, experimental});
     }

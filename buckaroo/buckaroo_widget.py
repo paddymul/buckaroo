@@ -224,8 +224,7 @@ export default function  WidgetDCFCellExample() {{
 
 
 class BuckarooWidget(BuckarooWidgetBase):
-    _esm = Path(__file__).parent / "static" / "widget.js"
-    #_esm= Path(__file__).parent / "BuckarooWidget.tsx"
+    render_func_name = Unicode("BuckarooWidget").tag(sync=True)
 
 
 class RawDFViewerWidget(BuckarooWidgetBase):
@@ -235,8 +234,6 @@ class RawDFViewerWidget(BuckarooWidgetBase):
 
     instead use DFViewer, or PolarsDFViewer which have better convience methods
     """
-    _esm = Path(__file__).parent / "static" / "widget.js"
-    #_esm= Path(__file__).parent / "DFViewerWidget.tsx"
     render_func_name = Unicode("DFViewer").tag(sync=True)
     df_data = List([
         {'a':  5  , 'b':20, 'c': 'Paddy'},
