@@ -12,7 +12,7 @@ import traceback
 import json
 import pandas as pd
 import traitlets
-from traitlets import List, Dict, observe
+from traitlets import List, Dict, observe, Unicode
 import anywidget
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
@@ -70,6 +70,7 @@ class BuckarooWidgetBase(CustomizableDataflow, anywidget.AnyWidget):
     DFStatsClass = DfStats # Pandas Specific
     autoclean_conf = tuple([CleaningConf, NoCleaningConf]) #override the base CustomizableDataFlow conf
 
+    render_func_name = Unicode("baked").tag(sync=True)
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
     ).tag(sync=True)
@@ -236,7 +237,7 @@ class RawDFViewerWidget(BuckarooWidgetBase):
     """
     _esm = Path(__file__).parent / "static" / "widget.js"
     #_esm= Path(__file__).parent / "DFViewerWidget.tsx"
-
+    render_func_name = Unicode("DFViewer").tag(sync=True)
     df_data = List([
         {'a':  5  , 'b':20, 'c': 'Paddy'},
         {'a': 58.2, 'b': 9, 'c': 'Margaret'}]).tag(sync=True)

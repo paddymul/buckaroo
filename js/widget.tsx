@@ -127,44 +127,6 @@ const ex_df_data = [
 ]
 
 
-const renderDFV = createRender(() => {
-
-    const [df_data, _set_df_meta] = useModelState('df_data');
-    const [df_viewer_config, _set_dfvc] = useModelState('df_viewer_config');
-    const [summary_stats_data, _set_ssd] = useModelState('summary_stats_data');
-    console.log("df_data", df_data);
-    console.log("df_viewer_config", df_viewer_config);
-    console.log("summary_stats_data", summary_stats_data);
-    /*
-      
-	                df_data={df_data}
-					df_viewer_config={df_viewer_config}
-					summary_stats_data={summary_stats_data}
-    */
-
-	return (
-		<div className="buckaroo_anywidget">
- 		    <srt.DFViewer
-			df_data={df_data}
-			df_viewer_config={df_viewer_config}
-            summary_stats_data={summary_stats_data}
-					/>
- 		</div>
- 	);
- });
-
-const renderBaked = createRender(() => {
-	return (
-		<div className="buckaroo_anywidget">
- 		    <srt.DFViewer
-			df_data={realSummaryTableData}
-			df_viewer_config={realSummaryConfig}
-                        summary_stats_data={[]}
-		/>
- 		</div>
- 	);
-});
-
 /*
 export function createRender(Widget) {
 	return ({ el, model, experimental }) => {
@@ -185,9 +147,50 @@ export function createRender(Widget) {
 }
 
 */
+
+const renderDFV = createRender(() => {
+    console.log("renderDFV")
+    const [df_data, _set_df_meta] = useModelState('df_data');
+    const [df_viewer_config, _set_dfvc] = useModelState('df_viewer_config');
+    const [summary_stats_data, _set_ssd] = useModelState('summary_stats_data');
+    console.log("df_data", df_data);
+    console.log("df_viewer_config", df_viewer_config);
+    console.log("summary_stats_data", summary_stats_data);
+	return (
+		<div className="buckaroo_anywidget">
+ 		    <srt.DFViewer
+			df_data={df_data}
+			df_viewer_config={df_viewer_config}
+            summary_stats_data={summary_stats_data}
+					/>
+ 		</div>
+ 	);
+ });
+
+const renderBaked = createRender(() => {
+    console.log("renderBaked")
+	return (
+		<div className="buckaroo_anywidget">
+ 		    <srt.DFViewer
+			df_data={realSummaryTableData}
+			df_viewer_config={realSummaryConfig}
+                        summary_stats_data={[]}
+		/>
+ 		</div>
+ 	);
+});
 const render = ({ el, model, experimental }) => {
     console.log("model", model);
-    renderBaked({el, model, experimental});
+    console.log("model.widget_manager", model.widget_manager);
+    console.log("model.widget_manager.attributes", model.widget_manager.attributes);
+
+    const render_func_name = model.get("render_func_name")
+    console.log("render_func_name", render_func_name);
+    if(render_func_name === "DFViewer") {
+	renderDFV({el, model, experimental})
+    } else {
+	renderBaked({el, model, experimental});
+    }
 }
 
 export default { render };
