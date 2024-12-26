@@ -181,7 +181,7 @@ const renderBuckarooWidget = createRender(() => {
 	return (
 	    <div className="buckaroo_anywidget">
  		<srt.WidgetDCFCell
-	    df_data_dict={df_dict}
+	    df_data_dict={df_data_dict}
 	    df_display_args={df_display_args}
             df_meta={df_meta}
 	    operations={operations}
