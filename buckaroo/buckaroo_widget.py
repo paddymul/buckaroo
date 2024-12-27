@@ -268,43 +268,6 @@ interface PayloadResponse {
 }
 """
 
-class InfiniteViewerWidget(BuckarooWidget):
-    """
-
-    A very raw way of instaniating just the DFViewer, not meant for use by enduers
-
-    instead use DFViewer, or PolarsDFViewer which have better convience methods
-    """
-
-
-
-
-    def __init__(self, df):
-        super().__init__()
-        print("InfiniteViewerWidget 231")
-        self.df = df
-
-    payload_args = Dict({'sourceName':'[]', 'start':0, 'end':50}).tag(sync=True)
-    payload_response = Dict({'key': {'sourceName':'[]', 'start':0, 'end':49},
-                            'data': []}
-                            ).tag(sync=True)
-    
-
-
-    @observe('payload_args')
-    def _payload_argsHandler(self, change):
-        start, end = self.payload_args['start'], self.payload_args['end']
-        print(self.payload_args)
-        sort = self.payload_args.get('sort')
-        if sort:
-            sort_dir = self.payload_args.get('sort_direction')
-            ascending = sort_dir == 'asc'
-            slice_df = pd_to_obj(self.df.sort_values(by=[sort], ascending=ascending)[start:end])
-        else:
-            slice_df = pd_to_obj(self.df[start:end])
-        self.payload_response = {'key':self.payload_args, 'data':slice_df}
-
-
 
 class InfinitePdSampling(PdSampling):
     serialize_limit = -1 #this turns off rows shown in the UI

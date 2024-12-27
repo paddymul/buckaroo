@@ -3,20 +3,7 @@ import { createRender, useModelState } from "@anywidget/react";
 import srt from "buckaroo-js-core";
 import "./widget.css";
 import "../packages/buckaroo-js-core/dist/style.css"
-const unused = () => {
-    	const [value, setValue] = useModelState<number>("value");
-	return (
-		<div className="anyw2_react">
-			<button onClick={() => setValue(value + 1)}>
-				count is {value}
-			</button>
-		</div>
-	);
-}
-const render2 = createRender(() => {
-    console.log("old render 17");
-    return <srt.Counter />
-});
+
 
 const realSummaryConfig = {
 	pinned_rows: [
@@ -126,27 +113,20 @@ const ex_df_data = [
   }
 ]
 
+const renderBaked = createRender(() => {
+    // used to test if the widget is properly rendering in an environment with baked data
+    console.log("renderBaked")
+	return (
+		<div className="buckaroo_anywidget">
+ 		    <srt.DFViewer
+			df_data={realSummaryTableData}
+			df_viewer_config={realSummaryConfig}
+                        summary_stats_data={[]}
+		/>
+ 		</div>
+ 	);
+});
 
-/*
-export function createRender(Widget) {
-	return ({ el, model, experimental }) => {
-		let root = ReactDOM.createRoot(el);
-		root.render(
-			React.createElement(
-				React.StrictMode,
-				null,
-				React.createElement(
-					RenderContext.Provider,
-					{ value: { model, experimental } },
-					React.createElement(Widget),
-				),
-			),
-		);
-		return () => root.unmount();
-	};
-}
-
-*/
 
 const renderDFV = createRender(() => {
     console.log("renderDFV")
@@ -229,18 +209,6 @@ const renderBuckarooInfiniteWidget = createRender(() => {
  	);
  });
 
-const renderBaked = createRender(() => {
-    console.log("renderBaked")
-	return (
-		<div className="buckaroo_anywidget">
- 		    <srt.DFViewer
-			df_data={realSummaryTableData}
-			df_viewer_config={realSummaryConfig}
-                        summary_stats_data={[]}
-		/>
- 		</div>
- 	);
-});
 const render = ({ el, model, experimental }) => {
     console.log("model", model);
     console.log("model.widget_manager", model.widget_manager);
