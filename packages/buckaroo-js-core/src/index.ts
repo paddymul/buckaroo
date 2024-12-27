@@ -39,7 +39,7 @@ export default {
     HistogramCell,
     CommandUtils,
     utils,
-    InfiniteWidgetDCFCell: BuckarooInfiniteWidget,
+    BuckarooInfiniteWidget,
     InfiniteEx,
     widgetUtils,
     SampleButton, HeaderNoArgs, Counter 

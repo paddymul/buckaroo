@@ -289,8 +289,8 @@ class InfiniteViewerWidget(BuckarooWidget):
                             'data': []}
                             ).tag(sync=True)
     
-    _esm= Path(__file__).parent / "BuckarooInfiniteWidget.tsx"
-    #    @exception_protect('payloadArgsHandler')    
+
+
     @observe('payload_args')
     def _payload_argsHandler(self, change):
         start, end = self.payload_args['start'], self.payload_args['end']
@@ -316,8 +316,7 @@ class BuckarooInfiniteWidget(BuckarooWidget):
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
-    _esm= Path(__file__).parent / "BuckarooInfiniteWidget.tsx"
-    
+    render_func_name = Unicode("BuckarooInfiniteWidget").tag(sync=True)    
     sampling_klass = InfinitePdSampling
     #final processing block
     @observe('widget_args_tuple')

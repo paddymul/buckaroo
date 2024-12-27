@@ -195,6 +195,39 @@ const renderBuckarooWidget = createRender(() => {
  		</div>
  	);
  });
+const renderBuckarooInfiniteWidget = createRender(() => {
+    console.log("renderInfiniteBuckarooWidget")
+    const [payload_args, on_payload_args] = useModelState('payload_args');
+    const [payload_response, _set_payload_response] = useModelState('payload_response');
+    const [df_data_dict, _set_df_data_dict] = useModelState('df_data_dict');
+    const [df_display_args, _set_dda] = useModelState('df_display_args')
+    const [df_meta, _set_df_meta] = useModelState('df_meta');
+
+    const [operations, on_operations] = useModelState('operations');
+    const [operation_results, _set_opr] = useModelState('operation_results');
+    const [commandConfig, _set_cc] = useModelState('commandConfig');
+    const [buckaroo_state, on_buckaroo_state] = useModelState('buckaroo_state');
+    const [buckaroo_options, _set_boptions] = useModelState('buckaroo_options');
+	return (
+	    <div className="buckaroo_anywidget">
+ 		<srt.BuckarooInfiniteWidget
+	    payload_args={payload_args}
+	    on_payload_args={on_payload_args}
+	    payload_response={payload_response}
+	    df_data_dict={df_data_dict}
+	    df_display_args={df_display_args}
+            df_meta={df_meta}
+	    operations={operations}
+	    on_operations={on_operations}
+	    operation_results={operation_results}
+	    commandConfig={commandConfig}
+	    buckaroo_state={buckaroo_state}
+	    on_buckaroo_state={on_buckaroo_state}
+	    buckaroo_options={buckaroo_options}
+					/>
+ 		</div>
+ 	);
+ });
 
 const renderBaked = createRender(() => {
     console.log("renderBaked")
@@ -220,6 +253,9 @@ const render = ({ el, model, experimental }) => {
     } 
     else if(render_func_name === "BuckarooWidget") {
 	renderBuckarooWidget({el, model, experimental})
+    } 
+    else if(render_func_name === "BuckarooInfiniteWidget") {
+	renderBuckarooInfiniteWidget({el, model, experimental})
     } else {
 	renderBaked({el, model, experimental});
     }
