@@ -54,6 +54,8 @@ dev-dependencies = [
     "pydantic>=2.5.2",
     "pyarrow",
     "polars[timezone]",
+    "hypothesis>=6.88.1",
+    "nbval>=0.9"
 ]
 
 
