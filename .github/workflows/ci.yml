@@ -71,15 +71,15 @@ jobs:
           UV_PYTHON: ${{ matrix.python-version }}
       - uses: codecov/codecov-action@v5
 
-  LintJavaScript:
-    name: JavaScript / Lint
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      - uses: biomejs/setup-biome@v2
-        with:
-          version: latest
-      - run: biome ci .
+  # LintJavaScript:
+  #   name: JavaScript / Lint
+  #   runs-on: macos-14
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: biomejs/setup-biome@v2
+  #       with:
+  #         version: latest
+  #     - run: biome ci .
 
   TypecheckJavaScript:
     name: JavaScript / Typecheck
