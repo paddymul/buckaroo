@@ -10,7 +10,7 @@ ROOT = pathlib.Path(__file__).parent / ".."
 
 
 class BuckarooBuildHook(BuildHookInterface):
-    """Hatchling plugin to build the quak frontend."""
+    """Hatchling plugin to build the buckaroo frontend."""
 
     PLUGIN_NAME = "buckaroo_hatch"
 
@@ -22,9 +22,9 @@ class BuckarooBuildHook(BuildHookInterface):
         #     return
 
 
-        bjs_core_root = ROOT / "packages/buckaroo-js-core"
-        if not (bjs_core_root / "dist/index.esm.js").exists():
-            subprocess.check_call(["npm", "install"], cwd=bjs_core_root)
-            subprocess.check_call(["npm", "run", "build"], cwd=bjs_core_root)
+        # bjs_core_root = ROOT / "packages/buckaroo-js-core"
+        # if not (bjs_core_root / "dist/index.esm.js").exists():
+        #     subprocess.check_call(["npm", "install"], cwd=bjs_core_root)
+        #     subprocess.check_call(["npm", "run", "build"], cwd=bjs_core_root)
         subprocess.check_call(["npm", "install"], cwd=ROOT)
         subprocess.check_call(["npm", "run", "build"], cwd=ROOT)
