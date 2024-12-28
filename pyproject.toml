@@ -88,21 +88,20 @@ Homepage = "https://github.com/paddymul/buckaroo"
 
 [tool.hatch.build]
 only-packages = true
+artifacts = ["src/buckaroo/static/widget.js", "scripts/hatch_build.py"]
 
 [tool.hatch.envs.default]
 installer = "uv"
 
-[tool.hatch.build.targets.wheel]
-include = [
-   "buckaroo/**/*.py",
-   "buckaroo/**/*.tsx",
-   "buckaroo/static/*",
-]
-[tool.hatch.build.targets.wheel.force-include]
-   "packages/buckaroo-js-core/dist/style.css" = "packages/buckaroo-js-core/dist/style.css"
+# temporarily commenting out to simplify build closer to quak
+# [tool.hatch.build.targets.wheel]
+# include = [
+#    "buckaroo/**/*.py",
+#    "buckaroo/static/*",
+# ]
+# [tool.hatch.build.targets.wheel.force-include]
+#    "packages/buckaroo-js-core/dist/style.css" = "packages/buckaroo-js-core/dist/style.css"
 
-# [tool.hatch.build]
-# only-packages = true
 
 
 [tool.isort]
