@@ -1,6 +1,6 @@
-"""A Hatchling plugin to build the quak frontend."""
+"""A Hatchling plugin to build the buckaroo frontend."""
+# based on quak
 
-import os
 import pathlib
 import subprocess
 
