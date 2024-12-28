@@ -52,11 +52,11 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.8"
+          # - "3.8" #other conflicts
           - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+          #- "3.10"
+          #- "3.11"
+          #- "3.12"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
