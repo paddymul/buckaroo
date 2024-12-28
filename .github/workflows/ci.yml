@@ -1,4 +1,5 @@
 name: CI
+# copied from anywidget, adpated to buckaroo
 
 on:
   push:
@@ -29,18 +30,20 @@ jobs:
           uv run ruff check
           uv run ruff format
 
-  TypecheckPython:
-    name: Python / Typecheck
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      # Disable jupyter-builder build hook because not needed for typechecking, and requires pnpm
-      - run: |
-          sed -i '' 's/\[tool.hatch.build.hooks.\(.*\)\]/\[_tool.hatch.build.hooks.\1\]/' pyproject.toml
-      - uses: astral-sh/setup-uv@v4
-        with:
-          version: "0.5.x"
-      - run: uv run mypy
+  # buckaroo isn't currently setup for mypy
+
+  # TypecheckPython:
+  #   name: Python / Typecheck
+  #   runs-on: macos-14
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # Disable jupyter-builder build hook because not needed for typechecking, and requires pnpm
+  #     - run: |
+  #         sed -i '' 's/\[tool.hatch.build.hooks.\(.*\)\]/\[_tool.hatch.build.hooks.\1\]/' pyproject.toml
+  #     - uses: astral-sh/setup-uv@v4
+  #       with:
+  #         version: "0.5.x"
+  #     - run: uv run mypy
 
   TestPython:
     name: Python / Test
