@@ -55,7 +55,9 @@ dev-dependencies = [
     "pyarrow",
     "polars[timezone]",
     "hypothesis>=6.88.1",
-    "nbval>=0.9"
+    "nbval>=0.9",
+    "pytest-playwright",
+    "solara"
 ]
 
 
