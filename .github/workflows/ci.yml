@@ -71,8 +71,8 @@ jobs:
           UV_PYTHON: ${{ matrix.python-version }}
       - uses: codecov/codecov-action@v5
   UITestPython:
-    needs: [TestPython]
-    name: Python / Test
+    #needs: [TestPython]
+    name: Playwright UI Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
