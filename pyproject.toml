@@ -91,6 +91,10 @@ Homepage = "https://github.com/paddymul/buckaroo"
 only-packages = true
 artifacts = ["src/buckaroo/static/widget.js", "src/buckaroo/static/widget.css", "scripts/hatch_build.py"]
 
+[tool.hatch.build.hooks.custom]
+path = "scripts/hatch_build.py"
+
+
 [tool.hatch.envs.default]
 installer = "uv"
 
