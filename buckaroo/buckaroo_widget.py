@@ -11,7 +11,6 @@ TODO: Add module docstring
 import traceback
 import json
 import pandas as pd
-import traitlets
 from traitlets import List, Dict, observe, Unicode
 import anywidget
 

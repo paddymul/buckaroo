@@ -59,7 +59,7 @@ test = [
     "anywidget",
     "nbstripout"
 ]
-polars = ["polars>=1.0,<1.6",
+polars = ["polars>=1.0,<1.10",
        "polars[timezone]"
 ]
 jupyterlab = ["jupyterlab>=3.6.0"]
