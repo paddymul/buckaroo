@@ -28,7 +28,6 @@ jobs:
         with:
           version: "0.5.x"
       - run: |
-          uv build
           uv run ruff check
           # uv run ruff format  # changes too many files
 
