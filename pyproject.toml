@@ -32,7 +32,6 @@ classifiers = [
 ]
 dependencies = [
     "anywidget >= 0.9.0",
-    "ipyreact",
     "graphlib_backport>=1.0.0",
     "packaging>=18"
 ]
@@ -41,8 +40,19 @@ version = "0.8.0"
 [project.license]
 file = "LICENSE.txt"
 
+
+
+[tool.uv]
+dev-dependencies = [
+    "anywidget[dev]>=0.9.0",
+    "jupyterlab>=4.2.5",
+    "ruff>=0.6.2",
+    "polars>=1.5.0",
+]
+
+
 [project.optional-dependencies]
-dev = ["watchfiles", "jupyterlab"]
+dev = ["watchfiles", "jupyterlab",     "anywidget[dev]>=0.9.0",]
 
 test = [
     "nbval>=0.9",
@@ -76,6 +86,11 @@ docs = [
 [project.urls]
 Homepage = "https://github.com/paddymul/buckaroo"
 
+[tool.hatch.build]
+only-packages = true
+
+[tool.hatch.envs.default]
+installer = "uv"
 
 [tool.hatch.build.targets.wheel]
 include = [
