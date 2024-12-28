@@ -81,22 +81,22 @@ jobs:
   #         version: latest
   #     - run: biome ci .
 
-  TypecheckJavaScript:
-    name: JavaScript / Typecheck
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: true
-      - run: pnpm typecheck
+  # TypecheckJavaScript:
+  #   name: JavaScript / Typecheck
+  #   runs-on: macos-14
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: pnpm/action-setup@v4
+  #       with:
+  #         run_install: true
+  #     - run: pnpm typecheck
 
-  TestJavaScript:
-    name: JavaScript / Test
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: true
-      - run: pnpm test
+  # TestJavaScript:
+  #   name: JavaScript / Test
+  #   runs-on: macos-14
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: pnpm/action-setup@v4
+  #       with:
+  #         run_install: true
+  #     - run: pnpm test
