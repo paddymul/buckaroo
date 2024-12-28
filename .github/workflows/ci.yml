@@ -66,7 +66,7 @@ jobs:
         with:
           version: "0.5.x"
       - name: Run tests
-        run: uv run --with pytest-cov pytest ./tests --color=yes --cov anywidget --cov-report xml
+        run: uv run --with pytest-cov pytest ./tests/unit --color=yes --cov anywidget --cov-report xml
         env:
           UV_PYTHON: ${{ matrix.python-version }}
       - uses: codecov/codecov-action@v5
