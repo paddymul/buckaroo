@@ -28,4 +28,3 @@ class BuckarooBuildHook(BuildHookInterface):
             subprocess.check_call(["npm", "run", "build"], cwd=bjs_core_root)
         subprocess.check_call(["npm", "install"], cwd=ROOT)
         subprocess.check_call(["npm", "run", "build"], cwd=ROOT)
-        1/0
