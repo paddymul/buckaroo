@@ -58,7 +58,7 @@ dev-dependencies = [
     "nbval>=0.9",
     "pytest-playwright",
     "solara",
-    "ipywidgets_runner"
+    "solara[pytest]",
 ]
 
 
