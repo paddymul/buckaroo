@@ -152,7 +152,8 @@ const renderBuckarooWidget = createRender(() => {
 
 	const [operations, on_operations] = useModelState("operations");
 	const [operation_results, _set_opr] = useModelState("operation_results");
-	const [commandConfig, _set_cc] = useModelState("commandConfig");
+	const [command_config, _set_cc] = useModelState("command_config");
+
 	const [buckaroo_state, on_buckaroo_state] = useModelState("buckaroo_state");
 	const [buckaroo_options, _set_boptions] = useModelState("buckaroo_options");
 	return (
@@ -164,7 +165,7 @@ const renderBuckarooWidget = createRender(() => {
 				operations={operations}
 				on_operations={on_operations}
 				operation_results={operation_results}
-				commandConfig={commandConfig}
+				command_config={command_config}
 				buckaroo_state={buckaroo_state}
 				on_buckaroo_state={on_buckaroo_state}
 				buckaroo_options={buckaroo_options}
@@ -183,7 +184,7 @@ const renderBuckarooInfiniteWidget = createRender(() => {
 
 	const [operations, on_operations] = useModelState("operations");
 	const [operation_results, _set_opr] = useModelState("operation_results");
-	const [commandConfig, _set_cc] = useModelState("commandConfig");
+	const [command_config, _set_cc] = useModelState("command_config");
 	const [buckaroo_state, on_buckaroo_state] = useModelState("buckaroo_state");
 	const [buckaroo_options, _set_boptions] = useModelState("buckaroo_options");
 	return (
@@ -198,7 +199,7 @@ const renderBuckarooInfiniteWidget = createRender(() => {
 				operations={operations}
 				on_operations={on_operations}
 				operation_results={operation_results}
-				commandConfig={commandConfig}
+				command_config={command_config}
 				buckaroo_state={buckaroo_state}
 				on_buckaroo_state={on_buckaroo_state}
 				buckaroo_options={buckaroo_options}
@@ -210,10 +211,10 @@ const renderBuckarooInfiniteWidget = createRender(() => {
 const render = ({ el, model, experimental }) => {
 	console.log("model", model);
 	console.log("model.widget_manager", model.widget_manager);
-	console.log(
-		"model.widget_manager.attributes",
-		model.widget_manager.attributes,
-	);
+	// console.log(
+	// 	"model.widget_manager.attributes",
+	// 	model.widget_manager.attributes,
+	// );
 
 	const render_func_name = model.get("render_func_name");
 	console.log("render_func_name", render_func_name);
