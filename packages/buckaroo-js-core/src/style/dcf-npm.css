@@ -242,3 +242,9 @@ edit box moves up and is only half visible */
     height: 100%;
 
 }
+
+.marimo .buckaroo_anwidget {
+    width:800px;
+    height:500px;
+    border:7px solid orange;
+}

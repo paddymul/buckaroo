@@ -8,5 +8,6 @@ cd ../..
 rm -rf packages/buckaroo-js-core/node_modules
 npm install && npm run build
 rm -rf dist
-time hatch build
+uv build --wheel
+#time hatch build
 #python -m twine upload --repository pypi dist/*.whl

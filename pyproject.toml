@@ -33,7 +33,8 @@ classifiers = [
 dependencies = [
     "anywidget >= 0.9.0",
     "graphlib_backport>=1.0.0",
-    "packaging>=18"
+    "hatch>=1.14.0",
+    "packaging>=18",
 ]
 version = "0.8.0"
 
@@ -99,7 +100,7 @@ Homepage = "https://github.com/paddymul/buckaroo"
 
 [tool.hatch.build]
 only-packages = true
-artifacts = ["src/buckaroo/static/widget.js", "src/buckaroo/static/widget.css", "scripts/hatch_build.py"]
+artifacts = ["buckaroo/static/widget.js", "buckaroo/static/widget.css", "scripts/hatch_build.py"]
 
 [tool.hatch.build.hooks.custom]
 path = "scripts/hatch_build.py"
