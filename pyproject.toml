@@ -35,6 +35,7 @@ dependencies = [
     "graphlib_backport>=1.0.0",
     "hatch>=1.14.0",
     "packaging>=18",
+    "twine>=6.0.1",
 ]
 version = "0.8.1"
 
