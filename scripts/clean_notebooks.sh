@@ -16,4 +16,6 @@ nbstripout docs/example-notebooks/DFViewer.ipynb \
  docs/example-notebooks/Styling-Gallery-Polars.ipynb \
  docs/example-notebooks/Styling-Gallery-Pandas.ipynb \
  docs/example-notebooks/styling-howto.ipynb \
+ docs/example-notebooks/Lowcode-UI.ipynb \
  docs/example-notebooks/testcases-fast.ipynb
+
