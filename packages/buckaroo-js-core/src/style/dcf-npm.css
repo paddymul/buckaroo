@@ -208,9 +208,13 @@ div.dependent-tabs ul.tabs li.active {
     clear:right;
 }
 
+.df-viewer {
+    width:100%;
+}
 .df-viewer.short-mode .ag-center-cols-viewport {
 /*  min-height: unset !important;  */
     min-height: 50px;
+
 }
 
 .df-viewer.in-iframe.short-mode {
@@ -248,3 +252,4 @@ edit box moves up and is only half visible */
     height:500px;
     border:7px solid orange;
 }
+

@@ -36,7 +36,7 @@ dependencies = [
     "hatch>=1.14.0",
     "packaging>=18",
 ]
-version = "0.8.0"
+version = "0.8.1"
 
 [project.license]
 file = "LICENSE.txt"
