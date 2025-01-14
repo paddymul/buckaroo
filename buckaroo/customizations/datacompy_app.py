@@ -116,6 +116,12 @@ def DatacompyBuckaroo(df1, df2):
             return [match_stats(cmp), {}]
         post_processing_method = "Match Stats"
 
+    # write class that automatically re-runs styling analysis on post_processed_df
+    # that way if post_processed_df has different column names then the default dataframe
+    # the new column names are dipslayed,  tailor made for this situation
+    # ... or these should be different pinned rows
+    # nope pinned rows don't work, because then we'd have to change column names still, or have
+    # a bunch of empty columns
         
     datacompy_post_processing_klasses = [
         DfHeader, ColumnSummary, RowSummary, ColumnMatching, MatchStats]
