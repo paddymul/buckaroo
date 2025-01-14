@@ -132,6 +132,34 @@ def DatacompyBuckaroo(df1, df2):
         analysis_klasses = base_a_klasses
     dcbw = DatacompyBuckarooWidget(pd.DataFrame({}, columns=[0,1]), debug=False)
     return dcbw
-    
+
+
+"""
+dual display
+iterate over columns from df_1 first
+if col in df2 also, note that
+all df2 only columns will be at the end
+
+
+histograms
+have row for df_1 histogram
+have row for df_2 histogram
+
+histogram empty when column not matched
+
+if columns exactly matched, both numeric histograms in green color
+
+if column values exactly matched no reason to show the other dataframe column
+
+if column values differ a couple of options, handled via styling
+compact = highlight differences, as in error handling, show the other value via hover
+both show df_2 column next to df_1, df2 empty except for difference
+
+For now don't do any joining of the df,  assume equal indexes, don't want to deal with that right now
+
+"""
+
+
 dcbw = DatacompyBuckaroo(df_a, df_b)
 dcbw
+
