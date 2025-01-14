@@ -219,7 +219,38 @@ def DatacompyBuckaroo(df1, df2):
 
     return dcbw
 
+from buckaroo.customizations.styling import (DefaultMainStyling)
+class MergingMainStylingAnalysis(DefaultMainStyling):
 
+    @classmethod
+    def style_columns(kls, sd):
+        print("merging main styling")
+        ret_col_config = []
+
+        #this is necessary for polars to add an index column, which is
+        #required so that summary_stats makes sense
+        if 'index' not in sd:
+            ret_col_config.append({'col_name': 'index', 'displayer_args': {'displayer': 'obj'}})
+            
+        for col in sd.keys():
+            col_meta = sd[col]
+            if col_meta.get('merge_rule') == 'hidden':
+                #new addition add to base styling analysis
+                #add unit test
+                continue
+
+            base_style = kls.style_column(col, col_meta)
+            if 'column_config_override' in col_meta:
+                #column_config_override, sent by the instantiation, gets set later
+                base_style.update(col_meta['column_config_override'])
+            ret_col_config.append(base_style)
+            
+        return {
+            'pinned_rows': kls.pinned_rows,
+            'column_config': ret_col_config,
+            'extra_grid_config': kls.extra_grid_config,
+            'component_config': kls.component_config
+        }
 
 
 """
