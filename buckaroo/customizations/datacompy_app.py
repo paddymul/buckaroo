@@ -1,8 +1,63 @@
 import pandas as pd
 import datacompy
+
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 from buckaroo import BuckarooWidget
+from buckaroo.dataflow.dataflow_extras import (
+    merge_sds, exception_protect)
+from traitlets import observe
 
+
+def col_join_dfs(df1, df2, cmp):
+    df1_name = cmp.df1_name
+    df2_name = cmp.df2_name
+
+    col_order = df1.columns.to_list()
+    for col in df2.columns:
+        if col in col_order:
+            continue
+            
+        col_order.append(col)
+    eqs = {}
+    def get_col_stat(col_name):
+        for obj in cmp.column_stats:
+            if obj['column'] == col_name:
+                return obj
+        return None
+            
+    for col in col_order:
+        col_stat = get_col_stat(col)
+        if col_stat:
+            eqs[col] = {'unequality': col_stat['unequal_cnt']}
+        else:
+            if col in df1.columns:
+                eqs[col] = {'unequality': df1_name}
+            else:
+                eqs[col] = {'unequality': df2_name}
+    ret_df_columns = {}
+    column_config_overrides = {}
+
+    for col in col_order:
+        eq_col = eqs[col]['unequality']
+        if eq_col == df1_name:
+            #it's only in df1
+            ret_df_columns[col] = df1[col]
+        elif eq_col == df2_name:
+            #it's only in df2
+            ret_df_columns[col] = df2[col]
+        elif eq_col == 0:
+            #columns are exactly the same
+            ret_df_columns[col] = df1[col]
+        else:
+            ret_df_columns[col] = df1[col]
+            #|df2 is a magic value, not a super fan, but it's also unlikely
+            df2_col_name = col+"|df2"
+            print("col", col, "df2_cols", df2.columns)
+            ret_df_columns[df2_col_name] = df2[col]
+            
+            column_config_overrides[df2_col_name] = {'merge_rule': 'hidden'}
+    ret_df = pd.DataFrame(ret_df_columns)
+    return ret_df, column_config_overrides, eqs
 
 def DatacompyBuckaroo(df1, df2):
     cmp = datacompy.Compare(
@@ -130,8 +185,41 @@ def DatacompyBuckaroo(df1, df2):
     base_a_klasses.extend(datacompy_post_processing_klasses)
     class DatacompyBuckarooWidget(BuckarooWidget):
         analysis_klasses = base_a_klasses
-    dcbw = DatacompyBuckarooWidget(pd.DataFrame({}, columns=[0,1]), debug=False)
+
+
+        #the following should move to 
+        def __init__(self, orig_df, debug=False,
+                     column_config_overrides=None,
+                     pinned_rows=None, extra_grid_config=None,
+                     component_config=None, init_sd=None):
+            if init_sd is None:
+                self.init_sd = {}
+            else:
+                self.init_sd = init_sd
+            super().__init__(
+                orig_df, debug, column_config_overrides, pinned_rows, extra_grid_config, component_config)
+
+        @observe('summary_sd')
+        @exception_protect('merged_sd-protector')
+        def _merged_sd(self, change):
+            #slightly inconsitent that processed_sd gets priority over
+            #summary_sd, given that processed_df is computed first. My
+            #thinking was that processed_sd has greater total knowledge
+            #and should supersede summary_sd.
+            self.merged_sd = merge_sds(
+                self.init_sd, self.cleaned_sd, self.summary_sd, self.processed_sd)
+
+    joined_df, column_config_overrides, init_sd = col_join_dfs(df1, df2, cmp)
+    index_first_sd = merge_sds({'index':{}}, init_sd)
+    dcbw = DatacompyBuckarooWidget(
+        joined_df, column_config_overrides=column_config_overrides, init_sd=index_first_sd,
+        pinned_rows=[
+        {'primary_key_val': 'unequality',     'displayer_args': {'displayer': 'obj' } }]
+    )
+
     return dcbw
+
+
 
 
 """
@@ -159,6 +247,29 @@ For now don't do any joining of the df,  assume equal indexes, don't want to dea
 
 """
 
+class Df1Histogram(ColAnalysis):
+    provides_defaults = dict(
+        df_1_histogram= [[],[]], histogram_args=[], histogram_bins=[])
+
+    requires_summary = ['histogram', 'compare_unequal_cnt', 'source_df']
+
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        if summary_dict['source_df'] == 'both':
+            return {'df_1_histogram': summary_dict['histogram']
+        return {'histogram':categorical_histogram(length, value_counts, nan_per)}
+
+class Df2Histogram(ColAnalysis):
+    provides_defaults = dict(
+        df_2_histogram= [[],[]], histogram_args=[], histogram_bins=[])
+
+    requires_summary = ['histogram', 'compare_equal']
+
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        return {'histogram':categorical_histogram(length, value_counts, nan_per)}
 
 dcbw = DatacompyBuckaroo(df_a, df_b)
 dcbw
