@@ -15,7 +15,7 @@ def DatacompyBuckaroo(df1, df2):
         df_header = pd.DataFrame({        
             "DataFrame": [cmp.df1_name, cmp.df2_name],
             "Columns": [cmp.df1.shape[1], cmp.df2.shape[1]],
-            "Rows": [cmp.df1.shape[0], cmp.df2.shape[0]]})
+            "Rows": [cmp.df1.shape[0], cmp.df2.shape[0]]}) #, columns=[0, 1])
         return df_header.T
     
     def column_summary(cmp):
@@ -84,32 +84,36 @@ def DatacompyBuckaroo(df1, df2):
     class DfHeader(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return get_df_header(cmp)
+            ab = get_df_header(cmp)
+            print("ab", ab)
+            return [ab, {}]
         post_processing_method = "Df Headers"
 
 
     class ColumnSummary(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return column_summary(cmp)
+            col_summary_df = column_summary(cmp)
+            print("col_summary", col_summary_df)
+            return [col_summary_df, {}]
         post_processing_method = "Column Summary"
 
     class RowSummary(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return row_summary(cmp)
+            return [row_summary(cmp), {}]
         post_processing_method = "Row Summary"
 
     class ColumnMatching(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return column_matching(cmp)
+            return [column_matching(cmp), {}]
         post_processing_method = "Column Matching"
 
     class MatchStats(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return match_stats(cmp)
+            return [match_stats(cmp), {}]
         post_processing_method = "Match Stats"
 
         
@@ -120,8 +124,8 @@ def DatacompyBuckaroo(df1, df2):
     base_a_klasses.extend(datacompy_post_processing_klasses)
     class DatacompyBuckarooWidget(BuckarooWidget):
         analysis_klasses = base_a_klasses
-    dcbw = DatacompyBuckarooWidget(pd.DataFrame({}), debug=False)
+    dcbw = DatacompyBuckarooWidget(pd.DataFrame({}, columns=[0,1]), debug=False)
     return dcbw
     
-    
-        
+dcbw = DatacompyBuckaroo(df_a, df_b)
+dcbw
