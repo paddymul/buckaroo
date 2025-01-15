@@ -108,6 +108,21 @@ def test_custom_summary_stats():
                           'a': {'distinct_count':2}, 'b': {'distinct_count':3}}
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
 
+def test_init_sd():
+    class DCDFC(CustomizableDataflow):
+        analysis_klasses = [DistinctCount, StylingAnalysis]
+
+    dc_dfc = DCDFC(BASIC_DF, init_sd={'a':{'foo':8}})
+
+    summary_sd = dc_dfc.widget_args_tuple[2]
+    print(summary_sd)
+    print("^"*80)
+    assert dc_dfc.merged_sd == {
+        'index': {'distinct_count': 3}, 
+        'a': {'distinct_count':2, 'foo':8}, 'b': {'distinct_count':3}}
+
+
+
 SENTINEL_DF = pd.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', 'b', 'c']})
 
 
@@ -353,3 +368,5 @@ def test_sample():
     assert len(bw.processed_df) == 100_000
     print(list(bw.df_data_dict.keys()))
     assert len(bw.df_data_dict['main']) == 5_000
+
+
