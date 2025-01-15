@@ -154,7 +154,6 @@ class StylingAnalysis(ColAnalysis):
     @classmethod
     def style_columns(kls, sd):
         ret_col_config = []
-
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
         if 'index' not in sd:
@@ -162,9 +161,15 @@ class StylingAnalysis(ColAnalysis):
             
         for col in sd.keys():
             col_meta = sd[col]
+            if col_meta.get('merge_rule') == 'hidden':
+                continue
             base_style = kls.style_column(col, col_meta)
             if 'column_config_override' in col_meta:
+                #column_config_override, sent by the instantiation, gets set later
                 base_style.update(col_meta['column_config_override'])
+            if base_style.get('merge_rule') == 'hidden':
+                continue
+
             ret_col_config.append(base_style)
             
         return {
@@ -173,3 +178,4 @@ class StylingAnalysis(ColAnalysis):
             'extra_grid_config': kls.extra_grid_config,
             'component_config': kls.component_config
         }
+

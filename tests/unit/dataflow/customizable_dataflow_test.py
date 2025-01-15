@@ -27,6 +27,17 @@ DFVIEWER_CONFIG_DEFAULT = {
                     'component_config': {},
                     'extra_grid_config': {},
 }
+DFVIEWER_CONFIG_WITHOUT_B = {
+    'pinned_rows': [],
+    'column_config':  [
+        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+        ## note that col_name:'b' isn't present because of the merge rule
+        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+    ],
+    'component_config': {},
+    'extra_grid_config': {},
+}
+
 
 def test_widget_instatiation():
     dfc = CustomizableDataflow(BASIC_DF)
@@ -81,17 +92,6 @@ def test_hide_column_config_overrides():
                       column_config_overrides={'b': {'merge_rule': 'hidden'}}
                       )
 
-    DFVIEWER_CONFIG_WITHOUT_B = {
-                   'pinned_rows': [],
-                   'column_config':  [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-                       ## note that col_name:'b' isn't present because of the merge rule
-                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                   ],
-                    'component_config': {},
-                    'extra_grid_config': {},
-    }
-    1/0
     assert cdfc2.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_WITHOUT_B
 
 
@@ -131,6 +131,69 @@ def test_custom_post_processing():
     p_dfc.post_processing_method = 'post1'
 
     assert p_dfc.processed_df is SENTINEL_DF
+
+
+class HidePostProcessingAnalysis(ColAnalysis):
+    provides_defaults = {}
+    post_processing_method = "hide_post"
+
+    @classmethod
+    def post_process_df(kls, cleaned_df):
+        return [SENTINEL_DF, {'sent_int_col': {'merge_rule': 'hidden'}}]
+
+SENTINEL_CONFIG_WITHOUT_INT = {
+    'pinned_rows': [],
+    'column_config':  [
+        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
+        {'col_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'}},
+    ],
+    'component_config': {},
+    'extra_grid_config': {},
+}
+
+
+def test_hide_column_config_post_processing():
+    """
+    verifies that a PostProcessing function can hide columns 
+    """
+    class PostDCFC(CustomizableDataflow):
+        analysis_klasses = [HidePostProcessingAnalysis, StylingAnalysis]
+
+    p_dfc = PostDCFC(BASIC_DF)
+    assert p_dfc.post_processing_method == ''
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+    assert p_dfc.cleaned_sd == {}
+    p_dfc.post_processing_method = 'hide_post'
+    assert p_dfc.processed_df is SENTINEL_DF
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == SENTINEL_CONFIG_WITHOUT_INT
+    p_dfc.post_processing_method == ''
+    assert p_dfc.cleaned_sd == {}
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+
+
+class HidePostProcessingAnalysis2(ColAnalysis):
+    provides_defaults = {}
+    post_processing_method = "hide_post"
+
+    @classmethod
+    def post_process_df(kls, cleaned_df):
+        ndf = pd.DataFrame({'a': [10, 20, 30], 'c':['foo', 'bar', 'baz'], })
+        return [ndf, {'c': {'merge_rule': 'hidden'}}]
+
+
+def test_hide_column_config_post_processing2():
+    """
+    This only works because we add an unknown column c, then remove it.
+    returning cleaned_df and dropping 'b' doesn't work
+    """
+    class PostDCFC(CustomizableDataflow):
+        analysis_klasses = [HidePostProcessingAnalysis2, StylingAnalysis]
+
+    p_dfc = PostDCFC(BASIC_DF)
+    assert p_dfc.post_processing_method == ''
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+    p_dfc.post_processing_method = 'hide_post'
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_WITHOUT_B
 
 class AlwaysFailAnalysis(ColAnalysis):
     provides_defaults = {}
