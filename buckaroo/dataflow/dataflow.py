@@ -285,7 +285,6 @@ class CustomizableDataflow(DataFlow):
     ### end code interpeter block
 
     def _compute_processed_result(self, cleaned_df, post_processing_method):
-        print("_compute_processed_result", post_processing_method)
         if post_processing_method == '':
             return [cleaned_df, {}]
         else:
