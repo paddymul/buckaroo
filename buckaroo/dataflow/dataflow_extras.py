@@ -1,4 +1,7 @@
 import sys
+import logging
+logger = logging.getLogger()
+
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 
@@ -170,7 +173,7 @@ class StylingAnalysis(ColAnalysis):
             try:
                 base_style = kls.style_column(col, col_meta)
             except:
-                print(f"Warning, styling failed from {kls} on column {col} with col_meta {col_meta} using default_styling instead")
+                logger.warn(f"Warning, styling failed from {kls} on column {col} with col_meta {col_meta} using default_styling instead")
                 base_style = kls.default_styling(col)
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
