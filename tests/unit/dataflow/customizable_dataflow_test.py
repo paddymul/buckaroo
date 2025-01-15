@@ -161,12 +161,14 @@ def test_hide_column_config_post_processing():
 
     p_dfc = PostDCFC(BASIC_DF)
     assert p_dfc.post_processing_method == ''
+    assert p_dfc.processed_df is BASIC_DF
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     assert p_dfc.cleaned_sd == {}
     p_dfc.post_processing_method = 'hide_post'
     assert p_dfc.processed_df is SENTINEL_DF
     assert p_dfc.df_display_args['main']['df_viewer_config'] == SENTINEL_CONFIG_WITHOUT_INT
-    p_dfc.post_processing_method == ''
+    p_dfc.post_processing_method = ''
+    assert p_dfc.processed_df is BASIC_DF
     assert p_dfc.cleaned_sd == {}
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
@@ -177,8 +179,9 @@ class HidePostProcessingAnalysis2(ColAnalysis):
 
     @classmethod
     def post_process_df(kls, cleaned_df):
-        ndf = pd.DataFrame({'a': [10, 20, 30], 'c':['foo', 'bar', 'baz'], })
-        return [ndf, {'c': {'merge_rule': 'hidden'}}]
+        # ndf = pd.DataFrame({'a': [100, 20, 30], 'b':['foo', 'bar', 'baz'], 'c': [80, 90,100]})
+        # return [ndf, {'b': {'merge_rule': 'hidden'}, 'c': {'merge_rule': 'hidden'}}]
+        return [cleaned_df, {'b': {'merge_rule': 'hidden'}}]
 
 
 def test_hide_column_config_post_processing2():
@@ -192,8 +195,13 @@ def test_hide_column_config_post_processing2():
     p_dfc = PostDCFC(BASIC_DF)
     assert p_dfc.post_processing_method == ''
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+    print("%"*80)
+    print("%"*80)
+    print("%"*80)
+
     p_dfc.post_processing_method = 'hide_post'
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_WITHOUT_B
+
 
 class AlwaysFailAnalysis(ColAnalysis):
     provides_defaults = {}

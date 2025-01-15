@@ -169,7 +169,6 @@ class StylingAnalysis(ColAnalysis):
                 base_style.update(col_meta['column_config_override'])
             if base_style.get('merge_rule') == 'hidden':
                 continue
-
             ret_col_config.append(base_style)
             
         return {

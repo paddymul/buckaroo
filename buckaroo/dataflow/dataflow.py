@@ -168,7 +168,7 @@ class DataFlow(HasTraits):
         result_summary_sd = self._get_summary_sd(self.processed_df)
         self.summary_sd = result_summary_sd
 
-    @observe('summary_sd')
+    @observe('summary_sd', 'processed_result')
     @exception_protect('merged_sd-protector')
     def _merged_sd(self, change):
         #slightly inconsitent that processed_sd gets priority over
@@ -285,6 +285,7 @@ class CustomizableDataflow(DataFlow):
     ### end code interpeter block
 
     def _compute_processed_result(self, cleaned_df, post_processing_method):
+        print("_compute_processed_result", post_processing_method)
         if post_processing_method == '':
             return [cleaned_df, {}]
         else:
