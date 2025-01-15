@@ -6,6 +6,8 @@ from buckaroo import BuckarooWidget
 from buckaroo.dataflow.dataflow_extras import (
     merge_sds, exception_protect)
 from traitlets import observe
+from IPython.utils import io
+import logging
 
 
 def col_join_dfs(df1, df2, cmp):
@@ -52,25 +54,60 @@ def col_join_dfs(df1, df2, cmp):
             ret_df_columns[col] = df1[col]
             #|df2 is a magic value, not a super fan, but it's also unlikely
             df2_col_name = col+"|df2"
-            print("col", col, "df2_cols", df2.columns)
+            
             ret_df_columns[df2_col_name] = df2[col]
+
             
             column_config_overrides[df2_col_name] = {'merge_rule': 'hidden'}
+            column_config_overrides[col] = {
+                'tooltip_config': { 'tooltip_type':'simple', 'val_column': df2_col_name},
+                'color_map_config': {
+                    'color_rule': 'color_not_null',
+                    'conditional_color': 'red',
+                    'exist_column': df2_col_name},
+            }
+
     ret_df = pd.DataFrame(ret_df_columns)
+    for col, v in eqs.items():
+        if v['unequality'] in ["df1", "df2"]:
+            continue
+        if v['unequality'] > 0:
+            df2_col_name = col+"|df2"
+            ret_df.loc[~(df1[col] == df2[col]), df2_col_name] = None
+
+        
     return ret_df, column_config_overrides, eqs
 
+
+
+def hide_orig_columns(orig_df, new_df):
+    """
+    convience method used for post_processing_functions that change the shape/name of columns,
+    provides a summary_dict that removes all columns from the orig_df that don't occur in new_df
+    """
+    remove_columns = orig_df.columns.difference(new_df.columns)
+    return {k: {'merge_rule': 'hidden'} for k in remove_columns}
+
 def DatacompyBuckaroo(df1, df2):
-    cmp = datacompy.Compare(
-        df1, df2,
-        join_columns='A',  # Column to join DataFrames on
-        abs_tol=0,  # Absolute tolerance
-        rel_tol=0)  # Relative tolerance
+    #shoving all of this into a function is a bit of a hack to geta closure over cmp
+    # ideally this would be better integrated into buckaroo via a special type of command
+    # in the low code UI,  That way this could work alongside filtering and other pieces
     
+    logger = logging.getLogger()
+    logger.setLevel(logging.CRITICAL)
+
+
+    cmp = datacompy.Compare(
+            df1, df2,
+            join_columns='a',  # Column to join DataFrames on
+            abs_tol=0,  # Absolute tolerancej
+            rel_tol=0) # Relative tolerance
+    logger.setLevel(logging.WARNING)
     def get_df_header(cmp):
         df_header = pd.DataFrame({        
             "DataFrame": [cmp.df1_name, cmp.df2_name],
             "Columns": [cmp.df1.shape[1], cmp.df2.shape[1]],
-            "Rows": [cmp.df1.shape[0], cmp.df2.shape[0]]}) #, columns=[0, 1])
+            "Rows": [cmp.df1.shape[0], cmp.df2.shape[0]]})
         return df_header.T
     
     def column_summary(cmp):
@@ -141,7 +178,7 @@ def DatacompyBuckaroo(df1, df2):
         def post_process_df(kls, df):
             ab = get_df_header(cmp)
             print("ab", ab)
-            return [ab, {}]
+            return [ab, hide_orig_columns(df, ab)]
         post_processing_method = "Df Headers"
 
 
@@ -149,34 +186,30 @@ def DatacompyBuckaroo(df1, df2):
         @classmethod
         def post_process_df(kls, df):
             col_summary_df = column_summary(cmp)
-            print("col_summary", col_summary_df)
-            return [col_summary_df, {}]
+            return [col_summary_df, hide_orig_columns(df, col_summary_df)]
         post_processing_method = "Column Summary"
 
     class RowSummary(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return [row_summary(cmp), {}]
+            new_df = row_summary(cmp)
+            return [new_df, hide_orig_columns(df, new_df)]
         post_processing_method = "Row Summary"
 
     class ColumnMatching(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return [column_matching(cmp), {}]
+            new_df = column_matching(cmp)
+            return [new_df, hide_orig_columns(df, new_df)]
         post_processing_method = "Column Matching"
 
     class MatchStats(ColAnalysis):
         @classmethod
         def post_process_df(kls, df):
-            return [match_stats(cmp), {}]
+            new_df = match_stats(cmp)
+            return [new_df, hide_orig_columns(df, new_df)]
         post_processing_method = "Match Stats"
 
-    # write class that automatically re-runs styling analysis on post_processed_df
-    # that way if post_processed_df has different column names then the default dataframe
-    # the new column names are dipslayed,  tailor made for this situation
-    # ... or these should be different pinned rows
-    # nope pinned rows don't work, because then we'd have to change column names still, or have
-    # a bunch of empty columns
         
     datacompy_post_processing_klasses = [
         DfHeader, ColumnSummary, RowSummary, ColumnMatching, MatchStats]
@@ -187,121 +220,30 @@ def DatacompyBuckaroo(df1, df2):
         analysis_klasses = base_a_klasses
 
 
-        #the following should move to 
-        def __init__(self, orig_df, debug=False,
-                     column_config_overrides=None,
-                     pinned_rows=None, extra_grid_config=None,
-                     component_config=None, init_sd=None):
-            if init_sd is None:
-                self.init_sd = {}
-            else:
-                self.init_sd = init_sd
-            super().__init__(
-                orig_df, debug, column_config_overrides, pinned_rows, extra_grid_config, component_config)
-
-        @observe('summary_sd')
-        @exception_protect('merged_sd-protector')
-        def _merged_sd(self, change):
-            #slightly inconsitent that processed_sd gets priority over
-            #summary_sd, given that processed_df is computed first. My
-            #thinking was that processed_sd has greater total knowledge
-            #and should supersede summary_sd.
-            self.merged_sd = merge_sds(
-                self.init_sd, self.cleaned_sd, self.summary_sd, self.processed_sd)
-
     joined_df, column_config_overrides, init_sd = col_join_dfs(df1, df2, cmp)
-    index_first_sd = merge_sds({'index':{}}, init_sd)
-    dcbw = DatacompyBuckarooWidget(
-        joined_df, column_config_overrides=column_config_overrides, init_sd=index_first_sd,
-        pinned_rows=[
-        {'primary_key_val': 'unequality',     'displayer_args': {'displayer': 'obj' } }]
+
+    #this is a bit of a hack and we are doing double work, for a demo it's expedient
+    df1_bw = BuckarooWidget(df1)
+    df1_histogram_sd = {k: {'df1_histogram': v['histogram']} for k,v in df1_bw.merged_sd.items()}
+
+    df2_bw = BuckarooWidget(df2)
+    df2_histogram_sd = {k: {'df2_histogram': v['histogram']} for k,v in df2_bw.merged_sd.items()}
+    full_init_sd = merge_sds(
+        {'index':{}}, # we want to make sure index is the first column recognized by buckaroo
+        init_sd,
+        df1_histogram_sd, df2_histogram_sd
     )
+    logger.setLevel(logging.CRITICAL)
+    dcbw = DatacompyBuckarooWidget(
+        joined_df, column_config_overrides=column_config_overrides, init_sd=full_init_sd,
+        pinned_rows=[
+        {'primary_key_val': 'dtype',           'displayer_args': {'displayer': 'obj'}},
+        {'primary_key_val': 'df1_histogram',   'displayer_args': {'displayer': 'histogram'}},
+        {'primary_key_val': 'df2_histogram',   'displayer_args': {'displayer': 'histogram'}},
+        {'primary_key_val': 'unequality',      'displayer_args': {'displayer': 'obj'}}
+        ],
+        debug=False
+    )
+    logger.setLevel(logging.WARNING)
 
     return dcbw
-
-from buckaroo.customizations.styling import (DefaultMainStyling)
-class MergingMainStylingAnalysis(DefaultMainStyling):
-
-    @classmethod
-    def style_columns(kls, sd):
-        print("merging main styling")
-        ret_col_config = []
-
-        #this is necessary for polars to add an index column, which is
-        #required so that summary_stats makes sense
-        if 'index' not in sd:
-            ret_col_config.append({'col_name': 'index', 'displayer_args': {'displayer': 'obj'}})
-            
-        for col in sd.keys():
-            col_meta = sd[col]
-            if col_meta.get('merge_rule') == 'hidden':
-                #new addition add to base styling analysis
-                #add unit test
-                continue
-
-            base_style = kls.style_column(col, col_meta)
-            if 'column_config_override' in col_meta:
-                #column_config_override, sent by the instantiation, gets set later
-                base_style.update(col_meta['column_config_override'])
-            ret_col_config.append(base_style)
-            
-        return {
-            'pinned_rows': kls.pinned_rows,
-            'column_config': ret_col_config,
-            'extra_grid_config': kls.extra_grid_config,
-            'component_config': kls.component_config
-        }
-
-
-"""
-dual display
-iterate over columns from df_1 first
-if col in df2 also, note that
-all df2 only columns will be at the end
-
-
-histograms
-have row for df_1 histogram
-have row for df_2 histogram
-
-histogram empty when column not matched
-
-if columns exactly matched, both numeric histograms in green color
-
-if column values exactly matched no reason to show the other dataframe column
-
-if column values differ a couple of options, handled via styling
-compact = highlight differences, as in error handling, show the other value via hover
-both show df_2 column next to df_1, df2 empty except for difference
-
-For now don't do any joining of the df,  assume equal indexes, don't want to deal with that right now
-
-"""
-
-class Df1Histogram(ColAnalysis):
-    provides_defaults = dict(
-        df_1_histogram= [[],[]], histogram_args=[], histogram_bins=[])
-
-    requires_summary = ['histogram', 'compare_unequal_cnt', 'source_df']
-
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        if summary_dict['source_df'] == 'both':
-            return {'df_1_histogram': summary_dict['histogram']
-        return {'histogram':categorical_histogram(length, value_counts, nan_per)}
-
-class Df2Histogram(ColAnalysis):
-    provides_defaults = dict(
-        df_2_histogram= [[],[]], histogram_args=[], histogram_bins=[])
-
-    requires_summary = ['histogram', 'compare_equal']
-
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        return {'histogram':categorical_histogram(length, value_counts, nan_per)}
-
-dcbw = DatacompyBuckaroo(df_a, df_b)
-dcbw
-
