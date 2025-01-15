@@ -91,7 +91,7 @@ def test_hide_column_config_overrides():
                     'component_config': {},
                     'extra_grid_config': {},
     }
-
+    1/0
     assert cdfc2.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_WITHOUT_B
 
 
