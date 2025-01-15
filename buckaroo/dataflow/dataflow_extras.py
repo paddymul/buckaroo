@@ -152,18 +152,26 @@ class StylingAnalysis(ColAnalysis):
     summary_stats_key= 'all_stats'
 
     @classmethod
+    def default_styling(kls, col_name):
+        return {'col_name': col_name, 'displayer_args': {'displayer': 'obj'}}
+
+    @classmethod
     def style_columns(kls, sd):
         ret_col_config = []
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
         if 'index' not in sd:
-            ret_col_config.append({'col_name': 'index', 'displayer_args': {'displayer': 'obj'}})
+            ret_col_config.append(kls.default_styling('index'))
             
         for col in sd.keys():
             col_meta = sd[col]
             if col_meta.get('merge_rule') == 'hidden':
                 continue
-            base_style = kls.style_column(col, col_meta)
+            try:
+                base_style = kls.style_column(col, col_meta)
+            except:
+                print(f"Warning, styling failed from {kls} on column {col} with col_meta {col_meta} using default_styling instead")
+                base_style = kls.default_styling(col)
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
                 base_style.update(col_meta['column_config_override'])

@@ -121,6 +121,27 @@ def test_init_sd():
         'index': {'distinct_count': 3}, 
         'a': {'distinct_count':2, 'foo':8}, 'b': {'distinct_count':3}}
 
+class AlwaysFailStyling(StylingAnalysis):
+    requires_summary = []
+
+    @classmethod
+    def style_column(kls, col, column_metadata):
+        1/0
+
+
+def test_always_fail_styling():
+    """ styling should default to obj displayer if an error is thrown
+    """
+    class DCDFC(CustomizableDataflow):
+        analysis_klasses = [AlwaysFailStyling]
+        pass
+
+    dc_dfc = DCDFC(BASIC_DF) #, init_sd={'a':{'foo':8}})
+
+    summary_sd = dc_dfc.widget_args_tuple[2]
+    print(summary_sd)
+    print("^"*80)
+
 
 
 SENTINEL_DF = pd.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', 'b', 'c']})
