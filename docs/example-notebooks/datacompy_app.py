@@ -10,7 +10,7 @@ from IPython.utils import io
 import logging
 
 
-def col_join_dfs(df1, df2, cmp):
+def col_join_dfs(df1, df2, cmp, how):
     df1_name = cmp.df1_name
     df2_name = cmp.df2_name
 
@@ -67,7 +67,7 @@ def col_join_dfs(df1, df2, cmp):
                     'exist_column': df2_col_name},
             }
 
-    ret_df = pd.DataFrame(ret_df_columns)
+    ret_df = pd.DataFrame(ret_df_columons)
     for col, v in eqs.items():
         if v['unequality'] in ["df1", "df2"]:
             continue
@@ -88,7 +88,7 @@ def hide_orig_columns(orig_df, new_df):
     remove_columns = orig_df.columns.difference(new_df.columns)
     return {k: {'merge_rule': 'hidden'} for k in remove_columns}
 
-def DatacompyBuckaroo(df1, df2):
+def DatacompyBuckaroo(df1, df2, join_columns):
     #shoving all of this into a function is a bit of a hack to geta closure over cmp
     # ideally this would be better integrated into buckaroo via a special type of command
     # in the low code UI,  That way this could work alongside filtering and other pieces
@@ -97,9 +97,10 @@ def DatacompyBuckaroo(df1, df2):
     logger.setLevel(logging.CRITICAL)
 
 
+    
     cmp = datacompy.Compare(
             df1, df2,
-            join_columns='a',  # Column to join DataFrames on
+            join_columns,
             abs_tol=0,  # Absolute tolerancej
             rel_tol=0) # Relative tolerance
     logger.setLevel(logging.WARNING)
@@ -220,7 +221,7 @@ def DatacompyBuckaroo(df1, df2):
         analysis_klasses = base_a_klasses
 
 
-    joined_df, column_config_overrides, init_sd = col_join_dfs(df1, df2, cmp)
+    joined_df, column_config_overrides, init_sd = col_join_dfs(df1, df2, cmp, join_columns)
 
     #this is a bit of a hack and we are doing double work, for a demo it's expedient
     df1_bw = BuckarooWidget(df1)
