@@ -150,9 +150,10 @@ interface HeightStyleArgs {
     compC?: ComponentConfig;
 }
 export interface HeightStyleI {
-    domLayout: DomLayoutType;
-    inIframe: string;
-    classMode: "short-mode" | "regular-mode";
+    domLayout: DomLayoutType; // an ag-grid argument https://www.ag-grid.com/javascript-data-grid/grid-size/#dom-layout
+    inIframe: string; // is this being rendered in an iFrame
+    //the class for the outer wrapping div
+    classMode: "short-mode" | "regular-mode"; 
     applicableStyle: CSSProperties;
 }
 
@@ -167,6 +168,11 @@ export const getHeightStyle = (df_viewer_config: DFViewerConfig, numRows: number
     return hs;
 };
 export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
+    /*
+      This function is intended to consolidate all of the calculations for the vertical styling of the viewer
+
+      
+      */
     const { numRows, pinnedRowLen, location, rowHeight, compC } = hArgs;
     const isGoogleColab = location.host.indexOf("colab.googleusercontent.com") !== -1;
 
@@ -176,7 +182,9 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     const regularDivStyle = { height: dfvHeight };
     const shortDivStyle = { minHeight: 50, maxHeight: dfvHeight };
 
-    // if the number of rows is within 5 of maxRowsWithoutScrolling, enable scrolling anyway.
+    // scrollSlop controls the tolerance for maxRowsWithoutScrolling
+    // to enable scrolling anyway. scroll slop includes room for other
+    // parts of the widget, notably the status bar
 
     // This still allows for scrolling of a single row. I'd rather
     // have the min scroll amount... if rows are hidden, at least 5
@@ -187,25 +195,15 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     
     const scrollSlop = 5
 
-    const maxRowsWithoutScrolling = (dfvHeight / (rowHeight || 21)) - scrollSlop;  // figured out default row height of 21.  Want to plumb back in to what is actually rendered.
+    // figured out default row height of 21.  Want to plumb back in to what is actually rendered.
+    const maxRowsWithoutScrolling = (dfvHeight / (rowHeight || 21)) - scrollSlop;  
 
 
 
     const belowMinRows = (numRows + pinnedRowLen) < maxRowsWithoutScrolling;
     console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
-    /*
-  console.log(
-    'shortMode',
-    shortMode,
-    'dfvHeight',
-    dfvHeight,
-    'isGoogleColab',
-    isGoogleColab,
-    'inIframe',
-    inIframe
-  );
-  */
+
     const inIframeClass = inIframe ? "inIframe" : "";
     if (isGoogleColab || inIframe) {
         return {
