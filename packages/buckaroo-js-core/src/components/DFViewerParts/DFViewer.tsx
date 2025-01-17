@@ -176,8 +176,23 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     const regularDivStyle = { height: dfvHeight };
     const shortDivStyle = { minHeight: 50, maxHeight: dfvHeight };
 
-    const belowMinRows = numRows + pinnedRowLen < 10;
+    // if the number of rows is within 5 of maxRowsWithoutScrolling, enable scrolling anyway.
 
+    // This still allows for scrolling of a single row. I'd rather
+    // have the min scroll amount... if rows are hidden, at least 5
+    // should be hidden... That would require sizing the whole widget
+    // smaller in that case which is also messy and inconsistent. I
+    // wish there were persistent side scrollbars a UI affordance we
+    // have lost
+    
+    const scrollSlop = 5
+
+    const maxRowsWithoutScrolling = (dfvHeight / (rowHeight || 21)) - scrollSlop;  // figured out default row height of 21.  Want to plumb back in to what is actually rendered.
+
+
+
+    const belowMinRows = (numRows + pinnedRowLen) < maxRowsWithoutScrolling;
+    console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
     /*
   console.log(
