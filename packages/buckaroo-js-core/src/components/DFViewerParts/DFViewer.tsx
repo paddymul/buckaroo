@@ -193,7 +193,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     // wish there were persistent side scrollbars a UI affordance we
     // have lost
     
-    const scrollSlop = 5
+    const scrollSlop = 3;
 
     // figured out default row height of 21.  Want to plumb back in to what is actually rendered.
     const maxRowsWithoutScrolling = (dfvHeight / (rowHeight || 21)) - scrollSlop;  
