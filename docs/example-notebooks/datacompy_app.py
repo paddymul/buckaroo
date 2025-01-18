@@ -10,7 +10,7 @@ from IPython.utils import io
 import logging
 
 
-def col_join_dfs(df1, df2, cmp, how):
+def col_join_dfs(df1, df2, cmp, join_columns, how):
     df1_name = cmp.df1_name
     df2_name = cmp.df2_name
 
@@ -36,26 +36,29 @@ def col_join_dfs(df1, df2, cmp, how):
                 eqs[col] = {'unequality': df1_name}
             else:
                 eqs[col] = {'unequality': df2_name}
-    ret_df_columns = {}
+
     column_config_overrides = {}
+
+    df2_suffix = "|df2"
 
     for col in col_order:
         eq_col = eqs[col]['unequality']
         if eq_col == df1_name:
-            #it's only in df1
-            ret_df_columns[col] = df1[col]
+            # it's only in df1
+            # ret_df_columns[col] = df1[col]
+            pass
         elif eq_col == df2_name:
-            #it's only in df2
-            ret_df_columns[col] = df2[col]
+            # it's only in df2
+            # ret_df_columns[col] = df2[col]
+            pass
         elif eq_col == 0:
             #columns are exactly the same
-            ret_df_columns[col] = df1[col]
+            # ret_df_columns[col] = df1[col]
+            pass
         else:
-            ret_df_columns[col] = df1[col]
             #|df2 is a magic value, not a super fan, but it's also unlikely
-            df2_col_name = col+"|df2"
+            df2_col_name = col+ df2_suffix
             
-            ret_df_columns[df2_col_name] = df2[col]
 
             
             column_config_overrides[df2_col_name] = {'merge_rule': 'hidden'}
@@ -67,16 +70,18 @@ def col_join_dfs(df1, df2, cmp, how):
                     'exist_column': df2_col_name},
             }
 
-    ret_df = pd.DataFrame(ret_df_columons)
-    for col, v in eqs.items():
-        if v['unequality'] in ["df1", "df2"]:
-            continue
-        if v['unequality'] > 0:
-            df2_col_name = col+"|df2"
-            ret_df.loc[~(df1[col] == df2[col]), df2_col_name] = None
+    m_df = pd.merge(df1, df2, on=join_columns, how=how, suffixes=["", df2_suffix])
 
-        
-    return ret_df, column_config_overrides, eqs
+    both_columns = [c for c in m_df.columns if df2_suffix in c] #columns that occur in both
+    for b_col in both_columns:
+        a_col = b_col.removesuffix(df2_suffix)
+        m_df.loc[(m_df[a_col] == m_df[col]), col] = None
+
+    #where did the row come from 
+    df_1_membership = m_df['a'].isin(df1[join_columns]).astype('Int8')
+    df_2_membership = (m_df['a'].isin(df2[join_columns]).astype('Int8') *2)
+    m_df['membership'] = df_1_membership + df_2_membership
+    return m_df, column_config_overrides, eqs
 
 
 
@@ -88,7 +93,7 @@ def hide_orig_columns(orig_df, new_df):
     remove_columns = orig_df.columns.difference(new_df.columns)
     return {k: {'merge_rule': 'hidden'} for k in remove_columns}
 
-def DatacompyBuckaroo(df1, df2, join_columns):
+def DatacompyBuckaroo(df1, df2, join_columns, how):
     #shoving all of this into a function is a bit of a hack to geta closure over cmp
     # ideally this would be better integrated into buckaroo via a special type of command
     # in the low code UI,  That way this could work alongside filtering and other pieces
@@ -221,7 +226,7 @@ def DatacompyBuckaroo(df1, df2, join_columns):
         analysis_klasses = base_a_klasses
 
 
-    joined_df, column_config_overrides, init_sd = col_join_dfs(df1, df2, cmp, join_columns)
+    joined_df, column_config_overrides, init_sd = col_join_dfs(df1, df2, cmp, join_columns[0], how)
 
     #this is a bit of a hack and we are doing double work, for a demo it's expedient
     df1_bw = BuckarooWidget(df1)
