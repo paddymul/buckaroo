@@ -83,10 +83,20 @@ export const cellRendererDisplayers = [
     "SVGDisplayer",
 ];
 
+export type ColorMap = "BLUE_TO_YELLOW" | "DIVERGING_RED_WHITE_BLUE" | string[];
+
 //ColorMapRules
 export interface ColorMapRules {
     color_rule: "color_map";
-    map_name: "BLUE_TO_YELLOW" | "DIVERGING_RED_WHITE_BLUE";
+    map_name: ColorMap;
+    //optional, the column to base the ranges on.  the proper histogram_bins must still be sent in for that column
+    val_column?: string;
+}
+
+//ColorCategorical rules
+export interface ColorCategoricalRules {
+    color_rule: "color_categorical";
+    map_name: ColorMap;
     //optional, the column to base the ranges on.  the proper histogram_bins must still be sent in for that column
     val_column?: string;
 }
@@ -103,7 +113,7 @@ export interface ColorFromColumn {
     col_name: string;
 }
 
-export type ColorMappingConfig = ColorMapRules | ColorWhenNotNullRules | ColorFromColumn;
+export type ColorMappingConfig = ColorMapRules | ColorWhenNotNullRules | ColorFromColumn | ColorCategoricalRules;
 
 //TooltipRules
 export interface SimpleTooltip {
