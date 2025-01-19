@@ -9,6 +9,7 @@ import {
     ColorMapRules,
     ColorCategoricalRules,
     ColorWhenNotNullRules,
+    ColorFromColumn,
     ColorMap
 } from "./DFWhole";
 
@@ -56,7 +57,10 @@ export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
 
     function cellStyle(params: CellClassParams) {
         const val = cmr.val_column ? params.data[cmr.val_column] : params.value;
-        const color = numberToColor(val);
+        const dataColor = numberToColor(val);
+	const isPinned = params.node.rowPinned;
+        const color = isPinned? "inherit": dataColor;
+
         return {
             backgroundColor: color,
         };
@@ -75,7 +79,9 @@ export function categoricalColor(cmr: ColorCategoricalRules) {
 
     function cellStyle(params: CellClassParams) {
         const val = cmr.val_column ? params.data[cmr.val_column] : params.value;
-        const color = cmap[val]
+	const isPinned = params.node.rowPinned;
+        const color = isPinned? "inherit": cmap[val]
+
         return {
             backgroundColor: color,
         };
@@ -88,16 +94,36 @@ export function categoricalColor(cmr: ColorCategoricalRules) {
 }
 
 export function colorNotNull(cmr: ColorWhenNotNullRules) {
+
     function cellStyle(params: CellClassParams) {
-        if (params.data === undefined) {
-            return { backgroundColor: "inherit" };
-        }
+         if (params.data === undefined) {
+             return { backgroundColor: "inherit" };
+         }
         const val = params.data[cmr.exist_column];
         const valPresent = val && val !== null;
         const isPinned = params.node.rowPinned;
         const color = valPresent && !isPinned ? cmr.conditional_color : "inherit";
-        return {
+         return {
             backgroundColor: color,
+         };
+    }
+    const retProps = {
+        cellStyle: cellStyle,
+    };
+    return retProps;
+}    
+    
+
+export function colorFromColumn(cmr: ColorFromColumn) {
+    function cellStyle(params: CellClassParams) {
+        if (params.data === undefined) {
+            return { backgroundColor: "inherit" };
+        }
+        const dataColor = params.data[cmr.val_column];
+	const isPinned = params.node.rowPinned;
+        const color = dataColor && !isPinned ? dataColor : "inherit";
+        return {
+            backgroundColor: color
         };
     }
 
@@ -123,8 +149,11 @@ export function getStyler(cmr: ColorMappingConfig, col_name: string, histogram_s
         }
         case "color_categorical": {
             //block necessary because you cant define varaibles in case blocks
-	    console.log("categorical_color", cmr);
 	    return categoricalColor(cmr);
+        }
+        case "color_from_column": {
+            //block necessary because you cant define varaibles in case blocks
+	    return colorFromColumn(cmr)
         }
         case "color_not_null":
             return colorNotNull(cmr);

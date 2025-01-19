@@ -110,7 +110,7 @@ export interface ColorWhenNotNullRules {
 
 export interface ColorFromColumn {
     color_rule: "color_from_column";
-    col_name: string;
+    val_column: string;
 }
 
 export type ColorMappingConfig = ColorMapRules | ColorWhenNotNullRules | ColorFromColumn | ColorCategoricalRules;
