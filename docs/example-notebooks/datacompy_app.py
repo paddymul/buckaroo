@@ -41,6 +41,7 @@ def col_join_dfs(df1, df2, cmp, join_columns, how):
 
     df2_suffix = "|df2"
 
+    eq_map = ["pink", "#73ae80", "#90b2b3", "#6c83b5"];
     for col in col_order:
         eq_col = eqs[col]['unequality']
         if eq_col == df1_name:
@@ -65,22 +66,32 @@ def col_join_dfs(df1, df2, cmp, join_columns, how):
             column_config_overrides[col] = {
                 'tooltip_config': { 'tooltip_type':'simple', 'val_column': df2_col_name},
                 'color_map_config': {
-                    'color_rule': 'color_not_null',
-                    'conditional_color': 'red',
-                    'exist_column': df2_col_name},
-            }
+                    'color_rule': 'color_categorical',
+                    'map_name': eq_map,
+                    'val_column': col + "|eq"}}
 
     m_df = pd.merge(df1, df2, on=join_columns, how=how, suffixes=["", df2_suffix])
+    df_1_membership = m_df['a'].isin(df1[join_columns]).astype('Int8') 
+    df_2_membership = (m_df['a'].isin(df2[join_columns]).astype('Int8') *2)
+    m_df['membership'] = df_1_membership + df_2_membership
 
     both_columns = [c for c in m_df.columns if df2_suffix in c] #columns that occur in both
     for b_col in both_columns:
         a_col = b_col.removesuffix(df2_suffix)
-        m_df.loc[(m_df[a_col] == m_df[col]), col] = None
+        col_neq = (m_df[a_col] == m_df[b_col]).astype('Int8') * 4
+
+        m_df[a_col + "|eq"] = col_neq + m_df['membership']
+        m_df['col_neq'] = col_neq
+        
+        
+        
 
     #where did the row come from 
-    df_1_membership = m_df['a'].isin(df1[join_columns]).astype('Int8')
-    df_2_membership = (m_df['a'].isin(df2[join_columns]).astype('Int8') *2)
-    m_df['membership'] = df_1_membership + df_2_membership
+    column_config_overrides[join_columns] =  {'color_map_config': {
+          'color_rule': 'color_categorical',
+          'map_name': eq_map,
+          'val_column': 'membership'
+        }}
     return m_df, column_config_overrides, eqs
 
 
