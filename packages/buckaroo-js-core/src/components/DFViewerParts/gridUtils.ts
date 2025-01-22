@@ -20,7 +20,7 @@ import { getStyler } from "./Styler";
 import { DFData, SDFMeasure, SDFT } from "./DFWhole";
 
 import { CellRendererArgs, FormatterArgs, PinnedRowConfig } from "./DFWhole";
-import { getBakedDFViewer, simpleTooltip } from "./SeriesSummaryTooltip";
+import { getBakedDFViewer, getSimpleTooltip } from "./SeriesSummaryTooltip";
 import { getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter } from "./Displayer";
 import { Dispatch, SetStateAction } from "react";
 import { CommandConfigT } from "../CommandUtils";
@@ -57,7 +57,7 @@ export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
 export function getTooltip(ttc: TooltipConfig, single_series_summary_df: DFWhole): Partial<ColDef> {
     switch (ttc.tooltip_type) {
         case "simple":
-            return { tooltipField: ttc.val_column, tooltipComponent: simpleTooltip };
+            return { tooltipComponent: getSimpleTooltip(ttc.val_column)};
 
         case "summary_series":
             return {
