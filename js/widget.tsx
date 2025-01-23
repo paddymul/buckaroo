@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createRender, useModelState } from "@anywidget/react";
+import { createRender, useModelState, useModel } from "@anywidget/react";
 import srt from "buckaroo-js-core";
 import "./widget.css";
 import "../packages/buckaroo-js-core/dist/style.css";
@@ -173,8 +173,10 @@ const renderBuckarooWidget = createRender(() => {
 		</div>
 	);
 });
-const renderBuckarooInfiniteWidget = createRender(() => {
-	console.log("renderInfiniteBuckarooWidget");
+const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
+    const model = useModel()
+    console.log("renderInfiniteBuckarooWidget", model);
+
 	const [payload_args, on_payload_args] = useModelState("payload_args");
 	const [payload_response, _set_payload_response] =
 		useModelState("payload_response");
@@ -201,7 +203,8 @@ const renderBuckarooInfiniteWidget = createRender(() => {
 				command_config={command_config}
 				buckaroo_state={buckaroo_state}
 				on_buckaroo_state={on_buckaroo_state}
-				buckaroo_options={buckaroo_options}
+	    buckaroo_options={buckaroo_options}
+	    model={model}
 			/>
 	);
 });

@@ -240,7 +240,7 @@ export interface TimedIDatasource extends IDatasource {
     createTime: Date;
 }
 
-export const getDs = (
+export const getDsOrig = (
     setPaState2: (pa: PayloadArgs) => void,
     respCache: LruCache<PayloadResponse>,
 ): TimedIDatasource => {
@@ -291,7 +291,10 @@ export const getDs = (
                             if (!expectedPayload) {
                                 console.log("got back the wrong payload");
                             }
+			    //@ts-ignore
+			    console.log("resp time", window.start - (new Date()));
                             console.log("found data for", origKey, toResp.data);
+
                             params.successCallback(toResp.data, toResp.length);
                             // after the first success, prepopulate the cache for the following request
                             setPaState2(dsPayloadArgsNext);
@@ -318,11 +321,87 @@ export const getDs = (
                     console.log("got back the wrong payload");
                     return;
                 }
+		//@ts-ignore
+		console.log("resp time417", window.start - (new Date()));
                 params.successCallback(resp.data, resp.length);
                 // after the first success, prepopulate the cache for the following request
                 setPaState2(dsPayloadArgsNext);
             }
         },
+    };
+    return dsLoc;
+};
+
+export const getDs = (
+    setPaState2: (pa: PayloadArgs) => void,
+    respCache: LruCache<PayloadResponse>,
+    model:any
+): TimedIDatasource => {
+    const dsLoc: TimedIDatasource = {
+        createTime: new Date(),
+        rowCount: undefined,
+        getRows: (params: IGetRowsParams) => {
+            const sm = params.sortModel;
+            const outside_params_string = JSON.stringify(params.context?.outside_df_params);
+            const dsPayloadArgs = {
+                sourceName: outside_params_string,
+                start: params.startRow,
+                end: params.endRow,
+                sort: sm.length === 1 ? sm[0].colId : undefined,
+                sort_direction: sm.length === 1 ? sm[0].sort : undefined,
+            };
+
+            console.log("gridUtils context outside_df_params", params.context?.outside_df_params);
+            const origKey = getPayloadKey(dsPayloadArgs);
+
+	    model.on("msg:custom", (msg:any) => {
+		console.log(`451 new message: ${JSON.stringify(msg)}`);
+
+		if(msg?.type !== "infinite_resp") {
+		    console.log("bailing not infinite_resp")
+		    return
+		}
+		if (msg.data === undefined) {
+		    console.log("bailing no data", msg)
+		    return
+		}
+		const payloadKey = getPayloadKey(dsPayloadArgs);
+		const respKey = getPayloadKey(msg?.key);
+		if ( payloadKey !== respKey) {
+		    console.log("bailing payload args not equal", msg)
+		    console.log(`expected |${payloadKey}| got |${respKey}|`)
+		    return
+		}
+		console.log("calling succes callback", msg)
+		//@ts-ignore
+		params.successCallback(msg?.data, msg?.length);
+	    });
+
+            const resp = respCache.get(origKey);
+
+            if (resp === undefined) {
+		setPaState2(dsPayloadArgs);                
+            } else {
+                const expectedPayload = getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
+                console.log(
+                    "data already in cache",
+                    dsPayloadArgs.start,
+                    dsPayloadArgs.end,
+                    expectedPayload,
+                    dsPayloadArgs,
+                    resp.key,
+                );
+                if (!expectedPayload) {
+                    console.log("got back the wrong payload");
+                    return;
+                }
+		//@ts-ignore
+		console.log("resp time417", window.start - (new Date()));
+                params.successCallback(resp.data, resp.length);
+                // after the first success, prepopulate the cache for the following request
+                //setPaState2(dsPayloadArgsNext);
+            }
+        }
     };
     return dsLoc;
 };

@@ -57,6 +57,7 @@ export function BuckarooInfiniteWidget({
     buckaroo_state,
     on_buckaroo_state,
     buckaroo_options,
+    model
 }: {
     payload_args: PayloadArgs;
     on_payload_args: (pa: PayloadArgs) => void;
@@ -71,15 +72,19 @@ export function BuckarooInfiniteWidget({
     buckaroo_state: BuckarooState;
     on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
     buckaroo_options: BuckarooOptions;
+    model:any
 }) {
+
+
     // We wonly want to create respCache once, there are some swapover
     // recreation of datasource where the old respCache gets incoming response
     // only to be destroyed
+
     const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
     const mainDs = useMemo(() => {
         const t = new Date();
         console.log("recreating data source because operations changed", t);
-        return getDs(on_payload_args, respCache);
+        return getDs(on_payload_args, respCache, model);
         // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
         // updating via post-processing changes appropriately.
         // forces re-render and dataload when not completely necessary if other
