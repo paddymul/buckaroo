@@ -56,7 +56,7 @@ export function colorMap(cmr: ColorMapRules, histogram_edges: number[]) {
     }
 
     function cellStyle(params: CellClassParams) {
-        const val = cmr.val_column ? params.data[cmr.val_column] : params.value;
+        const val = (cmr.val_column && params.data) ? params.data[cmr.val_column] : params.value;
         const dataColor = numberToColor(val);
 	const isPinned = params.node.rowPinned;
         const color = isPinned? "inherit": dataColor;
@@ -78,7 +78,7 @@ export function categoricalColor(cmr: ColorCategoricalRules) {
     const cmap = getColorMap(cmr.map_name);
 
     function cellStyle(params: CellClassParams) {
-        const val = cmr.val_column ? params.data[cmr.val_column] : params.value;
+        const val = (cmr.val_column && params.data) ? params.data[cmr.val_column] : params.value;
 	const isPinned = params.node.rowPinned;
         const color = isPinned? "inherit": cmap[val]
 
