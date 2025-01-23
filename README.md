@@ -152,9 +152,10 @@ uv sync -q
 [github release instructions](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
 
 ```bash
-git tag $VERSION_NUMBER #no leading v
 update CHANGELOG.md
-#push code and tag to github
+git commit -m "updated changelog for release $VERSION_NUMBER"
+git tag $VERSION_NUMBER # no leading v in the version number
+git push origin tag $VERSION_NUMBER
 ```
 navigate to [create new buckaroo release](https://github.com/paddymul/buckaroo/releases/new)
 Follow instructions
