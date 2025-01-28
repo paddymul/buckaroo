@@ -176,7 +176,7 @@ const renderBuckarooWidget = createRender(() => {
 const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
     const model = useModel()
     console.log("renderInfiniteBuckarooWidget", model);
-
+    model.send
 	const [payload_args, on_payload_args] = useModelState("payload_args");
 	const [payload_response, _set_payload_response] =
 		useModelState("payload_response");
@@ -211,7 +211,10 @@ const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
 
 const render = ({ el, model, experimental }) => {
 	console.log("model", model);
-	console.log("model.widget_manager", model.widget_manager);
+    console.log("model.widget_manager", model.widget_manager);
+    // model.send({"method":"custom", "foo":"bar"})
+    // model.send({"foo":8})
+	       
 	// console.log(
 	// 	"model.widget_manager.attributes",
 	// 	model.widget_manager.attributes,
