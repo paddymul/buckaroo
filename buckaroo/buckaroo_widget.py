@@ -339,7 +339,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
         if processed_df is None:
             return
 
-        print(self.payload_args)
         try:
             sort = self.payload_args.get('sort')
             if sort:
@@ -347,16 +346,15 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 ascending = sort_dir == 'asc'
                 sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
                 slice_df = pd_to_obj(sorted_df[start:end])
-                self.payload_response = {'key':self.payload_args, 'data':slice_df, 'length':len(sorted_df)}
+                self.send({ "type": "infinite_resp", 'key':self.payload_args, 'data':slice_df, 'length':len(processed_df)})
             else:
                 slice_df = pd_to_obj(processed_df[start:end])
                 self.send({ "type": "infinite_resp", 'key':self.payload_args, 'data':slice_df, 'length':len(processed_df)})
-                
-                #self.payload_response = {'key':self.payload_args, 'data':slice_df, 'length':len(processed_df)}
         except Exception as e:
             print(e)
             stack_trace = traceback.format_exc()
-            self.payload_response = {'key':self.payload_args, 'data':[], 'error_info':stack_trace, 'length':0}
+            self.send({ "type": "infinite_resp", 'key':self.payload_args, 'data':[], 'error_info':stack_trace, 'length':0})
+           
             raise
 
     def _df_to_obj(self, df:pd.DataFrame):
