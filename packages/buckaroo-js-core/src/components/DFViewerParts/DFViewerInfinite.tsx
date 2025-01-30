@@ -190,6 +190,7 @@ const getDsGridOptions = (origGridOptions: GridOptions): GridOptions => {
         ...origGridOptions,
         onSortChanged: (event: SortChangedEvent) => {
             const api: GridApi = event.api;
+	    //@ts-ignore
             console.log(
                 "sortChanged",
                 api.getFirstDisplayedRowIndex(),

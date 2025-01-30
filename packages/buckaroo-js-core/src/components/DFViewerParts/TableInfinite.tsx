@@ -92,7 +92,7 @@ export const InfiniteWrapper = ({
 
     const ds = useMemo(() => {
         console.log("recreating ds");
-        return getDs(on_payloadArgs, respCache);
+        return getDs(on_payloadArgs, respCache, {}); //this whole thing is broken
     }, [operations]);
     respCache.put(key, payloadResponse);
     console.log(`tableinfinite 94 found ${payloadResponse.data.length} rows for `, key);
