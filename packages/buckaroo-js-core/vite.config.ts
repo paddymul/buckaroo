@@ -21,6 +21,10 @@ export default defineConfig({
         emptyOutDir: true, // Clears the output directory before building.
         minify: false
     },
+
+    transform: {
+	"^.+\\.tsx?$": "ts-jest",
+    },
     plugins: [dts()], // Uses the 'vite-plugin-dts' plugin for generating TypeScript declaration files (d.ts).
     test: {
         globals: true,
