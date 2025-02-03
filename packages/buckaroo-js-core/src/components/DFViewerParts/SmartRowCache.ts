@@ -70,7 +70,7 @@ const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     return [[lStart, rEnd], combinedDFData]
 }
 
-const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment) => {
+export const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment) => {
     const [tStart, tEnd] = test;
     const lowEnd = segLow[1]
     const highStart = segHigh[0];
@@ -82,23 +82,28 @@ const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment) => {
 
 export const segmentLT = (a:Segment, b:Segment):boolean => {
     
-    const [aStart, _aEnd] = a;
-    const [bStart, _bEnd] = b;
+    const [aStart, aEnd] = a;
+    const [bStart, bEnd] = b;
     if (aStart < bStart) {
+	return true
+    } else if (aStart == bStart && aEnd < bEnd) {
+	//if they start in the same place, but a ends before b
 	return true
     }
     return false;
 }
     
 
-const segmentsOverlap = (segmentA:Segment, segmentB:Segment):boolean => {
+export const segmentsOverlap = (segmentA:Segment, segmentB:Segment):boolean => {
+    if (segmentLT(segmentB, segmentA)) {
+	return segmentsOverlap(segmentB, segmentA)
+    }
     const [aLow, aHigh] = segmentA;
     const [bLow, bHigh] = segmentB;
 
-    if(aLow > bLow && aLow < bHigh) {
-	return true;
-    } else if (aHigh > bLow && aHigh < bHigh) {
-	return true;
+
+    if(aLow <= bHigh && aHigh >= bLow) {
+	return true
     }
     return false;
 }

@@ -15,7 +15,11 @@ describe('foo', () => {
 	expect(segmentLT(low, high)).toBe(true);
 	expect(segmentLT(high, low)).toBe(false);
 	expect(segmentLT(high, high)).toBe(false);
-	expect(segmentLT(around, high)).toBe(false);
+	expect(segmentLT(around, high)).toBe(true); // because around starts before high
+	expect(segmentLT(high, around)).toBe(false);
+
+	expect(segmentLT(low, around)).toBe(true); // start at the same place, around ends higher
+	expect(segmentLT(around, low)).toBe(false); // start at the same place, around ends higher
     });
     test('test segmentsOverlap', () => {
 	expect(segmentsOverlap(low, high)).toBe(false);
