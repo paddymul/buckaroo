@@ -1,6 +1,5 @@
 import {
     DFData,
-    DFDataRow
 } from "./DFWhole";
 
 
@@ -21,17 +20,17 @@ const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segment, new
 	return [[newSegment], [newDF]]
     }
     const [newStart, newEnd] = newSegment;
-    const [firstStart, firstEnd] = segments[0];
+    const [firstStart, _firstEnd] = segments[0];
     if (newEnd < firstStart) {
 	return [[newSegment, ...segments], [newDF, ...dfs]]
     }
 
-    const [retSegments, retDFs] = [[],[]];
+    const [retSegments, retDFs]:[Segment[], DFData[]] = [[],[]];
 
     for(var i=0; i < segments.length; i++) {
 	const [seg, df] = [segments[i], dfs[i]];
 	if (segmentsOverlap(seg, newSegment)) {
-	    const [addSegment, addDf] = merge([seg,df], [newSegment, newDf]);
+	    const [addSegment, addDf] = merge([seg,df], [newSegment, newDF]);
 	    //slicing greater than the length of an array returns []
 	    const restSegments = retSegments.concat(segments.slice(i+1))
 	    const restDfs = retDFs.concat(dfs.slice(i+1))
@@ -47,7 +46,7 @@ const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segment, new
 	    }
 	}
     }
-    const [lastStart, lastEnd] = segments[segments.length -1];
+    const [_lastStart, lastEnd] = segments[segments.length -1];
     if (lastEnd < newStart) {
 	retSegments.push(newSegment);
 	retDFs.push(newDF);
@@ -71,7 +70,7 @@ const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     return [[lStart, rEnd], combinedDFData]
 }
 
-const segmentBetween = (test, segLow, segHigh) {
+const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment) => {
     const [tStart, tEnd] = test;
     const lowEnd = segLow[1]
     const highStart = segHigh[0];
@@ -81,7 +80,7 @@ const segmentBetween = (test, segLow, segHigh) {
     return false;
 }
 
-const segmentLT = (a:Segment, b:Segment):boolean => {
+export const segmentLT = (a:Segment, b:Segment):boolean => {
     
     const [aStart, _aEnd] = a;
     const [bStart, _bEnd] = b;
@@ -92,7 +91,7 @@ const segmentLT = (a:Segment, b:Segment):boolean => {
 }
     
 
-const segmentsOverlap(segmentA:Segment, segmentB:Segment):boolean {
+const segmentsOverlap = (segmentA:Segment, segmentB:Segment):boolean => {
     const [aLow, aHigh] = segmentA;
     const [bLow, bHigh] = segmentB;
 
@@ -104,7 +103,7 @@ const segmentsOverlap(segmentA:Segment, segmentB:Segment):boolean {
     return false;
 }
 
-const minimumFillArgs( haveSegment:Segment, needSegment:Segment):RowRequest {
+export const minimumFillArgs = ( haveSegment:Segment, needSegment:Segment):RequestArgs  => {
     /* given a segment that we have in cache, and a segment we need,
        return the minimum request size to satisfy needSegment */
     const [haveLow, haveHigh] = haveSegment;
@@ -126,16 +125,20 @@ const minimumFillArgs( haveSegment:Segment, needSegment:Segment):RowRequest {
 
 export class SmartRowCache {
     private rowSegments: DFData[] = [[]]
-    private segments: Segment[]
+    //private segments: Segment[]
+    offsets: Segment[] = [];
 
-    public addRows(rows, start, end): void {
+    
+    public addRows(rows:DFData, start:number, end:number): void {
 	for (const [segStart, segEnd] of this.offsets) {
+	    console.log(segStart, segEnd, rows, start, end)
 	    
 	}
+	console.log(this.rowSegments);
 	// handle accounting with offsets and rowSegments
     }
 
-    public hasRows(start, end): RequestArgs {
+    public hasRows(start:number, end:number): RequestArgs {
 	for (const [segStart, segEnd] of this.offsets) {
 	    if(segStart < start) {
 		if(segEnd > end) {
@@ -143,15 +146,16 @@ export class SmartRowCache {
 		} else {
 		    return {start:segEnd, end:end}
 		}
-	    } else if 		if(segEnd > end) {
+	    } else if (segEnd > end) {
 	}
 	return {start, end}
+	}
+	return false // doublecheck  
     }
-
 }
 
 
-
+/*
 export interface IDisplayArgs {
     data_key: string;
     df_viewer_config: DFViewerConfig;
@@ -195,3 +199,5 @@ export type RespCache = LruCache<PayloadResponse>;
 
 export interface TimedIDatasource extends IDatasource {
     createTime: Date;
+}
+*/
