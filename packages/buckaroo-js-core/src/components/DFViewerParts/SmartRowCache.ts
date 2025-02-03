@@ -70,11 +70,14 @@ const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     return [[lStart, rEnd], combinedDFData]
 }
 
-export const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment) => {
+export const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment):boolean => {
+    if (segmentLT(segHigh, segLow)) {
+	return segmentBetween(test, segHigh, segLow)
+    }
     const [tStart, tEnd] = test;
     const lowEnd = segLow[1]
     const highStart = segHigh[0];
-    if(lowEnd < tStart && highStart < tEnd) {
+    if(lowEnd < tStart && tEnd < highStart) {
 	return true
     }
     return false;
@@ -84,6 +87,7 @@ export const segmentLT = (a:Segment, b:Segment):boolean => {
     
     const [aStart, aEnd] = a;
     const [bStart, bEnd] = b;
+
     if (aStart < bStart) {
 	return true
     } else if (aStart == bStart && aEnd < bEnd) {
