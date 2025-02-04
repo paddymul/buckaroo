@@ -59,6 +59,7 @@ export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     const [rightSeg, rightDF ] = rightSD;
     if (segmentLT(rightSeg, leftSeg)) {
 	// it's easier if left is always less than right
+	throw "asfd";
 	return merge(rightSD, leftSD); 
     }
     const [lStart, lEnd] = leftSeg;
