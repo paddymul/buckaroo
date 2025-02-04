@@ -66,7 +66,11 @@ export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
 
     //if rStart === lEnd we need to do something different
     // probably don't want to slice at all
-    const sliceEnd = rStart === lEnd ? leftDF.length : rStart - lEnd;
+    if (lEnd === rStart) {
+	const combinedDFData = leftDF.concat(rightDF)
+	return [[lStart, rEnd], combinedDFData]
+    }
+    const sliceEnd = rStart - lEnd;
     const combinedDFData = leftDF.slice(0,sliceEnd).concat(rightDF)
     return [[lStart, rEnd], combinedDFData]
 }

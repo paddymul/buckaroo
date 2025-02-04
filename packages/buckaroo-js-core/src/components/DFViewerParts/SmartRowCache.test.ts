@@ -63,7 +63,7 @@ const dataD:DFData = [{'a':8}, {'a':9}, {'a':10} ]
 
 
 const segBD:Segment = [5, 9]
-const dataBD:DFData = [{'a':5}, {'a':6}, {'a':6}, {'a':8}]
+const dataBD:DFData = [{'a':5}, {'a':6}, {'a':7}, {'a':8}]
 
 
 
@@ -81,8 +81,10 @@ describe('merge', () => {
 
     test('test simple merge', () => {
 	expect(merge([segA, dataA] as SegData, [segB, dataB])).toStrictEqual([segC,dataC])
-	expect(merge([segA, dataA] as SegData, [segBD, dataBD])).toStrictEqual([[0,9], [fullData09]]);
+
+	expect(merge([segA, dataA] as SegData, [segBD, dataBD])).toStrictEqual([[0,9], fullData09]);
     });
+
 
     test('test offset simple merge', () => {
 	// run the same test as simple merge, with +4 on all offsets, makes sure we aren't special casing 0
@@ -103,11 +105,12 @@ describe('merge', () => {
 
 
 	expect(merge([segA, dataA] as SegData, [segEnd, dataEnd])).toStrictEqual([segC,dataC])
-    });
+	});
+
 })
 
 
-xdescribe('mergeSegments', () => {
+describe('mergeSegments', () => {
 
     test('test mid merge', () => {
 	const fullData:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6},
