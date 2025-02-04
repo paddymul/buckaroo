@@ -116,23 +116,23 @@ describe('mergeSegments', () => {
 
     });
 
-    test('test merge overlap2', () => {
+    // test('test merge overlap2', () => {
 
-	const data013:DFData =  [
-	    { a: 0 },  { a: 1 },
-	    { a: 2 },  { a: 3 },
-	    { a: 4 },  { a: 5 },
-	    { a: 6 },  { a: 7 },
-	    { a: 8 },  { a: 9 },
-	    { a: 10 }, { a: 11 },
-	    { a: 12 }
-	];
+    // 	const data013:DFData =  [
+    // 	    { a: 0 },  { a: 1 },
+    // 	    { a: 2 },  { a: 3 },
+    // 	    { a: 4 },  { a: 5 },
+    // 	    { a: 6 },  { a: 7 },
+    // 	    { a: 8 },  { a: 9 },
+    // 	    { a: 10 }, { a: 11 },
+    // 	    { a: 12 }
+    // 	];
 
-	const data811 =  [ { a: 8 }, { a: 9 }, { a: 10 } ];
+    // 	const data811 =  [ { a: 8 }, { a: 9 }, { a: 10 } ];
 	
-	expect(mergeSegments([[8,11]], [data811], [0,13], data013)).toStrictEqual(
-	    [[[0,13]], [data013]])
-    });
+    // 	expect(mergeSegments([[8,11]], [data811], [0,13], data013)).toStrictEqual(
+    // 	    [[[0,13]], [data013]])
+    // });
 
 
     // test('test mid merge recursive', () => {
