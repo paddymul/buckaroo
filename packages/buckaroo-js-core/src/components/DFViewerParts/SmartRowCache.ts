@@ -13,7 +13,7 @@ export type Segment = [number, number];
 export type RequestArgs = RowRequest | false;
 export type SegData = [Segment, DFData];
 
-const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segment, newDF:DFData): [Segment[], DFData[]] => {
+export const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segment, newDF:DFData): [Segment[], DFData[]] => {
 
 
     if (segments.length == 0) {
@@ -58,15 +58,15 @@ export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     const [leftSeg, leftDF] = leftSD;
     const [rightSeg, rightDF ] = rightSD;
     if (segmentLT(rightSeg, leftSeg)) {
-	console.log("re-arrangin args");
 	// it's easier if left is always less than right
 	return merge(rightSD, leftSD); 
     }
     const [lStart, lEnd] = leftSeg;
     const [rStart, rEnd] = rightSeg;
 
+    //if rStart === lEnd we need to do something different
+    // probably don't want to slice at all
     const sliceEnd = rStart === lEnd ? leftDF.length : rStart - lEnd;
-    console.log("sliceEnd", sliceEnd);
     const combinedDFData = leftDF.slice(0,sliceEnd).concat(rightDF)
     return [[lStart, rEnd], combinedDFData]
 }
