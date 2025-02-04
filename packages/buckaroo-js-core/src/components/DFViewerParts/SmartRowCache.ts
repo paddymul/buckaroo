@@ -34,10 +34,6 @@ export const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segme
 	    //slicing greater than the length of an array returns []
 	    const restSegments = retSegments.concat(segments.slice(i+1))
 	    const restDfs = retDFs.concat(dfs.slice(i+1))
-	    console.log("restSegments", restSegments);
-	    console.log("restDfs", restDfs);
-	    console.log("addSegment", addSegment),
-	    console.log("addDf", addDf);
 	    return mergeSegments(restSegments, restDfs, addSegment, addDf);
 	}
 	retSegments.push(seg)
@@ -63,14 +59,12 @@ export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     const [rightSeg, rightDF ] = rightSD;
     if (segmentLT(rightSeg, leftSeg)) {
 	// it's easier if left is always less than right
-	console.log("swapping");
 	return merge(rightSD, leftSD); 
     }
     const [lStart, lEnd] = leftSeg;
     const [rStart, rEnd] = rightSeg;
-    console.log("l", lStart, lEnd);
-    console.log("r", rStart, rEnd);
     if (lStart < rStart && rEnd < lEnd ){
+	// if leftSD entirely contains rightSD, just return left
 	return leftSD
     }
 
