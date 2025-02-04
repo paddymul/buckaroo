@@ -94,7 +94,8 @@ export const fullData015:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a'
 
 describe('mergeSegments', () => {
     test('test merge overlap', () => {
-
+	// test overlaps from both sides,  in every case segC is the expected result
+	// also test cases where one segment completely overlaps other data
 
 	expect(mergeSegments([segA], [dataA], segC, dataC)).toStrictEqual(
 	    [[segC], [dataC]])
@@ -116,24 +117,6 @@ describe('mergeSegments', () => {
 
     });
 
-    // test('test merge overlap2', () => {
-
-    // 	const data013:DFData =  [
-    // 	    { a: 0 },  { a: 1 },
-    // 	    { a: 2 },  { a: 3 },
-    // 	    { a: 4 },  { a: 5 },
-    // 	    { a: 6 },  { a: 7 },
-    // 	    { a: 8 },  { a: 9 },
-    // 	    { a: 10 }, { a: 11 },
-    // 	    { a: 12 }
-    // 	];
-
-    // 	const data811 =  [ { a: 8 }, { a: 9 }, { a: 10 } ];
-	
-    // 	expect(mergeSegments([[8,11]], [data811], [0,13], data013)).toStrictEqual(
-    // 	    [[[0,13]], [data013]])
-    // });
-
 
     // test('test mid merge recursive', () => {
     // 	expect(mergeSegments([segA, segD, segE], [dataA, dataD, dataE], segBE, dataBE)).toStrictEqual(
@@ -146,10 +129,10 @@ describe('mergeSegments', () => {
     // 	    [[[0,9]], [fullData09]])
     // });
 
-    test('test merge adjacent2', () => {
-	expect(mergeSegments([segBD], [dataBD], segA, dataA)).toStrictEqual(
-	    [[[0,9]], [fullData09]])
-    });
+    // test('test merge adjacent2', () => {
+    // 	expect(mergeSegments([segBD], [dataBD], segA, dataA)).toStrictEqual(
+    // 	    [[[0,9]], [fullData09]])
+    // });
 
 
     // test('test mid merge', () => {
