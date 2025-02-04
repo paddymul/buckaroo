@@ -34,6 +34,10 @@ export const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segme
 	    //slicing greater than the length of an array returns []
 	    const restSegments = retSegments.concat(segments.slice(i+1))
 	    const restDfs = retDFs.concat(dfs.slice(i+1))
+	    console.log("restSegments", restSegments);
+	    console.log("restDfs", restDfs);
+	    console.log("addSegment", addSegment),
+	    console.log("addDf", addDf);
 	    return mergeSegments(restSegments, restDfs, addSegment, addDf);
 	}
 	retSegments.push(seg)
@@ -64,8 +68,6 @@ export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     const [lStart, lEnd] = leftSeg;
     const [rStart, rEnd] = rightSeg;
 
-    //if rStart === lEnd we need to do something different
-    // probably don't want to slice at all
     if (lEnd === rStart) {
 	const combinedDFData = leftDF.concat(rightDF)
 	return [[lStart, rEnd], combinedDFData]
