@@ -58,15 +58,15 @@ export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     const [leftSeg, leftDF] = leftSD;
     const [rightSeg, rightDF ] = rightSD;
     if (segmentLT(rightSeg, leftSeg)) {
+	console.log("re-arrangin args");
 	// it's easier if left is always less than right
-	throw "asfd";
 	return merge(rightSD, leftSD); 
     }
     const [lStart, lEnd] = leftSeg;
     const [rStart, rEnd] = rightSeg;
 
-    const sliceEnd = rStart - lEnd;
-    
+    const sliceEnd = rStart === lEnd ? leftDF.length : rStart - lEnd;
+    console.log("sliceEnd", sliceEnd);
     const combinedDFData = leftDF.slice(0,sliceEnd).concat(rightDF)
     return [[lStart, rEnd], combinedDFData]
 }

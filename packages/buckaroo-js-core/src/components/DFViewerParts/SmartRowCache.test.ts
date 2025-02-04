@@ -64,6 +64,7 @@ const segCOffset:Segment = [3, 10]
 
 
 describe('merge', () => {
+
     test('test simple merge', () => {
 	expect(merge([segA, dataA] as SegData, [segB, dataB])).toStrictEqual([segC,dataC])
     });
@@ -79,6 +80,7 @@ describe('merge', () => {
 
 	expect(merge([segA, dataA] as SegData, [segBShort, dataBShort])).toStrictEqual([segC,dataC])
     });
+
 
     test('test mid merge', () => {
 	const segEnd:Segment = [5, 7]
