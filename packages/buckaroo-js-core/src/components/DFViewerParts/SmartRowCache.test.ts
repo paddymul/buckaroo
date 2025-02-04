@@ -3,8 +3,14 @@ import {
     Segment,
     segmentLT,
     segmentBetween,
-    segmentsOverlap
+    segmentsOverlap,
+    merge,
+    SegData
 } from "./SmartRowCache"
+import {
+    DFData,
+} from "./DFWhole";
+
 
 
 const low:Segment = [20,30]
@@ -38,5 +44,23 @@ describe('segment operators', () => {
 
 	expect(segmentsOverlap(mid, high)).toBe(true);
 	expect(segmentsOverlap(low, mid)).toBe(true);
+    });
+})
+
+
+describe('merge', () => {
+    test('test merge', () => {
+
+	const segA:Segment = [0,5];
+	const dataA:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}];
+
+	const segB:Segment = [2, 7]
+	const dataB:DFData = [{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6}];
+
+	const segC:Segment = [0,7]
+	const dataC:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6}];
+
+
+	expect(merge([segA, dataA] as SegData, [segB, dataB])).toStrictEqual([segC,dataC])
     });
 })

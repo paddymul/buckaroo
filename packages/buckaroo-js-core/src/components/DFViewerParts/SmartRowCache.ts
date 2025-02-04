@@ -54,7 +54,7 @@ const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segment, new
     return [retSegments, retDFs]
 }
 
-const merge = (leftSD:SegData, rightSD:SegData): SegData => {
+export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
     const [leftSeg, leftDF] = leftSD;
     const [rightSeg, rightDF ] = rightSD;
     if (segmentLT(rightSeg, leftSeg)) {
@@ -74,6 +74,8 @@ export const segmentBetween = (test:Segment, segLow:Segment, segHigh:Segment):bo
     if (segmentLT(segHigh, segLow)) {
 	return segmentBetween(test, segHigh, segLow)
     }
+
+    
     const [tStart, tEnd] = test;
     const lowEnd = segLow[1]
     const highStart = segHigh[0];
