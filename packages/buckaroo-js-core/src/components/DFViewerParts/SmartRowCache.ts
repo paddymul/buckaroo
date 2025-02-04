@@ -107,6 +107,17 @@ export const segmentLT = (a:Segment, b:Segment):boolean => {
 }
     
 
+export const segmentSubset = (outer:Segment, inner:Segment):boolean => {
+    
+    const [oStart, oEnd] = outer;
+    const [iStart, iEnd] = inner;
+
+    if (oStart <= iStart && iEnd <= oEnd) {
+	return true }
+    return false;
+}
+    
+
 export const segmentsOverlap = (segmentA:Segment, segmentB:Segment):boolean => {
     if (segmentLT(segmentB, segmentA)) {
 	return segmentsOverlap(segmentB, segmentA)
@@ -139,36 +150,52 @@ export const minimumFillArgs = ( haveSegment:Segment, needSegment:Segment):Reque
     return {start:needLow, end:needHigh}
 }
 
+export const getSliceRange = (haveSegment:Segment, haveDF:DFData, requestSeg:Segment): DFData => {
+    const [hStart, _hEnd] = haveSegment;
+    const [rStart, rEnd] = requestSeg;
 
+    const sStart = rStart - hStart;
+    const sEnd = rEnd - hStart;
+    return haveDF.slice(sStart, sEnd);
+}
+
+export const getRange = (segments:Segment[], dfs:DFData[], requestSeg:Segment): DFData => {
+    for(var i=0; i < segments.length; i++) {
+	const [seg, df] = [segments[i], dfs[i]];
+	if(segmentSubset(seg, requestSeg)) {
+	    return getSliceRange(seg, df, requestSeg);
+	}
+    }
+    throw new Error(`RequestSeg {requestSeg} not in {segments}`)
+}
 
 export class SmartRowCache {
-    private rowSegments: DFData[] = [[]]
-    //private segments: Segment[]
-    offsets: Segment[] = [];
+
+    private segments: Segment[] = []
+    private dfs: DFData[] = []
 
     
-    public addRows(rows:DFData, start:number, end:number): void {
-	for (const [segStart, segEnd] of this.offsets) {
-	    console.log(segStart, segEnd, rows, start, end)
-	    
-	}
-	console.log(this.rowSegments);
-	// handle accounting with offsets and rowSegments
+    public addRows(newSegment:Segment, newDf:DFData): void {
+	const [newSegs, newDfs] = mergeSegments(this.segments, this.dfs, newSegment, newDf)
+	this.segments = newSegs;
+	this.dfs = newDfs;
+	//clean up extra data
     }
 
-    public hasRows(start:number, end:number): RequestArgs {
-	for (const [segStart, segEnd] of this.offsets) {
-	    if(segStart < start) {
-		if(segEnd > end) {
-		    return false;
-		} else {
-		    return {start:segEnd, end:end}
-		}
-	    } else if (segEnd > end) {
+    public hasRows(needSeg:Segment): RequestArgs {
+	for (const ourSeg of this.segments) {
+	    if(segmentsOverlap(ourSeg, needSeg)) {
+		return minimumFillArgs(ourSeg, needSeg)
+	    }
 	}
-	return {start, end}
+	return false
+    }
+
+    public getRows(range:Segment): DFData {
+	if(this.hasRows(range) !== false) {
+	    return getRange(this.segments, this.dfs, range)
 	}
-	return false // doublecheck  
+	throw new Error(`Missing rows for {range}`)
     }
 }
 

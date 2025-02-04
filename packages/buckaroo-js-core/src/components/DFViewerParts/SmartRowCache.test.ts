@@ -7,6 +7,9 @@ import {
     merge,
     mergeSegments,
     SegData,
+    segmentSubset,
+    getSliceRange,
+    getRange
 } from "./SmartRowCache"
 import {
     DFData,
@@ -46,6 +49,17 @@ describe('segment operators', () => {
 	expect(segmentsOverlap(mid, high)).toBe(true);
 	expect(segmentsOverlap(low, mid)).toBe(true);
     });
+
+    test('test segmentSubset', () => {
+	expect(segmentSubset(low, high)).toBe(false);
+	expect(segmentSubset(high, low)).toBe(false);
+	expect(segmentSubset(around, high)).toBe(true);
+	expect(segmentSubset(high, around)).toBe(false);
+
+	expect(segmentSubset(mid, low)).toBe(false); // although they overlap, they aren't subsets
+	expect(segmentSubset(low, mid)).toBe(false); // although they overlap, they aren't subsets
+    });
+
 })
 
 
@@ -91,86 +105,30 @@ export const fullData015:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a'
 			    {'a':7}, {'a':8},
 			    {'a':9}, {'a':10}, {'a':11}, {'a':12}, {'a':13}, {'a':14}]
 
+describe('range tests', () => {
+    test('test getSliceRange', () => {
 
-describe('mergeSegments', () => {
+	expect(getSliceRange(segA, dataA, segA)).toStrictEqual(dataA);
+	expect(getSliceRange(segA, dataA, [2,4])).toStrictEqual([{'a':2},{'a':3}])
 
-    test('test merge overlap', () => {
-	expect(mergeSegments([segBShort], [dataBShort], segC, dataC)).toStrictEqual(
-	    [[segC], [dataC]])
-    });
-
-    test('test merge overlap', () => {
-	// test overlaps from both sides,  in every case segC is the expected result
-	// also test cases where one segment completely overlaps other data
-
-	expect(mergeSegments([segA], [dataA], segC, dataC)).toStrictEqual(
-	    [[segC], [dataC]])
-
-	expect(mergeSegments([segC], [dataC], segA, dataA)).toStrictEqual(
-	    [[segC], [dataC]])
-
-	expect(mergeSegments([segB], [dataB], segC, dataC)).toStrictEqual(
-	    [[segC], [dataC]])
-
-	expect(mergeSegments([segC], [dataC], segB, dataB)).toStrictEqual(
-	    [[segC], [dataC]])
-
-	expect(mergeSegments([segBShort], [dataBShort], segC, dataC)).toStrictEqual(
-	    [[segC], [dataC]])
-
-	expect(mergeSegments([segC], [dataC], segBShort, dataBShort)).toStrictEqual(
-	    [[segC], [dataC]])
-
-    });
+	expect(getSliceRange(segAOffset, dataA, segAOffset)).toStrictEqual(dataA);
+	expect(getSliceRange(segAOffset, dataA, [6,8])).toStrictEqual([{'a':2},{'a':3}])
 
 
-    test('test mid merge recursive', () => {
-	expect(mergeSegments([segA, segD, segE], [dataA, dataD, dataE], segBE, dataBE)).toStrictEqual(
-	    [[[0,15]], [fullData015]])
-    });
+    })
+    test('test getRange', () => {
+	expect(getRange([segA, segD], [dataA, dataD], segA)).toStrictEqual(dataA);
+	expect(getRange([segA, segD], [dataA, dataD], [2,4])).toStrictEqual([{'a':2},{'a':3}])
 
+	expect(getRange([segAOffset, segE], [dataA, dataE], segAOffset)).toStrictEqual(dataA);
+	expect(getRange([segAOffset, segE], [dataA, dataE], [6,8])).toStrictEqual([{'a':2},{'a':3}])
 
-    test('test merge adjacent', () => {
-	expect(mergeSegments([segA], [dataA], segBD, dataBD)).toStrictEqual(
-	    [[[0,9]], [fullData09]])
-    });
+	expect(getRange([segAOffset, segE], [dataA, dataE], segE)).toStrictEqual(dataE);
+	expect(getRange([segAOffset, segE], [dataA, dataE], [13, 15])).toStrictEqual([{'a':13},{'a':14}])
 
-    test('test merge adjacent2', () => {
-	expect(mergeSegments([segBD], [dataBD], segA, dataA)).toStrictEqual(
-	    [[[0,9]], [fullData09]])
-    });
+    })
+})
 
-
-    test('test mid merge', () => {
-	const fullData:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6},
-				 {'a':7}, {'a':8}, {'a':9}, {'a':10} ];
-
-	expect(mergeSegments([segA, segD], [dataA, dataD], segBD, dataBD)).toStrictEqual(
-	    [[[0,11]], [fullData]])
-    });
-
-
-
-
-
-    test('test empty mergeSegments', () => {
-	expect(mergeSegments([], [], segA, dataA)).toStrictEqual([[segA],[dataA]])
-    });
-    test('test simple mergeSegments', () => {
-	expect(mergeSegments([segA], [dataA], segB, dataB)).toStrictEqual([[segC],[dataC]])
-	expect(mergeSegments([segB], [dataB], segA, dataA)).toStrictEqual([[segC],[dataC]])
-	expect(mergeSegments([segA], [dataA], segBD, dataBD)).toStrictEqual([
-	    [[0,9]],
-
-	    [fullData09]]);
-    });
-
-    test('test mid no merge ', () => {
-	expect(mergeSegments([segA], [dataA], segBOffset, dataB)).toStrictEqual([[segA, segBOffset],[dataA, dataB]])
-    });
-
-
-});
 describe('merge', () => {
 
 
@@ -205,3 +163,76 @@ describe('merge', () => {
 	expect(merge([segA, dataA] as SegData, [segEnd, dataEnd])).toStrictEqual([segC,dataC])
 	});
 })
+
+describe('mergeSegments', () => {
+
+    test('test merge overlap', () => {
+	expect(mergeSegments([segBShort], [dataBShort], segC, dataC)).toStrictEqual(
+	    [[segC], [dataC]])
+    });
+
+    test('test merge overlap', () => {
+	// test overlaps from both sides,  in every case segC is the expected result
+	// also test cases where one segment completely overlaps other data
+
+	expect(mergeSegments([segA], [dataA], segC, dataC)).toStrictEqual(
+	    [[segC], [dataC]])
+
+	expect(mergeSegments([segC], [dataC], segA, dataA)).toStrictEqual(
+	    [[segC], [dataC]])
+
+	expect(mergeSegments([segB], [dataB], segC, dataC)).toStrictEqual(
+	    [[segC], [dataC]])
+
+	expect(mergeSegments([segC], [dataC], segB, dataB)).toStrictEqual(
+	    [[segC], [dataC]])
+
+	expect(mergeSegments([segBShort], [dataBShort], segC, dataC)).toStrictEqual(
+	    [[segC], [dataC]])
+
+	expect(mergeSegments([segC], [dataC], segBShort, dataBShort)).toStrictEqual(
+	    [[segC], [dataC]])
+    });
+
+    test('test mid merge recursive', () => {
+	expect(mergeSegments([segA, segD, segE], [dataA, dataD, dataE], segBE, dataBE)).toStrictEqual(
+	    [[[0,15]], [fullData015]])
+    });
+
+
+    test('test merge adjacent', () => {
+	expect(mergeSegments([segA], [dataA], segBD, dataBD)).toStrictEqual(
+	    [[[0,9]], [fullData09]])
+    });
+
+    test('test merge adjacent2', () => {
+	expect(mergeSegments([segBD], [dataBD], segA, dataA)).toStrictEqual(
+	    [[[0,9]], [fullData09]])
+    });
+
+
+    test('test mid merge', () => {
+	const fullData:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6},
+				 {'a':7}, {'a':8}, {'a':9}, {'a':10} ];
+
+	expect(mergeSegments([segA, segD], [dataA, dataD], segBD, dataBD)).toStrictEqual(
+	    [[[0,11]], [fullData]])
+    });
+
+    test('test empty mergeSegments', () => {
+	expect(mergeSegments([], [], segA, dataA)).toStrictEqual([[segA],[dataA]])
+    });
+    test('test simple mergeSegments', () => {
+	expect(mergeSegments([segA], [dataA], segB, dataB)).toStrictEqual([[segC],[dataC]])
+	expect(mergeSegments([segB], [dataB], segA, dataA)).toStrictEqual([[segC],[dataC]])
+	expect(mergeSegments([segA], [dataA], segBD, dataBD)).toStrictEqual([
+	    [[0,9]],
+
+	    [fullData09]]);
+    });
+
+    test('test mid no merge ', () => {
+	expect(mergeSegments([segA], [dataA], segBOffset, dataB)).toStrictEqual([[segA, segBOffset],[dataA, dataB]])
+    });
+
+});
