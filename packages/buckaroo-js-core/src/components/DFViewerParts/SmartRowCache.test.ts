@@ -248,17 +248,17 @@ describe('size management tests', () => {
 	const keepRange:Segment = [segAOffset[0], segE[0]+1];
 	const newSegE:Segment = [segE[0], segE[0]+1];
 
-	expect(compactSegements([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
+	expect(compactSegments([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
 	    [[segAOffset, newSegE], [dataA, [dataE[0]]]])
     })
 
     test('test compactSegments2', () => {
 
 	const keepRange:Segment = [segAOffset[0]+1, segE[0]+1];
-	const newSegA:Segment = [segA[0]+1, segA[1]];
+	//const newSegA:Segment = [segA[0]+1, segA[1]];
 	const newSegE:Segment = [segE[0], segE[0]+1];
 
-	expect(compactSegements([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
+	expect(compactSegments([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
 	    [[segAOffset, newSegE], [dataA, [dataE[0]]]])
     })
 })

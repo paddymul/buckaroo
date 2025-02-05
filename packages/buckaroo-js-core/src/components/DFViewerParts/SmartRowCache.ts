@@ -191,14 +191,14 @@ export const compactSegments = (segments:Segment[], dfs:DFData[], keep:Segment):
 	    // here we have to do something interesting
 	    if(segmentLT(keep, seg)) {
 		//keepEnd must be less than seg end
-		const newSeg = [seg[0], keep[1]]
-		const sliceDf = getSlizeRange(seg, df, newSeg)
+		const newSeg:Segment = [seg[0], keep[1]]
+		const sliceDf = getSliceRange(seg, df, newSeg)
 		retSegments.push(newSeg)
 		retDFs.push(sliceDf)
 	    } else {
 		//the keep window extends beyond the end of this segment,  use the end of seg
-		const newSeg = [keep[0], seg[1]]
-		const sliceDf = getSlizeRange(seg, df, newSeg)
+		const newSeg:Segment = [keep[0], seg[1]]
+		const sliceDf = getSliceRange(seg, df, newSeg)
 		retSegments.push(newSeg)
 		retDFs.push(sliceDf)
 	    }
