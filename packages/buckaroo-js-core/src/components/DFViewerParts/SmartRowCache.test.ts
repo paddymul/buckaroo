@@ -9,7 +9,9 @@ import {
     SegData,
     segmentSubset,
     getSliceRange,
-    getRange
+    getRange,
+    segmentsSize,
+    compactSegments
 } from "./SmartRowCache"
 import {
     DFData,
@@ -62,7 +64,7 @@ describe('segment operators', () => {
 
 })
 
-
+//export const segE:Segment = [12, 15]
 export const segA:Segment = [0,5];
 export const dataA:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}];
 
@@ -104,30 +106,6 @@ export const fullData09:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':
 export const fullData015:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6},
 			    {'a':7}, {'a':8},
 			    {'a':9}, {'a':10}, {'a':11}, {'a':12}, {'a':13}, {'a':14}]
-
-describe('range tests', () => {
-    test('test getSliceRange', () => {
-
-	expect(getSliceRange(segA, dataA, segA)).toStrictEqual(dataA);
-	expect(getSliceRange(segA, dataA, [2,4])).toStrictEqual([{'a':2},{'a':3}])
-
-	expect(getSliceRange(segAOffset, dataA, segAOffset)).toStrictEqual(dataA);
-	expect(getSliceRange(segAOffset, dataA, [6,8])).toStrictEqual([{'a':2},{'a':3}])
-
-
-    })
-    test('test getRange', () => {
-	expect(getRange([segA, segD], [dataA, dataD], segA)).toStrictEqual(dataA);
-	expect(getRange([segA, segD], [dataA, dataD], [2,4])).toStrictEqual([{'a':2},{'a':3}])
-
-	expect(getRange([segAOffset, segE], [dataA, dataE], segAOffset)).toStrictEqual(dataA);
-	expect(getRange([segAOffset, segE], [dataA, dataE], [6,8])).toStrictEqual([{'a':2},{'a':3}])
-
-	expect(getRange([segAOffset, segE], [dataA, dataE], segE)).toStrictEqual(dataE);
-	expect(getRange([segAOffset, segE], [dataA, dataE], [13, 15])).toStrictEqual([{'a':13},{'a':14}])
-
-    })
-})
 
 describe('merge', () => {
 
@@ -236,3 +214,52 @@ describe('mergeSegments', () => {
     });
 
 });
+describe('range tests', () => {
+    test('test getSliceRange', () => {
+
+	expect(getSliceRange(segA, dataA, segA)).toStrictEqual(dataA);
+	expect(getSliceRange(segA, dataA, [2,4])).toStrictEqual([{'a':2},{'a':3}])
+
+	expect(getSliceRange(segAOffset, dataA, segAOffset)).toStrictEqual(dataA);
+	expect(getSliceRange(segAOffset, dataA, [6,8])).toStrictEqual([{'a':2},{'a':3}])
+
+
+    })
+    test('test getRange', () => {
+	expect(getRange([segA, segD], [dataA, dataD], segA)).toStrictEqual(dataA);
+	expect(getRange([segA, segD], [dataA, dataD], [2,4])).toStrictEqual([{'a':2},{'a':3}])
+
+	expect(getRange([segAOffset, segE], [dataA, dataE], segAOffset)).toStrictEqual(dataA);
+	expect(getRange([segAOffset, segE], [dataA, dataE], [6,8])).toStrictEqual([{'a':2},{'a':3}])
+
+	expect(getRange([segAOffset, segE], [dataA, dataE], segE)).toStrictEqual(dataE);
+	expect(getRange([segAOffset, segE], [dataA, dataE], [13, 15])).toStrictEqual([{'a':13},{'a':14}])
+
+    })
+})
+
+describe('size management tests', () => {
+    test('test segmentsSize', () => {
+
+	expect(segmentsSize([[0,5], [12,15]])).toBe(8)
+    })
+
+    test('test compactSegments', () => {
+	const keepRange:Segment = [segAOffset[0], segE[0]+1];
+	const newSegE:Segment = [segE[0], segE[0]+1];
+
+	expect(compactSegements([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
+	    [[segAOffset, newSegE], [dataA, [dataE[0]]]])
+    })
+
+    test('test compactSegments2', () => {
+
+	const keepRange:Segment = [segAOffset[0]+1, segE[0]+1];
+	const newSegA:Segment = [segA[0]+1, segA[1]];
+	const newSegE:Segment = [segE[0], segE[0]+1];
+
+	expect(compactSegements([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
+	    [[segAOffset, newSegE], [dataA, [dataE[0]]]])
+    })
+})
+

@@ -169,6 +169,47 @@ export const getRange = (segments:Segment[], dfs:DFData[], requestSeg:Segment): 
     throw new Error(`RequestSeg {requestSeg} not in {segments}`)
 }
 
+export const segmentsSize = (segments:Segment[]): number => {
+    var accum = 0;
+    for(var i=0; i < segments.length; i++) {
+	const [start, end] = segments[i];
+	accum+= end-start
+    }
+    return accum;
+}
+
+export const compactSegments = (segments:Segment[], dfs:DFData[], keep:Segment): [Segment[], DFData[]] => {
+    const [retSegments, retDFs]:[Segment[], DFData[]] = [[],[]];
+
+    for(var i=0; i < segments.length; i++) {
+	const [seg, df] = [segments[i], dfs[i]];
+	if(segmentSubset(keep, seg)) {
+	    //if this segment is entirely inside of keep, just add it to retVars
+	    retSegments.push(seg)
+	    retDFs.push(df)
+	} else if (segmentsOverlap(keep, seg)) {
+	    // here we have to do something interesting
+	    if(segmentLT(keep, seg)) {
+		//keepEnd must be less than seg end
+		const newSeg = [seg[0], keep[1]]
+		const sliceDf = getSlizeRange(seg, df, newSeg)
+		retSegments.push(newSeg)
+		retDFs.push(sliceDf)
+	    } else {
+		//the keep window extends beyond the end of this segment,  use the end of seg
+		const newSeg = [keep[0], seg[1]]
+		const sliceDf = getSlizeRange(seg, df, newSeg)
+		retSegments.push(newSeg)
+		retDFs.push(sliceDf)
+	    }
+	}
+    }
+    return [retSegments, retDFs];
+}
+
+
+
+
 export class SmartRowCache {
 
     private segments: Segment[] = []
