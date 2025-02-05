@@ -254,12 +254,27 @@ describe('size management tests', () => {
 
     test('test compactSegments2', () => {
 
-	const keepRange:Segment = [segAOffset[0]+1, segE[0]+1];
-	//const newSegA:Segment = [segA[0]+1, segA[1]];
-	const newSegE:Segment = [segE[0], segE[0]+1];
+	//using segAOffset because I want to make sure nothing is 0 indexed
+	const segAOffset:Segment = [4, 9];
+	const dataA:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}];
+	const segE:Segment = [12, 15]
+	const dataE:DFData = [{'a':12}, {'a':13}, {'a':14}]
 
-	expect(compactSegments([segAOffset, segE], [dataA, dataE], keepRange)).toStrictEqual(
-	    [[segAOffset, newSegE], [dataA, [dataE[0]]]])
+
+	const keepRange:Segment = [5, 13]
+	const prevSegments = [segAOffset, segE]
+	const expectedSegments = [[5,9], [12,13]]
+
+	const expectedDFs = [[{'a':1},{'a':2},{'a':3},{'a':4}],
+			     [{'a':12}]];
+
+	// console.log("previous", prevSegments)
+	// console.log("keepRange", keepRange);
+	// console.log("expectedSegments", expectedSegments);
+	const [actualSegments, actualData] = compactSegments(prevSegments, [dataA, dataE], keepRange)
+	// console.log("actualSegments", actualSegments)
+	expect(actualSegments).toStrictEqual(expectedSegments)
+	expect(actualData).toStrictEqual(expectedDFs)
     })
 })
 
