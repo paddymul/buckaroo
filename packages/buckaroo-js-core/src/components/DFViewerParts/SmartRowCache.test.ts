@@ -276,5 +276,34 @@ describe('size management tests', () => {
 	expect(actualSegments).toStrictEqual(expectedSegments)
 	expect(actualData).toStrictEqual(expectedDFs)
     })
+    test('test compactSegments3', () => {
+	//same as 2, but with another untouched segment in the middle
+
+	//using segAOffset because I want to make sure nothing is 0 indexed
+	const segAOffset:Segment = [4, 7];
+	const dataA:DFData = [{'a':0},{'a':1},{'a':2}];
+	const segE:Segment = [12, 15]
+	const dataE:DFData = [{'a':12}, {'a':13}, {'a':14}]
+
+
+	const keepRange:Segment = [5, 13]
+	const untouchedSegment:Segment = [9,10];
+	const prevSegments = [segAOffset, untouchedSegment,  segE]
+	const expectedSegments = [[5,7], untouchedSegment, [12,13]]
+
+
+	const untouchedData:DFData = [{'a':9}];
+	const expectedDFs = [[{'a':1},{'a':2}],
+			     untouchedData,
+			     [{'a':12}]];
+
+	// console.log("previous", prevSegments)
+	// console.log("keepRange", keepRange);
+	// console.log("expectedSegments", expectedSegments);
+	const [actualSegments, actualData] = compactSegments(prevSegments, [dataA, untouchedData, dataE], keepRange)
+	// console.log("actualSegments", actualSegments)
+	expect(actualSegments).toStrictEqual(expectedSegments)
+	expect(actualData).toStrictEqual(expectedDFs)
+    })
 })
 
