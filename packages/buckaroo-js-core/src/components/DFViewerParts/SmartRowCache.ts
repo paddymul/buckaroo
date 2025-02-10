@@ -132,6 +132,15 @@ export const segmentsOverlap = (segmentA:Segment, segmentB:Segment):boolean => {
     return false;
 }
 
+export const segmentIntersect = (segmentA:Segment, segmentB:Segment):Segment => {
+    if (segmentLT(segmentB, segmentA)) {
+	return segmentIntersect(segmentB, segmentA)
+    }
+    const [aLow, aHigh] = segmentA;
+    const [bLow, bHigh] = segmentB;
+    return [Math.max(aLow, bLow), Math.min(aHigh, bHigh)]
+}
+
 export const minimumFillArgs = ( haveSegment:Segment, needSegment:Segment):RequestArgs  => {
     /* given a segment that we have in cache, and a segment we need,
        return the minimum request size to satisfy needSegment */
@@ -178,6 +187,28 @@ export const segmentsSize = (segments:Segment[]): number => {
     return accum;
 }
 
+
+export const slicedSegmentSize = (segments:Segment[], slice:Segment): number => {
+    var accum = 0;
+    for(var i=0; i < segments.length; i++) {
+	if (segmentsOverlap(segments[i], slice)) {
+	    const [start, end] = segmentIntersect(segments[i], slice)
+	    accum+= end-start
+	}
+    }
+    return accum;
+}
+
+export const segmentFromMidOffset = (midPoint:number, offset:number): Segment => {
+    return [midPoint - offset, midPoint + offset] as Segment;
+}
+
+export const sizeSlice = (midPoint:number, offset:number, segments:Segment[]): number => {
+    return slicedSegmentSize(segments, segmentFromMidOffset(midPoint, offset))
+}
+
+
+
 export const compactSegments = (segments:Segment[], dfs:DFData[], keep:Segment): [Segment[], DFData[]] => {
     const [retSegments, retDFs]:[Segment[], DFData[]] = [[],[]];
 
@@ -209,26 +240,63 @@ export const compactSegments = (segments:Segment[], dfs:DFData[], keep:Segment):
 
 
 
-
 export class SmartRowCache {
 
     private segments: Segment[] = []
     private dfs: DFData[] = []
     public maxSize: number = 1000;
-    public lastRequests: Segment[] = []
-    
+    public trimFactor:number = 0.8;  // trim down to trimFactor from maxSize
+    public lastRequest: Segment = [0,0];
 
-    public trimCache(): void {
-	
+    public usedSize(): number {
+	return segmentsSize(this.segments);
     }
 
+    public trimCache(): void {
+	if (this.usedSize() < this.maxSize) {
+	    return
+	}
+	if (this.lastRequest[0] == 0 && this.lastRequest[1] == 0) {
+	    throw new Error("trying to trim with no requests, unexpected");
+	}
+	const last = this.lastRequest;
+
+	const lastSegSize = last[1] - last[0]
+	const mid = (lastSegSize/2) + last[0];
+
+	var filled = 0;
+	
+	var targetWindow = Math.floor(this.maxSize * this.trimFactor / 2)
+	filled = sizeSlice(mid, targetWindow, this.segments);
+	while (filled < this.maxSize) {
+	    filled = sizeSlice(mid, targetWindow, this.segments);
+	    targetWindow *=2
+	}
+	
+	while (filled > Math.floor(this.maxSize * this.trimFactor)) {
+	    filled = sizeSlice(mid, targetWindow, this.segments);
+	    targetWindow *= Math.floor(.9)
+	}
+	       
+	const keepSeg = segmentFromMidOffset(mid, targetWindow);
+	[this.segments, this.dfs] = compactSegments(this.segments, this.dfs, keepSeg);
+    }
+
+    public getExtents():Segment {
+	if (this.segments.length === 0) {
+	    throw new Error("No Segments");
+	}
+	const last = this.segments[this.segments.length -1];
+	const first = this.segments[0];
+	return [first[0], last[1]]
+    }
+    
     public addRows(newSegment:Segment, newDf:DFData): void {
 	const [newSegs, newDfs] = mergeSegments(this.segments, this.dfs, newSegment, newDf)
 	this.segments = newSegs;
 	this.dfs = newDfs;
 
-	
-	//clean up extra data
+	this.trimCache()
     }
 
     public hasRows(needSeg:Segment): RequestArgs {
@@ -242,6 +310,7 @@ export class SmartRowCache {
 
     public getRows(range:Segment): DFData {
 	if(this.hasRows(range) !== false) {
+	    this.lastRequest = range;
 	    return getRange(this.segments, this.dfs, range)
 	}
 	throw new Error(`Missing rows for {range}`)
