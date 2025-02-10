@@ -214,12 +214,20 @@ export class SmartRowCache {
 
     private segments: Segment[] = []
     private dfs: DFData[] = []
-
+    public maxSize: number = 1000;
+    public lastRequests: Segment[] = []
     
+
+    public trimCache(): void {
+	
+    }
+
     public addRows(newSegment:Segment, newDf:DFData): void {
 	const [newSegs, newDfs] = mergeSegments(this.segments, this.dfs, newSegment, newDf)
 	this.segments = newSegs;
 	this.dfs = newDfs;
+
+	
 	//clean up extra data
     }
 
