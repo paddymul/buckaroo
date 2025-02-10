@@ -271,8 +271,8 @@ export class SmartRowCache {
 	}
 	
 	while (filled > Math.floor(this.maxSize * this.trimFactor)) {
+	    targetWindow = Math.floor(.9 * targetWindow)
 	    filled = sizeSlice(mid, targetWindow, this.segments);
-	    targetWindow *= Math.floor(.9)
 	}
 	       
 	const keepSeg = segmentFromMidOffset(mid, targetWindow);

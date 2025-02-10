@@ -328,6 +328,7 @@ describe('SmartRowCache tests', () => {
     test('basic SmartRowCache tests', () => {
 
 	const src = new SmartRowCache()
+	src.maxSize = 35
 	expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
 
 
@@ -340,7 +341,36 @@ describe('SmartRowCache tests', () => {
 	expect(src.getRows([10, 30])).toStrictEqual(genRows(10,30)[1])
 	expect(src.usedSize()).toBe(20)
 
-	src.addRows.apply(src, genRows(35, 45))  //make sure the cache is compacted
+	src.addRows.apply(src, genRows(35, 45))
 	expect(src.usedSize()).toBe(30)
+	src.getRows([35,45]) // move the last request up towards the growing end
+	src.addRows.apply(src, genRows(45, 55))
+	expect(src.usedSize()).toBe(27)  // .8 * 35 = 28, (trimFactor * maxSize) floor
+	expect(src.getExtents()).toStrictEqual([23,55])  
+	
+    })
+    test('SmartRowCache oppositeTrim side ', () => {
+
+	const src = new SmartRowCache()
+	src.maxSize = 35
+	expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
+
+
+	src.addRows.apply(src, genRows(10,20))
+	expect(src.hasRows([10,20])).toBe(true)
+
+	src.addRows.apply(src, genRows(20,30))  //make sure the cache is compacted
+	expect(src.hasRows([10,30])).toBe(true)
+
+	expect(src.getRows([10, 30])).toStrictEqual(genRows(10,30)[1])
+	expect(src.usedSize()).toBe(20)
+
+	src.addRows.apply(src, genRows(35, 45))
+	expect(src.usedSize()).toBe(30)
+	src.getRows([10, 20]) // move the last request up towards the growing end
+	src.addRows.apply(src, genRows(45, 55))
+	expect(src.usedSize()).toBe(28)  // .8 * 35 = 28, (trimFactor * maxSize) floor
+	expect(src.getExtents()).toStrictEqual([10,43])  
+	
     })
 })
