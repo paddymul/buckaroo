@@ -12,7 +12,8 @@ import {
     getRange,
     segmentsSize,
     segmentIntersect,
-    compactSegments
+    compactSegments,
+    SmartRowCache
 } from "./SmartRowCache"
 import {
     DFData,
@@ -315,3 +316,31 @@ describe('size management tests', () => {
     })
 })
 
+const genRows = (low:number, high:number):[Segment, DFData] => {
+    const retDF = [];
+    for(var i=low; i<high; i++) {
+	retDF.push({'a':i})
+    }
+    return [[low, high] as Segment, retDF]
+}
+
+describe('SmartRowCache tests', () => {
+    test('basic SmartRowCache tests', () => {
+
+	const src = new SmartRowCache()
+	expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
+
+
+	src.addRows.apply(src, genRows(10,20))
+	expect(src.hasRows([10,20])).toBe(true)
+
+	src.addRows.apply(src, genRows(20,30))  //make sure the cache is compacted
+	expect(src.hasRows([10,30])).toBe(true)
+
+	expect(src.getRows([10, 30])).toStrictEqual(genRows(10,30)[1])
+	expect(src.usedSize()).toBe(20)
+
+	src.addRows.apply(src, genRows(35, 45))  //make sure the cache is compacted
+	expect(src.usedSize()).toBe(30)
+    })
+})
