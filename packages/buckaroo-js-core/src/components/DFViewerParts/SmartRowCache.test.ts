@@ -11,6 +11,7 @@ import {
     getSliceRange,
     getRange,
     segmentsSize,
+    segmentIntersect,
     compactSegments
 } from "./SmartRowCache"
 import {
@@ -60,6 +61,13 @@ describe('segment operators', () => {
 
 	expect(segmentSubset(mid, low)).toBe(false); // although they overlap, they aren't subsets
 	expect(segmentSubset(low, mid)).toBe(false); // although they overlap, they aren't subsets
+    });
+
+    test('test segmentIntersect', () => {
+	expect(segmentIntersect(around, high)).toStrictEqual(high);
+	expect(segmentIntersect(high, around)).toStrictEqual(high);
+	expect(segmentIntersect(mid, low)).toStrictEqual([25,30]);
+	expect(segmentIntersect(low, mid)).toStrictEqual([25,30]);
     });
 
 })

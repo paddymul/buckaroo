@@ -133,9 +133,6 @@ export const segmentsOverlap = (segmentA:Segment, segmentB:Segment):boolean => {
 }
 
 export const segmentIntersect = (segmentA:Segment, segmentB:Segment):Segment => {
-    if (segmentLT(segmentB, segmentA)) {
-	return segmentIntersect(segmentB, segmentA)
-    }
     const [aLow, aHigh] = segmentA;
     const [bLow, bHigh] = segmentB;
     return [Math.max(aLow, bLow), Math.min(aHigh, bHigh)]
