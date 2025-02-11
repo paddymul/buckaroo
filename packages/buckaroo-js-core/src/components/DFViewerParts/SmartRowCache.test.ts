@@ -346,7 +346,39 @@ describe('SmartRowCache tests', () => {
 	src.getRows([35,45]) // move the last request up towards the growing end
 	src.addRows.apply(src, genRows(45, 55))
 	expect(src.usedSize()).toBe(27)  // .8 * 35 = 28, (trimFactor * maxSize) floor
+
+
+	// we want to verify that the cache was trimmed, and that
+	// there is more of the dataframe around the most recently
+	// requested side
 	expect(src.getExtents()).toStrictEqual([23,55])  
+
+	expect(src.hasRows([0,30])).toStrictEqual({"start": 0, "end": 23})
+	
+    })
+
+    test('basic SmartRowCache tests2', () => {
+
+	const src = new SmartRowCache()
+	src.maxSize = 35
+
+	src.addRows.apply(src, genRows(10,30))  //make sure the cache is compacted
+	expect(src.hasRows([10,30])).toBe(true)
+	src.addRows.apply(src, genRows(35, 45))
+	expect(src.usedSize()).toBe(30)
+	src.getRows([35,45]) // move the last request up towards the growing end
+	src.addRows.apply(src, genRows(45, 55))
+	expect(src.usedSize()).toBe(27)  // .8 * 35 = 28, (trimFactor * maxSize) floor
+
+
+	// we want to verify that the cache was trimmed, and that
+	// there is more of the dataframe around the most recently
+	// requested side
+	expect(src.getExtents()).toStrictEqual([23,55])
+	src.hasRows([0,15])
+	src.addRows.apply(src, genRows(0,30))  //make sure the cache is compacted
+	expect(src.getExtents()).toStrictEqual([23,55])  
+	expect(src.hasRows([0,30])).toStrictEqual({"start": 0, "end": 23})
 	
     })
     test('SmartRowCache oppositeTrim side ', () => {

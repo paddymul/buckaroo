@@ -197,7 +197,7 @@ export const slicedSegmentSize = (segments:Segment[], slice:Segment): number => 
 }
 
 export const segmentFromMidOffset = (midPoint:number, offset:number): Segment => {
-    return [midPoint - offset, midPoint + offset] as Segment;
+    return [Math.floor(midPoint - offset), Math.floor(midPoint + offset)] as Segment;
 }
 
 export const sizeSlice = (midPoint:number, offset:number, segments:Segment[]): number => {
@@ -297,6 +297,7 @@ export class SmartRowCache {
     }
 
     public hasRows(needSeg:Segment): RequestArgs {
+	this.lastRequest = needSeg;
 	for (const ourSeg of this.segments) {
 	    if(segmentSubset(ourSeg, needSeg)) {
 		//we have the entire segment
