@@ -99,6 +99,11 @@ describe('segment operators', () => {
 	expect(minimumFillArgs([0,30], [0,20])).toStrictEqual(true)
 	expect(minimumFillArgs([0,30], [10,20])).toStrictEqual(true)
     })
+    test('test minimumFillArgs empty segment', () => {
+	//nothing needed 
+	expect(minimumFillArgs([0,0], [0,20])).toStrictEqual({'start':0, 'end':20})
+	expect(minimumFillArgs([0,0], [10,20])).toStrictEqual({'start':10, 'end':20})
+    })
 })
 
 //export const segE:Segment = [12, 15]
