@@ -13,7 +13,8 @@ import {
     segmentsSize,
     segmentIntersect,
     compactSegments,
-    SmartRowCache
+    SmartRowCache,
+    minimumFillArgs
 } from "./SmartRowCache"
 import {
     DFData,
@@ -26,6 +27,7 @@ const mid:Segment = [ 25, 55];
 const midBetween:Segment = [35, 45];
 const high:Segment = [50, 100]
 const around:Segment = [20,120]
+
 describe('segment operators', () => {
     test('test segmentLT', () => {
 	expect(segmentLT(low, high)).toBe(true);
@@ -71,6 +73,21 @@ describe('segment operators', () => {
 	expect(segmentIntersect(low, mid)).toStrictEqual([25,30]);
     });
 
+    test('test minimumFillArgs', () => {
+	expect(minimumFillArgs(mid, low)).toStrictEqual({'start':20, 'end':25})
+    })
+    test('test minimumFillArgs2', () => {
+	expect(minimumFillArgs(low, mid)).toStrictEqual({'start':30, 'end':55})
+    })
+
+    test('test minimumFillArgs3', () => {
+	expect(minimumFillArgs(low, high)).toStrictEqual({'start':50, 'end':100})
+    })
+
+    test('test minimumFillArgs4', () => {
+	//same start
+	expect(minimumFillArgs([0,20], [0,30])).toStrictEqual({'start':20, 'end':30})
+    })
 })
 
 //export const segE:Segment = [12, 15]
@@ -100,7 +117,7 @@ export const dataBD:DFData = [{'a':5}, {'a':6}, {'a':7}, {'a':8}]
 
 export const segBE:Segment = [5, 13]
 export const dataBE:DFData = [{'a':5}, {'a':6}, {'a':7}, {'a':8},
-		       {'a':9}, {'a':10}, {'a':11}, {'a':12}]
+			      {'a':9}, {'a':10}, {'a':11}, {'a':12}]
 
 
 
@@ -109,12 +126,12 @@ export const segBOffset:Segment = [6, 11]
 export const segCOffset:Segment = [4, 11]
 
 export const fullData09:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6},
-			   {'a':7}, {'a':8}]
+				  {'a':7}, {'a':8}]
 
 
 export const fullData015:DFData = [{'a':0},{'a':1},{'a':2},{'a':3},{'a':4}, {'a':5}, {'a':6},
-			    {'a':7}, {'a':8},
-			    {'a':9}, {'a':10}, {'a':11}, {'a':12}, {'a':13}, {'a':14}]
+				   {'a':7}, {'a':8},
+				   {'a':9}, {'a':10}, {'a':11}, {'a':12}, {'a':13}, {'a':14}]
 
 describe('merge', () => {
 
@@ -148,7 +165,7 @@ describe('merge', () => {
 	const segEnd:Segment = [5, 7]
 	const dataEnd:DFData = [{'a':5}, {'a':6}];
 	expect(merge([segA, dataA] as SegData, [segEnd, dataEnd])).toStrictEqual([segC,dataC])
-	});
+    });
 })
 
 describe('mergeSegments', () => {
@@ -277,11 +294,7 @@ describe('size management tests', () => {
 	const expectedDFs = [[{'a':1},{'a':2},{'a':3},{'a':4}],
 			     [{'a':12}]];
 
-	// console.log("previous", prevSegments)
-	// console.log("keepRange", keepRange);
-	// console.log("expectedSegments", expectedSegments);
 	const [actualSegments, actualData] = compactSegments(prevSegments, [dataA, dataE], keepRange)
-	// console.log("actualSegments", actualSegments)
 	expect(actualSegments).toStrictEqual(expectedSegments)
 	expect(actualData).toStrictEqual(expectedDFs)
     })
@@ -306,11 +319,7 @@ describe('size management tests', () => {
 			     untouchedData,
 			     [{'a':12}]];
 
-	// console.log("previous", prevSegments)
-	// console.log("keepRange", keepRange);
-	// console.log("expectedSegments", expectedSegments);
 	const [actualSegments, actualData] = compactSegments(prevSegments, [dataA, untouchedData, dataE], keepRange)
-	// console.log("actualSegments", actualSegments)
 	expect(actualSegments).toStrictEqual(expectedSegments)
 	expect(actualData).toStrictEqual(expectedDFs)
     })
@@ -352,7 +361,6 @@ describe('SmartRowCache tests', () => {
 	// there is more of the dataframe around the most recently
 	// requested side
 	expect(src.getExtents()).toStrictEqual([23,55])  
-
 	expect(src.hasRows([0,30])).toStrictEqual({"start": 0, "end": 23})
 	
     })
@@ -376,9 +384,13 @@ describe('SmartRowCache tests', () => {
 	// requested side
 	expect(src.getExtents()).toStrictEqual([23,55])
 	src.hasRows([0,15])
-	src.addRows.apply(src, genRows(0,30))  //make sure the cache is compacted
-	expect(src.getExtents()).toStrictEqual([23,55])  
-	expect(src.hasRows([0,30])).toStrictEqual({"start": 0, "end": 23})
+
+	// This is an example of a call to addRows that immediately
+	// gets trimmed, we should probably throw an error here
+	src.addRows.apply(src, genRows(0,30))  
+	expect(src.getExtents()).toStrictEqual([0,26])
+
+	expect(src.hasRows([0,30])).toStrictEqual({"start": 26, "end": 30})
 	
     })
     test('SmartRowCache oppositeTrim side ', () => {

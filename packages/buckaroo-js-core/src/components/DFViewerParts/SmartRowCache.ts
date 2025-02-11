@@ -148,11 +148,19 @@ export const minimumFillArgs = ( haveSegment:Segment, needSegment:Segment):Reque
 	return {start:needLow, end:needHigh}
     } else if (needLow > haveLow && needHigh < haveHigh) {
 	return true
-    } else if (needLow < haveHigh) {
-	return {start:haveHigh, end:needHigh}
-    } else {
+    } 
+    // else if (segmentSubset(needSegment, haveSegment)) {
+    // 	// this will duplicate the haveSegment, but we can't issue two
+    // 	// requests from here rare case not currently encountered by
+    // 	// the code, and not worth the complexity
+    // 	return {start:needLow, end:needHigh}
+    // }
+    else if (needLow < haveLow) {
 	return {start:needLow, end:haveLow}
+    } else if (haveLow < needLow) {
+	return {start:haveHigh, end:needHigh}
     }
+
     return {start:needLow, end:needHigh}
 }
 
@@ -239,8 +247,28 @@ export const compactSegments = (segments:Segment[], dfs:DFData[], keep:Segment):
 
 export class SmartRowCache {
 
-    private segments: Segment[] = []
+    public segments: Segment[] = []
     private dfs: DFData[] = []
+    // These tuning factors are sensitive.
+    // there are other serverside and ag-grid tuning factors too.
+    // those are "rowRequestSize" from ag-grid verify prop name
+    // and the serverside followon payload size.
+    // to be safe  maxSize should be 10* rowRequestSize
+    // and followon payload size should be  1/3rd to 1/4 of maxSize
+
+    // RRS = 40
+    // maxSize = 400
+    // followon = 100
+
+    // given all of this we want some signal for "not at the end of cache, but fire off the next request anyways"
+
+    // the idea is that the user shouldn't have to wait for a server side request.
+
+    // also especially for sorting, that is expensive, fire off the
+    // first cache filling with the min, but while that DF is still
+    // sorted serverside, sned the followno request.
+    
+    
     public maxSize: number = 1000;
     public trimFactor:number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0,0];
@@ -304,6 +332,7 @@ export class SmartRowCache {
 		return true;
 	    }
 	    if(segmentsOverlap(ourSeg, needSeg)) {
+		console.log("ourSeg", ourSeg);
 		return minimumFillArgs(ourSeg, needSeg)
 	    }
 	}
