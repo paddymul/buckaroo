@@ -333,10 +333,6 @@ export class SmartRowCache {
     public hasRows(needSeg:Segment): RequestArgs {
 	this.lastRequest = needSeg;
 	for (const ourSeg of this.segments) {
-	    // if(segmentSubset(ourSeg, needSeg)) {
-	    // 	//we have the entire segment
-	    // 	return true;
-	    // }
 	    if(segmentsOverlap(ourSeg, needSeg)) {
 		return minimumFillArgs(ourSeg, needSeg)
 	    }
