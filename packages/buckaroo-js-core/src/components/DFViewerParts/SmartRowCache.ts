@@ -150,28 +150,23 @@ export const minimumFillArgs = ( haveSegment:Segment, needSegment:Segment):Reque
 	return true
     } 
     else if (needLow === haveLow) {
-	console.log("needLow === haveLow")
 	return {start:haveHigh, end:needHigh}
     }
     else if (needHigh === haveHigh) {
-	console.log("needHigh === haveHigh")
 	return {start:needLow, end:haveLow}
     }
     else if (segmentSubset(needSegment, haveSegment)) {
-	console.log("needSegment completely encompases haveSegment, requesting  all of need")
 	// this will duplicate the haveSegment, but we can't issue two
 	// requests from here rare case not currently encountered by
 	// the code, and not worth the complexity
 	return {start:needLow, end:needHigh}
     }
     else if (needLow < haveLow) {
-	console.log("needLow < haveLow")
 	return {start:needLow, end:haveLow}
     } else if (haveLow < needLow) {
-	console.log("haveLow < needLow")
 	return {start:haveHigh, end:needHigh}
     }
-
+    // we have none of it, so request  all of it
     return {start:needLow, end:needHigh}
 }
 
@@ -343,7 +338,6 @@ export class SmartRowCache {
 		return true;
 	    }
 	    if(segmentsOverlap(ourSeg, needSeg)) {
-		console.log("ourSeg", ourSeg);
 		return minimumFillArgs(ourSeg, needSeg)
 	    }
 	}
