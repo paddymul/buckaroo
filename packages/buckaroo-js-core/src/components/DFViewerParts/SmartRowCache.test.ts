@@ -88,6 +88,11 @@ describe('segment operators', () => {
 	//same start
 	expect(minimumFillArgs([0,20], [0,30])).toStrictEqual({'start':20, 'end':30})
     })
+    test('test minimumFillArgs nothing needed', () => {
+	//nothing needed 
+	expect(minimumFillArgs([0,30], [0,20])).toStrictEqual(true)
+	expect(minimumFillArgs([0,30], [10,20])).toStrictEqual(true)
+    })
 })
 
 //export const segE:Segment = [12, 15]
