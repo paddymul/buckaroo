@@ -34,6 +34,13 @@ export const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segme
 	    //slicing greater than the length of an array returns []
 	    const restSegments = retSegments.concat(segments.slice(i+1))
 	    const restDfs = retDFs.concat(dfs.slice(i+1))
+
+	    // it's possible that this could be slow if we have to
+	    // call recursively a bunch. I doubt it because I can't
+	    // think of many request patterns that leave a fragmented
+	    // segment set. You'll either be scrolling from one side
+	    // or the other. Not adding stuff in the middle which
+	    // causes a bunch of merging.
 	    return mergeSegments(restSegments, restDfs, addSegment, addDf);
 	}
 	retSegments.push(seg)
@@ -55,6 +62,9 @@ export const mergeSegments = (segments:Segment[], dfs:DFData[], newSegment:Segme
 }
 
 export const merge = (leftSD:SegData, rightSD:SegData): SegData => {
+    // This is the core performance sensitive function
+
+    // verify this is the fastest method
     const [leftSeg, leftDF] = leftSD;
     const [rightSeg, rightDF ] = rightSD;
     if (segmentLT(rightSeg, leftSeg)) {
