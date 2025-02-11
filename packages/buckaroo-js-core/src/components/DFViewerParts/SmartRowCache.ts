@@ -146,18 +146,29 @@ export const minimumFillArgs = ( haveSegment:Segment, needSegment:Segment):Reque
 
     if (!segmentsOverlap(haveSegment, needSegment)) {
 	return {start:needLow, end:needHigh}
-    } else if (needLow > haveLow && needHigh < haveHigh) {
+    } else if (segmentSubset(haveSegment, needSegment)) {
 	return true
     } 
-    // else if (segmentSubset(needSegment, haveSegment)) {
-    // 	// this will duplicate the haveSegment, but we can't issue two
-    // 	// requests from here rare case not currently encountered by
-    // 	// the code, and not worth the complexity
-    // 	return {start:needLow, end:needHigh}
-    // }
+    else if (needLow === haveLow) {
+	console.log("needLow === haveLow")
+	return {start:haveHigh, end:needHigh}
+    }
+    else if (needHigh === haveHigh) {
+	console.log("needHigh === haveHigh")
+	return {start:needLow, end:haveLow}
+    }
+    else if (segmentSubset(needSegment, haveSegment)) {
+	console.log("needSegment completely encompases haveSegment, requesting  all of need")
+	// this will duplicate the haveSegment, but we can't issue two
+	// requests from here rare case not currently encountered by
+	// the code, and not worth the complexity
+	return {start:needLow, end:needHigh}
+    }
     else if (needLow < haveLow) {
+	console.log("needLow < haveLow")
 	return {start:needLow, end:haveLow}
     } else if (haveLow < needLow) {
+	console.log("haveLow < needLow")
 	return {start:haveHigh, end:needHigh}
     }
 

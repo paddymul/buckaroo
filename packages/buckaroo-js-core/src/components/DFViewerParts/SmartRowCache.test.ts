@@ -38,6 +38,7 @@ describe('segment operators', () => {
 
 	expect(segmentLT(low, around)).toBe(true); // start at the same place, around ends higher
 	expect(segmentLT(around, low)).toBe(false); // start at the same place, around ends higher
+
     });
 
     test('test segmentBetween', () => {
@@ -54,6 +55,7 @@ describe('segment operators', () => {
 
 	expect(segmentsOverlap(mid, high)).toBe(true);
 	expect(segmentsOverlap(low, mid)).toBe(true);
+	expect(segmentsOverlap([0,20], [0,10])).toBe(true);
     });
 
     test('test segmentSubset', () => {
@@ -64,6 +66,8 @@ describe('segment operators', () => {
 
 	expect(segmentSubset(mid, low)).toBe(false); // although they overlap, they aren't subsets
 	expect(segmentSubset(low, mid)).toBe(false); // although they overlap, they aren't subsets
+
+	expect(segmentSubset([0,20], [0,10])).toBe(true); // they start at same number, but the inner ends before
     });
 
     test('test segmentIntersect', () => {
@@ -72,6 +76,12 @@ describe('segment operators', () => {
 	expect(segmentIntersect(mid, low)).toStrictEqual([25,30]);
 	expect(segmentIntersect(low, mid)).toStrictEqual([25,30]);
     });
+
+    test('test minimumFillArgs4', () => {
+	//same start
+	expect(minimumFillArgs([0,20], [0,30])).toStrictEqual({'start':20, 'end':30})
+    })
+
 
     test('test minimumFillArgs', () => {
 	expect(minimumFillArgs(mid, low)).toStrictEqual({'start':20, 'end':25})
@@ -84,10 +94,6 @@ describe('segment operators', () => {
 	expect(minimumFillArgs(low, high)).toStrictEqual({'start':50, 'end':100})
     })
 
-    test('test minimumFillArgs4', () => {
-	//same start
-	expect(minimumFillArgs([0,20], [0,30])).toStrictEqual({'start':20, 'end':30})
-    })
     test('test minimumFillArgs nothing needed', () => {
 	//nothing needed 
 	expect(minimumFillArgs([0,30], [0,20])).toStrictEqual(true)
