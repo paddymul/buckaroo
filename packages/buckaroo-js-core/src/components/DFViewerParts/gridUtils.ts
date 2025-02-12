@@ -24,6 +24,7 @@ import { getBakedDFViewer, getSimpleTooltip } from "./SeriesSummaryTooltip";
 import { getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter } from "./Displayer";
 import { Dispatch, SetStateAction } from "react";
 import { CommandConfigT } from "../CommandUtils";
+import { Segment, SmartRowCache } from "./SmartRowCache";
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
 // as implementations grow large or with many implmentations, they should move to separate files
@@ -57,7 +58,7 @@ export function extractPinnedRows(sdf: DFData, prc: PinnedRowConfig[]) {
 export function getTooltip(ttc: TooltipConfig, single_series_summary_df: DFWhole): Partial<ColDef> {
     switch (ttc.tooltip_type) {
         case "simple":
-            return { tooltipComponent: getSimpleTooltip(ttc.val_column)};
+            return { tooltipComponent: getSimpleTooltip(ttc.val_column) };
 
         case "summary_series":
             return {
@@ -279,8 +280,7 @@ export const getDsOrig = (
                         const toResp = respCache.get(origKey);
                         if (toResp === undefined && attempt < 30) {
                             console.log(
-                                `Attempt ${
-                                    attempt + 1
+                                `Attempt ${attempt + 1
                                 }: Data not found in cache, retrying... in ${retryWait} tried`,
                                 origKey,
                             );
@@ -291,8 +291,8 @@ export const getDsOrig = (
                             if (!expectedPayload) {
                                 console.log("got back the wrong payload");
                             }
-			    //@ts-ignore
-			    console.log("resp time", window.start - (new Date()));
+                            //@ts-ignore
+                            console.log("resp time", window.start - (new Date()));
                             console.log("found data for", origKey, toResp.data);
 
                             params.successCallback(toResp.data, toResp.length);
@@ -321,8 +321,8 @@ export const getDsOrig = (
                     console.log("got back the wrong payload");
                     return;
                 }
-		//@ts-ignore
-		console.log("resp time417", window.start - (new Date()));
+                //@ts-ignore
+                console.log("resp time417", window.start - (new Date()));
                 params.successCallback(resp.data, resp.length);
                 // after the first success, prepopulate the cache for the following request
                 setPaState2(dsPayloadArgsNext);
@@ -334,8 +334,8 @@ export const getDsOrig = (
 
 export const getDs = (
     setPaState2: (pa: PayloadArgs) => void,
-    respCache: LruCache<PayloadResponse>,
-    model:any
+    srCache: SmartRowCache,
+    model: any
 ): TimedIDatasource => {
     const dsLoc: TimedIDatasource = {
         createTime: new Date(),
@@ -354,53 +354,44 @@ export const getDs = (
             console.log("gridUtils context outside_df_params", params.context?.outside_df_params);
             const origKey = getPayloadKey(dsPayloadArgs);
 
-	    model.on("msg:custom", (msg:any) => {
-		console.log(`451 new message: ${JSON.stringify(msg)}`);
+            model.on("msg:custom", (msg: any) => {
+                console.log(`451 new message: ${JSON.stringify(msg)}`);
 
-		if(msg?.type !== "infinite_resp") {
-		    console.log("bailing not infinite_resp")
-		    return
-		}
-		if (msg.data === undefined) {
-		    console.log("bailing no data", msg)
-		    return
-		}
-		const payloadKey = getPayloadKey(dsPayloadArgs);
-		const respKey = getPayloadKey(msg?.key);
-		if ( payloadKey !== respKey) {
-		    console.log("bailing payload args not equal", msg)
-		    console.log(`expected |${payloadKey}| got |${respKey}|`)
-		    return
-		}
-		console.log("calling succes callback", msg)
-		//@ts-ignore
-		params.successCallback(msg?.data, msg?.length);
-	    });
-
-            const resp = respCache.get(origKey);
-
-            if (resp === undefined) {
-		setPaState2(dsPayloadArgs);                
-            } else {
-                const expectedPayload = getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
-                console.log(
-                    "data already in cache",
-                    dsPayloadArgs.start,
-                    dsPayloadArgs.end,
-                    expectedPayload,
-                    dsPayloadArgs,
-                    resp.key,
-                );
-                if (!expectedPayload) {
-                    console.log("got back the wrong payload");
-                    return;
+                if (msg?.type !== "infinite_resp") {
+                    console.log("bailing not infinite_resp")
+                    return
                 }
-		//@ts-ignore
-		console.log("resp time417", window.start - (new Date()));
-                params.successCallback(resp.data, resp.length);
-                // after the first success, prepopulate the cache for the following request
-                //setPaState2(dsPayloadArgsNext);
+                if (msg.data === undefined) {
+                    console.log("bailing no data", msg)
+                    return
+                }
+                const payloadKey = getPayloadKey(dsPayloadArgs);
+                
+                const respKey = getPayloadKey(msg?.key);
+                if (payloadKey !== respKey) {
+                    console.log("bailing payload args not equal", msg)
+                    console.log(`expected |${payloadKey}| got |${respKey}|`)
+                    return
+                }
+                console.log("calling succes callback", msg.key)
+                //@ts-ignore
+                const requestSegment:Segment = [dsPayloadArgs.start, dsPayloadArgs.end];
+                const payload_response = msg as PayloadResponse;
+                srCache.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
+                srCache.sentLength = payload_response.length;
+                params.successCallback(msg?.data, msg?.length);
+            });
+            const requestSegment:Segment = [dsPayloadArgs.start, dsPayloadArgs.end];
+            const srResp = srCache.hasRows(requestSegment)
+            if (srResp === true) {
+                console.log("rows for ", [dsPayloadArgs.start, dsPayloadArgs.end], origKey, "already in cache doing nothing");
+                const rows:DFData = srCache.getRows(requestSegment);
+                params.successCallback(rows, srCache.sentLength);
+            } else {
+                console.log("making request for", dsPayloadArgs);
+                 setPaState2(dsPayloadArgs);
             }
+            // const resp = respCache.get(origKey);
         }
     };
     return dsLoc;

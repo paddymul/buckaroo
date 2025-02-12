@@ -5,7 +5,6 @@ import { winners } from "../../baked_data/olympic-winners";
 import {
     getDs,
     getPayloadKey,
-    LruCache,
     //@ts-ignore
     PayloadArgs,
     PayloadResponse,
@@ -14,6 +13,7 @@ import {
 import { InfiniteViewer } from "./InfiniteViewerImpl";
 import { Operation } from "../OperationUtils";
 import _ from "lodash";
+import { SmartRowCache } from "./SmartRowCache";
 
 const data: [string, Operation[]][] = [
     ["Swimming", [[{ symbol: "foo" }, { symbol: "df" }, "green"]]],
@@ -88,13 +88,16 @@ export const InfiniteWrapper = ({
     operations: Operation[];
 }) => {
     const key = getPayloadKey(payloadResponse.key);
-    const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
+    const src:SmartRowCache = useMemo(() => new SmartRowCache(), [])
 
     const ds = useMemo(() => {
         console.log("recreating ds");
-        return getDs(on_payloadArgs, respCache, {}); //this whole thing is broken
+        return getDs(on_payloadArgs, src, {}); //this whole thing is broken
     }, [operations]);
-    respCache.put(key, payloadResponse);
+
+    src.addRows([payloadResponse.key.start, payloadResponse.key.end], payloadResponse.data);
+    src.sentLength = payloadResponse.length;
+
     console.log(`tableinfinite 94 found ${payloadResponse.data.length} rows for `, key);
     return (
         <div>

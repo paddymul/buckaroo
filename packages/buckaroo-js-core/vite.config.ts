@@ -1,8 +1,9 @@
 /// <reference types="vitest" />
-//import { defineConfig } from "vite";
+//import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { peerDependencies } from "./package.json";
-import { defineConfig } from 'vitest/config'
+
 
 export default defineConfig({
     build: {

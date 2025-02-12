@@ -36,8 +36,6 @@ export const getGridOptions = (
 
         enableCellTextSelection: true,
         onRowClicked: (event) => {
-            // console.log('A row was clicked')
-            // console.log("event", event)
             const sel = document.getSelection();
             if (sel === null) {
                 return;
@@ -60,7 +58,6 @@ export const getGridOptions = (
 
         onCellClicked: (event) => {
             const colName = event.column.getColId();
-            console.log("onCellClicked", event);
             if (setActiveCol === undefined || colName === undefined) {
                 console.log("returning because setActiveCol is undefined");
                 return;
@@ -106,7 +103,6 @@ export function DFViewer({
         cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
     };
 
-    console.log("108 here");
     //const gridRef = useRef<AgGridReact<unknown>>(null);
     const pinned_rows = df_viewer_config.pinned_rows;
     const topRowData = summary_stats_data
@@ -201,7 +197,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
 
 
     const belowMinRows = (numRows + pinnedRowLen) < maxRowsWithoutScrolling;
-    console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
+    //console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
 
     const inIframeClass = inIframe ? "inIframe" : "";

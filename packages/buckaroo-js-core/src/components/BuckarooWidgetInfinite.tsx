@@ -14,12 +14,12 @@ import {
     getDs,
     getPayloadKey,
     IDisplayArgs,
-    LruCache,
     PayloadArgs,
     PayloadResponse,
 } from "./DFViewerParts/gridUtils";
 import { DatasourceOrRaw, DFViewerInfinite } from "./DFViewerParts/DFViewerInfinite";
 import { IDatasource } from "@ag-grid-community/core";
+import { SmartRowCache } from "./DFViewerParts/SmartRowCache";
 
 export const getDataWrapper = (
     data_key: string,
@@ -80,11 +80,13 @@ export function BuckarooInfiniteWidget({
     // recreation of datasource where the old respCache gets incoming response
     // only to be destroyed
 
-    const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
+    //const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
+    
+    const src = useMemo(() => new SmartRowCache(), []);
     const mainDs = useMemo(() => {
         const t = new Date();
         console.log("recreating data source because operations changed", t);
-        return getDs(on_payload_args, respCache, model);
+        return getDs(on_payload_args, src, model);
         // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
         // updating via post-processing changes appropriately.
         // forces re-render and dataload when not completely necessary if other
@@ -93,8 +95,10 @@ export function BuckarooInfiniteWidget({
         // putting buckaroo_state.post_processing doesn't work properly
     }, [operations, buckaroo_state]);
     const cacheKey = getPayloadKey(payload_response.key);
-    console.log("setting respCache", cacheKey, payload_response);
-    respCache.put(getPayloadKey(payload_response.key), payload_response);
+    console.log("initial setting src", cacheKey, payload_response);
+    src.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
+    src.sentLength = payload_response.length;
+    //respCache.put(getPayloadKey(payload_response.key), payload_response);
 
     const [activeCol, setActiveCol] = useState("stoptime");
 
