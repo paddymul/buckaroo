@@ -136,7 +136,7 @@ export function DFViewerInfinite({
             />
         );
     } else if (data_wrapper.data_type === "DataSource") {
-        const dsGridOptions = getDsGridOptions(gridOptions);
+        const dsGridOptions = getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling );
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
                 <pre>{error_info ? error_info : ""}</pre>
@@ -185,7 +185,8 @@ const RowDataViewer = ({
     );
 };
 
-const getDsGridOptions = (origGridOptions: GridOptions): GridOptions => {
+const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:number):
+ GridOptions => {
     const dsGridOptions: GridOptions = {
         ...origGridOptions,
         onSortChanged: (event: SortChangedEvent) => {
@@ -203,11 +204,11 @@ const getDsGridOptions = (origGridOptions: GridOptions): GridOptions => {
         },
         rowBuffer: 5,
         rowModelType: "infinite",
-        cacheBlockSize: 49,
-        cacheOverflowSize: 2,
+        cacheBlockSize: maxRowsWithoutScrolling + 5,
+        cacheOverflowSize: 0,
         maxConcurrentDatasourceRequests: 1,
-        maxBlocksInCache: 5,
-        infiniteInitialRowCount: 49,
+        maxBlocksInCache: 0,
+        infiniteInitialRowCount: maxRowsWithoutScrolling + 5
     };
     return dsGridOptions;
 };

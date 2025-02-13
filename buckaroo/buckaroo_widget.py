@@ -380,10 +380,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
 
         
-    @observe('payload_args')
-    def _payload_args_handler(self, change):
-        if False:
-            self._handle_payload_args(self.payload_args)
 
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(df)
