@@ -12,7 +12,7 @@ import { CommandConfigT } from "./CommandUtils";
 import { Operation } from "./OperationUtils";
 import {
     getDs,
-    getPayloadKey,
+//    getPayloadKey,
     IDisplayArgs,
     PayloadArgs,
     PayloadResponse,
@@ -93,11 +93,18 @@ export function BuckarooInfiniteWidget({
         // buckaroo_state props change
         //
         // putting buckaroo_state.post_processing doesn't work properly
-    }, [operations, buckaroo_state]);
+    }, []); // [operations, buckaroo_state]);
+    /*
     const cacheKey = getPayloadKey(payload_response.key);
     console.log("initial setting src", cacheKey, payload_response);
-    src.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
+    try {
+        console.log("about to call addRows", src.getExtents())
+        src.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
+    } catch (e:any) {
+        console.log("error with addrRows 102", e)
+    }
     src.sentLength = payload_response.length;
+    */
     //respCache.put(getPayloadKey(payload_response.key), payload_response);
 
     const [activeCol, setActiveCol] = useState("stoptime");

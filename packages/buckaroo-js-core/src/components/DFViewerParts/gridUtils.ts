@@ -241,102 +241,13 @@ export interface TimedIDatasource extends IDatasource {
     createTime: Date;
 }
 
-export const getDsOrig = (
-    setPaState2: (pa: PayloadArgs) => void,
-    respCache: LruCache<PayloadResponse>,
-): TimedIDatasource => {
-    const dsLoc: TimedIDatasource = {
-        createTime: new Date(),
-        rowCount: undefined,
-        getRows: (params: IGetRowsParams) => {
-            const sm = params.sortModel;
-            const outside_params_string = JSON.stringify(params.context?.outside_df_params);
-            const dsPayloadArgs = {
-                sourceName: outside_params_string,
-                start: params.startRow,
-                end: params.endRow,
-                sort: sm.length === 1 ? sm[0].colId : undefined,
-                sort_direction: sm.length === 1 ? sm[0].sort : undefined,
-            };
-
-            const dsPayloadArgsNext = {
-                sourceName: outside_params_string,
-                start: params.endRow,
-                end: params.endRow + (params.endRow - params.startRow),
-                sort: sm.length === 1 ? sm[0].colId : undefined,
-                sort_direction: sm.length === 1 ? sm[0].sort : undefined,
-            };
-            //      console.log('dsPayloadArgs', dsPayloadArgs, getPayloadKey(dsPayloadArgs));
-            console.log("gridUtils context outside_df_params", params.context?.outside_df_params);
-            const origKey = getPayloadKey(dsPayloadArgs);
-            const resp = respCache.get(origKey);
-
-            if (resp === undefined) {
-                const tryFetching = (attempt: number) => {
-                    //const retryWait = 30 * Math.pow(1.7, attempt);
-                    //fetching is really cheap.  I'm going to go every 10ms up until 400 ms
-                    const retryWait = 15;
-                    setTimeout(() => {
-                        const toResp = respCache.get(origKey);
-                        if (toResp === undefined && attempt < 30) {
-                            console.log(
-                                `Attempt ${attempt + 1
-                                }: Data not found in cache, retrying... in ${retryWait} tried`,
-                                origKey,
-                            );
-                            tryFetching(attempt + 1);
-                        } else if (toResp !== undefined) {
-                            const expectedPayload =
-                                getPayloadKey(dsPayloadArgs) === getPayloadKey(toResp.key);
-                            if (!expectedPayload) {
-                                console.log("got back the wrong payload");
-                            }
-                            //@ts-ignore
-                            console.log("resp time", window.start - (new Date()));
-                            console.log("found data for", origKey, toResp.data);
-
-                            params.successCallback(toResp.data, toResp.length);
-                            // after the first success, prepopulate the cache for the following request
-                            setPaState2(dsPayloadArgsNext);
-                        } else {
-                            console.log("Failed to fetch data after 5 attempts");
-                        }
-                    }, retryWait); // Increase timeout exponentially
-                };
-
-                console.log("after setTimeout, about to call setPayloadArgs", dsPayloadArgs);
-                tryFetching(0);
-                setPaState2(dsPayloadArgs);
-            } else {
-                const expectedPayload = getPayloadKey(dsPayloadArgs) === getPayloadKey(resp.key);
-                console.log(
-                    "data already in cache",
-                    dsPayloadArgs.start,
-                    dsPayloadArgs.end,
-                    expectedPayload,
-                    dsPayloadArgs,
-                    resp.key,
-                );
-                if (!expectedPayload) {
-                    console.log("got back the wrong payload");
-                    return;
-                }
-                //@ts-ignore
-                console.log("resp time417", window.start - (new Date()));
-                params.successCallback(resp.data, resp.length);
-                // after the first success, prepopulate the cache for the following request
-                setPaState2(dsPayloadArgsNext);
-            }
-        },
-    };
-    return dsLoc;
-};
 
 export const getDs = (
     setPaState2: (pa: PayloadArgs) => void,
     srCache: SmartRowCache,
     model: any
 ): TimedIDatasource => {
+    console.log("setPaState2", setPaState2)
     const dsLoc: TimedIDatasource = {
         createTime: new Date(),
         rowCount: undefined,
@@ -373,13 +284,19 @@ export const getDs = (
                     console.log(`expected |${payloadKey}| got |${respKey}|`)
                     return
                 }
-                console.log("calling succes callback", msg.key)
+                console.log("calling success callback", msg.key)
                 //@ts-ignore
                 const requestSegment:Segment = [dsPayloadArgs.start, dsPayloadArgs.end];
                 const payload_response = msg as PayloadResponse;
                 srCache.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
                 srCache.sentLength = payload_response.length;
-                params.successCallback(msg?.data, msg?.length);
+                try {
+                    const rows = srCache.getRows(requestSegment);
+                    params.successCallback(rows, srCache.sentLength);
+                } catch (e) {
+                    console.log("error, probably from getRows", e)
+                }
+
             });
             const requestSegment:Segment = [dsPayloadArgs.start, dsPayloadArgs.end];
             const srResp = srCache.hasRows(requestSegment)
@@ -389,7 +306,9 @@ export const getDs = (
                 params.successCallback(rows, srCache.sentLength);
             } else {
                 console.log("making request for", dsPayloadArgs);
-                 setPaState2(dsPayloadArgs);
+                 debugger;
+                 const ab = model.send({type:'infinite_request', payload_args:dsPayloadArgs})
+                 console.log("ab", ab)
             }
             // const resp = respCache.get(origKey);
         }
