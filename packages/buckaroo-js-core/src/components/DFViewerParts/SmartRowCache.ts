@@ -13,6 +13,32 @@ export type Segment = [number, number];
 export type RequestArgs = RowRequest | true;
 export type SegData = [Segment, DFData];
 
+export interface PayloadArgs {
+    sourceName: string;
+    start: number;
+    end: number;
+    sort?: string;
+    sort_direction?: string;
+}
+export interface PayloadResponse {
+    key: PayloadArgs;
+    data: DFData;
+    length: number;
+    error_info?: string;
+}
+
+
+export const getPayloadKey = (payloadArgs: PayloadArgs): string => {
+    return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}`;
+};
+
+export const getSourcePayloadKey = (payloadArgs: PayloadArgs): string => {
+    // exclude start and end, we need to know which cache to append to
+    return `${payloadArgs.sourceName}-${payloadArgs.sort}-${payloadArgs.sort_direction}`;
+};
+
+
+
 export const mergeSegments = (segments: Segment[], dfs: DFData[], newSegment: Segment, newDF: DFData): [Segment[], DFData[]] => {
 
 
@@ -367,3 +393,92 @@ export class SmartRowCache {
         throw new Error(`Missing rows for {range}`)
     }
 }
+
+export class KeyAwareSmartRowCache {
+
+    private subRowCaches: Record<string, SmartRowCache>
+
+    private waitingCallbacks: Record<string, any>
+    public sentLength: number = 5000;
+
+
+    public maxSize: number = 1000;
+    public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
+    public lastRequest: Segment = [0, 0];
+
+    public usedSize(): number {
+	return _sum(_.map(_.values(this.subRowCaches), (src) => src.usedSize()))
+    }
+
+
+
+    public hasRows(pa:PayloadArgs): boolean {
+	// this should probably be "ensure rows"
+	const srcKey = getSourcePayloadKey(pa)
+	const seg:Segment = [pa.start, pa.end];
+	if(!_.has(this.subRowCaches, srcKey)) {
+	    return false
+	}
+	const reqArgs = this.subRowCaches[srcKey].hasRows(seg)
+	if (reqArgs === true) {
+	    return true
+	}
+	return false
+    }
+
+    public getRows(pa:PayloadArgs): DFData {
+	const srcKey = getSourcePayloadKey(pa)
+	const seg:Segment = [pa.start, pa.end];
+	if(!_.has(this.subRowCaches, srcKey)) {
+            throw new Error(`Missing source for  ${pa}`)
+	}
+	return this.subRowCaches[srcKey].getRows(seg);
+    }
+
+    public getRequestRows(pa:PayloadArgs, cb:any): void {
+	// this function fires off a request for the rows, and when
+	// that request is filled calls cb
+
+	// maybe this should be async
+	// const srcKey = getSourcePayloadKey(pa)
+	// const seg:Segment = [pa.start, pa.end];
+
+	if (this.hasRows(pa)) {
+	    cb(this.getRows(pa))
+	    return
+	}
+
+	// note here we are using the full payload key because the start and end rows matter
+	const cbKey = getPayloadKey(pa)
+	this.waitingCallbacks[cbKey] = cb
+
+	// fire off the request here
+    }
+
+    public addPayloadResponse(resp:PayloadResponse) => {
+	const srcKey = getSourcePayloadKey(resp.key)
+	const seg:Segment = [resp.key.start, resp.key.end];
+
+	if(!_.has(this.subRowCaches, srcKey)) {
+	    subRowCaches[srcKey] = new SmartRowCache();
+	}
+	subRowCaches[srcKey].addRows(seg, resp.data)
+	const cbKey = getPayloadKey(resp.key)
+	if (_.has(this.waitingCallbacks,cbKey)) {
+	    this.waitingCallbacks[cbKey](this.getRows(resp.key))
+	    delete this.waitingCallbacks[cbKey]
+	}
+    }
+
+    public trim():void {
+	/*
+	  trim should go through sources in least recently used order.
+	  and trim each of the caches to the initial display size.
+
+	  Then if more space is needed, start deleting the older caches.
+
+	 */
+	
+    }
+}
+

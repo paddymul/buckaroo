@@ -180,19 +180,7 @@ export function extractSDFT(summaryStatsDf: DFData): SDFT {
     });
     return zipObject(allColumns, vals) as SDFT;
 }
-export interface PayloadArgs {
-    sourceName: string;
-    start: number;
-    end: number;
-    sort?: string;
-    sort_direction?: string;
-}
-export interface PayloadResponse {
-    key: PayloadArgs;
-    data: DFData;
-    length: number;
-    error_info?: string;
-}
+
 export const getPayloadKey = (payloadArgs: PayloadArgs): string => {
     return `${payloadArgs.sourceName}-${payloadArgs.start}-${payloadArgs.end}-${payloadArgs.sort}-${payloadArgs.sort_direction}`;
 };
