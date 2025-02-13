@@ -1,4 +1,4 @@
-import _ from "lodash";
+import * as _ from "lodash";
 import {
     DFData,
 } from "./DFWhole";
@@ -396,21 +396,22 @@ export class SmartRowCache {
 }
 
 
-export type RequestFn = (pa:PayloadArgs) => void 
+export type RequestFN = (pa:PayloadArgs) => void 
 type SubrowCacheDict = Record<string, SmartRowCache>;
+export type FoundRowsCB = (df:DFData, length:number) => void;
 
 export class KeyAwareSmartRowCache {
 
     private subRowCaches: SubrowCacheDict
 
-    private waitingCallbacks: Record<string, any>
-    private reqFn: RequestFn;
+    private waitingCallbacks: Record<string, FoundRowsCB>
+    private reqFn: RequestFN;
 
     public maxSize: number = 1000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
 
-    constructor(reqFn:RequestFn) {
+    constructor(reqFn:RequestFN) {
 	this.reqFn = reqFn;
 	this.subRowCaches = {};
 	this.waitingCallbacks = {};
@@ -455,8 +456,10 @@ export class KeyAwareSmartRowCache {
 	// const seg:Segment = [pa.start, pa.end];
 
 	if (this.hasRows(pa)) {
-	    cb(this.getRows(pa));
-	    return
+	    cb(this.getRows(pa), 459);
+	    const cbKey = getPayloadKey(pa)
+	    delete this.waitingCallbacks[cbKey]
+	    return;
 	}
 
 	// note here we are using the full payload key because the start and end rows matter
@@ -477,7 +480,7 @@ export class KeyAwareSmartRowCache {
 	this.subRowCaches[srcKey].addRows(seg, resp.data)
 	const cbKey = getPayloadKey(resp.key)
 	if (_.has(this.waitingCallbacks,cbKey)) {
-	    this.waitingCallbacks[cbKey](this.getRows(resp.key))
+	    this.waitingCallbacks[cbKey](this.getRows(resp.key), 463)
 	    delete this.waitingCallbacks[cbKey]
 	}
     }

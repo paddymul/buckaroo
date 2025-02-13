@@ -14,10 +14,15 @@ import {
     segmentIntersect,
     compactSegments,
     SmartRowCache,
-    minimumFillArgs
+    minimumFillArgs,
+    KeyAwareSmartRowCache,
+    PayloadArgs,
+    //PayloadResponse,
+//    RequestFN
 } from "./SmartRowCache"
 import {
     DFData,
+    DFDataRow
 } from "./DFWhole";
 
 
@@ -341,10 +346,13 @@ describe('size management tests', () => {
     })
 })
 
-const genRows = (low:number, high:number):[Segment, DFData] => {
+
+const genRows = (low:number, high:number, key:string ='a'):[Segment, DFData] => {
     const retDF = [];
     for(var i=low; i<high; i++) {
-	retDF.push({'a':i})
+	const row:DFDataRow = {};
+	row[key] = i
+	retDF.push(row)
     }
     return [[low, high] as Segment, retDF]
 }
@@ -434,3 +442,30 @@ describe('SmartRowCache tests', () => {
 	
     })
 })
+
+fdescribe('KeyAwareSmartRowCache tests', () => {
+    test('basic KeyAwareSmartRowCache tests', () => {
+
+	let src:KeyAwareSmartRowCache;
+
+
+	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+	    console.log("reqFn", pa)
+	})
+
+	src = new KeyAwareSmartRowCache(mockRequestFn);
+
+	const pa1: PayloadArgs = {
+	    sourceName:"foo", start:0, end:20}
+
+	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa1, mockCbFn)
+	// The mock function was called twice
+	expect(mockRequestFn.mock.calls).toHaveLength(1);	
+	//expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
+    })
+});
+
