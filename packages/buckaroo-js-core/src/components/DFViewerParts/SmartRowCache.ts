@@ -411,6 +411,7 @@ export class KeyAwareSmartRowCache {
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
 
+    public padding: number = 100;
     constructor(reqFn:RequestFN) {
 	this.reqFn = reqFn;
 	this.subRowCaches = {};
@@ -468,6 +469,13 @@ export class KeyAwareSmartRowCache {
 
 	// fire off the request here
 	this.reqFn(pa);
+
+	// make the next request
+	const followonArgs:PayloadArgs = {
+	    'sourceName':pa.sourceName, 'sort':pa.sort, 'sort_direction':pa.sort_direction,
+	    'start':pa.end, 'end':pa.end + this.padding
+	}
+	this.reqFn(followonArgs)
     }
 
     public addPayloadResponse(resp:PayloadResponse)  {

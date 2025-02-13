@@ -17,7 +17,7 @@ import {
     minimumFillArgs,
     KeyAwareSmartRowCache,
     PayloadArgs,
-    //PayloadResponse,
+    PayloadResponse,
 //    RequestFN
 } from "./SmartRowCache"
 import {
@@ -443,7 +443,7 @@ describe('SmartRowCache tests', () => {
     })
 })
 
-fdescribe('KeyAwareSmartRowCache tests', () => {
+describe('KeyAwareSmartRowCache tests', () => {
     test('basic KeyAwareSmartRowCache tests', () => {
 
 	let src:KeyAwareSmartRowCache;
@@ -463,12 +463,84 @@ fdescribe('KeyAwareSmartRowCache tests', () => {
 	})
 
 	src.getRequestRows(pa1, mockCbFn)
-	// The mock function was called twice
-	expect(mockRequestFn.mock.calls).toHaveLength(1);
+	// The mock function was called twice, once for the first request, and again for the followon
+	expect(mockRequestFn.mock.calls).toHaveLength(2);
 
 	expect(mockRequestFn.mock.calls[0][0]).toStrictEqual(pa1)
 	
 	//expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
+    })
+    test('test that callback is called', () => {
+
+	let src:KeyAwareSmartRowCache;
+
+
+	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+	    console.log("reqFn", pa)
+	    const resp:PayloadResponse = {
+		key:pa,
+		data:genRows(pa.start, pa.end, pa.sourceName)[1],
+		length:800
+	    }
+	    src.addPayloadResponse(resp)
+	})
+
+	src = new KeyAwareSmartRowCache(mockRequestFn);
+
+	const pa1: PayloadArgs = {
+	    sourceName:"foo", start:0, end:20}
+
+	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa1, mockCbFn)
+	expect(mockCbFn.mock.calls).toHaveLength(1);
+    })
+    test('test that second request is made', () => {
+
+	let src:KeyAwareSmartRowCache;
+
+
+	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+	    console.log("reqFn", pa)
+	    const resp:PayloadResponse = {
+		key:pa,
+		data:genRows(pa.start, pa.end, pa.sourceName)[1],
+		length:800
+	    }
+	    src.addPayloadResponse(resp)
+	})
+
+	src = new KeyAwareSmartRowCache(mockRequestFn);
+
+	const pa1: PayloadArgs = {
+	    sourceName:"foo", start:0, end:20}
+
+	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa1, mockCbFn)
+	expect(mockRequestFn.mock.calls).toHaveLength(2);
+
+	expect(src.usedSize()).toBe(120)
+
+
+	const pa2: PayloadArgs = {
+	    sourceName:"foo", start:40, end:60}
+
+	const mockCbFn2 = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa2, mockCbFn2)
+
+	// this should be cached, and shouldn't generate a second request
+	expect(mockRequestFn.mock.calls).toHaveLength(2);
+
+
+
     })
 });
 
