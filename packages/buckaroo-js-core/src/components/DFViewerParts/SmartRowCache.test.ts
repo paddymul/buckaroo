@@ -464,7 +464,10 @@ fdescribe('KeyAwareSmartRowCache tests', () => {
 
 	src.getRequestRows(pa1, mockCbFn)
 	// The mock function was called twice
-	expect(mockRequestFn.mock.calls).toHaveLength(1);	
+	expect(mockRequestFn.mock.calls).toHaveLength(1);
+
+	expect(mockRequestFn.mock.calls[0][0]).toStrictEqual(pa1)
+	
 	//expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
     })
 });
