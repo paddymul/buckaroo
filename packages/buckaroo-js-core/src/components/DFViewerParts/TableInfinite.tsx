@@ -1,19 +1,18 @@
 "use strict";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { winners } from "../../baked_data/olympic-winners";
 import {
-    getDs,
-    getPayloadKey,
+//    getDs,
+//    getPayloadKey,
     //@ts-ignore
     PayloadArgs,
-    PayloadResponse,
     //  sourceName,
 } from "./gridUtils";
-import { InfiniteViewer } from "./InfiniteViewerImpl";
+//import { InfiniteViewer } from "./InfiniteViewerImpl";
 import { Operation } from "../OperationUtils";
 import _ from "lodash";
-import { SmartRowCache } from "./SmartRowCache";
+import { PayloadResponse } from "./SmartRowCache";
 
 const data: [string, Operation[]][] = [
     ["Swimming", [[{ symbol: "foo" }, { symbol: "df" }, "green"]]],
@@ -78,21 +77,25 @@ const getDataset = (sportName: string) => {
 export const InfiniteWrapper = ({
     //@ts-ignore
     payloadArgs,
+    //@ts-ignore
     on_payloadArgs,
     payloadResponse,
     operations,
+    
 }: {
     payloadArgs: PayloadArgs;
     on_payloadArgs: (pa: PayloadArgs) => void;
     payloadResponse: PayloadResponse;
     operations: Operation[];
 }) => {
-    const key = getPayloadKey(payloadResponse.key);
-    const src:SmartRowCache = useMemo(() => new SmartRowCache(), [])
+    console.log("here", payloadArgs,on_payloadArgs, payloadResponse, operations);
+    return <h1>broken</h1>
+    //    const key = getPayloadKey(payloadResponse.key);
 
+    /*
     const ds = useMemo(() => {
         console.log("recreating ds");
-        return getDs(on_payloadArgs, src, {}); //this whole thing is broken
+        return getDs({}); //this whole thing is broken
     }, [operations]);
 
     src.addRows([payloadResponse.key.start, payloadResponse.key.end], payloadResponse.data);
@@ -106,6 +109,7 @@ export const InfiniteWrapper = ({
             <InfiniteViewer dataSource={ds} operations={operations} />
         </div>
     );
+    */
 };
 
 export const InfiniteEx = () => {

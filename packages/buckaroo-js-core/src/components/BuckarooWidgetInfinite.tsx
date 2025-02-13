@@ -12,14 +12,11 @@ import { CommandConfigT } from "./CommandUtils";
 import { Operation } from "./OperationUtils";
 import {
     getDs,
-//    getPayloadKey,
-    IDisplayArgs,
-    PayloadArgs,
-    PayloadResponse,
+    IDisplayArgs
 } from "./DFViewerParts/gridUtils";
 import { DatasourceOrRaw, DFViewerInfinite } from "./DFViewerParts/DFViewerInfinite";
 import { IDatasource } from "@ag-grid-community/core";
-import { SmartRowCache } from "./DFViewerParts/SmartRowCache";
+import { KeyAwareSmartRowCache, PayloadArgs, PayloadResponse, RequestFN } from "./DFViewerParts/SmartRowCache";
 
 export const getDataWrapper = (
     data_key: string,
@@ -45,6 +42,7 @@ export const getDataWrapper = (
 export function BuckarooInfiniteWidget({
     //@ts-ignore
     payload_args,
+    //@ts-ignore
     on_payload_args,
     payload_response,
     df_data_dict,
@@ -80,13 +78,31 @@ export function BuckarooInfiniteWidget({
     // recreation of datasource where the old respCache gets incoming response
     // only to be destroyed
 
-    //const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
     
-    const src = useMemo(() => new SmartRowCache(), []);
+    const reqFn:RequestFN = (pa:PayloadArgs) => {
+        model.send({type:'infinite_request', payload_args:pa})
+    }
+
+    const src = new KeyAwareSmartRowCache(reqFn);
+    model.on("msg:custom", (msg: any) => {
+        if (msg?.type !== "infinite_resp") {
+            console.log("bailing not infinite_resp")
+            return
+        }
+        if (msg.data === undefined) {
+            console.log("bailing no data", msg)
+            return
+        }
+        const payload_response = msg as PayloadResponse;
+        console.log("got a response for ", payload_response.key);
+
+        src.addPayloadResponse(payload_response);
+    });
+
     const mainDs = useMemo(() => {
         const t = new Date();
         console.log("recreating data source because operations changed", t);
-        return getDs(on_payload_args, src, model);
+        return getDs(src);
         // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
         // updating via post-processing changes appropriately.
         // forces re-render and dataload when not completely necessary if other

@@ -24,7 +24,7 @@ import { getBakedDFViewer, getSimpleTooltip } from "./SeriesSummaryTooltip";
 import { getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter } from "./Displayer";
 import { Dispatch, SetStateAction } from "react";
 import { CommandConfigT } from "../CommandUtils";
-import { Segment, SmartRowCache } from "./SmartRowCache";
+import { KeyAwareSmartRowCache, PayloadArgs } from "./SmartRowCache";
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
 // as implementations grow large or with many implmentations, they should move to separate files
@@ -223,7 +223,6 @@ export class LruCache<T> {
         this.values.set(key, value);
     }
 }
-export type RespCache = LruCache<PayloadResponse>;
 
 export interface TimedIDatasource extends IDatasource {
     createTime: Date;
@@ -231,11 +230,8 @@ export interface TimedIDatasource extends IDatasource {
 
 
 export const getDs = (
-    setPaState2: (pa: PayloadArgs) => void,
-    srCache: SmartRowCache,
-    model: any
+    src: KeyAwareSmartRowCache,
 ): TimedIDatasource => {
-    console.log("setPaState2", setPaState2)
     const dsLoc: TimedIDatasource = {
         createTime: new Date(),
         rowCount: undefined,
@@ -249,56 +245,7 @@ export const getDs = (
                 sort: sm.length === 1 ? sm[0].colId : undefined,
                 sort_direction: sm.length === 1 ? sm[0].sort : undefined,
             };
-
-            console.log("gridUtils context outside_df_params", params.context?.outside_df_params);
-            const origKey = getPayloadKey(dsPayloadArgs);
-
-            model.on("msg:custom", (msg: any) => {
-                console.log(`451 new message: ${JSON.stringify(msg)}`);
-
-                if (msg?.type !== "infinite_resp") {
-                    console.log("bailing not infinite_resp")
-                    return
-                }
-                if (msg.data === undefined) {
-                    console.log("bailing no data", msg)
-                    return
-                }
-                const payloadKey = getPayloadKey(dsPayloadArgs);
-                
-                const respKey = getPayloadKey(msg?.key);
-                if (payloadKey !== respKey) {
-                    console.log("bailing payload args not equal", msg)
-                    console.log(`expected |${payloadKey}| got |${respKey}|`)
-                    return
-                }
-                console.log("calling success callback", msg.key)
-                //@ts-ignore
-                const requestSegment:Segment = [dsPayloadArgs.start, dsPayloadArgs.end];
-                const payload_response = msg as PayloadResponse;
-                srCache.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
-                srCache.sentLength = payload_response.length;
-                try {
-                    const rows = srCache.getRows(requestSegment);
-                    params.successCallback(rows, srCache.sentLength);
-                } catch (e) {
-                    console.log("error, probably from getRows", e)
-                }
-
-            });
-            const requestSegment:Segment = [dsPayloadArgs.start, dsPayloadArgs.end];
-            const srResp = srCache.hasRows(requestSegment)
-            if (srResp === true) {
-                console.log("rows for ", [dsPayloadArgs.start, dsPayloadArgs.end], origKey, "already in cache doing nothing");
-                const rows:DFData = srCache.getRows(requestSegment);
-                params.successCallback(rows, srCache.sentLength);
-            } else {
-                console.log("making request for", dsPayloadArgs);
-                 debugger;
-                 const ab = model.send({type:'infinite_request', payload_args:dsPayloadArgs})
-                 console.log("ab", ab)
-            }
-            // const resp = respCache.get(origKey);
+            src.getRequestRows(dsPayloadArgs, params.successCallback)
         }
     };
     return dsLoc;
