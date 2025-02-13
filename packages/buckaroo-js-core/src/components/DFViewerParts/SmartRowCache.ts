@@ -1,3 +1,4 @@
+import _ from "lodash";
 import {
     DFData,
 } from "./DFWhole";
@@ -394,20 +395,30 @@ export class SmartRowCache {
     }
 }
 
+
+export type RequestFn = (pa:PayloadArgs) => void 
+type SubrowCacheDict = Record<string, SmartRowCache>;
+
 export class KeyAwareSmartRowCache {
 
-    private subRowCaches: Record<string, SmartRowCache>
+    private subRowCaches: SubrowCacheDict
 
     private waitingCallbacks: Record<string, any>
-    public sentLength: number = 5000;
-
+    private reqFn: RequestFn;
 
     public maxSize: number = 1000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
 
+    constructor(reqFn:RequestFn) {
+	this.reqFn = reqFn;
+	this.subRowCaches = {};
+	this.waitingCallbacks = {};
+    }
+ 
+
     public usedSize(): number {
-	return _sum(_.map(_.values(this.subRowCaches), (src) => src.usedSize()))
+	return _.sum(_.map(_.values(this.subRowCaches), (src) => src.usedSize()))
     }
 
 
@@ -444,7 +455,7 @@ export class KeyAwareSmartRowCache {
 	// const seg:Segment = [pa.start, pa.end];
 
 	if (this.hasRows(pa)) {
-	    cb(this.getRows(pa))
+	    cb(this.getRows(pa));
 	    return
 	}
 
@@ -453,16 +464,17 @@ export class KeyAwareSmartRowCache {
 	this.waitingCallbacks[cbKey] = cb
 
 	// fire off the request here
+	this.reqFn(pa);
     }
 
-    public addPayloadResponse(resp:PayloadResponse) => {
+    public addPayloadResponse(resp:PayloadResponse)  {
 	const srcKey = getSourcePayloadKey(resp.key)
 	const seg:Segment = [resp.key.start, resp.key.end];
 
 	if(!_.has(this.subRowCaches, srcKey)) {
-	    subRowCaches[srcKey] = new SmartRowCache();
+	    this.subRowCaches[srcKey] = new SmartRowCache();
 	}
-	subRowCaches[srcKey].addRows(seg, resp.data)
+	this.subRowCaches[srcKey].addRows(seg, resp.data)
 	const cbKey = getPayloadKey(resp.key)
 	if (_.has(this.waitingCallbacks,cbKey)) {
 	    this.waitingCallbacks[cbKey](this.getRows(resp.key))
@@ -470,7 +482,8 @@ export class KeyAwareSmartRowCache {
 	}
     }
 
-    public trim():void {
+    public trim():void  {
+	console.log("trim")
 	/*
 	  trim should go through sources in least recently used order.
 	  and trim each of the caches to the initial display size.
