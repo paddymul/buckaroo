@@ -336,7 +336,7 @@ export class SmartRowCache {
 
 
     public maxSize: number = 1000;
-    public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
+    public trimFactor: number = 0.6;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
 
     public usedSize(): number {
@@ -512,6 +512,8 @@ export class KeyAwareSmartRowCache {
                 'start': ex[1], 'end': ex[1] + this.padding
             }
             console.log("making premptive request with", followonArgs)
+            // to help with segment garbage collection
+            src.hasRows([ex[1], ex[1]+this.padding]) 
             this.reqFn(followonArgs);
         }
     }
