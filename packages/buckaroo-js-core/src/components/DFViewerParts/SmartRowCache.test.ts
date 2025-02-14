@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 //import { describe, expect } from 'jest';
 import {
     Segment,
@@ -18,7 +19,7 @@ import {
     KeyAwareSmartRowCache,
     PayloadArgs,
     PayloadResponse,
-//    RequestFN
+    //    RequestFN
 } from "./SmartRowCache"
 import {
     DFData,
@@ -441,6 +442,30 @@ describe('SmartRowCache tests', () => {
 	expect(src.getExtents()).toStrictEqual([10,43])  
 	
     })
+    test('SmartRowCache trim 2 side ', () => {
+	// based on patterns seen when actually run
+	const src = new SmartRowCache()
+	src.maxSize = 35
+	expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
+
+
+	src.addRows.apply(src, genRows(10,20))
+	expect(src.hasRows([10,20])).toBe(true)
+
+	src.addRows.apply(src, genRows(20,30))  //make sure the cache is compacted
+	expect(src.hasRows([10,30])).toBe(true)
+
+	expect(src.getRows([10, 30])).toStrictEqual(genRows(10,30)[1])
+	expect(src.usedSize()).toBe(20)
+
+	src.addRows.apply(src, genRows(35, 45))
+	expect(src.usedSize()).toBe(30)
+	src.getRows([10, 20]) // move the last request up towards the growing end
+	src.addRows.apply(src, genRows(45, 55))
+	expect(src.usedSize()).toBe(28)  // .8 * 35 = 28, (trimFactor * maxSize) floor
+	expect(src.getExtents()).toStrictEqual([10,43])  
+	
+    })
 })
 
 describe('KeyAwareSmartRowCache tests', () => {
@@ -464,10 +489,13 @@ describe('KeyAwareSmartRowCache tests', () => {
 	})
 
 	src.getRequestRows(pa1, mockCbFn, failNOP)
-	// The mock function was called twice, once for the first request, and again for the followon
-	expect(mockRequestFn.mock.calls).toHaveLength(2);
+	const second_request = {"end": 120, "sort": undefined, "sort_direction": undefined, "sourceName": "foo", "start": 20}
 
-	expect(mockRequestFn.mock.calls[0][0]).toStrictEqual(pa1)
+	const expectedRequest:PayloadArgs = {...pa1, second_request}
+	// The mock function was called twice, once for the first request, and again for the followon
+	expect(mockRequestFn.mock.calls).toHaveLength(1);
+
+	expect(mockRequestFn.mock.calls[0][0]).toStrictEqual(expectedRequest)
 	
 	//expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
     })
@@ -511,6 +539,15 @@ describe('KeyAwareSmartRowCache tests', () => {
 		length:800
 	    }
 	    src.addPayloadResponse(resp)
+	    if(pa.second_request !== undefined) {
+		const sr = pa.second_request;
+		const resp2:PayloadResponse = {
+		    key:sr,
+		    data:genRows(sr.start, sr.end, sr.sourceName)[1],
+		    length:800
+		}
+	    src.addPayloadResponse(resp2)
+	    }
 	})
 
 	src = new KeyAwareSmartRowCache(mockRequestFn);
@@ -523,7 +560,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	})
 
 	src.getRequestRows(pa1, mockCbFn, failNOP)
-	expect(mockRequestFn.mock.calls).toHaveLength(2);
+	expect(mockRequestFn.mock.calls).toHaveLength(1);
 
 	expect(src.usedSize()).toBe(120)
 
@@ -538,7 +575,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	src.getRequestRows(pa2, mockCbFn2, failNOP)
 
 	// this should be cached, and shouldn't generate a second request
-	expect(mockRequestFn.mock.calls).toHaveLength(2);
+	expect(mockRequestFn.mock.calls).toHaveLength(1);
 
 
 

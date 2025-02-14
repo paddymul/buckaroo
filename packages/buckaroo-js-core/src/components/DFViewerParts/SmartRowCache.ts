@@ -336,7 +336,7 @@ export class SmartRowCache {
 
 
     public maxSize: number = 1000;
-    public trimFactor: number = 0.6;  // trim down to trimFactor from maxSize
+    public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
 
     public usedSize(): number {
@@ -531,7 +531,7 @@ export class KeyAwareSmartRowCache {
             cb(this.getRows(pa), src.sentLength);
             const cbKey = getPayloadKey(pa)
             delete this.waitingCallbacks[cbKey]
-            this.maybeMakeLeadingRequest(pa)
+            //this.maybeMakeLeadingRequest(pa)
             return;
         }
         // note here we are using the full payload key because the start and end rows matter
