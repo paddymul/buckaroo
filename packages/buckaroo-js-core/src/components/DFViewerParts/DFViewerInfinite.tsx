@@ -119,7 +119,7 @@ export function DFViewerInfinite({
         getRowId,
         rowModelType: "clientSide",
     };
-    console.log("error_info", error_info);
+    
     if (data_wrapper.data_type === "Raw") {
         const rdGridOptions: GridOptions = {
             ...gridOptions,
@@ -171,7 +171,6 @@ const RowDataViewer = ({
     rdGridOptions: GridOptions;
     topRowData: DFData;
 }): React.JSX.Element => {
-    console.log("gridRef");
     return (
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
             <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>

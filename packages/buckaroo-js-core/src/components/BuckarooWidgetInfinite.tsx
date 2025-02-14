@@ -38,12 +38,17 @@ export const getDataWrapper = (
         };
     }
 };
+const gensym = () => {
+    let a = 0;
+    return () => {
+        a += 1;
+        return a;
+    }
+}
+
+const counter = gensym()
 
 export function BuckarooInfiniteWidget({
-    //@ts-ignore
-    payload_args,
-    //@ts-ignore
-    on_payload_args,
     payload_response,
     df_data_dict,
     df_display_args,
@@ -73,35 +78,46 @@ export function BuckarooInfiniteWidget({
     model:any
 }) {
 
-
-    // We wonly want to create respCache once, there are some swapover
-    // recreation of datasource where the old respCache gets incoming response
-    // only to be destroyed
-
+    // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
+    // so having it live between relaods is key
+    console.log("about to call useMemo")
+    const src = useMemo(() => {
+        const reqFn:RequestFN = (pa:PayloadArgs) => {
+            console.log("78 send", pa)
+            model.send({type:'infinite_request', payload_args:pa})
+        }
+        const src = new KeyAwareSmartRowCache(reqFn)
+        //const creationTime = new Date();
+        const symNum = counter();
+        console.log("about to call model.on");
+        model.on("msg:custom", (msg: any) => {
+            if (msg?.type !== "infinite_resp") {
+                console.log("bailing not infinite_resp")
+                return
+            }
+            if (msg.data === undefined) {
+                console.log("bailing no data", msg)
+                return
+            }
+            const payload_response = msg as PayloadResponse;
+            if (payload_response.error_info !== undefined) {
+                console.log("there was a problem with the request, not adding to the cache")
+                console.log(payload_response.error_info)
+            }
+            console.log("92 got a response for ", symNum, 
+                //creationTime.getUTCSeconds(), creationTime.getUTCMilliseconds() ,
+                payload_response.key);
     
-    const reqFn:RequestFN = (pa:PayloadArgs) => {
-        model.send({type:'infinite_request', payload_args:pa})
-    }
+            src.addPayloadResponse(payload_response);
+        })
+        return src;
+    }, []);
 
-    const src = new KeyAwareSmartRowCache(reqFn);
-    model.on("msg:custom", (msg: any) => {
-        if (msg?.type !== "infinite_resp") {
-            console.log("bailing not infinite_resp")
-            return
-        }
-        if (msg.data === undefined) {
-            console.log("bailing no data", msg)
-            return
-        }
-        const payload_response = msg as PayloadResponse;
-        console.log("got a response for ", payload_response.key);
-
-        src.addPayloadResponse(payload_response);
-    });
-
+    //@ts-ignore
+    window.ksrc = src
     const mainDs = useMemo(() => {
-        const t = new Date();
-        console.log("recreating data source because operations changed", t);
+        console.log("recreating data source because operations changed", new Date());
+        src.debugCacheState();
         return getDs(src);
         // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
         // updating via post-processing changes appropriately.
@@ -109,20 +125,7 @@ export function BuckarooInfiniteWidget({
         // buckaroo_state props change
         //
         // putting buckaroo_state.post_processing doesn't work properly
-    }, []); // [operations, buckaroo_state]);
-    /*
-    const cacheKey = getPayloadKey(payload_response.key);
-    console.log("initial setting src", cacheKey, payload_response);
-    try {
-        console.log("about to call addRows", src.getExtents())
-        src.addRows([payload_response.key.start, payload_response.key.end], payload_response.data);
-    } catch (e:any) {
-        console.log("error with addrRows 102", e)
-    }
-    src.sentLength = payload_response.length;
-    */
-    //respCache.put(getPayloadKey(payload_response.key), payload_response);
-
+    }, [operations, buckaroo_state]);
     const [activeCol, setActiveCol] = useState("stoptime");
 
     const cDisp = df_display_args[buckaroo_state.df_display];

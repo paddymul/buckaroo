@@ -366,20 +366,23 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 slice_df = pd_to_obj(processed_df[start:end])
                 self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':slice_df, 'length':len(processed_df)})
     
-                extra_start, extra_end = end, end+100
+                second_pa = new_payload_args.get('second_request')
+                if not second_pa:
+                    return
+                
+                extra_start, extra_end = second_pa.get('start'), second_pa.get('end')
                 extra_payload_args = dict(
                     start=extra_start, end=extra_end,
                     sourceName=new_payload_args.get('sourceName', 'no_source_name'))
                 extra_df = pd_to_obj(processed_df[extra_start:extra_end])
-                #self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':extra_df, 'length':len(processed_df)})
+                self.send(
+                    {"type": "infinite_resp", 'key':second_pa, 'data':extra_df, 'length':len(processed_df)})
         except Exception as e:
             print(e)
             stack_trace = traceback.format_exc()
             self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'error_info':stack_trace, 'length':0})
             raise
 
-
-        
 
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(df)
