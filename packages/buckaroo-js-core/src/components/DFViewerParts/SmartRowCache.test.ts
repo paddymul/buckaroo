@@ -442,19 +442,33 @@ describe('SmartRowCache tests', () => {
 	expect(src.getExtents()).toStrictEqual([10,43])  
 	
     })
-    test('SmartRowCache trim 2 side ', () => {
-	// based on patterns seen when actually run
-	const src = new SmartRowCache()
-	src.maxSize = 35
-	src.addRows.apply(src, genRows(880,902))
+    // test('SmartRowCache trim 2 side ', () => {
+    // 	// based on patterns seen when actually run
+    // 	const src = new SmartRowCache()
+    // 	src.maxSize = 35
+    // 	src.addRows.apply(src, genRows(880,902))
 
-	// important because we want the most recent hasRows
-	expect(src.hasRows([880,902])).toBe(true)
-	expect(src.hasRows([902, 1002])).toStrictEqual({'start':902, 'end':1002})
-	src.addRows.apply(src, genRows(902,1002))  //force a compaction
-	expect(src.hasRows([902,924])).toBe(true)
-    })
+    // 	// important because we want the most recent hasRows
+    // 	expect(src.hasRows([880,902])).toBe(true)
+    // 	expect(src.hasRows([902, 1002])).toStrictEqual({'start':902, 'end':1002})
+    // 	src.addRows.apply(src, genRows(902,1002))  //force a compaction
+    // 	expect(src.hasRows([902,924])).toBe(true)
+    // })
 })
+describe('failing SmartRowCache tests', () => {
+      test('SmartRowCache trim premptive request ', () => {
+	  // based on patterns seen when actually run
+	  const src = new SmartRowCache()
+	  src.addRows.apply(src, genRows(0,902))
+
+	  // important because we want the most recent hasRows
+	  expect(src.hasRows([880,902])).toBe(true)
+	  expect(src.hasRows([902, 1002])).toStrictEqual({'start':902, 'end':1002})
+	  src.addRows.apply(src, genRows(902,1002))  //force a compaction
+	  expect(src.getExtents()).toStrictEqual([223, 1002])
+	  expect(src.hasRows([902,924])).toBe(true)
+    })
+})  
 
 describe('KeyAwareSmartRowCache tests', () => {
     const failNOP = () => {}

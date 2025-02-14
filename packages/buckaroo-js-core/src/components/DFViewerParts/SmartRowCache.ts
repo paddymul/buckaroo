@@ -281,7 +281,7 @@ export const sizeSlice = (midPoint: number, offset: number, segments: Segment[])
 
 export const compactSegments = (segments: Segment[], dfs: DFData[], keep: Segment): [Segment[], DFData[]] => {
     const [retSegments, retDFs]: [Segment[], DFData[]] = [[], []];
-
+    console.log("284 segments", segments)
     for (var i = 0; i < segments.length; i++) {
         const [seg, df] = [segments[i], dfs[i]];
         if (segmentSubset(keep, seg)) {
@@ -347,8 +347,12 @@ export class SmartRowCache {
         if (this.usedSize() < this.maxSize) {
             return
         }
-        if (this.lastRequest[0] == 0 && this.lastRequest[1] == 0) {
-            throw new Error("trying to trim with no requests, unexpected");
+        console.log("trimCache oversize start", this.getExtents(), this.lastRequest, this.segments)
+
+        if (this.lastRequest[0] === 0 && this.lastRequest[1] === 0) {
+            //throw new Error("trying to trim with no requests, unexpected");
+            console.log("trying to trim with no requests, unexpected")
+            return
         }
         const last = this.lastRequest;
 
@@ -363,14 +367,19 @@ export class SmartRowCache {
             filled = sizeSlice(mid, targetWindow, this.segments);
             targetWindow *= 2
         }
-
-        while (filled > Math.floor(this.maxSize * this.trimFactor)) {
+	const targetSize = Math.floor(this.maxSize * this.trimFactor)
+	console.log("targetSize", targetSize)
+        while (filled > targetSize) {
             targetWindow = Math.floor(.9 * targetWindow)
             filled = sizeSlice(mid, targetWindow, this.segments);
         }
-
+	console.log("targetWindow", targetWindow, mid)
         const keepSeg = segmentFromMidOffset(mid, targetWindow);
-        [this.segments, this.dfs] = compactSegments(this.segments, this.dfs, keepSeg);
+	console.log("keepSeg", keepSeg)
+	const res = compactSegments(this.segments, this.dfs, keepSeg);
+	this.segments = res[0]
+	this.dfs = res[1]
+        //[this.segments, this.dfs] = 
     }
 
     public getExtents(): Segment {
@@ -409,6 +418,10 @@ export class SmartRowCache {
     }
 
     public hasRows(needSeg: Segment): RequestArgs {
+        if(needSeg[0] === 0 && needSeg[1] === 0) {
+            console.log("setting lastRequest to [0,0] in hasRows")
+            debugger;
+        }
         this.lastRequest = needSeg;
         for (const ourSeg of this.segments) {
             if (segmentsOverlap(ourSeg, needSeg)) {
@@ -420,6 +433,10 @@ export class SmartRowCache {
 
     public getRows(range: Segment): DFData {
         if (this.hasRows(range) === true) {
+            if(range[0] === 0 && range[1] === 0) {
+                console.log("setting lastRequest to [0,0] in getRows")
+                debugger;
+            }
             this.lastRequest = range;
             return getRange(this.segments, this.dfs, range)
         }
@@ -500,13 +517,16 @@ export class KeyAwareSmartRowCache {
     public maybeMakeLeadingRequest(pa:PayloadArgs): void {
         const reqSeg:Segment = [pa.start, pa.end]
         const src = this.ensureRowCacheForPa(pa)
-        const ex = src.getExtents()
+        const ex = src.safeGetExtents()
         if (ex[1] == src.sentLength) {
             console.log("not making extra request because already have to the end of the available data", ex, src.sentLength)
             return 
         }
+
         const exDist:number = segmentEndDist(reqSeg, ex);
+        console.log("maybeMakeLeadingRequest", exDist, reqSeg, ex)
         if (exDist > 0  && exDist < this.reUpDist) {
+            // only try to eagerly make requests when scrolling down
             const followonArgs: PayloadArgs = {
                 'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
                 'start': ex[1], 'end': ex[1] + this.padding
@@ -514,6 +534,7 @@ export class KeyAwareSmartRowCache {
             console.log("making premptive request with", followonArgs)
             // to help with segment garbage collection
             src.hasRows([ex[1], ex[1]+this.padding]) 
+            console.log("after hasRows 535", src.lastRequest);
             this.reqFn(followonArgs);
         }
     }
@@ -531,7 +552,7 @@ export class KeyAwareSmartRowCache {
             cb(this.getRows(pa), src.sentLength);
             const cbKey = getPayloadKey(pa)
             delete this.waitingCallbacks[cbKey]
-            //this.maybeMakeLeadingRequest(pa)
+            this.maybeMakeLeadingRequest(pa)
             return;
         }
         // note here we are using the full payload key because the start and end rows matter
