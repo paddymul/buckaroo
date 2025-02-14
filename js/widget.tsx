@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createRender, useModelState } from "@anywidget/react";
+import { createRender, useModelState, useModel } from "@anywidget/react";
 import srt from "buckaroo-js-core";
 import "./widget.css";
 import "../packages/buckaroo-js-core/dist/style.css";
@@ -173,8 +173,9 @@ const renderBuckarooWidget = createRender(() => {
 		</div>
 	);
 });
-const renderBuckarooInfiniteWidget = createRender(() => {
-	console.log("renderInfiniteBuckarooWidget");
+const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
+    const model = useModel()
+
 	const [payload_args, on_payload_args] = useModelState("payload_args");
 	const [payload_response, _set_payload_response] =
 		useModelState("payload_response");
@@ -201,19 +202,13 @@ const renderBuckarooInfiniteWidget = createRender(() => {
 				command_config={command_config}
 				buckaroo_state={buckaroo_state}
 				on_buckaroo_state={on_buckaroo_state}
-				buckaroo_options={buckaroo_options}
+	    buckaroo_options={buckaroo_options}
+	    model={model}
 			/>
 	);
 });
 
 const render = ({ el, model, experimental }) => {
-	console.log("model", model);
-	console.log("model.widget_manager", model.widget_manager);
-	// console.log(
-	// 	"model.widget_manager.attributes",
-	// 	model.widget_manager.attributes,
-	// );
-
 	const render_func_name = model.get("render_func_name");
 	console.log("render_func_name", render_func_name);
 	if (render_func_name === "DFViewer") {

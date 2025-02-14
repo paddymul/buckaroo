@@ -12,14 +12,11 @@ import { CommandConfigT } from "./CommandUtils";
 import { Operation } from "./OperationUtils";
 import {
     getDs,
-    getPayloadKey,
-    IDisplayArgs,
-    LruCache,
-    PayloadArgs,
-    PayloadResponse,
+    IDisplayArgs
 } from "./DFViewerParts/gridUtils";
 import { DatasourceOrRaw, DFViewerInfinite } from "./DFViewerParts/DFViewerInfinite";
 import { IDatasource } from "@ag-grid-community/core";
+import { KeyAwareSmartRowCache, PayloadArgs, PayloadResponse, RequestFN } from "./DFViewerParts/SmartRowCache";
 
 export const getDataWrapper = (
     data_key: string,
@@ -41,12 +38,51 @@ export const getDataWrapper = (
         };
     }
 };
+const gensym = () => {
+    let a = 0;
+    return () => {
+        a += 1;
+        return a;
+    }
+}
+
+const counter = gensym()
+const getSingleSRC = _.once((model:any, setRespError) => {
+    const symNum = counter();
+
+    console.log("in getSingSRC", symNum, new Date())
+    const reqFn:RequestFN = (pa:PayloadArgs) => {
+        console.log("78 send", pa)
+        model.send({type:'infinite_request', payload_args:pa})
+    }
+    const src = new KeyAwareSmartRowCache(reqFn)
+    console.log("about to call model.on");
+        model.on("msg:custom", (msg: any) => {
+            if (msg?.type !== "infinite_resp") {
+                console.log("bailing not infinite_resp")
+                return
+            }
+            if (msg.data === undefined) {
+                console.log("bailing no data", msg)
+                return
+            }
+            const payload_response = msg as PayloadResponse;
+            if (payload_response.error_info !== undefined) {
+                console.log("there was a problem with the request, not adding to the cache")
+                console.log(payload_response.error_info)
+                setRespError(payload_response.error_info)
+                return
+            }
+            console.log("92 got a response for ", symNum, 
+                //creationTime.getUTCSeconds(), creationTime.getUTCMilliseconds() ,
+                payload_response.key);
+    
+            src.addPayloadResponse(payload_response);
+        })
+    return src;
+})
 
 export function BuckarooInfiniteWidget({
-    //@ts-ignore
-    payload_args,
-    on_payload_args,
-    payload_response,
     df_data_dict,
     df_display_args,
     df_meta,
@@ -57,10 +93,8 @@ export function BuckarooInfiniteWidget({
     buckaroo_state,
     on_buckaroo_state,
     buckaroo_options,
+    model
 }: {
-    payload_args: PayloadArgs;
-    on_payload_args: (pa: PayloadArgs) => void;
-    payload_response: PayloadResponse;
     df_meta: DFMeta;
     df_data_dict: Record<string, DFData>;
     df_display_args: Record<string, IDisplayArgs>;
@@ -71,15 +105,36 @@ export function BuckarooInfiniteWidget({
     buckaroo_state: BuckarooState;
     on_buckaroo_state: React.Dispatch<React.SetStateAction<BuckarooState>>;
     buckaroo_options: BuckarooOptions;
+    model:any
 }) {
-    // We wonly want to create respCache once, there are some swapover
-    // recreation of datasource where the old respCache gets incoming response
-    // only to be destroyed
-    const respCache = useMemo(() => new LruCache<PayloadResponse>(), []);
+
+    // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
+    // so having it live between relaods is key
+    //    console.log("about to call useMemo")
+
+    const [respError, setRespError] = useState<string|undefined>(undefined);
+
+    const src = useMemo(() => {
+        /*
+        const reqFn:RequestFN = (pa:PayloadArgs) => {
+            console.log("78 send", pa)
+            model.send({type:'infinite_request', payload_args:pa})
+        }
+        const src = new KeyAwareSmartRowCache(reqFn)
+        */
+        const src = getSingleSRC(model, setRespError, );
+
+        //const symNum = counter();
+        
+        return src;
+    }, []);
+
+    //@ts-ignore
+    window.ksrc = src
     const mainDs = useMemo(() => {
-        const t = new Date();
-        console.log("recreating data source because operations changed", t);
-        return getDs(on_payload_args, respCache);
+        console.log("recreating data source because operations changed", new Date());
+        src.debugCacheState();
+        return getDs(src);
         // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
         // updating via post-processing changes appropriately.
         // forces re-render and dataload when not completely necessary if other
@@ -87,10 +142,6 @@ export function BuckarooInfiniteWidget({
         //
         // putting buckaroo_state.post_processing doesn't work properly
     }, [operations, buckaroo_state]);
-    const cacheKey = getPayloadKey(payload_response.key);
-    console.log("setting respCache", cacheKey, payload_response);
-    respCache.put(getPayloadKey(payload_response.key), payload_response);
-
     const [activeCol, setActiveCol] = useState("stoptime");
 
     const cDisp = df_display_args[buckaroo_state.df_display];
@@ -126,7 +177,7 @@ export function BuckarooInfiniteWidget({
                     outside_df_params={outsideDFParams}
                     activeCol={activeCol}
                     setActiveCol={setActiveCol}
-                    error_info={payload_response.error_info}
+                    error_info={respError}
                 />
             </div>
             {buckaroo_state.show_commands ? (

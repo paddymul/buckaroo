@@ -329,33 +329,60 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                             'data': []}
                             ).tag(sync=True)
 
-    #    @exception_protect('payloadArgsHandler')    
-    @observe('payload_args')
-    def _payload_args_handler(self, change):
+    def __init__(self, orig_df, debug=False,
+                 column_config_overrides=None,
+                 pinned_rows=None, extra_grid_config=None,
+                 component_config=None, init_sd=None):
+        super().__init__(orig_df, debug, column_config_overrides, pinned_rows,
+                     extra_grid_config, component_config, init_sd)
 
-        start, end = self.payload_args['start'], self.payload_args['end']
+        def payload_bridge(_unused_self, msg, _unused_buffers):
+            print("payload_bridge")
+            print(msg)
+            print("-"*80)
+            print(_unused_buffers)
+            if msg['type'] == 'infinite_request':
+                payload_args = msg['payload_args']
+                self._handle_payload_args(payload_args)
+
+        self.on_msg(payload_bridge)
+
+    def _handle_payload_args(self, new_payload_args):
+        start, end = new_payload_args['start'], new_payload_args['end']
         print("payload_args changed", start, end)
         _unused, processed_df, merged_sd = self.widget_args_tuple
         if processed_df is None:
             return
 
-        print(self.payload_args)
         try:
-            sort = self.payload_args.get('sort')
+            sort = new_payload_args.get('sort')
             if sort:
-                sort_dir = self.payload_args.get('sort_direction')
+                sort_dir = new_payload_args.get('sort_direction')
                 ascending = sort_dir == 'asc'
                 sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
                 slice_df = pd_to_obj(sorted_df[start:end])
-                self.payload_response = {'key':self.payload_args, 'data':slice_df, 'length':len(sorted_df)}
+                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':slice_df, 'length':len(processed_df)})
             else:
                 slice_df = pd_to_obj(processed_df[start:end])
-                self.payload_response = {'key':self.payload_args, 'data':slice_df, 'length':len(processed_df)}
+                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':slice_df, 'length':len(processed_df)})
+    
+                second_pa = new_payload_args.get('second_request')
+                if not second_pa:
+                    return
+                
+                extra_start, extra_end = second_pa.get('start'), second_pa.get('end')
+                extra_payload_args = dict(
+                    start=extra_start, end=extra_end,
+                    sourceName=new_payload_args.get('sourceName', 'no_source_name'))
+                extra_df = pd_to_obj(processed_df[extra_start:extra_end])
+                self.send(
+                    {"type": "infinite_resp", 'key':second_pa, 'data':extra_df, 'length':len(processed_df)})
         except Exception as e:
             print(e)
             stack_trace = traceback.format_exc()
-            self.payload_response = {'key':self.payload_args, 'data':[], 'error_info':stack_trace, 'length':0}
+            self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'error_info':stack_trace, 'length':0})
             raise
+
 
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(df)
