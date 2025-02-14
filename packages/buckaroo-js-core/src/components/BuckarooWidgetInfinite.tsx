@@ -49,7 +49,6 @@ const gensym = () => {
 const counter = gensym()
 
 export function BuckarooInfiniteWidget({
-    payload_response,
     df_data_dict,
     df_display_args,
     df_meta,
@@ -62,9 +61,6 @@ export function BuckarooInfiniteWidget({
     buckaroo_options,
     model
 }: {
-    payload_args: PayloadArgs;
-    on_payload_args: (pa: PayloadArgs) => void;
-    payload_response: PayloadResponse;
     df_meta: DFMeta;
     df_data_dict: Record<string, DFData>;
     df_display_args: Record<string, IDisplayArgs>;
@@ -80,14 +76,17 @@ export function BuckarooInfiniteWidget({
 
     // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
     // so having it live between relaods is key
-    console.log("about to call useMemo")
+    //    console.log("about to call useMemo")
+
+    const [respError, setRespError] = useState<string|undefined>(undefined);
+
     const src = useMemo(() => {
         const reqFn:RequestFN = (pa:PayloadArgs) => {
             console.log("78 send", pa)
             model.send({type:'infinite_request', payload_args:pa})
         }
         const src = new KeyAwareSmartRowCache(reqFn)
-        //const creationTime = new Date();
+
         const symNum = counter();
         console.log("about to call model.on");
         model.on("msg:custom", (msg: any) => {
@@ -103,6 +102,8 @@ export function BuckarooInfiniteWidget({
             if (payload_response.error_info !== undefined) {
                 console.log("there was a problem with the request, not adding to the cache")
                 console.log(payload_response.error_info)
+                setRespError(payload_response.error_info)
+                return
             }
             console.log("92 got a response for ", symNum, 
                 //creationTime.getUTCSeconds(), creationTime.getUTCMilliseconds() ,
@@ -161,7 +162,7 @@ export function BuckarooInfiniteWidget({
                     outside_df_params={outsideDFParams}
                     activeCol={activeCol}
                     setActiveCol={setActiveCol}
-                    error_info={payload_response.error_info}
+                    error_info={respError}
                 />
             </div>
             {buckaroo_state.show_commands ? (

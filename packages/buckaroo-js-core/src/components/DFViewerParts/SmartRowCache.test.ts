@@ -444,6 +444,7 @@ describe('SmartRowCache tests', () => {
 })
 
 describe('KeyAwareSmartRowCache tests', () => {
+    const failNOP = () => {}
     test('basic KeyAwareSmartRowCache tests', () => {
 
 	let src:KeyAwareSmartRowCache;
@@ -462,7 +463,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	    console.log("mockCbFn", df.length,  length )
 	})
 
-	src.getRequestRows(pa1, mockCbFn)
+	src.getRequestRows(pa1, mockCbFn, failNOP)
 	// The mock function was called twice, once for the first request, and again for the followon
 	expect(mockRequestFn.mock.calls).toHaveLength(2);
 
@@ -494,7 +495,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	    console.log("mockCbFn", df.length,  length )
 	})
 
-	src.getRequestRows(pa1, mockCbFn)
+	src.getRequestRows(pa1, mockCbFn, failNOP)
 	expect(mockCbFn.mock.calls).toHaveLength(1);
     })
     test('test that second request is made', () => {
@@ -521,7 +522,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	    console.log("mockCbFn", df.length,  length )
 	})
 
-	src.getRequestRows(pa1, mockCbFn)
+	src.getRequestRows(pa1, mockCbFn, failNOP)
 	expect(mockRequestFn.mock.calls).toHaveLength(2);
 
 	expect(src.usedSize()).toBe(120)
@@ -534,7 +535,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	    console.log("mockCbFn", df.length,  length )
 	})
 
-	src.getRequestRows(pa2, mockCbFn2)
+	src.getRequestRows(pa2, mockCbFn2, failNOP)
 
 	// this should be cached, and shouldn't generate a second request
 	expect(mockRequestFn.mock.calls).toHaveLength(2);

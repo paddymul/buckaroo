@@ -412,12 +412,25 @@ export class SmartRowCache {
 export type RequestFN = (pa: PayloadArgs) => void
 type SubrowCacheDict = Record<string, SmartRowCache>;
 export type FoundRowsCB = (df: DFData, length: number) => void;
+export type FailCB = () => void;
+
+
+function verifyResp(resp: PayloadResponse):boolean {
+    debugger;
+    console.log("resp", resp);
+    if (resp.data.length === 0) {
+        return false
+    }
+    return true
+}
+
+
 
 export class KeyAwareSmartRowCache {
 
     private subRowCaches: SubrowCacheDict
 
-    private waitingCallbacks: Record<string, FoundRowsCB>
+    private waitingCallbacks: Record<string, [FoundRowsCB, FailCB]>
     private reqFn: RequestFN;
 
     public maxSize: number = 1000;
@@ -464,7 +477,8 @@ export class KeyAwareSmartRowCache {
         _.map(this.subRowCaches, (c, k) => {console.log(k, c.safeGetExtents())});
     }
 
-    public getRequestRows(pa: PayloadArgs, cb: any): void {
+
+    public getRequestRows(pa: PayloadArgs, cb: FoundRowsCB, failCb: FailCB): void {
         // this function fires off a request for the rows, and when
         // that request is filled calls cb
 
@@ -483,8 +497,9 @@ export class KeyAwareSmartRowCache {
             return;
         }
 
+
         // note here we are using the full payload key because the start and end rows matter
-        this.waitingCallbacks[cbKey] = cb
+        this.waitingCallbacks[cbKey] = [cb, failCb]
         // make the next request
         const followonArgs: PayloadArgs = {
             'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
@@ -503,11 +518,18 @@ export class KeyAwareSmartRowCache {
             this.subRowCaches[srcKey] = new SmartRowCache();
         }
         const src = this.subRowCaches[srcKey];
+        const cbKey = getPayloadKey(resp.key)
+
+
         src.addRows(seg, resp.data)
         src.sentLength = resp.length;
-        const cbKey = getPayloadKey(resp.key)
         if (_.has(this.waitingCallbacks, cbKey)) {
-            this.waitingCallbacks[cbKey](this.getRows(resp.key), src.sentLength);
+            const [success, fail] = this.waitingCallbacks[cbKey];
+            if(verifyResp(resp)) {
+                success(this.getRows(resp.key), src.sentLength);
+            } else {
+                fail()
+            }
             delete this.waitingCallbacks[cbKey]
         }
     }
@@ -524,4 +546,3 @@ export class KeyAwareSmartRowCache {
 
     }
 }
-

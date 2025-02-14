@@ -192,38 +192,6 @@ export interface IDisplayArgs {
     summary_stats_key: string;
 }
 
-export class LruCache<T> {
-    private values: Map<string, T> = new Map<string, T>();
-    private maxEntries = 10;
-
-    public get(key: string): T | undefined {
-        const hasKey = this.values.has(key);
-        if (hasKey) {
-            // peek the entry, re-insert for LRU strategy
-            const maybeEntry = this.values.get(key);
-            if (maybeEntry === undefined) {
-                throw new Error(`unexpected undefined for ${key}`);
-            }
-            const entry: T = maybeEntry;
-            this.values.delete(key);
-            this.values.set(key, entry);
-            return entry;
-        }
-        return undefined;
-    }
-
-    public put(key: string, value: T) {
-        if (this.values.size >= this.maxEntries) {
-            // least-recently used cache eviction strategy
-            const keyToDelete = this.values.keys().next().value;
-            console.log(`deleting ${keyToDelete}`);
-            this.values.delete(String(keyToDelete));
-        }
-
-        this.values.set(key, value);
-    }
-}
-
 export interface TimedIDatasource extends IDatasource {
     createTime: Date;
 }
@@ -245,7 +213,17 @@ export const getDs = (
                 sort: sm.length === 1 ? sm[0].colId : undefined,
                 sort_direction: sm.length === 1 ? sm[0].sort : undefined,
             };
-            src.getRequestRows(dsPayloadArgs, params.successCallback)
+            const successWrapper = (df:DFData, length:number) => {
+                console.log("successWrapper called", df.length, length)
+                params.successCallback(df, length)
+            }
+
+            const failWrapper = () => {
+                console.log("request failed for ", dsPayloadArgs)
+                params.failCallback()
+            }
+            // src.getRequestRows(dsPayloadArgs, params.successCallback)
+            src.getRequestRows(dsPayloadArgs, successWrapper, failWrapper)
         }
     };
     return dsLoc;
