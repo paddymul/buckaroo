@@ -238,6 +238,25 @@ export const segmentsSize = (segments: Segment[]): number => {
     return accum;
 }
 
+export const segmentSize = (seg:Segment):number => {
+    const [start, end] = seg
+    return end - start;
+}
+
+export const segmentMid = (seg:Segment): number => {
+    return Math.floor(seg[0] + (segmentSize(seg)/2))
+}
+
+export const segmentEndDist = (lastSegment:Segment, extent:Segment):number => {
+    const mid = segmentMid(lastSegment)
+    const [eStart, eEnd] = extent;
+
+    const [startDist, endDist] =  [(mid - eStart), (eEnd - mid)]
+    if (startDist < endDist) {
+        return -startDist
+    }
+    return endDist
+}
 
 export const slicedSegmentSize = (segments: Segment[], slice: Segment): number => {
     var accum = 0;
@@ -436,6 +455,7 @@ export class KeyAwareSmartRowCache {
     public maxSize: number = 1000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
+    public reUpDist:number = 40;  //threshhold for requesting next range
 
     public padding: number = 100;
     constructor(reqFn: RequestFN) {
@@ -477,27 +497,41 @@ export class KeyAwareSmartRowCache {
         _.map(this.subRowCaches, (c, k) => {console.log(k, c.safeGetExtents())});
     }
 
+    public maybeMakeLeadingRequest(pa:PayloadArgs): void {
+        const reqSeg:Segment = [pa.start, pa.end]
+        const src = this.ensureRowCacheForPa(pa)
+        const ex = src.getExtents()
+        if (ex[1] == src.sentLength) {
+            console.log("not making extra request because already have to the end of the available data", ex, src.sentLength)
+            return 
+        }
+        const exDist:number = segmentEndDist(reqSeg, ex);
+        if (exDist > 0  && exDist < this.reUpDist) {
+            const followonArgs: PayloadArgs = {
+                'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
+                'start': ex[1], 'end': ex[1] + this.padding
+            }
+            console.log("making premptive request with", followonArgs)
+            this.reqFn(followonArgs);
+        }
+    }
 
     public getRequestRows(pa: PayloadArgs, cb: FoundRowsCB, failCb: FailCB): void {
         // this function fires off a request for the rows, and when
         // that request is filled calls cb
 
         // maybe this should be async
-        // const srcKey = getSourcePayloadKey(pa)
-        // const seg:Segment = [pa.start, pa.end];
+
         const cbKey = getPayloadKey(pa)
-        const srcKey = getSourcePayloadKey(pa);
+        const src =  this.ensureRowCacheForPa(pa);
 
         if (this.hasRows(pa)) {
-            const src = this.subRowCaches[srcKey]
-
             cb(this.getRows(pa), src.sentLength);
             const cbKey = getPayloadKey(pa)
             delete this.waitingCallbacks[cbKey]
+            this.maybeMakeLeadingRequest(pa)
             return;
         }
-
-
         // note here we are using the full payload key because the start and end rows matter
         this.waitingCallbacks[cbKey] = [cb, failCb]
         // make the next request
@@ -510,16 +544,21 @@ export class KeyAwareSmartRowCache {
         this.reqFn(pa);
     }
 
-    public addPayloadResponse(resp: PayloadResponse) {
-        const srcKey = getSourcePayloadKey(resp.key)
-        const seg: Segment = [resp.key.start, resp.key.end];
+    public ensureRowCacheForPa(pa:PayloadArgs): SmartRowCache {
+        const srcKey = getSourcePayloadKey(pa)
 
         if (!_.has(this.subRowCaches, srcKey)) {
             this.subRowCaches[srcKey] = new SmartRowCache();
         }
         const src = this.subRowCaches[srcKey];
-        const cbKey = getPayloadKey(resp.key)
+        return src;
+    }
 
+    public addPayloadResponse(resp: PayloadResponse) {
+        const seg: Segment = [resp.key.start, resp.key.end];
+
+        const src = this.ensureRowCacheForPa(resp.key)
+        const cbKey = getPayloadKey(resp.key)
 
         src.addRows(seg, resp.data)
         src.sentLength = resp.length;
