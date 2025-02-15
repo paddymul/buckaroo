@@ -20,6 +20,7 @@ export interface PayloadArgs {
     end: number;
     sort?: string;
     sort_direction?: string;
+    request_time?:number;
     second_request?: PayloadArgs
 }
 
@@ -347,7 +348,6 @@ export class SmartRowCache {
         if (this.usedSize() < this.maxSize) {
             return
         }
-        console.log("trimCache oversize start", this.getExtents(), this.lastRequest, this.segments)
 
         if (this.lastRequest[0] === 0 && this.lastRequest[1] === 0) {
             //throw new Error("trying to trim with no requests, unexpected");
@@ -368,14 +368,12 @@ export class SmartRowCache {
             targetWindow *= 2
         }
 	const targetSize = Math.floor(this.maxSize * this.trimFactor)
-	console.log("targetSize", targetSize)
+
         while (filled > targetSize) {
             targetWindow = Math.floor(.9 * targetWindow)
             filled = sizeSlice(mid, targetWindow, this.segments);
         }
-	console.log("targetWindow", targetWindow, mid)
-        const keepSeg = segmentFromMidOffset(mid, targetWindow);
-	console.log("keepSeg", keepSeg)
+    const keepSeg = segmentFromMidOffset(mid, targetWindow);
 	const res = compactSegments(this.segments, this.dfs, keepSeg);
 	this.segments = res[0]
 	this.dfs = res[1]
@@ -412,7 +410,6 @@ export class SmartRowCache {
         const [newSegs, newDfs] = mergeSegments(this.segments, this.dfs, newSegment, newDf)
         this.segments = newSegs;
         this.dfs = newDfs;
-        //console.log("addRows called with", newSegment)
         this.trimCache()
         //console.log("size,extents after trimCache", this.usedSize(), this.getExtents())
     }
@@ -453,7 +450,6 @@ export type FailCB = () => void;
 
 function verifyResp(resp: PayloadResponse):boolean {
     debugger;
-    console.log("resp", resp);
     if (resp.data.length === 0) {
         return false
     }
@@ -472,9 +468,9 @@ export class KeyAwareSmartRowCache {
     public maxSize: number = 1000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
-    public reUpDist:number = 40;  //threshhold for requesting next range
+    public reUpDist:number = 200;  //threshhold for requesting next range
 
-    public padding: number = 100;
+    public padding: number = 400;
     constructor(reqFn: RequestFN) {
         this.reqFn = reqFn;
         this.subRowCaches = {};
@@ -524,17 +520,18 @@ export class KeyAwareSmartRowCache {
         }
 
         const exDist:number = segmentEndDist(reqSeg, ex);
-        console.log("maybeMakeLeadingRequest", exDist, reqSeg, ex)
+        //console.log("maybeMakeLeadingRequest", exDist, reqSeg, ex)
         if (exDist > 0  && exDist < this.reUpDist) {
             // only try to eagerly make requests when scrolling down
+            // scrolling up happens when exDist is negative
+            //@ts-ignore
+            const reqTime = (new Date()) - 1 as number
             const followonArgs: PayloadArgs = {
                 'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
-                'start': ex[1], 'end': ex[1] + this.padding
+                'start': ex[1], 'end': ex[1] + this.padding,   request_time:reqTime
             }
-            console.log("making premptive request with", followonArgs)
             // to help with segment garbage collection
             src.hasRows([ex[1], ex[1]+this.padding]) 
-            console.log("after hasRows 535", src.lastRequest);
             this.reqFn(followonArgs);
         }
     }
@@ -543,11 +540,12 @@ export class KeyAwareSmartRowCache {
         // this function fires off a request for the rows, and when
         // that request is filled calls cb
 
-        // maybe this should be async
-
         const cbKey = getPayloadKey(pa)
         const src =  this.ensureRowCacheForPa(pa);
-
+        //@ts-ignore
+        const reqTime = (new Date()) - 1 as number
+        pa.request_time = reqTime;
+        
         if (this.hasRows(pa)) {
             cb(this.getRows(pa), src.sentLength);
             const cbKey = getPayloadKey(pa)
@@ -556,11 +554,12 @@ export class KeyAwareSmartRowCache {
             return;
         }
         // note here we are using the full payload key because the start and end rows matter
-        this.waitingCallbacks[cbKey] = [cb, failCb]
+        this.waitingCallbacks[cbKey] = [cb, failCb];
         // make the next request
+
         const followonArgs: PayloadArgs = {
             'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
-            'start': pa.end, 'end': pa.end + this.padding
+            'start': pa.end, 'end': pa.end + this.padding, request_time:reqTime
         }
         pa.second_request = followonArgs;
         // fire off the request here
@@ -579,6 +578,13 @@ export class KeyAwareSmartRowCache {
 
     public addPayloadResponse(resp: PayloadResponse) {
         const seg: Segment = [resp.key.start, resp.key.end];
+
+        if(resp.key.request_time !== undefined ) {
+            //@ts-ignore
+            const now = (new Date()) - 1 as number
+            const respTime = now - resp.key.request_time;
+            console.log(`response had ${seg[1]-seg[0]} rows took ${respTime}`)
+        }
 
         const src = this.ensureRowCacheForPa(resp.key)
         const cbKey = getPayloadKey(resp.key)

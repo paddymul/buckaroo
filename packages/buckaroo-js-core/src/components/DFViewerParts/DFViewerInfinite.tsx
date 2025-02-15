@@ -205,7 +205,7 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
         rowModelType: "infinite",
         cacheBlockSize: maxRowsWithoutScrolling + 5,
         cacheOverflowSize: 0,
-        maxConcurrentDatasourceRequests: 1,
+        maxConcurrentDatasourceRequests: 2,
         maxBlocksInCache: 0,
         infiniteInitialRowCount: maxRowsWithoutScrolling + 5
     };

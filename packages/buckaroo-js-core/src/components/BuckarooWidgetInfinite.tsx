@@ -38,6 +38,7 @@ export const getDataWrapper = (
         };
     }
 };
+/*
 const gensym = () => {
     let a = 0;
     return () => {
@@ -45,19 +46,16 @@ const gensym = () => {
         return a;
     }
 }
-
-const counter = gensym()
+*/
+//const counter = gensym()
 const getSingleSRC = _.once((model:any, setRespError) => {
-    const symNum = counter();
-
-    console.log("in getSingSRC", symNum, new Date())
+    //const symNum = counter();
     const reqFn:RequestFN = (pa:PayloadArgs) => {
-        console.log("78 send", pa)
         model.send({type:'infinite_request', payload_args:pa})
     }
     const src = new KeyAwareSmartRowCache(reqFn)
-    console.log("about to call model.on");
-        model.on("msg:custom", (msg: any) => {
+
+    model.on("msg:custom", (msg: any) => {
             if (msg?.type !== "infinite_resp") {
                 console.log("bailing not infinite_resp")
                 return
@@ -73,10 +71,11 @@ const getSingleSRC = _.once((model:any, setRespError) => {
                 setRespError(payload_response.error_info)
                 return
             }
+            /*
             console.log("92 got a response for ", symNum, 
                 //creationTime.getUTCSeconds(), creationTime.getUTCMilliseconds() ,
                 payload_response.key);
-    
+            */
             src.addPayloadResponse(payload_response);
         })
     return src;
@@ -110,24 +109,14 @@ export function BuckarooInfiniteWidget({
 
     // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
     // so having it live between relaods is key
-    //    console.log("about to call useMemo")
-
     const [respError, setRespError] = useState<string|undefined>(undefined);
+    
+    // const src: KeyAwareSmartRowCache= useMemo(() => {
+    //     return getSingleSRC(model, setRespError );
+    // }, []);
 
-    const src = useMemo(() => {
-        /*
-        const reqFn:RequestFN = (pa:PayloadArgs) => {
-            console.log("78 send", pa)
-            model.send({type:'infinite_request', payload_args:pa})
-        }
-        const src = new KeyAwareSmartRowCache(reqFn)
-        */
-        const src = getSingleSRC(model, setRespError, );
-
-        //const symNum = counter();
-        
-        return src;
-    }, []);
+    const src: KeyAwareSmartRowCache= useMemo(
+        () => getSingleSRC(model, setRespError), [])
 
     //@ts-ignore
     window.ksrc = src

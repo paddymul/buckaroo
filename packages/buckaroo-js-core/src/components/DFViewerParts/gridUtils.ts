@@ -214,8 +214,8 @@ export const getDs = (
                 sort_direction: sm.length === 1 ? sm[0].sort : undefined,
             };
             const successWrapper = (df:DFData, length:number) => {
-                console.log("successWrapper called 217", 
-                    [dsPayloadArgs.start, dsPayloadArgs.end], length)
+                //console.log("successWrapper called 217", 
+                //   [dsPayloadArgs.start, dsPayloadArgs.end], length)
                 params.successCallback(df, length)
             }
 
