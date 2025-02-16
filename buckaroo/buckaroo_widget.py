@@ -361,9 +361,11 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 ascending = sort_dir == 'asc'
                 sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
                 slice_df = sorted_df[start:end]
+                slice_df['index'] = slice_df.index
                 self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'length':len(processed_df)}, [slice_df.to_parquet()])
             else:
                 slice_df = processed_df[start:end]
+                slice_df['index'] = slice_df.index
                 self.send({ "type": "infinite_resp", 'key':new_payload_args,
                             'data': [], 'length':len(processed_df)}, [slice_df.to_parquet()])
     
@@ -378,9 +380,11 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 #extra_df = pd_to_obj(processed_df[extra_start:extra_end])
                 # self.send(
                 #     {"type": "infinite_resp", 'key':second_pa, 'data':extra_df, 'length':len(processed_df)})
+                extra_df = processed_df[extra_start:extra_end]
+                extra_df['index'] = extra_df.index
                 self.send(
                     {"type": "infinite_resp", 'key':second_pa, 'data':[], 'length':len(processed_df)},
-                    [processed_df[extra_start:extra_end].to_parquet()]
+                    [extra_df.to_parquet()]
                 )
         except Exception as e:
             print(e)

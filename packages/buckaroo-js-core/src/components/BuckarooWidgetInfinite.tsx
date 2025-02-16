@@ -77,12 +77,25 @@ const getSingleSRC = _.once((model: any, setRespError) => {
             //creationTime.getUTCSeconds(), creationTime.getUTCMilliseconds() ,
             payload_response.key);
         */
+
+        if(payload_response.key.request_time !== undefined ) {
+
+            //@ts-ignore
+            const now = (new Date()) - 1 as number
+            const respTime = now - payload_response.key.request_time;
+            console.log(`response before parse took ${respTime}`)
+        }
+            
         const table_bytes = buffers[0]
         console.log("table_bytes", table_bytes)
         const metadata = parquetMetadata(table_bytes.buffer)
 
+        //metadata.schema[metadata.schema.length -1 ].name = "index" 
+        console.log("metadata", metadata)
+
         parquetRead({
             file: table_bytes.buffer,
+            metadata:metadata,
             rowFormat: 'object',
             onComplete: data => {
                 console.log("objdata", data)
@@ -94,7 +107,6 @@ const getSingleSRC = _.once((model: any, setRespError) => {
                 src.addPayloadResponse(payload_response);
             }
         })
-        console.log("metadata", metadata)
     })
     return src;
 })

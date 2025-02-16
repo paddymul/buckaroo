@@ -468,9 +468,9 @@ export class KeyAwareSmartRowCache {
     public maxSize: number = 1000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
-    public reUpDist:number = 200;  //threshhold for requesting next range
+    public reUpDist:number = 500;  //threshhold for requesting next range
 
-    public padding: number = 400;
+    public padding: number = 1000;
     constructor(reqFn: RequestFN) {
         this.reqFn = reqFn;
         this.subRowCaches = {};
