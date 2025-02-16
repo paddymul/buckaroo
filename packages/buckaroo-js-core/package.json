@@ -20,7 +20,8 @@
     "@ag-grid-community/react": "^32.3.2",
     "@ag-grid-community/styles": "^32.3.2",
     "lodash": "^4.17.21",
-    "recharts": "^2.13.1"
+    "recharts": "^2.13.1",
+    "hyparquet": "^1.8.2"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.26.0",

@@ -577,6 +577,7 @@ export class KeyAwareSmartRowCache {
     }
 
     public addPayloadResponse(resp: PayloadResponse) {
+        console.log("addPayloadResponse", resp)
         const seg: Segment = [resp.key.start, resp.key.end];
 
         if(resp.key.request_time !== undefined ) {

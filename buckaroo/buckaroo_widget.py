@@ -360,11 +360,12 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 sort_dir = new_payload_args.get('sort_direction')
                 ascending = sort_dir == 'asc'
                 sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
-                slice_df = pd_to_obj(sorted_df[start:end])
-                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':slice_df, 'length':len(processed_df)})
+                slice_df = sorted_df[start:end]
+                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'length':len(processed_df)}, [slice_df.to_parquet()])
             else:
-                slice_df = pd_to_obj(processed_df[start:end])
-                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':slice_df, 'length':len(processed_df)})
+                slice_df = processed_df[start:end]
+                self.send({ "type": "infinite_resp", 'key':new_payload_args,
+                            'data': [], 'length':len(processed_df)}, [slice_df.to_parquet()])
     
                 second_pa = new_payload_args.get('second_request')
                 if not second_pa:
@@ -374,9 +375,13 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 extra_payload_args = dict(
                     start=extra_start, end=extra_end,
                     sourceName=new_payload_args.get('sourceName', 'no_source_name'))
-                extra_df = pd_to_obj(processed_df[extra_start:extra_end])
+                #extra_df = pd_to_obj(processed_df[extra_start:extra_end])
+                # self.send(
+                #     {"type": "infinite_resp", 'key':second_pa, 'data':extra_df, 'length':len(processed_df)})
                 self.send(
-                    {"type": "infinite_resp", 'key':second_pa, 'data':extra_df, 'length':len(processed_df)})
+                    {"type": "infinite_resp", 'key':second_pa, 'data':[], 'length':len(processed_df)},
+                    [processed_df[extra_start:extra_end].to_parquet()]
+                )
         except Exception as e:
             print(e)
             stack_trace = traceback.format_exc()
