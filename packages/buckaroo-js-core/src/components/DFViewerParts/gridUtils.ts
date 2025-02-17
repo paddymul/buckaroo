@@ -209,7 +209,8 @@ export const getDs = (
             const dsPayloadArgs = {
                 sourceName: outside_params_string,
                 start: params.startRow,
-                end: params.endRow,
+                end: params.startRow + 1000,
+                origEnd: params.endRow,
                 sort: sm.length === 1 ? sm[0].colId : undefined,
                 sort_direction: sm.length === 1 ? sm[0].sort : undefined,
             };

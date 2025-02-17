@@ -83,24 +83,17 @@ const getSingleSRC = _.once((model: any, setRespError) => {
             //@ts-ignore
             const now = (new Date()) - 1 as number
             const respTime = now - payload_response.key.request_time;
-            console.log(`response before parse took ${respTime}`)
+            console.log(`response before ${[payload_response.key.start, payload_response.key.origEnd, payload_response.key.end]} parse took ${respTime}`)
         }
             
         const table_bytes = buffers[0]
-        console.log("table_bytes", table_bytes)
         const metadata = parquetMetadata(table_bytes.buffer)
-
-        //metadata.schema[metadata.schema.length -1 ].name = "index" 
-        console.log("metadata", metadata)
 
         parquetRead({
             file: table_bytes.buffer,
             metadata:metadata,
             rowFormat: 'object',
             onComplete: data => {
-                console.log("objdata", data)
-                //@ts-ignore
-                window.data = data
                 //@ts-ignore
                 const parqData:DFData = data as DFData
                 payload_response.data = parqData

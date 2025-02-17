@@ -18,6 +18,7 @@ export interface PayloadArgs {
     sourceName: string;
     start: number;
     end: number;
+    origEnd:number;
     sort?: string;
     sort_direction?: string;
     request_time?:number;
@@ -336,7 +337,7 @@ export class SmartRowCache {
     // sorted serverside, sned the followno request.
 
 
-    public maxSize: number = 1000;
+    public maxSize: number = 4000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
 
@@ -468,7 +469,7 @@ export class KeyAwareSmartRowCache {
     public maxSize: number = 1000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
-    public reUpDist:number = 500;  //threshhold for requesting next range
+    public reUpDist:number = 300;  //threshhold for requesting next range
 
     public padding: number = 1000;
     constructor(reqFn: RequestFN) {
@@ -485,7 +486,7 @@ export class KeyAwareSmartRowCache {
     public hasRows(pa: PayloadArgs): boolean {
         // this should probably be "ensure rows"
         const srcKey = getSourcePayloadKey(pa)
-        const seg: Segment = [pa.start, pa.end];
+        const seg: Segment = [pa.start, pa.origEnd];
         if (!_.has(this.subRowCaches, srcKey)) {
             return false
         }
@@ -498,7 +499,7 @@ export class KeyAwareSmartRowCache {
 
     public getRows(pa: PayloadArgs): DFData {
         const srcKey = getSourcePayloadKey(pa)
-        const seg: Segment = [pa.start, pa.end];
+        const seg: Segment = [pa.start, pa.origEnd];
         if (!_.has(this.subRowCaches, srcKey)) {
             throw new Error(`Missing source for  ${pa}`)
         }
@@ -511,7 +512,7 @@ export class KeyAwareSmartRowCache {
     }
 
     public maybeMakeLeadingRequest(pa:PayloadArgs): void {
-        const reqSeg:Segment = [pa.start, pa.end]
+        const reqSeg:Segment = [pa.start, pa.origEnd]
         const src = this.ensureRowCacheForPa(pa)
         const ex = src.safeGetExtents()
         if (ex[1] == src.sentLength) {
@@ -520,7 +521,7 @@ export class KeyAwareSmartRowCache {
         }
 
         const exDist:number = segmentEndDist(reqSeg, ex);
-        //console.log("maybeMakeLeadingRequest", exDist, reqSeg, ex)
+        console.log("maybeMakeLeadingRequest", exDist, reqSeg, ex)
         if (exDist > 0  && exDist < this.reUpDist) {
             // only try to eagerly make requests when scrolling down
             // scrolling up happens when exDist is negative
@@ -528,7 +529,8 @@ export class KeyAwareSmartRowCache {
             const reqTime = (new Date()) - 1 as number
             const followonArgs: PayloadArgs = {
                 'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
-                'start': ex[1], 'end': ex[1] + this.padding,   request_time:reqTime
+                'start': ex[1], 'end': ex[1] + this.padding, 'origEnd': ex[1] + this.padding,   
+                request_time:reqTime
             }
             // to help with segment garbage collection
             src.hasRows([ex[1], ex[1]+this.padding]) 
@@ -539,7 +541,6 @@ export class KeyAwareSmartRowCache {
     public getRequestRows(pa: PayloadArgs, cb: FoundRowsCB, failCb: FailCB): void {
         // this function fires off a request for the rows, and when
         // that request is filled calls cb
-
         const cbKey = getPayloadKey(pa)
         const src =  this.ensureRowCacheForPa(pa);
         //@ts-ignore
@@ -547,6 +548,7 @@ export class KeyAwareSmartRowCache {
         pa.request_time = reqTime;
         
         if (this.hasRows(pa)) {
+            console.log(`request for ${[pa.start, pa.origEnd, pa.end]} in cache, extents ${src.getExtents()}`)
             cb(this.getRows(pa), src.sentLength);
             const cbKey = getPayloadKey(pa)
             delete this.waitingCallbacks[cbKey]
@@ -555,13 +557,6 @@ export class KeyAwareSmartRowCache {
         }
         // note here we are using the full payload key because the start and end rows matter
         this.waitingCallbacks[cbKey] = [cb, failCb];
-        // make the next request
-
-        const followonArgs: PayloadArgs = {
-            'sourceName': pa.sourceName, 'sort': pa.sort, 'sort_direction': pa.sort_direction,
-            'start': pa.end, 'end': pa.end + this.padding, request_time:reqTime
-        }
-        pa.second_request = followonArgs;
         // fire off the request here
         this.reqFn(pa);
     }
@@ -577,7 +572,6 @@ export class KeyAwareSmartRowCache {
     }
 
     public addPayloadResponse(resp: PayloadResponse) {
-        console.log("addPayloadResponse", resp)
         const seg: Segment = [resp.key.start, resp.key.end];
 
         if(resp.key.request_time !== undefined ) {
@@ -589,8 +583,11 @@ export class KeyAwareSmartRowCache {
 
         const src = this.ensureRowCacheForPa(resp.key)
         const cbKey = getPayloadKey(resp.key)
+        const preExtents = src.safeGetExtents()
 
         src.addRows(seg, resp.data)
+        console.log(`response before ${[resp.key.start, resp.key.origEnd, resp.key.end]} before add, preExtents ${preExtents}, post extents ${src.safeGetExtents()}`)
+
         src.sentLength = resp.length;
         if (_.has(this.waitingCallbacks, cbKey)) {
             const [success, fail] = this.waitingCallbacks[cbKey];

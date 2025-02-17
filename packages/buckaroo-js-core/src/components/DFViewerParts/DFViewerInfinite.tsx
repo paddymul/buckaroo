@@ -201,13 +201,13 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
             // Setting a sort and being in the middle of it makes no sense
             api.ensureIndexVisible(0);
         },
-        rowBuffer: 5,
+        rowBuffer: 20,
         rowModelType: "infinite",
-        cacheBlockSize: maxRowsWithoutScrolling + 5,
+        cacheBlockSize: maxRowsWithoutScrolling + 50,
         cacheOverflowSize: 0,
         maxConcurrentDatasourceRequests: 2,
         maxBlocksInCache: 0,
-        infiniteInitialRowCount: maxRowsWithoutScrolling + 5
+        infiniteInitialRowCount: maxRowsWithoutScrolling + 50
     };
     return dsGridOptions;
 };

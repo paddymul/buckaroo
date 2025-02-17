@@ -484,14 +484,14 @@ describe('KeyAwareSmartRowCache tests', () => {
 	src = new KeyAwareSmartRowCache(mockRequestFn);
 
 	const pa1: PayloadArgs = {
-	    sourceName:"foo", start:0, end:20}
+	    sourceName:"foo", start:0, end:20, origEnd:20}
 
 	const mockCbFn = jest.fn((df:DFData, length:number) => {
 	    console.log("mockCbFn", df.length,  length )
 	})
 
 	src.getRequestRows(pa1, mockCbFn, failNOP)
-	const second_request = {"end": 120, "sort": undefined, "sort_direction": undefined, "sourceName": "foo", "start": 20}
+	const second_request = {"end": 120, "origEnd":120, "sort": undefined, "sort_direction": undefined, "sourceName": "foo", "start": 20}
 
 	const expectedRequest:PayloadArgs = {...pa1, second_request}
 	// The mock function was called twice, once for the first request, and again for the followon
@@ -519,7 +519,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	src = new KeyAwareSmartRowCache(mockRequestFn);
 
 	const pa1: PayloadArgs = {
-	    sourceName:"foo", start:0, end:20}
+	    sourceName:"foo", start:0, end:20, origEnd:20}
 
 	const mockCbFn = jest.fn((df:DFData, length:number) => {
 	    console.log("mockCbFn", df.length,  length )
@@ -555,7 +555,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	src = new KeyAwareSmartRowCache(mockRequestFn);
 
 	const pa1: PayloadArgs = {
-	    sourceName:"foo", start:0, end:20}
+	    sourceName:"foo", start:0, end:20, origEnd:20}
 
 	const mockCbFn = jest.fn((df:DFData, length:number) => {
 	    console.log("mockCbFn", df.length,  length )
@@ -568,7 +568,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 
 
 	const pa2: PayloadArgs = {
-	    sourceName:"foo", start:40, end:60}
+	    sourceName:"foo", start:40, end:60, origEnd:60}
 
 	const mockCbFn2 = jest.fn((df:DFData, length:number) => {
 	    console.log("mockCbFn", df.length,  length )
