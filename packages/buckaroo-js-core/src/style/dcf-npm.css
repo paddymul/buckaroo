@@ -161,11 +161,10 @@ div.dependent-tabs ul.tabs li.active {
 
 .dev-examples .statusBar {
     width:800px; border:3px dashed purple;
-    
+}
 
-
-
-
+.marimo .statusBar {
+    width:100%;
 }
 
 .custom-tooltip {
