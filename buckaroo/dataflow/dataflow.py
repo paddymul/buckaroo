@@ -207,12 +207,12 @@ class CustomizableDataflow(DataFlow):
     def __init__(self, orig_df, debug=False,
                  column_config_overrides=None,
                  pinned_rows=None, extra_grid_config=None,
-                 component_config=None, init_sd=None):
+                 component_config=None, init_sd=None, skip_main_serial=False):
         if init_sd is None:
             self.init_sd = {}
         else:
             self.init_sd = init_sd
-
+        self.skip_main_serial = skip_main_serial
         if column_config_overrides is None:
             column_config_overrides = {}
         self.column_config_overrides = column_config_overrides
@@ -362,10 +362,14 @@ class CustomizableDataflow(DataFlow):
         # to expedite processing maybe future provided dfs from
         # postprcoessing could default to empty until that is
         # selected, optionally
-        
-        self.df_data_dict = {'main': self._df_to_obj(processed_df),
-                             'all_stats': self._sd_to_jsondf(merged_sd),
-                             'empty': []}
+        if self.skip_main_serial:
+            self.df_data_dict = {'main': [],
+                                 'all_stats': self._sd_to_jsondf(merged_sd),
+                                 'empty': []}
+        else:
+            self.df_data_dict = {'main': self._df_to_obj(processed_df),
+                                 'all_stats': self._sd_to_jsondf(merged_sd),
+                                 'empty': []}
 
         temp_display_args = {}
         for display_name, A_Klass in self.df_display_klasses.items():

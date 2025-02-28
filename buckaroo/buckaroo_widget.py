@@ -83,7 +83,8 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
     def __init__(self, orig_df, debug=False,
                  column_config_overrides=None,
                  pinned_rows=None, extra_grid_config=None,
-                 component_config=None, init_sd=None):
+                 component_config=None, init_sd=None,
+                 skip_main_serial=False):
         """
         BuckarooWidget was originally designed to extend CustomizableDataFlow
 
@@ -111,7 +112,8 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
             orig_df,
             debug=debug,column_config_overrides=column_config_overrides,
             pinned_rows=pinned_rows, extra_grid_config=extra_grid_config,
-            component_config=component_config, init_sd=init_sd)
+            component_config=component_config, init_sd=init_sd,
+            skip_main_serial=skip_main_serial)
 
         bidirectional_wire(self, self.dataflow, "df_data_dict")
         bidirectional_wire(self, self.dataflow, "df_display_args")
@@ -120,6 +122,7 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         bidirectional_wire(self, self.dataflow, "operations")
         bidirectional_wire(self, self.dataflow, "operation_results")
         bidirectional_wire(self, self.dataflow, "buckaroo_options")
+        bidirectional_wire(self, self.dataflow, "command_config")
         
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(self.sampling_klass.serialize_sample(df))
@@ -150,8 +153,9 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
     operation_results = Dict(
         {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
     ).tag(sync=True)
+    command_config = Dict({}).tag(sync=True)
 
-    buckaroo_options = Dict({})
+    buckaroo_options = Dict({}).tag(sync=True)
 
 
     
@@ -276,15 +280,17 @@ class BuckarooInfiniteWidget(BuckarooWidget):
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
+        
+
+
     render_func_name = Unicode("BuckarooInfiniteWidget").tag(sync=True)    
     sampling_klass = InfinitePdSampling
     #final processing block
-    @observe('widget_args_tuple')
     def _handle_widget_change(self, change):
         """
        put together df_dict for consumption by the frontend
         """
-        _unused, processed_df, merged_sd = self.widget_args_tuple
+        _unused, processed_df, merged_sd = self.dataflow.widget_args_tuple
         if processed_df is None:
             return
 
@@ -328,8 +334,12 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                  pinned_rows=None, extra_grid_config=None,
                  component_config=None, init_sd=None):
         super().__init__(orig_df, debug, column_config_overrides, pinned_rows,
-                     extra_grid_config, component_config, init_sd)
+                         extra_grid_config, component_config, init_sd,
+                         skip_main_serial=True)
 
+        def widget_tuple_args_bridge(change_unused):
+            self._handle_widget_change(change_unused)
+        self.dataflow.observe(widget_tuple_args_bridge, "widget_args_tuple")
         def payload_bridge(_unused_self, msg, _unused_buffers):
             print("payload_bridge")
             print(msg)
