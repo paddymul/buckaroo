@@ -11,7 +11,7 @@ TODO: Add module docstring
 import traceback
 import json
 import pandas as pd
-from traitlets import List, Dict, observe, Unicode
+from traitlets import List, Dict, observe, Unicode, Any
 import anywidget
 
 from .customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
@@ -53,15 +53,75 @@ def sym(name):
 
 symDf = SymbolDf = {'symbol': 'df'}
 
-class BuckarooWidgetBase(CustomizableDataflow, anywidget.AnyWidget):
+
+def wire_change_to_inner(outer_instance, inner_instance, prop_name):
+    def propagate_change(change):
+        outer_val, inner_val = getattr(outer_instance, prop_name), getattr(inner_instance, prop_name)
+        if outer_val == inner_val:
+            #prevent loops
+            return
+        setattr(inner_instance, prop_name, getattr(outer_instance, prop_name))
+    outer_instance.observe(propagate_change, prop_name)
+
+def bidirectional_wire(outer_instance, inner_instance, prop_name):
+    wire_change_to_inner(outer_instance, inner_instance, prop_name)
+    wire_change_to_inner(inner_instance, outer_instance, prop_name)
+    outer_val, inner_val = getattr(outer_instance, prop_name), getattr(inner_instance, prop_name)
+    if not inner_val == outer_val:
+        setattr(outer_instance, prop_name, inner_val)
+    
+class BuckarooWidgetBase(anywidget.AnyWidget):
     """Extends CustomizableDataFlow and DOMWIdget
 
     Replaces generic options in CustomizableDataFlow with Pandas implementations
     Also adds buckaroo_state object and communication to simpler CustomizableDataFlow implementations
     
     """
+
+
+
+    def __init__(self, orig_df, debug=False,
+                 column_config_overrides=None,
+                 pinned_rows=None, extra_grid_config=None,
+                 component_config=None, init_sd=None):
+        """
+        BuckarooWidget was originally designed to extend CustomizableDataFlow
+
+        Because I want to more tightly control which traits are serialized to the frontend
+        I have now split them
+
+        Previously the entire dataframe would be synced to the frontend
+
+        this is slow, and it broke marimo
+
+        """
+        kls = self.__class__
+        class InnerDataFlow(CustomizableDataflow):
+            sampling_klass = kls.sampling_klass
+            autocleaning_klass = kls.autocleaning_klass
+            DFStatsClass = kls.DFStatsClass
+            autoclean_conf= kls.autoclean_conf
+            analysis_klasses = kls.analysis_klasses
+        self.dataflow = InnerDataFlow(
+            orig_df,
+            debug=debug,column_config_overrides=column_config_overrides,
+            pinned_rows=pinned_rows, extra_grid_config=extra_grid_config,
+            component_config=component_config, init_sd=init_sd)
+
+        bidirectional_wire(self, self.dataflow, "df_data_dict")
+        bidirectional_wire(self, self.dataflow, "df_display_args")
+        bidirectional_wire(self, self.dataflow, "df_meta")
+
+        bidirectional_wire(self, self.dataflow, "operations")
+        bidirectional_wire(self, self.dataflow, "operation_results")
+        bidirectional_wire(self, self.dataflow, "buckaroo_options")
+        
+
     _esm = Path(__file__).parent / "static" / "widget.js"
     _css = Path(__file__).parent / "static" / "widget.css"
+    #used for selecting the right codepath in the widget.tsx since we
+    #can only have a single exported function with anywidget
+    render_func_name = Unicode("baked").tag(sync=True)
 
 
     sampling_klass = PdSampling
@@ -69,17 +129,25 @@ class BuckarooWidgetBase(CustomizableDataflow, anywidget.AnyWidget):
     DFStatsClass = DfStats # Pandas Specific
     autoclean_conf = tuple([CleaningConf, NoCleaningConf]) #override the base CustomizableDataFlow conf
 
-    render_func_name = Unicode("baked").tag(sync=True)
-    operation_results = Dict(
-        {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
-    ).tag(sync=True)
 
+    df_data_dict = Dict({}).tag(sync=True)
+    df_display_args = Dict({}).tag(sync=True)
+    #information about the dataframe
     df_meta = Dict({
         'columns': 5, # dummy data
         'rows_shown': 20,
         'total_rows': 877}).tag(sync=True)
 
+    operations = Any([]).tag(sync=True)
+    operation_results = Dict(
+        {'transformed_df': EMPTY_DF_WHOLE, 'generated_py_code':'# instantiation, unused'}
+    ).tag(sync=True)
 
+    buckaroo_options = Dict({})
+
+
+    
+    #information about the current configuration of buckaroo
     buckaroo_state = Dict({
         'cleaning_method': 'NoCleaning',
         'post_processing': '',
@@ -90,93 +158,15 @@ class BuckarooWidgetBase(CustomizableDataflow, anywidget.AnyWidget):
         'quick_command_args': {}
     }).tag(sync=True)
 
-    def to_dfviewer_ex(self):
-        df_data_json = json.dumps(self.df_data_dict['main'], indent=4)
-        summary_stats_data_json = json.dumps(self.df_data_dict['all_stats'], indent=4)
-        df_config_json = json.dumps(self.df_display_args['main']['df_viewer_config'], indent=4)
-        code_str = f"""
-import React, {{useState}} from 'react';
-import {{extraComponents}} from 'buckaroo';
-
-
-export const df_data = {df_data_json}
-
-export const summary_stats_data = {summary_stats_data_json}
-
-export const dfv_config = {df_config_json}
-        
-export default function DFViewerExString() {{
-
-    const [activeCol, setActiveCol] = useState('tripduration');
-    return (
-        <extraComponents.DFViewer
-        df_data={{df_data}}
-        df_viewer_config={{dfv_config}}
-        summary_stats_data={{summary_stats_data}}
-        activeCol={{activeCol}}
-        setActiveCol={{setActiveCol}}
-            />
-    );
-}}
-"""
-        return code_str
-
-    def to_widgetdcfecell_ex(self):
-        code_str = f"""
-import React, {{useState}} from 'react';
-import {{extraComponents}} from 'buckaroo';
-
-const df_meta = {json.dumps(self.df_meta, indent=4)}
-
-const df_display_args = {json.dumps(self.df_display_args, indent=4)}
-
-const df_data_dict = {json.dumps(self.df_data_dict, indent=4)}
-
-const buckaroo_options = {json.dumps(self.buckaroo_options, indent=4)}
-
-const buckaroo_state = {json.dumps(self.buckaroo_state, indent=4)}
-
-const command_config = {json.dumps(self.command_config, indent=4)}
-
-const w_operations = {json.dumps(self.operations, indent=4)}
-
-const operation_results = {json.dumps(self.operation_results, indent=4)}
-        
-export default function  WidgetDCFCellExample() {{
-     const [bState, setBState] = React.useState<BuckarooState>(buckaroo_state);
-    const [operations, setOperations] = useState<Operation[]>(w_operations);
-    return (
-        <extraComponents.WidgetDCFCell
-            df_meta={{df_meta}}
-            df_display_args={{df_display_args}}
-            df_data_dict={{df_data_dict}}
-            buckaroo_options={{buckaroo_options}}
-            buckaroo_state={{bState}}
-            on_buckaroo_state={{setBState}}
-            command_config={{command_config}}
-            operations={{operations}}
-            on_operations={{setOperations}}
-            operation_results={{operation_results}}
-        />
-    );
-}}
-
-"""
-        return code_str
-
-
 
     @observe('buckaroo_state')
     @exception_protect('buckaroo_state-protector')
     def _buckaroo_state(self, change):
-        #how to control ordering of column_config???
-        # dfviewer_config = self._get_dfviewer_config(self.merged_sd, self.style_method)
-        # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
         old, new = change['old'], change['new']
         if not old['post_processing'] == new['post_processing']: 
-            self.post_processing_method = new['post_processing']
+            self.dataflow.post_processing_method = new['post_processing']
         if not old['quick_command_args'] == new['quick_command_args']: 
-            self.quick_command_args = new['quick_command_args']
+            self.dataflow.quick_command_args = new['quick_command_args']
 
 
         
@@ -324,10 +314,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
         self.df_display_args = temp_display_args
 
-    payload_args = Dict({'sourceName':'unused', 'start':0, 'end':50}).tag(sync=True)
-    payload_response = Dict({'key': {'sourceName':'unused', 'start':0, 'end':49},
-                            'data': []}
-                            ).tag(sync=True)
 
     def __init__(self, orig_df, debug=False,
                  column_config_overrides=None,

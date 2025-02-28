@@ -175,10 +175,6 @@ const renderBuckarooWidget = createRender(() => {
 });
 const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
     const model = useModel()
-
-	const [payload_args, on_payload_args] = useModelState("payload_args");
-	const [payload_response, _set_payload_response] =
-		useModelState("payload_response");
 	const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
 	const [df_display_args, _set_dda] = useModelState("df_display_args");
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
@@ -190,9 +186,6 @@ const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
 	const [buckaroo_options, _set_boptions] = useModelState("buckaroo_options");
 	return (
 			<srt.BuckarooInfiniteWidget
-				payload_args={payload_args}
-				on_payload_args={on_payload_args}
-				payload_response={payload_response}
 				df_data_dict={df_data_dict}
 				df_display_args={df_display_args}
 				df_meta={df_meta}
