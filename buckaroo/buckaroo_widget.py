@@ -95,6 +95,7 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         this is slow, and it broke marimo
 
         """
+        super().__init__()
         kls = self.__class__
         class InnerDataFlow(CustomizableDataflow):
             sampling_klass = kls.sampling_klass
