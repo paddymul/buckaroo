@@ -102,6 +102,10 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
             DFStatsClass = kls.DFStatsClass
             autoclean_conf= kls.autoclean_conf
             analysis_klasses = kls.analysis_klasses
+
+            def _df_to_obj(idfself, df:pd.DataFrame):
+                return self._df_to_obj(df)
+
         self.dataflow = InnerDataFlow(
             orig_df,
             debug=debug,column_config_overrides=column_config_overrides,
@@ -116,6 +120,9 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         bidirectional_wire(self, self.dataflow, "operation_results")
         bidirectional_wire(self, self.dataflow, "buckaroo_options")
         
+    def _df_to_obj(self, df:pd.DataFrame):
+        return pd_to_obj(self.sampling_klass.serialize_sample(df))
+
 
     _esm = Path(__file__).parent / "static" / "widget.js"
     _css = Path(__file__).parent / "static" / "widget.css"
@@ -187,13 +194,13 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         """
 
         stats = self.DFStatsClass(
-            self.processed_df,
-            self.analysis_klasses,
-            self.df_name, debug=self.debug)
+            self.dataflow.processed_df,
+            self.dataflow.analysis_klasses,
+            self.dataflow.df_name, debug=self.dataflow.debug)
         stats.add_analysis(analysis_klass)
-        self.analysis_klasses = stats.ap.ordered_a_objs
-        self.setup_options_from_analysis()
-        self.summary_sd = stats.sdf
+        self.dataflow.analysis_klasses = stats.ap.ordered_a_objs
+        self.dataflow.setup_options_from_analysis()
+        #self.summary_sd = stats.sdf
 
     def add_processing(self, df_processing_func):
         proc_func_name = df_processing_func.__name__

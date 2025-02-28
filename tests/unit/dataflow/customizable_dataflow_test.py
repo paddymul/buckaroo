@@ -301,8 +301,8 @@ def test_stock_flow():
     bw = BuckarooWidget(typed_df)
     #cleaning should be off by default. no columns should be changed
     #and the values shouldn't be changed
-    assert bw.processed_df.columns.tolist() == typed_df.columns.tolist()
-    assert bw.processed_df.values.tolist() == typed_df.values.tolist()
+    assert bw.dataflow.processed_df.columns.tolist() == typed_df.columns.tolist()
+    assert bw.dataflow.processed_df.values.tolist() == typed_df.values.tolist()
     
 
 class TransposeProcessing(ColAnalysis):
@@ -335,7 +335,7 @@ def test_transpose_error():
     temp_buckaroo_state = vcb.buckaroo_state.copy()
     temp_buckaroo_state['post_processing'] = 'transpose'
     vcb.buckaroo_state = temp_buckaroo_state
-    assert vcb.processed_df.values.tolist() == [
+    assert vcb.dataflow.processed_df.values.tolist() == [
         [1, 1, 1, 1, 1],
         [0.5, 0.5, 0.5, 0.5, 0.5],
         ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]
@@ -357,7 +357,7 @@ def test_bstate_commands():
 
     bw = BuckarooWidget(typed_df)
     assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
-    assert bw.cleaning_method == 'NoCleaning'
+    assert bw.dataflow.cleaning_method == 'NoCleaning'
     class VCBuckarooWidget(BuckarooWidget):
         #analysis_klasses = base_a_klasses
         autoclean_conf = tuple([NoCleaningConf]) 
@@ -368,7 +368,7 @@ def test_bstate_commands():
     vcb.buckaroo_state = temp_buckaroo_state
 
     #probably something in autocleaning config should be responsible for generating these commands
-    assert vcb.merged_operations == [
+    assert vcb.dataflow.merged_operations == [
         [qc_sym('search'), s('df'), "col", "needle"]]
 
 

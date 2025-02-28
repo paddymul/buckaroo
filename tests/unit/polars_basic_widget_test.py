@@ -56,7 +56,7 @@ def test_polars_all_stats():
         analysis_klasses= [SelectOnlyAnalysis, StylingAnalysis]
 
     spbw = SimplePolarsBuckaroo(test_df)
-    assert spbw.merged_sd == expected
+    assert spbw.dataflow.merged_sd == expected
 
     assert spbw.df_data_dict['all_stats'] == [
         {'index': 'null_count', 'normal_int_series': 0.0},
@@ -97,7 +97,7 @@ def test_pandas_all_stats():
         analysis_klasses= [SimpleAnalysis, StylingAnalysis]
 
     sbw = SimpleBuckaroo(pd_test_df)
-    assert sbw.merged_sd == {
+    assert sbw.dataflow.merged_sd == {
         'index': {'mean': 2.5, 'null_count': 0, 'quin99': 4.0},
         'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
@@ -234,33 +234,33 @@ def test_polars_search():
 
     bw = PolarsBuckarooWidget(df)
     assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
-    assert bw.cleaning_method == 'NoCleaning'
+    assert bw.dataflow.cleaning_method == 'NoCleaning'
     # class VCBuckarooWidget(BuckarooWidget):
     #     #analysis_klasses = base_a_klasses
     #     autoclean_conf = tuple([NoCleaningConf]) 
 
     # vcb = VCBuckarooWidget(typed_df, debug=False)
-    assert len(bw.processed_df) == 4
+    assert len(bw.dataflow.processed_df) == 4
     
     temp_buckaroo_state = bw.buckaroo_state.copy()
     temp_buckaroo_state['quick_command_args'] = {'search': ['a']}
     bw.buckaroo_state = temp_buckaroo_state
 
     #probably something in autocleaning config should be responsible for generating these commands
-    assert bw.merged_operations == [
+    assert bw.dataflow.merged_operations == [
         [qc_sym('search'), s('df'), "col", "a"]]
 
-    assert len(bw.processed_df) == 3
+    assert len(bw.dataflow.processed_df) == 3
 
     temp_buckaroo_state = bw.buckaroo_state.copy()
     temp_buckaroo_state['quick_command_args'] = {'search': ['aa']}
     bw.buckaroo_state = temp_buckaroo_state
 
     #probably something in autocleaning config should be responsible for generating these commands
-    assert bw.merged_operations == [
+    assert bw.dataflow.merged_operations == [
         [qc_sym('search'), s('df'), "col", "aa"]]
 
-    assert len(bw.processed_df) == 1
+    assert len(bw.dataflow.processed_df) == 1
 
     """
     add an additional test that accounts for arbitrary, configurable status bar command args

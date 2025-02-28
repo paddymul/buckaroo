@@ -66,6 +66,9 @@ class PolarsBuckarooWidget(BuckarooWidget):
     def _df_to_obj(self, df):
         # I want to this, but then row numbers are lost
         #return pd_to_obj(self.sampling_klass.serialize_sample(df).to_pandas())
+        import pandas as pd
+        if isinstance(df, pd.DataFrame):
+            return pd_to_obj(self.sampling_klass.serialize_sample(df))
         return pd_to_obj(self.sampling_klass.serialize_sample(df.to_pandas()))
 
 def PolarsDFViewer(df,

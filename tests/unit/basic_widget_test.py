@@ -40,12 +40,12 @@ def test_interpreter():
     # df['int_col'] = smart_to_int(df['int_col'])
     # df['str_col'] = df['str_col'].fillna(value='').astype('string').replace('', None)
     # return df'''
-    assert 'str_col' in w.cleaned_df.columns
+    assert 'str_col' in w.dataflow.cleaned_df.columns
     temp_ops = w.operations.copy()
     temp_ops.append([{"symbol":"dropcol"},{"symbol":"df"},"str_col"])
     w.operations = temp_ops
 
-    tdf = w.cleaned_df
+    tdf = w.dataflow.cleaned_df
     assert 'str_col' not in tdf.columns
     '''
     #assert w.operation_results['transform_error'] is False
