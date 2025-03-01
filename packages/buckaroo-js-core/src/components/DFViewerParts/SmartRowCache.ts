@@ -437,7 +437,10 @@ export class SmartRowCache {
             }
             this.lastRequest = range;
             return getRange(this.segments, this.dfs, range)
-        }
+        } else if (range[0] === 0 && range[1] > this.sentLength) {
+	    const fullSeg: Segment = [0, this.sentLength];
+	    return getRange(this.segments, this.dfs, fullSeg)
+	}
         throw new Error(`Missing rows for {range}`)
     }
 }
@@ -471,7 +474,7 @@ export class KeyAwareSmartRowCache {
     public lastRequest: Segment = [0, 0];
     public reUpDist:number = 300;  //threshhold for requesting next range
 
-    public padding: number = 1000;
+    public padding: number = 200;
     constructor(reqFn: RequestFN) {
         this.reqFn = reqFn;
         this.subRowCaches = {};
@@ -585,7 +588,15 @@ export class KeyAwareSmartRowCache {
         const cbKey = getPayloadKey(resp.key)
         const preExtents = src.safeGetExtents()
 
-        src.addRows(seg, resp.data)
+	if(resp.length < resp.key.end && resp.key.start === 0) {
+	    // add tests
+	    const entireSeg: Segment = [0, resp.length];
+            src.addRows(entireSeg, resp.data)
+	} else {
+            src.addRows(seg, resp.data)
+	}
+	    
+
         console.log(`response before ${[resp.key.start, resp.key.origEnd, resp.key.end]} before add, preExtents ${preExtents}, post extents ${src.safeGetExtents()}`)
 
         src.sentLength = resp.length;

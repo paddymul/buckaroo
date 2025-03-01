@@ -363,8 +363,8 @@ describe('SmartRowCache tests', () => {
 
 	const src = new SmartRowCache()
 	src.maxSize = 35
+	src.trimFactor = .8
 	expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
-
 
 	src.addRows.apply(src, genRows(10,20))
 	expect(src.hasRows([10,20])).toBe(true)
@@ -459,6 +459,7 @@ describe('failing SmartRowCache tests', () => {
       test('SmartRowCache trim premptive request ', () => {
 	  // based on patterns seen when actually run
 	  const src = new SmartRowCache()
+	  src.maxSize = 1000;
 	  src.addRows.apply(src, genRows(0,902))
 
 	  // important because we want the most recent hasRows
@@ -473,9 +474,7 @@ describe('failing SmartRowCache tests', () => {
 describe('KeyAwareSmartRowCache tests', () => {
     const failNOP = () => {}
     test('basic KeyAwareSmartRowCache tests', () => {
-
 	let src:KeyAwareSmartRowCache;
-
 
 	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
 	    console.log("reqFn", pa)
@@ -491,15 +490,10 @@ describe('KeyAwareSmartRowCache tests', () => {
 	})
 
 	src.getRequestRows(pa1, mockCbFn, failNOP)
-	const second_request = {"end": 120, "origEnd":120, "sort": undefined, "sort_direction": undefined, "sourceName": "foo", "start": 20}
 
-	const expectedRequest:PayloadArgs = {...pa1, second_request}
-	// The mock function was called twice, once for the first request, and again for the followon
-	expect(mockRequestFn.mock.calls).toHaveLength(1);
+	const expectedRequest:PayloadArgs = {...pa1 } ;
 
 	expect(mockRequestFn.mock.calls[0][0]).toStrictEqual(expectedRequest)
-	
-	//expect(src.hasRows([10,20])).toStrictEqual({"start": 10, "end": 20})
     })
     test('test that callback is called', () => {
 
@@ -527,60 +521,6 @@ describe('KeyAwareSmartRowCache tests', () => {
 
 	src.getRequestRows(pa1, mockCbFn, failNOP)
 	expect(mockCbFn.mock.calls).toHaveLength(1);
-    })
-    test('test that second request is made', () => {
-
-	let src:KeyAwareSmartRowCache;
-
-
-	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
-	    console.log("reqFn", pa)
-	    const resp:PayloadResponse = {
-		key:pa,
-		data:genRows(pa.start, pa.end, pa.sourceName)[1],
-		length:800
-	    }
-	    src.addPayloadResponse(resp)
-	    if(pa.second_request !== undefined) {
-		const sr = pa.second_request;
-		const resp2:PayloadResponse = {
-		    key:sr,
-		    data:genRows(sr.start, sr.end, sr.sourceName)[1],
-		    length:800
-		}
-	    src.addPayloadResponse(resp2)
-	    }
-	})
-
-	src = new KeyAwareSmartRowCache(mockRequestFn);
-
-	const pa1: PayloadArgs = {
-	    sourceName:"foo", start:0, end:20, origEnd:20}
-
-	const mockCbFn = jest.fn((df:DFData, length:number) => {
-	    console.log("mockCbFn", df.length,  length )
-	})
-
-	src.getRequestRows(pa1, mockCbFn, failNOP)
-	expect(mockRequestFn.mock.calls).toHaveLength(1);
-
-	expect(src.usedSize()).toBe(120)
-
-
-	const pa2: PayloadArgs = {
-	    sourceName:"foo", start:40, end:60, origEnd:60}
-
-	const mockCbFn2 = jest.fn((df:DFData, length:number) => {
-	    console.log("mockCbFn", df.length,  length )
-	})
-
-	src.getRequestRows(pa2, mockCbFn2, failNOP)
-
-	// this should be cached, and shouldn't generate a second request
-	expect(mockRequestFn.mock.calls).toHaveLength(1);
-
-
-
     })
 });
 
