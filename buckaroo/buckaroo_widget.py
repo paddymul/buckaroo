@@ -366,12 +366,12 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
                 slice_df = sorted_df[start:end]
                 slice_df['index'] = slice_df.index
-                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'length':len(processed_df)}, [slice_df.to_parquet()])
+                self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'length':len(processed_df)}, [to_parquet(slice_df)])
             else:
                 slice_df = processed_df[start:end]
                 slice_df['index'] = slice_df.index
                 self.send({ "type": "infinite_resp", 'key':new_payload_args,
-                            'data': [], 'length':len(processed_df)}, [slice_df.to_parquet()])
+                            'data': [], 'length':len(processed_df)}, [to_parquet(slice_df) ])
     
                 second_pa = new_payload_args.get('second_request')
                 if not second_pa:
@@ -388,7 +388,7 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 extra_df['index'] = extra_df.index
                 self.send(
                     {"type": "infinite_resp", 'key':second_pa, 'data':[], 'length':len(processed_df)},
-                    [extra_df.to_parquet()]
+                    [to_parquet(extra_df)]
                 )
         except Exception as e:
             print(e)
@@ -399,4 +399,12 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(df)
+
+def to_parquet(df):
+    # I don't like this copy.  modify to keep the same data with different names
+    df2 = df.copy()
+    df2.columns = [str(x) for x in df2.columns]
+    obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
+    encodings = {k:'json' for k in obj_columns}
+    return df2.to_parquet(engine='fastparquet', object_encoding=encodings)
 
