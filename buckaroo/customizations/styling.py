@@ -30,7 +30,7 @@ class DefaultMainStyling(StylingAnalysis):
             disp = {'displayer': 'float', 'min_fraction_digits':0, 'max_fraction_digits':0}
         elif t == 'float':
             disp = {'displayer': 'float', 'min_fraction_digits':digits, 'max_fraction_digits':digits}
-        elif t == 'temporal':
+        elif t == 'datetime':
             disp = {'displayer': 'datetimeLocaleString','locale': 'en-US',  'args': {}}
         elif t == 'string':
             disp = {'displayer': 'string', 'max_length': 35}
