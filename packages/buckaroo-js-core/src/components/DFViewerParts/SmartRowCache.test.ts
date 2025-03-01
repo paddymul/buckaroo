@@ -442,18 +442,6 @@ describe('SmartRowCache tests', () => {
 	expect(src.getExtents()).toStrictEqual([10,43])  
 	
     })
-    // test('SmartRowCache trim 2 side ', () => {
-    // 	// based on patterns seen when actually run
-    // 	const src = new SmartRowCache()
-    // 	src.maxSize = 35
-    // 	src.addRows.apply(src, genRows(880,902))
-
-    // 	// important because we want the most recent hasRows
-    // 	expect(src.hasRows([880,902])).toBe(true)
-    // 	expect(src.hasRows([902, 1002])).toStrictEqual({'start':902, 'end':1002})
-    // 	src.addRows.apply(src, genRows(902,1002))  //force a compaction
-    // 	expect(src.hasRows([902,924])).toBe(true)
-    // })
 })
 describe('failing SmartRowCache tests', () => {
       test('SmartRowCache trim premptive request ', () => {
@@ -472,7 +460,9 @@ describe('failing SmartRowCache tests', () => {
 })  
 
 describe('KeyAwareSmartRowCache tests', () => {
+
     const failNOP = () => {}
+
     test('basic KeyAwareSmartRowCache tests', () => {
 	let src:KeyAwareSmartRowCache;
 
@@ -561,12 +551,14 @@ describe('KeyAwareSmartRowCache tests', () => {
 	expect(respData2.length).toStrictEqual(17)
 	expect(sentLength2).toStrictEqual(17)
     })
+
     test('KeyAwareSmartRowCache test last rows', () => {
 	// verify that a request that overlaps the end of the data is handled proeprly
 	let src:KeyAwareSmartRowCache;
 	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
 	    console.log("reqFn", pa)
 	    if (pa.end > 800) {
+		console.log("before 800")
 		const resp2:PayloadResponse = {
 		    key:pa,
 		    data:genRows(pa.start, 800, pa.sourceName)[1],

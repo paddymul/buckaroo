@@ -316,7 +316,7 @@ export class SmartRowCache {
 
     public segments: Segment[] = []
     private dfs: DFData[] = []
-    public sentLength: number = 5000;
+    public sentLength: number = 0;
     // These tuning factors are sensitive.
     // there are other serverside and ag-grid tuning factors too.
     // those are "rowRequestSize" from ag-grid verify prop name
@@ -406,7 +406,11 @@ export class SmartRowCache {
         if (newDf.length !== newSegLength) {
             //throw new Error(`addRows called with a df smaller that newSegLenth ${newSegLength} ${newSegment} ${newDf.length}`)
             console.log(`addRows called with a df smaller that newSegLenth ${newSegLength} ${newSegment} ${newDf.length}`)
-            return;
+	    if ((newSegment[0] + newDf.length) === this.sentLength) {
+		const endSegment:Segment = [newSegment[0], this.sentLength];
+		return this.addRows(endSegment, newDf);
+	    }
+	    return
         }
         const [newSegs, newDfs] = mergeSegments(this.segments, this.dfs, newSegment, newDf)
         this.segments = newSegs;
@@ -437,7 +441,7 @@ export class SmartRowCache {
             }
             this.lastRequest = range;
             return getRange(this.segments, this.dfs, range)
-        } else if (range[0] === 0 && range[1] > this.sentLength) {
+        } else if (range[0] === 0 && range[1] > this.sentLength && this.sentLength !== 0) {
 	    const fullSeg: Segment = [0, this.sentLength];
 	    return getRange(this.segments, this.dfs, fullSeg)
 	}
@@ -504,9 +508,14 @@ export class KeyAwareSmartRowCache {
         const srcKey = getSourcePayloadKey(pa)
         const seg: Segment = [pa.start, pa.origEnd];
         if (!_.has(this.subRowCaches, srcKey)) {
-            throw new Error(`Missing source for  ${pa}`)
+            throw new Error(`Missing source for ${pa}`)
         }
-        return this.subRowCaches[srcKey].getRows(seg);
+	const src = this.subRowCaches[srcKey]
+	if (src.sentLength !== 0 &&  src.sentLength < pa.end) {
+	    const newSeg:Segment = [pa.start, src.sentLength];
+	    return src.getRows(newSeg);
+	}
+        return src.getRows(seg);
     }
 
     public debugCacheState():void {
@@ -593,6 +602,7 @@ export class KeyAwareSmartRowCache {
 	    const entireSeg: Segment = [0, resp.length];
             src.addRows(entireSeg, resp.data)
 	} else {
+	    
             src.addRows(seg, resp.data)
 	}
 	    
