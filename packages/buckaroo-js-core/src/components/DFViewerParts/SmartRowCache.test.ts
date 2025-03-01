@@ -522,7 +522,8 @@ describe('KeyAwareSmartRowCache tests', () => {
 	expect(mockCbFn.mock.calls).toHaveLength(1);
     })
     test('KeyAwareSmartRowCache test short data', () => {
-
+	// verify that KeyAwareSmartRowCache handles the case where
+	// the returned data is smaller than request size
 	let src:KeyAwareSmartRowCache;
 	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
 	    console.log("reqFn", pa)
@@ -559,10 +560,58 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const [respData2, sentLength2] = mockCbFn2.mock.calls[0];
 	expect(respData2.length).toStrictEqual(17)
 	expect(sentLength2).toStrictEqual(17)
-
-	
-	
     })
+    test('KeyAwareSmartRowCache test last rows', () => {
+	// verify that a request that overlaps the end of the data is handled proeprly
+	let src:KeyAwareSmartRowCache;
+	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+	    console.log("reqFn", pa)
+	    if (pa.end > 800) {
+		const resp2:PayloadResponse = {
+		    key:pa,
+		    data:genRows(pa.start, 800, pa.sourceName)[1],
+		    length:800
+		}
+		src.addPayloadResponse(resp2)
+		return 
+	    }
+	    const resp:PayloadResponse = {
+		key:pa,
+		data:genRows(pa.start, pa.end, pa.sourceName)[1],
+		length:800
+	    }
+	    src.addPayloadResponse(resp)
+	})
 
+	src = new KeyAwareSmartRowCache(mockRequestFn);
+
+	const pa1: PayloadArgs = {
+	    sourceName:"foo", start:0, end:20, origEnd:20}
+
+	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa1, mockCbFn, failNOP)
+	expect(mockCbFn.mock.calls).toHaveLength(1);
+
+
+
+	const pa2: PayloadArgs = {
+	    sourceName:"foo", start:770, end:820, origEnd:820}
+
+	const mockCbFn2 = jest.fn((df:DFData, length:number) => {
+	    
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa2, mockCbFn2, failNOP)
+	const [respData2, sentLength2] = mockCbFn2.mock.calls[0];
+	expect(respData2.length).toStrictEqual(30)
+	expect(sentLength2).toStrictEqual(800)
+
+
+    })
+    
 });
 
