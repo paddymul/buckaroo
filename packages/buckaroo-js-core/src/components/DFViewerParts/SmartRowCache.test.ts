@@ -495,11 +495,10 @@ describe('KeyAwareSmartRowCache tests', () => {
 
 	expect(mockRequestFn.mock.calls[0][0]).toStrictEqual(expectedRequest)
     })
+
+
     test('test that callback is called', () => {
-
 	let src:KeyAwareSmartRowCache;
-
-
 	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
 	    console.log("reqFn", pa)
 	    const resp:PayloadResponse = {
@@ -522,5 +521,48 @@ describe('KeyAwareSmartRowCache tests', () => {
 	src.getRequestRows(pa1, mockCbFn, failNOP)
 	expect(mockCbFn.mock.calls).toHaveLength(1);
     })
+    test('KeyAwareSmartRowCache test short data', () => {
+
+	let src:KeyAwareSmartRowCache;
+	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+	    console.log("reqFn", pa)
+	    // we're going to get a request for 20 rows, only send back 17
+	    const resp:PayloadResponse = {
+		key:pa,
+		data:genRows(pa.start, 17, pa.sourceName)[1],
+		length:17
+	    }
+	    src.addPayloadResponse(resp)
+	})
+
+	src = new KeyAwareSmartRowCache(mockRequestFn);
+
+	const pa1: PayloadArgs = {
+	    sourceName:"foo", start:0, end:20, origEnd:20}
+
+	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn", df.length,  length )
+	})
+
+	src.getRequestRows(pa1, mockCbFn, failNOP)
+	expect(mockCbFn.mock.calls).toHaveLength(1);
+	const [respData, sentLength] = mockCbFn.mock.calls[0];
+	expect(respData.length).toStrictEqual(17)
+	expect(sentLength).toStrictEqual(17)
+	const pa2: PayloadArgs = {
+	    sourceName:"foo", start:0, end:17, origEnd:17}
+
+	const mockCbFn2 = jest.fn((df:DFData, length:number) => {
+	    console.log("mockCbFn2", df.length,  length )
+	})
+	src.getRequestRows(pa2, mockCbFn2, failNOP)
+	const [respData2, sentLength2] = mockCbFn2.mock.calls[0];
+	expect(respData2.length).toStrictEqual(17)
+	expect(sentLength2).toStrictEqual(17)
+
+	
+	
+    })
+
 });
 
