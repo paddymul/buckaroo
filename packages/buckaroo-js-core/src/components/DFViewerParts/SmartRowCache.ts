@@ -613,6 +613,7 @@ export class KeyAwareSmartRowCache {
         }
 
         const src = this.ensureRowCacheForPa(resp.key)
+	this.trim()
         const cbKey = getPayloadKey(resp.key)
         const preExtents = src.safeGetExtents()
 
@@ -641,6 +642,18 @@ export class KeyAwareSmartRowCache {
 
     public trim(): void {
         console.log("trim")
+
+	if(this.usedSize() > this.maxSize) {
+	    const lastUsedKey = this.srcAccesses.keys().next().value;
+	    if (lastUsedKey !== undefined) {
+		this.srcAccesses.delete(lastUsedKey)
+	    } else {
+	    throw new Error(`unexpected couldn't find any keys in srcAccesses `);
+	    }
+
+	    
+		
+	}
         /*
           trim should go through sources in least recently used order.
           and trim each of the caches to the initial display size.
