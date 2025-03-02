@@ -505,12 +505,11 @@ describe('KeyAwareSmartRowCache tests', () => {
 	    sourceName:"foo", start:0, end:20, origEnd:20}
 
 	const mockCbFn = jest.fn((df:DFData, length:number) => {
-	    console.log("mockCbFn", df.length,  length )
-	})
-
+	    console.log("mockCbFn", df.length,  length )})
 	src.getRequestRows(pa1, mockCbFn, failNOP)
 	expect(mockCbFn.mock.calls).toHaveLength(1);
     })
+
     test('KeyAwareSmartRowCache test short data', () => {
 	// verify that KeyAwareSmartRowCache handles the case where
 	// the returned data is smaller than request size
@@ -601,9 +600,61 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const [respData2, sentLength2] = mockCbFn2.mock.calls[0];
 	expect(respData2.length).toStrictEqual(30)
 	expect(sentLength2).toStrictEqual(800)
+    })
+
+        test('test trim functionality', () => {
+	    let src:KeyAwareSmartRowCache;
+	    const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+		const L = 7700
+		console.log("reqFn", pa)
+		if (pa.end > L) {
+		    console.log("before 800")
+		    const resp2:PayloadResponse = {
+			key:pa,
+			data:genRows(pa.start, L, pa.sourceName)[1],
+			length:L
+		    }
+		    src.addPayloadResponse(resp2)
+		    return 
+		}
+		const resp:PayloadResponse = {
+		    key:pa,
+		    data:genRows(pa.start, pa.end, pa.sourceName)[1],
+		    length:L
+		}
+		src.addPayloadResponse(resp)
+	    })
+
+	    src = new KeyAwareSmartRowCache(mockRequestFn);
+	    src.maxSize = 3000;
+
+	    const pa1: PayloadArgs = {
+		sourceName:"foo", start:0, end:20, origEnd:20}
+
+	    const mockCbFn = jest.fn((df:DFData, length:number) => {
+		console.log("mockCbFn", df.length,  length )
+	    })
+	    src.getRequestRows(pa1, mockCbFn, failNOP)
+	    expect(src.usedSize()).toStrictEqual(20);
+
+
+	    const pa2: PayloadArgs = {
+		sourceName:"bar", start:0, end:22, origEnd:22}
+	    src.getRequestRows(pa2, mockCbFn, failNOP)
+	    expect(src.usedSize()).toStrictEqual(42);
+
+	    const pa3: PayloadArgs = {
+		sourceName:"baz", start:0, end:3003, origEnd:3003}
+	    src.getRequestRows(pa3, mockCbFn, failNOP)
+	    expect(src.usedSize()).toStrictEqual(3045);
+	    src.trim();
+	    expect(src.usedSize()).toStrictEqual(3025);
+	    const pa4: PayloadArgs = {
+		sourceName:"qqqq", start:0, end:55, origEnd:55}
+	    src.getRequestRows(pa4, mockCbFn, failNOP)
+	    expect(src.usedSize()).toStrictEqual(3058);
 
 
     })
     
 });
-

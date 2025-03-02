@@ -485,8 +485,7 @@ export class KeyAwareSmartRowCache {
 
 
     public usedSize(): number {
-	//@ts-ignore
-        return _.sum(_.map(_.values(this.srcAccesses), (src) => src ? src.usedSize() : 0))
+        return _.sum(Array.from(this.srcAccesses.values()).map((x) => x.usedSize()))
     }
 
     public hasRows(pa: PayloadArgs): boolean {
@@ -612,8 +611,8 @@ export class KeyAwareSmartRowCache {
             console.log(`response had ${seg[1]-seg[0]} rows took ${respTime}`)
         }
 
-        const src = this.ensureRowCacheForPa(resp.key)
 	this.trim()
+        const src = this.ensureRowCacheForPa(resp.key)
         const cbKey = getPayloadKey(resp.key)
         const preExtents = src.safeGetExtents()
 
