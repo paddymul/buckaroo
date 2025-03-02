@@ -451,7 +451,6 @@ export class SmartRowCache {
 
 
 export type RequestFN = (pa: PayloadArgs) => void
-type SubrowCacheDict = Record<string, SmartRowCache>;
 export type FoundRowsCB = (df: DFData, length: number) => void;
 export type FailCB = () => void;
 
@@ -468,12 +467,11 @@ function verifyResp(resp: PayloadResponse):boolean {
 
 export class KeyAwareSmartRowCache {
 
-    private subRowCaches: SubrowCacheDict
-
+    private srcAccesses: Map<string, SmartRowCache>
     private waitingCallbacks: Record<string, [FoundRowsCB, FailCB]>
     private reqFn: RequestFN;
 
-    public maxSize: number = 1000;
+    public maxSize: number = 10000;
     public trimFactor: number = 0.8;  // trim down to trimFactor from maxSize
     public lastRequest: Segment = [0, 0];
     public reUpDist:number = 300;  //threshhold for requesting next range
@@ -481,23 +479,29 @@ export class KeyAwareSmartRowCache {
     public padding: number = 200;
     constructor(reqFn: RequestFN) {
         this.reqFn = reqFn;
-        this.subRowCaches = {};
         this.waitingCallbacks = {};
+	this.srcAccesses = new Map();
     }
 
 
     public usedSize(): number {
-        return _.sum(_.map(_.values(this.subRowCaches), (src) => src.usedSize()))
+	//@ts-ignore
+        return _.sum(_.map(_.values(this.srcAccesses), (src) => src ? src.usedSize() : 0))
     }
 
     public hasRows(pa: PayloadArgs): boolean {
         // this should probably be "ensure rows"
         const srcKey = getSourcePayloadKey(pa)
         const seg: Segment = [pa.start, pa.origEnd];
-        if (!_.has(this.subRowCaches, srcKey)) {
+	if (!this.srcAccesses.has(srcKey)) {
             return false
         }
-        const reqArgs = this.subRowCaches[srcKey].hasRows(seg)
+	const src = this.srcAccesses.get(srcKey);
+	if(src === undefined) {
+	    throw new Error(`unexpected couldn't find SmartRowCache for ${srcKey}`);
+	}
+
+        const reqArgs = src.hasRows(seg)
         if (reqArgs === true) {
             return true
         }
@@ -506,22 +510,34 @@ export class KeyAwareSmartRowCache {
 
     public getRows(pa: PayloadArgs): DFData {
         const srcKey = getSourcePayloadKey(pa)
+
         const seg: Segment = [pa.start, pa.origEnd];
-        if (!_.has(this.subRowCaches, srcKey)) {
+
+	if (!this.srcAccesses.has(srcKey)) {
             throw new Error(`Missing source for ${pa}`)
         }
-	const src = this.subRowCaches[srcKey]
+	let src = this.srcAccesses.get(srcKey);
+	if(src === undefined) {
+	    throw new Error(`unexpected couldn't find SmartRowCache for ${srcKey}`);
+	}
+
+	this.srcAccesses.delete(srcKey);
+	this.srcAccesses.set(srcKey, src);
+
 	if (src.sentLength !== 0 &&  src.sentLength < pa.end) {
 	    const newSeg:Segment = [pa.start, src.sentLength];
+	    console.log("at failing point", newSeg, src.getExtents())
 	    return src.getRows(newSeg);
 	}
         return src.getRows(seg);
     }
 
+    /*
     public debugCacheState():void {
         //_.map({'a':9, 'b':20}, (v,k) => {console.log(k, v+10)}) 
-        _.map(this.subRowCaches, (c, k) => {console.log(k, c.safeGetExtents())});
+        _.map(this.srcAccesses, (k, c) => {console.log(k,  k.safeGetExtents())});
     }
+    */
 
     public maybeMakeLeadingRequest(pa:PayloadArgs): void {
         const reqSeg:Segment = [pa.start, pa.origEnd]
@@ -576,10 +592,13 @@ export class KeyAwareSmartRowCache {
     public ensureRowCacheForPa(pa:PayloadArgs): SmartRowCache {
         const srcKey = getSourcePayloadKey(pa)
 
-        if (!_.has(this.subRowCaches, srcKey)) {
-            this.subRowCaches[srcKey] = new SmartRowCache();
+	if (!this.srcAccesses.has(srcKey)){
+            this.srcAccesses.set(srcKey, new SmartRowCache());
         }
-        const src = this.subRowCaches[srcKey];
+        const src = this.srcAccesses.get(srcKey);
+	if(src === undefined) {
+	    throw new Error(`unexpected couldn't find SmartRowCache for ${srcKey}`);
+	}
         return src;
     }
 
@@ -602,7 +621,6 @@ export class KeyAwareSmartRowCache {
 	    const entireSeg: Segment = [0, resp.length];
             src.addRows(entireSeg, resp.data)
 	} else {
-	    
             src.addRows(seg, resp.data)
 	}
 	    
