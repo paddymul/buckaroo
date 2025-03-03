@@ -488,6 +488,13 @@ export class KeyAwareSmartRowCache {
         return _.sum(Array.from(this.srcAccesses.values()).map((x) => x.usedSize()))
     }
 
+    public debugCacheState():void {
+	_.map(
+	    _.fromPairs(
+		Array.from(this.srcAccesses.entries())),
+	    (k, _c) => {console.log(k,  k.safeGetExtents())});
+    }
+
     public hasRows(pa: PayloadArgs): boolean {
         // this should probably be "ensure rows"
         const srcKey = getSourcePayloadKey(pa)
@@ -531,12 +538,7 @@ export class KeyAwareSmartRowCache {
         return src.getRows(seg);
     }
 
-    /*
-    public debugCacheState():void {
-        //_.map({'a':9, 'b':20}, (v,k) => {console.log(k, v+10)}) 
-        _.map(this.srcAccesses, (k, c) => {console.log(k,  k.safeGetExtents())});
-    }
-    */
+
 
     public maybeMakeLeadingRequest(pa:PayloadArgs): void {
         const reqSeg:Segment = [pa.start, pa.origEnd]
