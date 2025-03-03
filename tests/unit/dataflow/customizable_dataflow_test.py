@@ -209,6 +209,31 @@ def test_hide_column_config_post_processing():
     assert p_dfc.cleaned_sd == {}
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
+def test_add_analysis():
+    """
+    verifies that a PostProcessing function can hide columns 
+    """
+    class PostDCFC(CustomizableDataflow):
+        analysis_klasses = []
+        #pass
+
+    p_dfc = PostDCFC(BASIC_DF)
+    assert p_dfc.post_processing_method == ''
+    assert p_dfc.processed_df is BASIC_DF
+    assert p_dfc.df_display_args == {}
+    p_dfc.add_analysis(StylingAnalysis)
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+    assert p_dfc.cleaned_sd == {}
+    p_dfc.add_analysis(HidePostProcessingAnalysis)
+    p_dfc.post_processing_method = 'hide_post'
+    assert p_dfc.processed_df is SENTINEL_DF
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == SENTINEL_CONFIG_WITHOUT_INT
+    """ Make sure we can switch post_processing back to unset and everything works """
+    p_dfc.post_processing_method = ''
+    assert p_dfc.processed_df is BASIC_DF
+    assert p_dfc.cleaned_sd == {}
+    assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
+
 
 class HidePostProcessingAnalysis2(ColAnalysis):
     provides_defaults = {}

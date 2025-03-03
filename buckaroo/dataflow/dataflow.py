@@ -317,11 +317,14 @@ class CustomizableDataflow(DataFlow):
     ### start summary stats block
 
     def _get_summary_sd(self, processed_df):
+        print("320 _get_summary_sd", self.analysis_klasses)
         stats = self.DFStatsClass(
             processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         sdf = stats.sdf
+        print("326 sdf", sdf)
+        print("327 stats.errs", stats.errs)
         if stats.errs:
             if self.debug:
                 raise Exception("Error executing analysis")
@@ -344,6 +347,33 @@ class CustomizableDataflow(DataFlow):
     def _df_to_obj(self, df:pd.DataFrame):
         return pd_to_obj(self.sampling_klass.serialize_sample(df))
     
+    def add_analysis(self, analysis_klass):
+        """
+        same as get_summary_sd, call whatever to set summary_sd and trigger further comps
+        """
+
+        stats = self.DFStatsClass(
+            self.processed_df,
+            self.analysis_klasses,
+            self.df_name, debug=self.debug)
+        stats.add_analysis(analysis_klass)
+        print("analysis_klass before")
+        print(self.analysis_klasses)
+        
+        self.analysis_klasses = stats.ap.ordered_a_objs
+        self.setup_options_from_analysis()
+        #super().__init__(self.sampling_klass.pre_stats_sample(orig_df))
+        
+        #force recomputation
+        print("asdf", self._get_summary_sd(self.processed_df))
+        
+        self.populate_df_meta()
+        self._handle_widget_change({})
+        print("analysis_klasses after")
+        print(self.analysis_klasses)
+
+        #self.summary_sd = stats.sdf
+
 
     #final processing block
     @observe('widget_args_tuple')

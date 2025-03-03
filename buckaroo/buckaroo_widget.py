@@ -98,6 +98,7 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         """
         super().__init__()
         kls = self.__class__
+        print("kls", kls, kls.analysis_klasses)
         class InnerDataFlow(CustomizableDataflow):
             sampling_klass = kls.sampling_klass
             autocleaning_klass = kls.autocleaning_klass
@@ -114,6 +115,8 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
             pinned_rows=pinned_rows, extra_grid_config=extra_grid_config,
             component_config=component_config, init_sd=init_sd,
             skip_main_serial=skip_main_serial)
+        print("-"*80)
+        print(self.dataflow.analysis_klasses)
 
         bidirectional_wire(self, self.dataflow, "df_data_dict")
         bidirectional_wire(self, self.dataflow, "df_display_args")
@@ -197,15 +200,16 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         """
         same as get_summary_sd, call whatever to set summary_sd and trigger further comps
         """
-
-        stats = self.DFStatsClass(
-            self.dataflow.processed_df,
-            self.dataflow.analysis_klasses,
-            self.dataflow.df_name, debug=self.dataflow.debug)
-        stats.add_analysis(analysis_klass)
-        self.dataflow.analysis_klasses = stats.ap.ordered_a_objs
-        self.dataflow.setup_options_from_analysis()
-        #self.summary_sd = stats.sdf
+        self.dataflow.add_analysis(analysis_klass)
+        
+        # stats = self.DFStatsClass(
+        #     self.dataflow.processed_df,
+        #     self.dataflow.analysis_klasses,
+        #     self.dataflow.df_name, debug=self.dataflow.debug)
+        # stats.add_analysis(analysis_klass)
+        # self.dataflow.analysis_klasses = stats.ap.ordered_a_objs
+        # self.dataflow.setup_options_from_analysis()
+        # #self.summary_sd = stats.sdf
 
     def add_processing(self, df_processing_func):
         proc_func_name = df_processing_func.__name__

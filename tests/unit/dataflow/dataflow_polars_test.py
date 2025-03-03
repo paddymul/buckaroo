@@ -29,17 +29,20 @@ class BasicStyling(StylingAnalysis):
     df_display_name = "basic"
     
 
-def xtest_widget_instatiation():
+def test_widget_instatiation():
     dfc = PolarsBuckarooWidget(BASIC_DF)
     #the BasicStyling is simple and predictable, it writes to 'basic' which nothing else should
-    dfc.add_analysis(BasicStyling)
+    #dfc.add_analysis(BasicStyling)
     assert_frame_equal(dfc.dataflow.widget_args_tuple[1], BASIC_DF)
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
 
-    actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
+    #actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
     expected_column_config = DFVIEWER_CONFIG_DEFAULT['column_config']
 
     #this test is brittle because styling is rapidly changing in development
+    #assert dfc.analysis_klasses == dfc.dataflow.analysis_klasses
+    print("dfc.df_display_args")
+    print(dfc.df_display_args)
     assert actual_column_config == expected_column_config 
 
 def test_custom_dataflow():
