@@ -32,17 +32,15 @@ class BasicStyling(StylingAnalysis):
 def test_widget_instatiation():
     dfc = PolarsBuckarooWidget(BASIC_DF)
     #the BasicStyling is simple and predictable, it writes to 'basic' which nothing else should
-    #dfc.add_analysis(BasicStyling)
+    dfc.add_analysis(BasicStyling)
     assert_frame_equal(dfc.dataflow.widget_args_tuple[1], BASIC_DF)
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
 
-    #actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
+    actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
     expected_column_config = DFVIEWER_CONFIG_DEFAULT['column_config']
 
     #this test is brittle because styling is rapidly changing in development
     #assert dfc.analysis_klasses == dfc.dataflow.analysis_klasses
-    print("dfc.df_display_args")
-    print(dfc.df_display_args)
     assert actual_column_config == expected_column_config 
 
 def test_custom_dataflow():
@@ -195,7 +193,7 @@ class ColumnConfigOverride(ColAnalysis):
 	        'column_config_override': EXPECTED_OVERRIDE}}]
     post_processing_method = "override"
 
-def xtest_column_config_override():
+def test_column_config_override():
 
     bw = PolarsBuckarooWidget(typed_df, debug=False)
 
@@ -211,7 +209,7 @@ def xtest_column_config_override():
     temp_buckaroo_state['post_processing'] = 'override'
     bw.buckaroo_state = temp_buckaroo_state
     
-    assert bw.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
+    assert bw.dataflow.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
     cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
     int_cc_after = cc_after[1]
     assert int_cc_after['col_name'] == 'int_col' #make sure we found the right row

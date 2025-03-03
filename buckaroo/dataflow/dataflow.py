@@ -357,22 +357,11 @@ class CustomizableDataflow(DataFlow):
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         stats.add_analysis(analysis_klass)
-        print("analysis_klass before")
-        print(self.analysis_klasses)
         
         self.analysis_klasses = stats.ap.ordered_a_objs
         self.setup_options_from_analysis()
-        #super().__init__(self.sampling_klass.pre_stats_sample(orig_df))
-        
         #force recomputation
-        print("asdf", self._get_summary_sd(self.processed_df))
-        
-        self.populate_df_meta()
         self._handle_widget_change({})
-        print("analysis_klasses after")
-        print(self.analysis_klasses)
-
-        #self.summary_sd = stats.sdf
 
 
     #final processing block
