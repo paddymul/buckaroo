@@ -174,8 +174,9 @@ class StylingAnalysis(ColAnalysis):
                 continue
             try:
                 base_style = kls.style_column(col, col_meta)
-            except Exception:
+            except Exception as exc:
                 logger.warn(f"Warning, styling failed from {kls} on column {col} with col_meta {col_meta} using default_styling instead")
+                logger.warn(exc)
                 base_style = kls.default_styling(col)
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
