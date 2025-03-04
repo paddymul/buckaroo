@@ -98,7 +98,6 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         """
         super().__init__()
         kls = self.__class__
-        print("kls", kls, kls.analysis_klasses)
         class InnerDataFlow(CustomizableDataflow):
             sampling_klass = kls.sampling_klass
             autocleaning_klass = kls.autocleaning_klass
@@ -115,8 +114,6 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
             pinned_rows=pinned_rows, extra_grid_config=extra_grid_config,
             component_config=component_config, init_sd=init_sd,
             skip_main_serial=skip_main_serial)
-        print("-"*80)
-        print(self.dataflow.analysis_klasses)
 
         bidirectional_wire(self, self.dataflow, "df_data_dict")
         bidirectional_wire(self, self.dataflow, "df_display_args")
