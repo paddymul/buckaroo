@@ -317,14 +317,11 @@ class CustomizableDataflow(DataFlow):
     ### start summary stats block
 
     def _get_summary_sd(self, processed_df):
-        print("320 _get_summary_sd", self.analysis_klasses)
         stats = self.DFStatsClass(
             processed_df,
             self.analysis_klasses,
             self.df_name, debug=self.debug)
         sdf = stats.sdf
-        print("326 sdf", sdf)
-        print("327 stats.errs", stats.errs)
         if stats.errs:
             if self.debug:
                 raise Exception("Error executing analysis")
