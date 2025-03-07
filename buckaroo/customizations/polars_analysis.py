@@ -74,18 +74,28 @@ DUMMY_VALUE_COUNTS = pl.Series(
 class BasicAnalysis(PolarsAnalysis):
 
 
-    provides_defaults = dict(length=0, nan_count=0, min=0, max=0, mode=0,
-                             mean=0, unique_count=0, empty_count=0, distinct_count=0)
+    provides_defaults = {'length':0, 'null_count':0, 'nan_count':0, 'min':0, 'max':0, 'mode':0,
+                         'mean':0, 'unique_count':0, 'empty_count':0, 'distinct_count':0,
+                         'most_freq':0, 'median':0,
+                         'non_null_count':0, 'std':0,
+                         '2nd_freq':0, '3rd_freq':0, '4th_freq':0, '5th_freq':0}
+
 
     requires_summary = ['value_counts']
     select_clauses = [
         F.all().len().name.map(json_postfix('length')),
+        F.all().null_count().name.map(json_postfix('null_count')),
         F.all().null_count().name.map(json_postfix('nan_count')),
         NOT_STRUCTS.min().name.map(json_postfix('min')),
         NOT_STRUCTS.max().name.map(json_postfix('max')),
         NOT_STRUCTS.mean().name.map(json_postfix('mean')),
+        NOT_STRUCTS.mode().name.map(json_postfix('most_freq')),
+        NOT_STRUCTS.median().name.map(json_postfix('median')),
+        NOT_STRUCTS.std().name.map(json_postfix('std')),
+        
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
-        (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count'))
+        (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count')),
+        (NOT_STRUCTS.len() - NOT_STRUCTS.null_count()).name.map(json_postfix('non_null_count'))
         ]
 
     @staticmethod
@@ -94,7 +104,12 @@ class BasicAnalysis(PolarsAnalysis):
         if 'value_counts' in summary_dict:
             temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
             regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
-            return dict(mode=regular_col_vc_df[0]['key'][0], distinct_count=len(temp_df))
+            return {'mode':regular_col_vc_df[0]['key'][0],
+                    '2nd_freq':regular_col_vc_df[1]['key'][0],
+                    '3rd_freq':regular_col_vc_df[2]['key'][0],
+                    '4th_freq':regular_col_vc_df[3]['key'][0],
+                    '5th_freq':regular_col_vc_df[4]['key'][0],
+                    'distinct_count':len(temp_df)}
         else:
 
             return dict(mode=None, value_counts=DUMMY_VALUE_COUNTS, distinct_count=0,
