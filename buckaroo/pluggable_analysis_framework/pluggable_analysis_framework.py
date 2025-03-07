@@ -1,3 +1,4 @@
+import json
 import graphlib
 from collections import OrderedDict
 from typing import List, Union, Any, Mapping, Tuple, Callable
@@ -113,6 +114,11 @@ def order_analysis(a_objs):
         for j in ao.full_provides():
             graph[j] = set([first_mid_key])
     ts = graphlib.TopologicalSorter(graph)
-    seq =  tuple(ts.static_order())
+    try:
+        seq =  tuple(ts.static_order())
+    except graphlib.CycleError as e:
+        print("e", e)
+        print("graph", graph)
+        raise
     full_class_list = [key_class_objs.get(k, None) for k in seq]
     return clean_list(full_class_list)
