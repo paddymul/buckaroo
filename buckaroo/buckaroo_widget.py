@@ -194,19 +194,7 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
 
 
     def add_analysis(self, analysis_klass):
-        """
-        same as get_summary_sd, call whatever to set summary_sd and trigger further comps
-        """
         self.dataflow.add_analysis(analysis_klass)
-        
-        # stats = self.DFStatsClass(
-        #     self.dataflow.processed_df,
-        #     self.dataflow.analysis_klasses,
-        #     self.dataflow.df_name, debug=self.dataflow.debug)
-        # stats.add_analysis(analysis_klass)
-        # self.dataflow.analysis_klasses = stats.ap.ordered_a_objs
-        # self.dataflow.setup_options_from_analysis()
-        # #self.summary_sd = stats.sdf
 
     def add_processing(self, df_processing_func):
         proc_func_name = df_processing_func.__name__
