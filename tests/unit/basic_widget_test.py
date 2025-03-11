@@ -9,6 +9,57 @@ from buckaroo.serialization_utils import (DuplicateColumnsException)
 
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 
+from buckaroo.dataflow.dataflow_extras import StylingAnalysis
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
+
+from buckaroo.customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
+from buckaroo.customizations.histogram import (Histogram)
+from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
+from traitlets import observe
+import warnings
+class EverythingStyling(StylingAnalysis):
+    """
+    This styling shows as much detail as possible
+    """
+    df_display_name = "Everything"
+    requires_summary = [ "_type"]
+
+    #Styling analysis handles column iteration for us.
+    @classmethod
+    def style_column(kls, col:str, column_metadata):
+        print("EverythingStyling style_column", col)
+        
+        try:
+            t = column_metadata['_type']
+            return {'col_name':col, 'displayer_args': disp }
+        except Exception as  e:
+            #print(col, e)
+            disp = {'displayer': 'foo'}
+            raise
+
+            
+class KitchenSinkWidget(BuckarooWidget):
+    #let's be explicit here and show all of the built in analysis klasses
+    analysis_klasses = [
+    TypingStats, DefaultSummaryStats,
+    Histogram, ComputedDefaultSummaryStats,
+    # default buckaroo styling
+    DefaultSummaryStatsStyling, DefaultMainStyling,
+    EverythingStyling
+    ]
+
+def test_styling_instantiation():
+    
+    """styling routines are called before processed_sd has run, that
+    can cause errors because EverythingStyling expects keys in
+    column_metadata to be present from "requires_summary". There is a
+    special case in the code to not warn about this, make sure we
+    don't have problems"""
+    
+    ksw = KitchenSinkWidget(simple_df)
+    #TODO: check that nothing was logged, later
+    # I'm not quite sure how to verify the clean user experience I want here
+
 
 
 def test_basic_instantiation():
