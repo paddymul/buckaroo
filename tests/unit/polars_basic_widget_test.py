@@ -6,7 +6,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis)
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
-from buckaroo.polars_buckaroo import PolarsBuckarooWidget
+from buckaroo.polars_buckaroo import PolarsBuckarooWidget, PolarsBuckarooInfiniteWidget
 from buckaroo.dataflow.dataflow import StylingAnalysis
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 
@@ -67,7 +67,18 @@ def test_polars_boolean():
     sdf, errs = polars_produce_series_df(
         bool_df, PolarsBuckarooWidget.analysis_klasses, 'test_df', debug=True)
     assert errs == {}
-    
+
+def test_polars_infinite():
+    bool_df = pl.DataFrame({'bools':[True, True, False, False, True, None]})
+    pbw = PolarsBuckarooInfiniteWidget(bool_df)
+    byts = pbw._handle_payload_args({'start':0, 'end':3})
+
+def Xtest_polars_index_col():
+    df = pl.DataFrame({'bools':[True, True, False, False, True, None],
+                       'index':[   0,    1,     2,     3,    4,    5]
+                       })
+    pbw2= PolarsBuckarooWidget(df)
+
 
 def test_pandas_all_stats():
     """
