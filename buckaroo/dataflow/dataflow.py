@@ -153,20 +153,21 @@ class DataFlow(HasTraits):
     def _get_summary_sd(self, df):
         analysis_klasses = self.analysis_klasses
         if analysis_klasses == "foo":
-            return {'some-col': {'foo':8}}
+            return {'some-col': {'foo':8}}, {}
         if analysis_klasses == "bar":
-            return {'other-col': {'bar':10}}
+            return {'other-col': {'bar':10}}, {}
         index_name = df.index.name or "index"
         ret_summary = {index_name: {}}
         for col in df.columns:
             ret_summary[col] = {}
-        return ret_summary
+        return ret_summary, {}
 
     @observe('processed_result', 'analysis_klasses')
     @exception_protect('summary_sd-protector')
     def _summary_sd(self, change):
-        result_summary_sd = self._get_summary_sd(self.processed_df)
+        result_summary_sd, errs  = self._get_summary_sd(self.processed_df)
         self.summary_sd = result_summary_sd
+        self.errs = errs
 
     @observe('summary_sd', 'processed_result')
     @exception_protect('merged_sd-protector')
@@ -326,9 +327,9 @@ class CustomizableDataflow(DataFlow):
             if self.debug:
                 raise Exception("Error executing analysis")
             else:
-                return {}
+                return {}, stats.errs
         else:
-            return sdf
+            return sdf, {}
 
 
     # ### end summary stats block        
@@ -356,6 +357,7 @@ class CustomizableDataflow(DataFlow):
         stats.add_analysis(analysis_klass)
         
         self.analysis_klasses = stats.ap.ordered_a_objs
+        self.DFStatsClass.verify_analysis_objects(self.analysis_klasses)
         self.setup_options_from_analysis()
         #force recomputation
         self._handle_widget_change({})

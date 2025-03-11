@@ -36,10 +36,8 @@ test_df = pl.DataFrame({
 })
 
 
-
 def test_polars_all_stats():
     """
-    FIXME temporarily disabled to test other build stuff
     the all_stats verify that PolarsBuckarooWidget produces the
     same summary_stats shape tatha pandas does.
 
@@ -64,7 +62,12 @@ def test_polars_all_stats():
         {'index': 'quin99', 'normal_int_series': 4.0}]
     assert spbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
-
+def test_polars_boolean():
+    bool_df = pl.DataFrame({'bools':[True, True, False, False, True, None]})
+    sdf, errs = polars_produce_series_df(
+        bool_df, PolarsBuckarooWidget.analysis_klasses, 'test_df', debug=True)
+    assert errs == {}
+    
 
 def test_pandas_all_stats():
     """

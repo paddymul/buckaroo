@@ -43,7 +43,6 @@ class ComputedDefaultSummaryStats(PolarsAnalysis):
 
     @staticmethod
     def computed_summary(summary_dict):
-        print("summary_dict", summary_dict)
         len_ = summary_dict['length']
         return dict(
             distinct_per=summary_dict['distinct_count']/len_,
@@ -110,11 +109,16 @@ class BasicAnalysis(PolarsAnalysis):
         if 'value_counts' in summary_dict:
             temp_df = pl.DataFrame({'vc': summary_dict['value_counts'].explode()}).unnest('vc')
             regular_col_vc_df = temp_df.select(pl.all().exclude('count').alias('key'), pl.col('count'))
-            return {'mode':regular_col_vc_df[0]['key'][0],
-                    '2nd_freq':regular_col_vc_df[1]['key'][0],
-                    '3rd_freq':regular_col_vc_df[2]['key'][0],
-                    '4th_freq':regular_col_vc_df[3]['key'][0],
-                    '5th_freq':regular_col_vc_df[4]['key'][0],
+
+            def get_freq(pos):
+                if len(regular_col_vc_df) > pos:
+                    return regular_col_vc_df[pos]['key'][0]
+                return None
+            return {'mode': get_freq(0),
+                    '2nd_freq': get_freq(1),
+                    '3rd_freq': get_freq(2),
+                    '4th_freq': get_freq(3),
+                    '5th_freq': get_freq(4),
                     'distinct_count':len(temp_df)}
         else:
 
