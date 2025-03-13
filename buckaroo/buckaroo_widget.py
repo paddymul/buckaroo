@@ -11,6 +11,11 @@ from io import BytesIO
 import traceback
 import json
 import pandas as pd
+import logging
+
+# Creating an object
+logger = logging.getLogger()
+
 from traitlets import List, Dict, observe, Unicode, Any
 import anywidget
 
@@ -330,10 +335,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
             self._handle_widget_change(change_unused)
         self.dataflow.observe(widget_tuple_args_bridge, "widget_args_tuple")
         def payload_bridge(_unused_self, msg, _unused_buffers):
-            print("payload_bridge")
-            print(msg)
-            print("-"*80)
-            print(_unused_buffers)
             if msg['type'] == 'infinite_request':
                 payload_args = msg['payload_args']
                 self._handle_payload_args(payload_args)
@@ -342,7 +343,7 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
     def _handle_payload_args(self, new_payload_args):
         start, end = new_payload_args['start'], new_payload_args['end']
-        print("payload_args changed", start, end)
+        logger.debug("payload_args changed", start, end)
         _unused, processed_df, merged_sd = self.dataflow.widget_args_tuple
         if processed_df is None:
             return
@@ -380,7 +381,7 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                     [to_parquet(extra_df)]
                 )
         except Exception as e:
-            print(e)
+            logger.error(e)
             stack_trace = traceback.format_exc()
             self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'error_info':stack_trace, 'length':0})
             raise
@@ -411,7 +412,7 @@ def to_parquet(df):
     try:
         df2.to_parquet(data, engine='fastparquet', object_encoding=encodings)
     except Exception as e:
-        print("e", e)
+        logger.error("error serializing to parquet", e)
     finally:
         data.close = orig_close
     data.seek(0)
