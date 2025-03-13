@@ -67,7 +67,7 @@ def debug_packages():
         print(f"{package:<17}:", path)
 
 try:
-    if is_in_ipython() or is_in_marimo():
+    if is_in_ipython():
         enable()
         print("Buckaroo has been enabled as the default DataFrame viewer.  To return to default dataframe visualization use `from buckaroo import disable; disable()`")
     else:
