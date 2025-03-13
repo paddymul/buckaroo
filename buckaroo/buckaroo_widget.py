@@ -354,7 +354,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
                 ascending = sort_dir == 'asc'
                 sorted_df = processed_df.sort_values(by=[sort], ascending=ascending)
                 slice_df = sorted_df[start:end]
-                slice_df['index'] = slice_df.index
                 self.send({ "type": "infinite_resp", 'key':new_payload_args, 'data':[], 'length':len(processed_df)}, [to_parquet(slice_df)])
             else:
                 slice_df = processed_df[start:end]
@@ -402,7 +401,7 @@ def to_parquet(df):
     orig_close = data.close
     data.close = lambda: None
     df2 = df.copy()
-    df2['index'] = slice_df.index
+    df2['index'] = df2.index
     df2.columns = [str(x) for x in df2.columns]
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     encodings = {k:'json' for k in obj_columns}
