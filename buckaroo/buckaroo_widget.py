@@ -7,7 +7,7 @@
 """
 TODO: Add module docstring
 """
-
+from io import BytesIO
 import traceback
 import json
 import pandas as pd
@@ -396,4 +396,24 @@ def to_parquet(df):
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     encodings = {k:'json' for k in obj_columns}
     return df2.to_parquet(engine='fastparquet', object_encoding=encodings)
+
+
+def to_parquet(df):
+    data: BytesIO = BytesIO()
+    
+    orig_close = data.close
+    data.close = lambda: None
+    df2 = df.copy()
+    df2.columns = [str(x) for x in df2.columns]
+    obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
+    encodings = {k:'json' for k in obj_columns}
+
+    try:
+        df2.to_parquet(data, engine='fastparquet', object_encoding=encodings)
+    except Exception as e:
+        print("e", e)
+    finally:
+        data.close = orig_close
+    data.seek(0)
+    return data.read()
 
