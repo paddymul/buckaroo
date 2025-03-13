@@ -14,7 +14,7 @@ import pandas as pd
 import logging
 
 # Creating an object
-logger = logging.getLogger()
+
 
 from traitlets import List, Dict, observe, Unicode, Any
 import anywidget
@@ -32,7 +32,7 @@ from .dataflow.dataflow_extras import (Sampling, exception_protect, merge_column
 from .dataflow.autocleaning import PandasAutocleaning
 from pathlib import Path
 
-
+logger = logging.getLogger()
 
 class PdSampling(Sampling):
     @classmethod
@@ -343,7 +343,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
     def _handle_payload_args(self, new_payload_args):
         start, end = new_payload_args['start'], new_payload_args['end']
-        logger.debug("payload_args changed", start, end)
         _unused, processed_df, merged_sd = self.dataflow.widget_args_tuple
         if processed_df is None:
             return
