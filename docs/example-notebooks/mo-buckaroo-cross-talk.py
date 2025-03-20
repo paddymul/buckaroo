@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.11.14-dev6"
+__generated_with = "0.11.22"
 app = marimo.App(width="medium")
 
 
@@ -10,21 +10,15 @@ def _():
     return (mo,)
 
 
-app._unparsable_cell(
-    r"""
-    mo.
-    """,
-    name="_"
-)
-
-
 @app.cell
 async def _(mo):
     import pandas as pd
     import numpy as np
-    import micropip
+    import sys
+    if "pyodide" in sys.modules: # a hacky way to figure out if we're running in pyodide
+        import micropip
+        await micropip.install("buckaroo")
 
-    await micropip.install("buckaroo")
     from buckaroo.buckaroo_widget import BuckarooInfiniteWidget, BuckarooWidget
 
 
@@ -42,12 +36,13 @@ async def _(mo):
         micropip,
         np,
         pd,
+        sys,
     )
 
 
 @app.cell
-def _(BWOrig, np, pd):
-    ROWS = 13_0
+def _(BWI, np, pd):
+    ROWS = 1_300_000
     typed_df = pd.DataFrame(
         {
             "int_col": np.random.randint(1, 50, ROWS),
@@ -55,13 +50,25 @@ def _(BWOrig, np, pd):
             "str_col": ["foobar"] * ROWS,
         }
     )
-    widget1 = BWOrig(typed_df)
+    widget1 = BWI(typed_df)
     widget1
     return ROWS, typed_df, widget1
 
 
 @app.cell
-def _(BWOrig, np, pd):
+def _(widget1):
+    widget1
+    return
+
+
+@app.cell
+def _(widget1):
+    widget1
+    return
+
+
+@app.cell
+def _(BWI, np, pd):
     ROWS2 = 34_0
     typed_df2 = pd.DataFrame(
         {
@@ -70,7 +77,7 @@ def _(BWOrig, np, pd):
             "str_col2": ["foobar"] * ROWS2,
         }
     )
-    widget2 = BWOrig(typed_df2)
+    widget2 = BWI(typed_df2)
     widget2
     return ROWS2, typed_df2, widget2
 
