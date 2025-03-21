@@ -9,7 +9,6 @@ TODO: Add module docstring
 """
 from io import BytesIO
 import traceback
-import json
 import pandas as pd
 import logging
 

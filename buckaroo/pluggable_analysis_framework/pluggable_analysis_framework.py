@@ -1,4 +1,3 @@
-import json
 import graphlib
 from collections import OrderedDict
 from typing import List, Union, Any, Mapping, Tuple, Callable

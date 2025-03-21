@@ -10,13 +10,10 @@ from buckaroo.serialization_utils import (DuplicateColumnsException)
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 
 from buckaroo.dataflow.dataflow_extras import StylingAnalysis
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
 from buckaroo.customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from buckaroo.customizations.histogram import (Histogram)
 from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
-from traitlets import observe
-import warnings
 class EverythingStyling(StylingAnalysis):
     """
     This styling shows as much detail as possible

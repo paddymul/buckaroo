@@ -1,5 +1,4 @@
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
-from buckaroo import BuckarooWidget
 
 def hide_orig_columns(orig_df, new_df):
     """
