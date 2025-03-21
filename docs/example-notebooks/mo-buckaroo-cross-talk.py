@@ -83,30 +83,6 @@ def _(BWI, np, pd):
 
 
 @app.cell
-def _(widget2):
-    widget2.widget.dataflow.raw_df.columns
-    return
-
-
-@app.cell
-def _(widget1):
-    widget1.widget.dataflow.raw_df.columns
-    return
-
-
-@app.cell
-def _(widget1, widget2):
-    len(widget1.widget._esm), len(widget2.widget._esm)
-    return
-
-
-@app.cell
-def _(widget1, widget2):
-    widget1.widget._esm == widget2.widget._esm
-    return
-
-
-@app.cell
 def _():
     return
 
