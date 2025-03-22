@@ -1,3 +1,4 @@
+import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
 import { OperationViewer } from "../components/Operations";
@@ -5,11 +6,32 @@ import { Operation, OperationDefaultArgs, sym } from "../components/OperationUti
 import { CommandArgSpec, CommandConfigT, symDf } from "../components/CommandUtils";
 
 
+const OperationViewerWrap = ({
+    operations,
+    activeColumn,
+    allColumns,
+    command_config,
+}: {
+    operations: Operation[];
+    activeColumn: string;
+    allColumns: string[];
+    command_config: CommandConfigT;
+}) => {
+    const [usedOperations, setOperations] = React.useState<Operation[]>(operations);
+    return (<OperationViewer
+	    operations={usedOperations}
+	    setOperations={setOperations}
+	    activeColumn={activeColumn}
+	    allColumns={allColumns}
+	    command_config={command_config} />)
+}
+	    
+    
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "Buckaroo/Chrome/OperationViewer",
-  component: OperationViewer,
+  component:OperationViewerWrap,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
     // info: https://storybook.js.org/docs/configure/story-layout
@@ -28,12 +50,10 @@ const meta = {
   // actions panel once invoked:
   // https://storybook.js.org/docs/essentials/actions#action-args
   //args: { onClick: fn() },
-} satisfies Meta<typeof OperationViewer>;
+} satisfies Meta<typeof OperationViewerWrap>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-
 
 
 const bakedOperationDefaults: OperationDefaultArgs = {
@@ -44,7 +64,7 @@ const bakedOperationDefaults: OperationDefaultArgs = {
     resample: [sym('resample'), symDf, 'col', 'monthly', {}],
   };
 
-  export const bakedArgSpecs: CommandArgSpec = {
+const bakedArgSpecs: CommandArgSpec = {
       dropcol: [null],
     fillna: [[3, 'fillVal', 'type', 'integer']],
     remove_outliers: [[3, 'tail', 'type', 'float']],
@@ -64,17 +84,11 @@ const bakedOperations: Operation[] = [
     [sym('fillna'), symDf, 'col2', 5],
     [sym('resample'), symDf, 'month', 'monthly', {}],
   ];
-
-const setter = (foo: unknown) => {
-                console.log('setCommands sent', foo);
-            }
-
 // More on writing stories with args:
 // https://storybook.js.org/docs/writing-stories/args
 export const Primary: Story = {
   args: {
       operations:bakedOperations,
-      setOperations:setter,
       activeColumn: 'foo-column',
       allColumns: ['foo-col', 'bar-col', 'baz-col'],
       command_config:bakedCommandConfig
@@ -84,7 +98,6 @@ export const Primary: Story = {
 export const NoOps: Story = {
   args: {
       operations:[],
-      setOperations:setter,
       activeColumn: 'foo-column',
       allColumns: ['foo-col', 'bar-col', 'baz-col'],
       command_config:bakedCommandConfig
