@@ -1,6 +1,5 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
 import { OperationViewer } from "../components/Operations";
 import { Operation, OperationDefaultArgs, sym } from "../components/OperationUtils";
 import { CommandArgSpec, CommandConfigT, symDf } from "../components/CommandUtils";

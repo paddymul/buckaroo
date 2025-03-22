@@ -65,16 +65,34 @@ const CustomTooltip = ({ active, payload, screenCoords }: any) => {
     return null;
 };
 
+
+export interface HistogramBar {
+    'cat_pop'?: number;
+    'name':string;
+    'NA'?: number;
+    'longtail'?: number;
+    'unique'?:number;
+    'population'?: number;
+}
+
+
 export const HistogramCell = (props: any) => {
-    if (props === undefined || props.value === undefined) {
+    debugger;
+    if (props === undefined ) {
         return <span></span>;
     }
-    const histogram = props.value;
+    const potentialHistogramArr = props.value;
     //for key "index", the value is "histogram"
     // this causes ReChart to blow up, so we check to see if it's an array
-    if (histogram === undefined || !_.isArray(histogram)) {
+    if (potentialHistogramArr === undefined || !_.isArray(potentialHistogramArr)) {
         return <span></span>;
     }
+    const histogramArr = potentialHistogramArr as HistogramBar[];
+    return TypedHistogramCell({histogramArr});
+}
+
+export const TypedHistogramCell = ({histogramArr}:{histogramArr:HistogramBar[]}) => {
+    console.log("histogramArr", histogramArr);
     const dumbClickHandler = (rechartsArgs: any, _unused_react: any) => {
         // I can't find the type for rechartsArgs
         // these are probably the keys we care about
@@ -104,7 +122,7 @@ export const HistogramCell = (props: any) => {
                 width={100}
                 height={24}
                 barGap={1}
-                data={histogram}
+                data={histogramArr}
                 onClick={dumbClickHandler}
                 onMouseMove={(_, e) => {
                     // console.log(e);
