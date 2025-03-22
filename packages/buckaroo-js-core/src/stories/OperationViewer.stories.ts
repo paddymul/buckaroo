@@ -80,3 +80,13 @@ export const Primary: Story = {
       command_config:bakedCommandConfig
   },
 };
+
+export const NoOps: Story = {
+  args: {
+      operations:[],
+      setOperations:setter,
+      activeColumn: 'foo-column',
+      allColumns: ['foo-col', 'bar-col', 'baz-col'],
+      command_config:bakedCommandConfig
+  },
+};
