@@ -1,14 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { DatasourceOrRaw, DFViewerInfinite, RawDataWrapper } from "../components/DFViewerParts/DFViewerInfinite";
+import { DatasourceWrapper, DFViewerInfinite, RawDataWrapper } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/DFViewer";
 //import "../packages/buckaroo-js-core/dist/style.css";
 import "../style/dcf-npm.css"
 import '@ag-grid-community/styles/ag-grid.css'; 
 import '@ag-grid-community/styles/ag-theme-quartz.css';
+import { IDatasource, IGetRowsParams } from "@ag-grid-community/core";
 
 const DFViewerInfiniteWrap = ({
-    data_wrapper,
+    data,
     df_viewer_config,
     summary_stats_data,
     activeCol,
@@ -16,7 +17,7 @@ const DFViewerInfiniteWrap = ({
     outside_df_params,
     error_info,
 }: {
-    data_wrapper: DatasourceOrRaw;
+    data: DFData;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
     activeCol?: string;
@@ -28,6 +29,19 @@ const DFViewerInfiniteWrap = ({
     error_info?: string;
 }) => {
 
+  const tempDataSource:IDatasource = {
+    rowCount:data.length,
+    getRows(params:IGetRowsParams) {
+      const slicedData = data.slice(params.startRow, params.endRow);
+      params.successCallback(slicedData, data.length)
+
+    }
+  };
+  const data_wrapper:DatasourceWrapper = {
+    datasource:tempDataSource,
+    data_type:"DataSource",
+    length:data.length
+  }
   return (
      <div style={{height:500, width:800}}>
       <DFViewerInfinite
@@ -45,7 +59,7 @@ const DFViewerInfiniteWrap = ({
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Buckaroo/DFViewer/DFViewer",
+  title: "Buckaroo/DFViewer/DFViewerInfinite",
   component:DFViewerInfiniteWrap,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
@@ -69,18 +83,14 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const rd:RawDataWrapper = {
-  data: [
+const data = [
     {'a':20, 'b':"foo"},
     {'a':30, 'b':"bar"}
-  ],
-  length:2,
-  data_type:'Raw'
-}
+  ];
+
 export const Primary: Story = {
   args: {
-    data_wrapper:rd,
+    data:data,
     df_viewer_config: {
       column_config: [
       {
