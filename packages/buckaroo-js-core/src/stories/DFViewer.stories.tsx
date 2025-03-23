@@ -5,6 +5,7 @@ import { SetColumFunc } from "../components/DFViewerParts/DFViewer";
 //import "../packages/buckaroo-js-core/dist/style.css";
 import "../style/dcf-npm.css"
 import '@ag-grid-community/styles/ag-grid.css'; 
+import "@ag-grid-community/styles/ag-theme-alpine.css";
 import '@ag-grid-community/styles/ag-theme-quartz.css';
 
 const DFViewerInfiniteWrap = ({

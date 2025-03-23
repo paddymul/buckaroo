@@ -6,7 +6,9 @@ import { SetColumFunc } from "../components/DFViewerParts/DFViewer";
 import "../style/dcf-npm.css"
 import '@ag-grid-community/styles/ag-grid.css'; 
 import '@ag-grid-community/styles/ag-theme-quartz.css';
+import "@ag-grid-community/styles/ag-theme-alpine.css";
 import { IDatasource, IGetRowsParams } from "@ag-grid-community/core";
+import _ from "lodash";
 
 const DFViewerInfiniteWrap = ({
     data,
@@ -91,6 +93,72 @@ const data = [
 export const Primary: Story = {
   args: {
     data:data,
+    df_viewer_config: {
+      column_config: [
+      {
+        col_name: 'a',
+        displayer_args: {
+          displayer: 'float',
+          min_fraction_digits: 2,
+          max_fraction_digits: 8,
+        },
+        //tooltip_config: { tooltip_type: 'summary_series' },
+      },
+      {
+        col_name: 'a',
+        displayer_args: {
+          displayer: 'integer',
+          min_digits:2, max_digits:3
+        },
+      },
+      {
+        col_name: 'b',
+        displayer_args: {
+          displayer: 'obj',
+        },
+      },
+    ],
+    pinned_rows:[]
+  },
+  
+    }
+}
+
+const dictOfArraystoDFData = (dict:Record<string, any[]>):DFData => {
+  const keys = _.keys(dict);
+  const length = dict[keys[0]].length;
+
+  return _.times(length, index => {
+    return _.reduce(keys, (result, key) => {
+        //@ts-ignore
+        result[key] = dict[key][index];
+        return result;
+      }, {});
+  });
+}
+
+const arange = (N:number):number[] => {
+  const retArr:number[] = [];
+  for(var i =0; i< N; i++){
+    retArr.push(i)
+  }
+  return retArr
+}
+const NRandom = (N:number, low:number, high:number):number[] => {
+  const retArr:number[] = [];
+  for(var i =0; i< N; i++){
+    retArr.push(Math.floor((Math.random() * (high-low))+low))
+  }
+  return retArr
+}
+
+const N = 10_000;
+console.log("156")
+console.log(dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)   }))
+
+export const Large: Story = {
+  args: {
+    data:dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)   }),
     df_viewer_config: {
       column_config: [
       {
