@@ -3,6 +3,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 
 import { Bar, BarChart, Tooltip } from "recharts";
+import { ChartColors } from "./LineChartCell";
 
 export interface HistogramNode {
     name: string;
@@ -88,17 +89,20 @@ export const HistogramCell = (props: any) => {
         return <span></span>;
     }
     const histogramArr = potentialHistogramArr as HistogramBar[];
-    return TypedHistogramCell({histogramArr});
+    return TypedHistogramCell({histogramArr, context:props.context});
 }
 
-export const TypedHistogramCell = ({histogramArr}:{histogramArr:HistogramBar[]}) => {
+export const TypedHistogramCell = ({histogramArr, context}:
+    {histogramArr:HistogramBar[], context:any}) => {
     console.log("histogramArr", histogramArr);
     const dumbClickHandler = (rechartsArgs: any, _unused_react: any) => {
+        //we can access the rest of the data model through context
+    
         // I can't find the type for rechartsArgs
         // these are probably the keys we care about
         // activeTooltipIndex
         // activeLabel
-        console.log("dumbClickHandler", rechartsArgs);
+        console.log("dumbClickHandler", rechartsArgs, context);
     };
 
     // used to prevent duplicate IDs which lead to a nasty bug where patterns aren't applied
@@ -140,7 +144,7 @@ export const TypedHistogramCell = ({histogramArr}:{histogramArr:HistogramBar[]})
                         patternUnits="userSpaceOnUse"
                         patternTransform="rotate(45)"
                     >
-                        <rect width="2" height="4" fill="red" />
+                        <rect width="2" height="4" fill={ChartColors.NA} />
                     </pattern>
                     <pattern id={circleId} width="4" height="4" patternUnits="userSpaceOnUse">
                         <circle data-color="outline" stroke="pink" cx=".5" cy=".5" r="1.5"></circle>
@@ -204,21 +208,21 @@ export const TypedHistogramCell = ({histogramArr}:{histogramArr:HistogramBar[]})
                 />
                 <Bar
                     dataKey="cat_pop"
-                    stroke="pink"
+                    stroke={ChartColors.cat_pop}
                     fill={circleUrl}
                     stackId="stack"
                     isAnimationActive={false}
                 />
                 <Bar
                     dataKey="unique"
-                    stroke="#0f0"
+                    stroke={ChartColors.unique}
                     fill={checkersUrl}
                     stackId="stack"
                     isAnimationActive={false}
                 />
                 <Bar
                     dataKey="longtail"
-                    stroke="teal"
+                    stroke={ChartColors.longtail}
                     fill={leafsUrl}
                     stackId="stack"
                     isAnimationActive={false}
@@ -230,7 +234,9 @@ export const TypedHistogramCell = ({histogramArr}:{histogramArr:HistogramBar[]})
                     stackId="stack"
                     isAnimationActive={false}
                 />
-                <Bar dataKey="NA" fill={stripeUrl} stackId="stack" isAnimationActive={false} />
+                <Bar dataKey="NA" fill={stripeUrl} 
+                     stackId="stack" 
+                     isAnimationActive={false} />
                 <Tooltip
                     formatter={formatter}
                     allowEscapeViewBox={{ x: true, y: true }}
