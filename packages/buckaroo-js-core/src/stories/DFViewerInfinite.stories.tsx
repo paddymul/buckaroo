@@ -87,11 +87,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 const data = [
     {'a':20, 'b':"foo"},
-    {'a':30, 'b':"bar"}
+    {'a':30, 'b':"bar"},
+    {'a':NaN, 'b':NaN},
+    {'a':null, 'b':null},
+    {'a':undefined, 'b':undefined}
+
   ];
 
 export const Primary: Story = {
   args: {
+    //@ts-ignore
+    // the undefineds aren't allowed in the type but do happen in the wild
     data:data,
     df_viewer_config: {
       column_config: [
@@ -117,6 +123,12 @@ export const Primary: Story = {
           displayer: 'obj',
         },
       },
+      {
+        col_name: 'b',
+        displayer_args: {
+          displayer: 'string',
+        },
+      }
     ],
     pinned_rows:[]
   },
