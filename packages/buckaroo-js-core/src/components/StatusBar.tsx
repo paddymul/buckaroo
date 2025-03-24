@@ -121,7 +121,7 @@ export const SearchEditor =  memo(({ value, onValueChange, stopEditing }: Custom
         <div
             ref={refContainer}
             tabIndex={1} // important - without this the key presses wont be caught
-            style={{display:"flex", "flexDirection":"row", border:"1px solid red"}}
+            style={{display:"flex", "flexDirection":"row"}}
         >
        <input
            type="text"
@@ -129,7 +129,11 @@ export const SearchEditor =  memo(({ value, onValueChange, stopEditing }: Custom
            value={value || ''}
            onChange={({ target: { value }}) => onValueChange(value === '' ? null : value)}
        />
-       <button style={{flex:"none"}}>X</button>
+       <button style={{flex:"none"}}
+                onClick={() => {onValueChange(""),
+                    stopEditing();
+                }}
+       >X</button>
         </div>
     );
 });
@@ -208,6 +212,7 @@ export function StatusBar({
             width: 200,
             editable: true,
             cellEditor: SearchEditor,
+            onCellValueChanged: handleCellChange,
         },
 
         {
@@ -284,7 +289,7 @@ export function StatusBar({
 
     const gridRef = useRef<AgGridReact<unknown>>(null);
 
-    const onGridReady = useCallback((params: GridReadyEvent) => {
+    const onGridReady = useCallback((params: {api:GridApi}) => {
         console.log("ongridready params", params )
         const eParams:StartEditingCellParams = {
             rowIndex:0, colKey:"search"
@@ -300,7 +305,7 @@ export function StatusBar({
             <div style={{ height: heightOverride||50 }} className="theme-hanger ag-theme-alpine-dark">
                 <AgGridReact
                     ref={gridRef}
-
+                    onCellEditingStopped={onGridReady}
                     onCellClicked={updateDict}
                     onGridReady={onGridReady}
                     gridOptions={gridOptions}
