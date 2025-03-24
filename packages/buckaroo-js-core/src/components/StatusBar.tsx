@@ -2,13 +2,14 @@
 import React, { useRef, useCallback } from "react";
 import _ from "lodash";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
-import { ColDef, GridOptions } from "@ag-grid-community/core";
+import { ColDef, GridOptions, ModuleRegistry } from "@ag-grid-community/core";
 import { basicIntFormatter } from "./DFViewerParts/Displayer";
 import { DFMeta } from "./WidgetTypes";
 import { BuckarooOptions } from "./WidgetTypes";
 import { BuckarooState, BKeys } from "./WidgetTypes";
+import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 export type setColumFunc = (newCol: string) => void;
-
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 const helpCell = function (_params: any) {
     return (
         <a
@@ -26,11 +27,13 @@ export function StatusBar({
     buckarooState,
     setBuckarooState,
     buckarooOptions,
+    heightOverride
 }: {
     dfMeta: DFMeta;
     buckarooState: BuckarooState;
     setBuckarooState: React.Dispatch<React.SetStateAction<BuckarooState>>;
     buckarooOptions: BuckarooOptions;
+    heightOverride?: number;
 }) {
     const optionCycles = buckarooOptions;
 
@@ -169,7 +172,7 @@ export function StatusBar({
     };
     return (
         <div className="statusBar">
-            <div style={{ height: 50 }} className="theme-hanger ag-theme-alpine-dark">
+            <div style={{ height: heightOverride||50 }} className="theme-hanger ag-theme-alpine-dark">
                 <AgGridReact
                     ref={gridRef}
                     onCellClicked={updateDict}
