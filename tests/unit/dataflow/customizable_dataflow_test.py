@@ -4,7 +4,7 @@ import pytest
 from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.dataflow import CustomizableDataflow, StylingAnalysis
-from buckaroo.buckaroo_widget import BuckarooWidget
+from buckaroo.buckaroo_widget import BuckarooWidget, BuckarooInfiniteWidget
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)         
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 
@@ -409,7 +409,10 @@ def test_bstate_commands():
     typed_df = pd.DataFrame(
         {'int_col': [1] * ROWS,
          'float_col': [.5] * ROWS,
-         "str_col": ["foobar"]* ROWS})
+         "str_col": ["foobar"]* ROWS,
+         "other": ["foo", "foo", "needle", "needle", "foo"]
+
+         })
 
     base_a_klasses = BuckarooWidget.analysis_klasses.copy()
     base_a_klasses.extend([TransposeProcessing])
@@ -422,6 +425,7 @@ def test_bstate_commands():
         autoclean_conf = tuple([NoCleaningConf]) 
 
     vcb = VCBuckarooWidget(typed_df, debug=False)
+    assert len(vcb.dataflow.processed_df) == 5
     temp_buckaroo_state = vcb.buckaroo_state.copy()
     temp_buckaroo_state['quick_command_args'] = {'search': ['needle']}
     vcb.buckaroo_state = temp_buckaroo_state
@@ -429,6 +433,54 @@ def test_bstate_commands():
     #probably something in autocleaning config should be responsible for generating these commands
     assert vcb.dataflow.merged_operations == [
         [qc_sym('search'), s('df'), "col", "needle"]]
+    assert len(vcb.dataflow.processed_df) == 2
+    assert vcb.df_meta['filtered_rows'] == 2
+
+
+    """
+    add an additional test that accounts for arbitrary, configurable status bar command args
+
+    dataflow should just be responsible for parsing back the frontend datastructure.
+
+    There should be another part where the frontend presents a command structure to the status bar.
+    
+
+    """
+def test_bstate_commands2():
+    """
+    Makes sure that when bstate is editted, the correct commands get added
+
+    """
+    ROWS = 5
+    typed_df = pd.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS,
+         "other": ["foo", "foo", "needle", "needle", "foo"]
+
+         })
+
+    base_a_klasses = BuckarooWidget.analysis_klasses.copy()
+    base_a_klasses.extend([TransposeProcessing])
+
+    bw = BuckarooWidget(typed_df)
+    assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
+    assert bw.dataflow.cleaning_method == 'NoCleaning'
+    class VCBuckarooWidget(BuckarooInfiniteWidget):
+        #analysis_klasses = base_a_klasses
+        autoclean_conf = tuple([NoCleaningConf]) 
+
+    vcb = VCBuckarooWidget(typed_df, debug=False)
+    assert len(vcb.dataflow.processed_df) == 5
+    temp_buckaroo_state = vcb.buckaroo_state.copy()
+    temp_buckaroo_state['quick_command_args'] = {'search': ['needle']}
+    vcb.buckaroo_state = temp_buckaroo_state
+
+    #probably something in autocleaning config should be responsible for generating these commands
+    assert vcb.dataflow.merged_operations == [
+        [qc_sym('search'), s('df'), "col", "needle"]]
+    assert len(vcb.dataflow.processed_df) == 2
+    assert vcb.df_meta['filtered_rows'] == 2
 
 
     """
