@@ -1,13 +1,15 @@
 // https://plnkr.co/edit/QTNwBb2VEn81lf4t?open=index.tsx
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState, memo, useEffect } from "react";
 import _ from "lodash";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
-import { ColDef, GridOptions, ModuleRegistry } from "@ag-grid-community/core";
+import { ColDef, GridApi, GridOptions, GridReadyEvent, ModuleRegistry, StartEditingCellParams } from "@ag-grid-community/core";
 import { basicIntFormatter } from "./DFViewerParts/Displayer";
 import { DFMeta } from "./WidgetTypes";
 import { BuckarooOptions } from "./WidgetTypes";
 import { BuckarooState, BKeys } from "./WidgetTypes";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
+import { CustomCellEditorProps } from '@ag-grid-community/react';
+
 export type setColumFunc = (newCol: string) => void;
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 const helpCell = function (_params: any) {
@@ -22,6 +24,114 @@ const helpCell = function (_params: any) {
     );
 };
 
+
+export const MoodEditor =  memo(({ value, onValueChange, stopEditing }: CustomCellEditorProps) => {
+    const isHappy = (value: string) => value === 'Happy';
+
+    const [ready, setReady] = useState(false);
+    const refContainer = useRef<HTMLDivElement>(null);
+
+    const checkAndToggleMoodIfLeftRight = (event: any) => {
+        if (ready) {
+            if (['ArrowLeft', 'ArrowRight'].indexOf(event.key) > -1) {
+                // left and right
+                const isLeft = event.key === 'ArrowLeft';
+                onValueChange(isLeft ? 'Happy' : 'Sad');
+                event.stopPropagation();
+            }
+        }
+    };
+
+    useEffect(() => {
+        refContainer.current?.focus();
+        setReady(true);
+    }, []);
+
+    useEffect(() => {
+        window.addEventListener('keydown', checkAndToggleMoodIfLeftRight);
+
+        return () => {
+            window.removeEventListener('keydown', checkAndToggleMoodIfLeftRight);
+        };
+    }, [checkAndToggleMoodIfLeftRight, ready]);
+
+    const onClick = (happy: boolean) => {
+        onValueChange(happy ? 'Happy' : 'Sad');
+        stopEditing();
+    };
+
+    const mood = {
+        borderRadius: 15,
+        border: '1px solid grey',
+        backgroundColor: '#e6e6e6',
+        padding: 15,
+        textAlign: 'center' as const,
+        display: 'inline-block',
+    };
+
+    const unselected = {
+        paddingLeft: 10,
+        paddingRight: 10,
+        border: '1px solid transparent',
+        padding: 4,
+    };
+
+    const selected = {
+        paddingLeft: 10,
+        paddingRight: 10,
+        border: '1px solid lightgreen',
+        padding: 4,
+    };
+
+    const happyStyle = isHappy(value) ? selected : unselected;
+    const sadStyle = !isHappy(value) ? selected : unselected;
+
+    return (
+        <div
+            ref={refContainer}
+            style={mood}
+            tabIndex={1} // important - without this the key presses wont be caught
+        >
+            <img
+                src="https://www.ag-grid.com/example-assets/smileys/happy.png"
+                onClick={() => onClick(true)}
+                style={happyStyle}
+            />
+            <img
+                src="https://www.ag-grid.com/example-assets/smileys/sad.png"
+                onClick={() => onClick(false)}
+                style={sadStyle}
+            />
+        </div>
+    );
+});
+
+export const SearchEditor =  memo(({ value, onValueChange, stopEditing }: CustomCellEditorProps) => {
+    const [ready, setReady] = useState(false);
+    const refContainer = useRef<HTMLDivElement>(null);
+
+
+    useEffect(() => {
+        refContainer.current?.focus();
+        setReady(true);
+    }, []);
+
+
+    return (
+        <div
+            ref={refContainer}
+            tabIndex={1} // important - without this the key presses wont be caught
+        >
+       <input
+           type="text"
+           value={value || ''}
+           onChange={({ target: { value }}) => onValueChange(value === '' ? null : value)}
+       />
+       <button>X</button>
+        </div>
+    );
+});
+
 export function StatusBar({
     dfMeta,
     buckarooState,
@@ -35,6 +145,7 @@ export function StatusBar({
     buckarooOptions: BuckarooOptions;
     heightOverride?: number;
 }) {
+
     const optionCycles = buckarooOptions;
 
     const idxs = _.fromPairs(
@@ -73,6 +184,7 @@ export function StatusBar({
         }
     };
 
+
     const handleCellChange = useCallback((params: { oldValue: any; newValue: any }) => {
         const { oldValue, newValue } = params;
 
@@ -93,9 +205,13 @@ export function StatusBar({
             headerName: "search",
             width: 200,
             editable: true,
-            onCellValueChanged: handleCellChange,
+            cellEditor: SearchEditor,
+            //cellRenderer:SearchCellRenderer,
+            //onCellValueChanged: handleCellChange,
             //hide: !showSearch,
+
         },
+
         {
             field: "df_display",
             headerName: "Σ", //note the greek symbols instead of icons which require buildchain work
@@ -159,6 +275,8 @@ export function StatusBar({
             post_processing: buckarooState.post_processing,
             show_commands: buckarooState.show_commands || "0",
             search: searchStr,
+            //search: searchParam,
+
         },
     ];
 
@@ -167,6 +285,15 @@ export function StatusBar({
     };
 
     const gridRef = useRef<AgGridReact<unknown>>(null);
+
+    const onGridReady = useCallback((params: GridReadyEvent) => {
+        console.log("ongridready params", params )
+        const eParams:StartEditingCellParams = {
+            rowIndex:0, colKey:"search"
+        }
+        params.api.startEditingCell(eParams)
+    }, []);
+
     const defaultColDef = {
         cellStyle: { textAlign: "left" },
     };
@@ -175,7 +302,9 @@ export function StatusBar({
             <div style={{ height: heightOverride||50 }} className="theme-hanger ag-theme-alpine-dark">
                 <AgGridReact
                     ref={gridRef}
+
                     onCellClicked={updateDict}
+                    onGridReady={onGridReady}
                     gridOptions={gridOptions}
                     defaultColDef={defaultColDef}
                     rowData={rowData}
