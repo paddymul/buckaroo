@@ -366,6 +366,40 @@ def test_transpose_error():
         ['foobar', 'foobar', 'foobar', 'foobar', 'foobar']]
 
 
+
+class SliceProcessing(ColAnalysis):
+    provides_defaults = {}
+    @classmethod
+    def post_process_df(kls, df):
+        print("post_process_df SliceProcessing")
+        return [df[:3], {}]
+    post_processing_method = "slice"
+
+def test_df_meta_update():
+    """Swaps in a different post processing method at runtime to show the
+    values are changed.
+
+    """
+    ROWS = 5
+    typed_df = pd.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+
+    base_a_klasses = BuckarooWidget.analysis_klasses.copy()
+    base_a_klasses.extend([SliceProcessing])
+
+    class VCBuckarooWidget(BuckarooWidget):
+        analysis_klasses = base_a_klasses
+
+    vcb = VCBuckarooWidget(typed_df, debug=False)
+    assert vcb.df_meta['filtered_rows'] == 5
+    temp_buckaroo_state = vcb.buckaroo_state.copy()
+    temp_buckaroo_state['post_processing'] = 'slice'
+    vcb.buckaroo_state = temp_buckaroo_state
+    assert vcb.df_meta['filtered_rows'] == 3
+
+
 def test_bstate_commands():
     """
     Makes sure that when bstate is editted, the correct commands get added

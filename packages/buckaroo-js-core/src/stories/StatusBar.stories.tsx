@@ -97,15 +97,6 @@ const bs:BuckarooState = {
 
 }
 
-const data = [
-    {'a':20, 'b':"foo"},
-    {'a':30, 'b':"bar"},
-    {'a':NaN, 'b':NaN},
-    {'a':null, 'b':null},
-    {'a':undefined, 'b':undefined}
-
-  ];
-
 export const Primary: Story = {
   args: {
     dfMeta:dfm,

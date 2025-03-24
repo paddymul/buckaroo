@@ -65,6 +65,7 @@ class DataFlow(HasTraits):
 
     analysis_klasses = None
     summary_sd = Any()
+    df_meta = Any()
 
     merged_sd = Any()
 
@@ -236,6 +237,7 @@ class CustomizableDataflow(DataFlow):
         warnings.filterwarnings('default')
 
     def populate_df_meta(self):
+
         self.df_meta = {
             'columns': len(self.processed_df.columns),
             # I need to recompute this when sampling changes

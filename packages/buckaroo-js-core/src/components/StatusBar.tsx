@@ -2,7 +2,7 @@
 import React, { useRef, useCallback, useState, memo, useEffect } from "react";
 import _ from "lodash";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
-import { ColDef, GridApi, GridOptions, GridReadyEvent, ModuleRegistry, StartEditingCellParams } from "@ag-grid-community/core";
+import { ColDef, GridApi, GridOptions, ModuleRegistry, StartEditingCellParams } from "@ag-grid-community/core";
 import { basicIntFormatter } from "./DFViewerParts/Displayer";
 import { DFMeta } from "./WidgetTypes";
 import { BuckarooOptions } from "./WidgetTypes";
@@ -107,7 +107,7 @@ export const MoodEditor =  memo(({ value, onValueChange, stopEditing }: CustomCe
 });
 
 export const SearchEditor =  memo(({ value, onValueChange, stopEditing }: CustomCellEditorProps) => {
-    const [ready, setReady] = useState(false);
+    const [_ready, setReady] = useState(false);
     const refContainer = useRef<HTMLDivElement>(null);
 
 

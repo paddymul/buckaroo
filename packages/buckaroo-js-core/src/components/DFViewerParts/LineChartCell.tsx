@@ -2,7 +2,7 @@ import _ from "lodash";
 import React from "react";
 import { createPortal } from "react-dom";
 
-import { Area, ComposedChart, Line, LineChart, Tooltip } from "recharts";
+import { Area, ComposedChart, Line, Tooltip } from "recharts";
 
 export interface HistogramNode {
     name: string;
