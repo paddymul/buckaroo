@@ -121,13 +121,15 @@ export const SearchEditor =  memo(({ value, onValueChange, stopEditing }: Custom
         <div
             ref={refContainer}
             tabIndex={1} // important - without this the key presses wont be caught
+            style={{display:"flex", "flexDirection":"row", border:"1px solid red"}}
         >
        <input
            type="text"
+           style={{flex:"auto", width:150}}
            value={value || ''}
            onChange={({ target: { value }}) => onValueChange(value === '' ? null : value)}
        />
-       <button>X</button>
+       <button style={{flex:"none"}}>X</button>
         </div>
     );
 });
@@ -206,10 +208,6 @@ export function StatusBar({
             width: 200,
             editable: true,
             cellEditor: SearchEditor,
-            //cellRenderer:SearchCellRenderer,
-            //onCellValueChanged: handleCellChange,
-            //hide: !showSearch,
-
         },
 
         {
