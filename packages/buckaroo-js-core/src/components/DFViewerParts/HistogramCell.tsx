@@ -82,6 +82,7 @@ export const HistogramCell = (props: any) => {
     if (props === undefined ) {
         return <span></span>;
     }
+    console.log("props", props)
     const potentialHistogramArr = props.value;
     //for key "index", the value is "histogram"
     // this causes ReChart to blow up, so we check to see if it's an array
