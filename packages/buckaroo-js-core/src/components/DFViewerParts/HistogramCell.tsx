@@ -45,8 +45,6 @@ export function FloatingTooltip({ items, x, y }: any) {
 const CustomTooltip = ({ active, payload, screenCoords }: any) => {
     // Read this github issue for context https://github.com/recharts/recharts/issues/5181
     if (active && payload && payload.length && screenCoords) {
-        // console.log("payload", payload, "label", label);
-        // console.log("payload[0].payload", payload[0].payload, payload[0].payload.name)
         const name = payload[0].payload.name;
         return createPortal(
             <div
