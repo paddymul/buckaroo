@@ -1,20 +1,23 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { DatasourceOrRaw, DFViewerInfinite, RawDataWrapper } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
-import { DFViewer, SetColumFunc } from "../components/DFViewerParts/DFViewer";
+import { SetColumFunc } from "../components/DFViewerParts/DFViewer";
 //import "../packages/buckaroo-js-core/dist/style.css";
 import "../style/dcf-npm.css"
 import '@ag-grid-community/styles/ag-grid.css'; 
 import "@ag-grid-community/styles/ag-theme-alpine.css";
 import '@ag-grid-community/styles/ag-theme-quartz.css';
 
-const DFViewerWrap = ({
-    df_data,
+const DFViewerInfiniteWrap = ({
+    data_wrapper,
     df_viewer_config,
     summary_stats_data,
     activeCol,
     setActiveCol,
+    outside_df_params,
+    error_info,
 }: {
-    df_data:DFData,
+    data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
     activeCol?: string;
@@ -28,13 +31,14 @@ const DFViewerWrap = ({
 
   return (
      <div style={{height:500, width:800}}>
-      <DFViewer
-      df_data={df_data}
+      <DFViewerInfinite
+      data_wrapper={data_wrapper}
       df_viewer_config={df_viewer_config}
       summary_stats_data={summary_stats_data}
       activeCol={activeCol}
       setActiveCol={setActiveCol}
-    />
+      outside_df_params={outside_df_params}
+      error_info={error_info} />
      </div>);
 }
 
@@ -42,8 +46,8 @@ const DFViewerWrap = ({
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Buckaroo/DFViewer/DFViewer",
-  component:DFViewerWrap,
+  title: "Buckaroo/DFViewer/DFViewerInfiniteRaw",
+  component:DFViewerInfiniteWrap,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
     // info: https://storybook.js.org/docs/configure/story-layout
@@ -62,17 +66,22 @@ const meta = {
   // actions panel once invoked:
   // https://storybook.js.org/docs/essentials/actions#action-args
   //args: { onClick: fn() },
-} satisfies Meta<typeof DFViewerWrap>;
+} satisfies Meta<typeof DFViewerInfiniteWrap>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const rd:RawDataWrapper = {
+  data: [
+    {'a':20, 'b':"foo"},
+    {'a':30, 'b':"bar"}
+  ],
+  length:2,
+  data_type:'Raw'
+}
 export const Primary: Story = {
   args: {
-    df_data: [
-      {'a':20, 'b':"foo"},
-      {'a':30, 'b':"bar"}
-    ],
+    data_wrapper:rd,
     df_viewer_config: {
       column_config: [
       {
@@ -105,9 +114,12 @@ export const Primary: Story = {
 }
 export const DateNoDisplay: Story = {
   args: {
-    df_data:    [{'index': 0, 'date': '06/11/2021', 'date2': '06/11/2021'},
+    data_wrapper: {data_type:'Raw',
+      data:    [{'index': 0, 'date': '06/11/2021', 'date2': '06/11/2021'},
       {'index': 1, 'date': 'Nov, 22nd 2021', 'date2': '22/11/2021'},
       {'index': 2, 'date': '24th of November, 2021', 'date2': '24/11/2021'}],
+      length:3
+    },
     df_viewer_config: {
       column_config: [
       { col_name: 'index', displayer_args: {'displayer':'obj'} },
