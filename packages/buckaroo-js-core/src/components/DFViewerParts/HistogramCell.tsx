@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 
 import { Bar, BarChart, Tooltip } from "recharts";
 import { ChartColors } from "./LineChartCell";
+import { ColDef, Column, Context, GridApi } from "@ag-grid-community/core";
 
 export interface HistogramNode {
     name: string;
@@ -42,6 +43,7 @@ export function FloatingTooltip({ items, x, y }: any) {
 }
 
 const CustomTooltip = ({ active, payload, screenCoords }: any) => {
+    // Read this github issue for context https://github.com/recharts/recharts/issues/5181
     if (active && payload && payload.length && screenCoords) {
         // console.log("payload", payload, "label", label);
         // console.log("payload[0].payload", payload[0].payload, payload[0].payload.name)
@@ -77,12 +79,15 @@ export interface HistogramBar {
 }
 
 
-export const HistogramCell = (props: any) => {
-    debugger;
+export const HistogramCell = (props:
+    {api:GridApi, colDef:ColDef, 
+     column:Column, context:Context, value:any}
+) => {
+    // relevant args here 
+    // https://www.ag-grid.com/react-data-grid/component-cell-renderer/
     if (props === undefined ) {
         return <span></span>;
     }
-    console.log("props", props)
     const potentialHistogramArr = props.value;
     //for key "index", the value is "histogram"
     // this causes ReChart to blow up, so we check to see if it's an array
@@ -95,7 +100,6 @@ export const HistogramCell = (props: any) => {
 
 export const TypedHistogramCell = ({histogramArr, context}:
     {histogramArr:HistogramBar[], context:any}) => {
-    console.log("histogramArr", histogramArr);
     const dumbClickHandler = (rechartsArgs: any, _unused_react: any) => {
         //we can access the rest of the data model through context
     
