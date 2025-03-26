@@ -93,10 +93,13 @@ def test_check_and_fix_df5():
 def test_serialize_naive_json():
     d = date(year=1999, month=10, day=3)
     d2 = date(year=1999, month=10, day=3)
-    df = pd.DataFrame({#'a': [pd.DataFrame, Exception, lambda x: x+10],
-                       'b': [d, d2, None]
-                       })
+    df = pd.DataFrame({'a': [pd.DataFrame, Exception, lambda x: x+10],
+                       'b': [d, d2, None]})
+
+    #just make sure we don't throw an error
     output = to_parquet(df)
+    #and make sure output isn't empty. I don't want to hardcode a
+    #response here
     assert len(output) > 20
     
 # def test_int_overflow_validation():
