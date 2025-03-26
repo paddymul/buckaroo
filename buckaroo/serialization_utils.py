@@ -151,12 +151,19 @@ def pd_to_obj(df:pd.DataFrame):
     return obj['data']
 
 
+from fastparquet import json as fp_json
+from io import BytesIO
+import logging
+logger = logging.getLogger()
+
+
 class MyJsonImpl(fp_json.BaseImpl):
     def __init__(self):
-        import json
+        from pandas._libs.json import ujson_dumps
 
-        #logger.debug("Using json encoder/decoder")
-        self.api = json
+        #for some reason the following line causes errors, so I have to reimport ujson_dumps
+        # from pandas._libs.json import ujson_dumps
+        # self.dumps = ujson_dumps
 
     def dumps(self, data):
         from pandas._libs.json import ujson_dumps
@@ -168,7 +175,8 @@ class MyJsonImpl(fp_json.BaseImpl):
 
 def to_parquet(df):
     data: BytesIO = BytesIO()
-    
+
+    # data.close doesn't work in pyodide, so we make close a no-op
     orig_close = data.close
     data.close = lambda: None
     # I don't like this copy.  modify to keep the same data with different names
@@ -178,9 +186,7 @@ def to_parquet(df):
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     encodings = {k:'json' for k in obj_columns}
 
-    orig_codec_classes = fp_json._codec_classes
     orig_get_cached_codec = fp_json._get_cached_codec
-    #fp_json._codec_classes = {'json':MyJsonImpl}
     def fake_get_cached_codec():
         return MyJsonImpl()
 
@@ -192,8 +198,7 @@ def to_parquet(df):
         raise
     finally:
         data.close = orig_close
-    fp_json._codec_classes = orig_codec_classes
-    fp_json._get_cached_codec = orig_get_cached_codec
+        fp_json._get_cached_codec = orig_get_cached_codec
 
 
     data.seek(0)
