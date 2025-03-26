@@ -25,7 +25,7 @@ from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyl
 from .pluggable_analysis_framework.analysis_management import DfStats
 from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
 
-from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj
+from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj, to_parquet
 from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from .dataflow.dataflow_extras import (Sampling, exception_protect, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
@@ -380,56 +380,4 @@ class BuckarooInfiniteWidget(BuckarooWidget):
         return pd_to_obj(df)
 
 
-
-
-class MyJsonImpl(fp_json.BaseImpl):
-    def __init__(self):
-        import json
-
-        #logger.debug("Using json encoder/decoder")
-        self.api = json
-
-    def dumps(self, data):
-        print("my dumps")
-        from pandas._libs.json import ujson_dumps
-        #return self.api.dumps(data, separators=(",", ":"), default_handler=str).encode("utf-8")
-        return ujson_dumps(data, default_handler=str).encode("utf-8")
-
-    def loads(self, s):
-        return self.api.loads(s)
-data: BytesIO = BytesIO()
-
-
-def to_parquet(df):
-    data: BytesIO = BytesIO()
-    
-    orig_close = data.close
-    data.close = lambda: None
-    # I don't like this copy.  modify to keep the same data with different names
-    df2 = df.copy()
-    df2['index'] = df2.index
-    df2.columns = [str(x) for x in df2.columns]
-    obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
-    encodings = {k:'json' for k in obj_columns}
-
-    orig_codec_classes = fp_json._codec_classes
-    orig_get_cached_codec = fp_json._get_cached_codec
-    fp_json._codec_classes = {'json':MyJsonImpl}
-    def fake_get_cached_codec():
-        return MyJsonImpl()
-
-    fp_json._get_cached_codec = fake_get_cached_codec
-    
-    try:
-        df2.to_parquet(data, engine='fastparquet', object_encoding=encodings)
-    except Exception as e:
-        logger.error("error serializing to parquet", e)
-    finally:
-        data.close = orig_close
-    fp_json._codec_classes = orig_codec_classes
-    fp_json._get_cached_codec = orig_get_cached_codec
-
-
-    data.seek(0)
-    return data.read()
 
