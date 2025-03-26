@@ -2,7 +2,7 @@
 import React, { useRef, useCallback, useState, memo, useEffect } from "react";
 import _ from "lodash";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
-import { ColDef, GridApi, GridOptions, ModuleRegistry, StartEditingCellParams } from "@ag-grid-community/core";
+import { ColDef, GridApi, GridOptions, ModuleRegistry } from "@ag-grid-community/core";
 import { basicIntFormatter } from "./DFViewerParts/Displayer";
 import { DFMeta } from "./WidgetTypes";
 import { BuckarooOptions } from "./WidgetTypes";
@@ -23,6 +23,51 @@ const helpCell = function (_params: any) {
         </a>
     );
 };
+
+export const fakeSearchCell = function (_params: any) {
+    const value = _params.value;
+    console.log("_params", _params);
+    console.log("_params.api", _params.api)
+
+    const [searchVal, setSearchVal] = useState<string>(value||'');
+    const setVal = () => {
+        _params.setValue(searchVal === '' ? null : searchVal)
+    }
+
+    const keyPressHandler = (event:React.KeyboardEvent<HTMLInputElement> ) => {
+        // If the user presses the "Enter" key on the keyboard
+    if (event.key === "Enter") {
+      // Cancel the default action, if needed
+      event.preventDefault();
+      setVal()
+      // Trigger the button element with a click
+      //document.getElementById("myBtn").click();
+    }
+  } 
+    return (
+        <div
+            className={"FakeSearchEditor"}
+            tabIndex={1} // important - without this the key presses wont be caught
+            style={{ display: "flex", "flexDirection": "row" }}
+        >
+            <input
+                type="text"
+                style={{ flex: "auto", width: 140 }}
+                value={searchVal}
+                onChange={({ target: { value }}) => setSearchVal(value)}
+                onSubmit={setVal}
+                onKeyDown={keyPressHandler}
+            />
+            <button style={{ flex: "none" }} onClick={setVal}>&#x1F50D;</button>
+            <button style={{ flex: "none" }}
+                    onClick={(clickParams) => {
+                        console.log("clickParams", clickParams)
+                        _params.setValue("")
+                    }}
+            >X</button>
+        </div>
+    )
+}
 
 export const SearchEditor =  memo(({ value, onValueChange, stopEditing }: CustomCellEditorProps) => {
     const [_ready, setReady] = useState(false);
@@ -125,8 +170,10 @@ export function StatusBar({
             field: "search",
             headerName: "search",
             width: 200,
-            editable: true,
+            //editable: true,
             cellEditor: SearchEditor,
+            cellRenderer: fakeSearchCell,
+
             onCellValueChanged: handleCellChange,
         },
 
@@ -201,10 +248,14 @@ export function StatusBar({
     const gridRef = useRef<AgGridReact<unknown>>(null);
 
     const onGridReady = useCallback((params: {api:GridApi}) => {
-        const eParams:StartEditingCellParams = {
-            rowIndex:0, colKey:"search"
-        }
-        params.api.startEditingCell(eParams)
+        console.log("onGridReady statusbar", params)
+
+        // const eParams:StartEditingCellParams = {
+        //     rowIndex:0, colKey:"search"
+        // }
+        // params.api.startEditingCell(eParams)
+  //      params.api.clearFocusedCell();
+
     }, []);
 
     const defaultColDef = {

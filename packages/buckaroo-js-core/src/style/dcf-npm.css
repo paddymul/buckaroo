@@ -262,6 +262,8 @@ edit box moves up and is only half visible */
 
 
 /* These are important to remove the blue outlines around the  */
+
+/*
 .statusBar .ag-ltr .ag-cell-inline-editing.ag-cell input{
   border-color:none;
   border:none;
@@ -280,6 +282,7 @@ edit box moves up and is only half visible */
   border:none;
   outline:1px solid var(--ag-border-color);
 }
+  */
 .statusBar .ag-ltr .ag-cell-focus:not(.ag-cell-range-selected):focus-within,
 .statusBar .ag-ltr .ag-context-menu-open .ag-cell-focus:not(.ag-cell-range-selected),
 .statusBar .ag-ltr .ag-full-width-row.ag-row-focus:focus .ag-cell-wrapper.ag-row-group,
@@ -292,4 +295,13 @@ edit box moves up and is only half visible */
 .statusBar .ag-rtl .ag-cell-range-single-cell.ag-cell-range-handle {
   border-style:none;
   outline: initial;
+}
+
+
+.statusBar .ag-column-first { 
+  padding:0;
+}
+
+.statusBar .ag-column-first .FakeSearchEditor input{ 
+  outline:none;
 }
