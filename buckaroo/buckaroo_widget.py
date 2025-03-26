@@ -7,12 +7,9 @@
 """
 TODO: Add module docstring
 """
-from io import BytesIO
 import traceback
 import pandas as pd
 import logging
-from fastparquet import json as fp_json
-# Creating an object
 
 
 from traitlets import List, Dict, observe, Unicode, Any
