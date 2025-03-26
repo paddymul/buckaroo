@@ -8,6 +8,7 @@ from fastparquet import json as fp_json
 import logging
 logger = logging.getLogger()
 
+
 def is_col_dt_safe(col_or_index):
     if isinstance(col_or_index.dtype, DatetimeTZDtype):
         dt = col_or_index.dtype
@@ -151,15 +152,11 @@ def pd_to_obj(df:pd.DataFrame):
     return obj['data']
 
 
-from fastparquet import json as fp_json
-from io import BytesIO
-import logging
-logger = logging.getLogger()
 
 
 class MyJsonImpl(fp_json.BaseImpl):
     def __init__(self):
-        from pandas._libs.json import ujson_dumps
+        pass
 
         #for some reason the following line causes errors, so I have to reimport ujson_dumps
         # from pandas._libs.json import ujson_dumps
