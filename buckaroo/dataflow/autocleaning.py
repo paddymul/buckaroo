@@ -220,7 +220,8 @@ class PandasAutocleaning:
         if ops_eq(existing_operations, [{'meta':'no-op'}]):
 
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, [])
-            print("handle_ops_and_clean no-op, final_ops", final_ops)
+            cleaning_sd = {}
+            print("handle_ops_and_clean no-op, cleaning_sd", cleaning_sd)
         else:
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, existing_operations)
 

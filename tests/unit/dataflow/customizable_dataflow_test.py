@@ -51,6 +51,7 @@ def test_widget_instatiation():
     
     pd.testing.assert_frame_equal(dfc.widget_args_tuple[1], BASIC_DF)
     pd.testing.assert_frame_equal(dfc.cleaned_df, BASIC_DF)
+    assert dfc.cleaned_sd == {}
     pd.testing.assert_frame_equal(dfc.processed_df, BASIC_DF)
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
@@ -208,7 +209,7 @@ SENTINEL_CONFIG_WITHOUT_INT = {
 #FIXME, this used to be {}, but some change tot eh autcleaning ops,
 #and now I'm getting this probably equivalent structure, dig to the
 #bottom of this
-ALMOST_EMPTY_SD = {'a': {}, 'b': {}, 'index': {}}
+ALMOST_EMPTY_SD = {}
 
 def test_hide_column_config_post_processing():
     """
@@ -228,7 +229,7 @@ def test_hide_column_config_post_processing():
     assert p_dfc.df_display_args['main']['df_viewer_config'] == SENTINEL_CONFIG_WITHOUT_INT
     """ Make sure we can switch post_processing back to unset and everything works """
     p_dfc.post_processing_method = ''
-    assert p_dfc.processed_df is BASIC_DF
+    pd.testing.assert_frame_equal(p_dfc.processed_df, BASIC_DF)
     assert p_dfc.cleaned_sd == {}
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
@@ -253,7 +254,7 @@ def test_add_analysis():
     assert p_dfc.df_display_args['main']['df_viewer_config'] == SENTINEL_CONFIG_WITHOUT_INT
     """ Make sure we can switch post_processing back to unset and everything works """
     p_dfc.post_processing_method = ''
-    assert p_dfc.processed_df is BASIC_DF
+    pd.testing.assert_frame_equal(p_dfc.processed_df, BASIC_DF)
     assert p_dfc.cleaned_sd == {}
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
@@ -519,7 +520,7 @@ def test_bstate_commands2():
     
 def test_sample():
     big_df = pd.DataFrame({'a': np.arange(105_000)})
-    bw = CustomizableDataflow(big_df)
+    bw = ACDFC(big_df)
     assert len(bw.processed_df) == 100_000
     print(list(bw.df_data_dict.keys()))
     assert len(bw.df_data_dict['main']) == 5_000

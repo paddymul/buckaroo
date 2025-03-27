@@ -107,8 +107,8 @@ class DataFlow(HasTraits):
             return
         else:
             self.cleaned = result
-            print("110 setting self.cleaned")
-            print(self.cleaned_df)
+            print("110 setting self.cleaned_sd")
+            print(self.cleaned_sd)
             self.operations = result[3]
             print("finished resetting operations")
             print(self.cleaned_df)
