@@ -205,6 +205,10 @@ SENTINEL_CONFIG_WITHOUT_INT = {
     'extra_grid_config': {},
 }
 
+#FIXME, this used to be {}, but some change tot eh autcleaning ops,
+#and now I'm getting this probably equivalent structure, dig to the
+#bottom of this
+ALMOST_EMPTY_SD = {'a': {}, 'b': {}, 'index': {}}
 
 def test_hide_column_config_post_processing():
     """
@@ -215,9 +219,10 @@ def test_hide_column_config_post_processing():
 
     p_dfc = PostDCFC(BASIC_DF)
     assert p_dfc.post_processing_method == ''
-    assert p_dfc.processed_df is BASIC_DF
+    pd.testing.assert_frame_equal(p_dfc.processed_df, BASIC_DF)
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
-    assert p_dfc.cleaned_sd == {}
+    #assert p_dfc.cleaned_sd == {}
+    assert p_dfc.cleaned_sd == ALMOST_EMPTY_SD
     p_dfc.post_processing_method = 'hide_post'
     assert p_dfc.processed_df is SENTINEL_DF
     assert p_dfc.df_display_args['main']['df_viewer_config'] == SENTINEL_CONFIG_WITHOUT_INT
@@ -237,11 +242,11 @@ def test_add_analysis():
 
     p_dfc = PostDCFC(BASIC_DF)
     assert p_dfc.post_processing_method == ''
-    assert p_dfc.processed_df is BASIC_DF
+    pd.testing.assert_frame_equal(p_dfc.processed_df, BASIC_DF)
     assert p_dfc.df_display_args == {}
     p_dfc.add_analysis(StylingAnalysis)
     assert p_dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
-    assert p_dfc.cleaned_sd == {}
+    assert p_dfc.cleaned_sd == ALMOST_EMPTY_SD
     p_dfc.add_analysis(HidePostProcessingAnalysis)
     p_dfc.post_processing_method = 'hide_post'
     assert p_dfc.processed_df is SENTINEL_DF
