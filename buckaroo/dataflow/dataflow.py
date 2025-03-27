@@ -99,22 +99,15 @@ class DataFlow(HasTraits):
     @observe('sampled_df', 'cleaning_method', 'quick_command_args', 'operations')
     @exception_protect('operation_result-protector')
     def _operation_result(self, change):
-        print("102 operation_result", id(self.sampled_df), self.cleaning_method, self.quick_command_args, self.operations)
         result = self.ac_obj.handle_ops_and_clean(
             self.sampled_df, self.cleaning_method, self.quick_command_args, self.operations)
         if result is None:
-            print("106 result is None, returning")
             return
         else:
             self.cleaned = result
-            print("110 setting self.cleaned_sd")
-            print(self.cleaned_sd)
             self.operations = result[3]
-            print("finished resetting operations")
-            print(self.cleaned_df)
         self.operation_results = {'transformed_df':None,
                                   'generated_py_code': self.generated_code,
-                                  #'transform_error': None
                                   }
 
     @property
@@ -147,7 +140,6 @@ class DataFlow(HasTraits):
     @observe('cleaned', 'post_processing_method')
     @exception_protect('processed_result-protector')
     def _processed_result(self, change):
-        print("147 cleaned changed")
         #for now this is a no-op because I don't have a post_processing_function or mechanism
         self.processed_result = self._compute_processed_result(self.cleaned_df, self.post_processing_method)
         self.populate_df_meta()

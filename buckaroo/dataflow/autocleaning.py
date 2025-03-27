@@ -210,41 +210,29 @@ class PandasAutocleaning:
     def handle_ops_and_clean(self, df, cleaning_method, quick_command_args, existing_operations):
         if df is None:
             #on first instantiation df is likely to be None,  do nothing and return
-            print("handle_ops_and_clean exiting because df is none")
             return None
 
         cleaning_ops, cleaning_sd = self.produce_cleaning_ops(df, cleaning_method)
-        print("handle_ops_and_clean 217 cleaning_ops", cleaning_ops, "existing_ops", existing_operations)
+
         # [{'meta':'no-op'}] is a sentinel for the initial state
-        # 
         if ops_eq(existing_operations, [{'meta':'no-op'}]):
 
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, [])
             #FIXME, a little bit of a hack to reset cleaning_sd, but it helps tests pass. I
             # don't know how any other properties could really be set
             # when 'no-op' the initial state is true
-
             cleaning_sd = {}
-            print("handle_ops_and_clean no-op, cleaning_sd", cleaning_sd)
         else:
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, existing_operations)
 
-        print("final_ops", final_ops, cleaning_method)
         if ops_eq(final_ops,[]) and cleaning_method == "NoCleaning":
+            #nothing to be done here, no point in running the interpreter
+            #this also has the nice effect of not copying the DF, which the interpreter does
             return [df, {}, "", []]
             
 
-        # if ops_eq(final_ops, existing_operations):
-        #     # if the ops haven't changed, do nothing
-        #     print("handle_ops_and_clean exiting because final_ops == existing")
-        #     return None
-        
-        print("pre -run interpreter ", len(df), df.columns)
         cleaned_df = self._run_df_interpreter(df, final_ops)
-        print("len(cleaned_df)", len(cleaned_df), cleaned_df.columns)
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
         generated_code = self._run_code_generator(final_ops)
-
-
         return [merged_cleaned_df, cleaning_sd, generated_code, final_ops]
 
