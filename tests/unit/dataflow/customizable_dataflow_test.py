@@ -51,6 +51,7 @@ def test_widget_instatiation():
     
     pd.testing.assert_frame_equal(dfc.widget_args_tuple[1], BASIC_DF)
     pd.testing.assert_frame_equal(dfc.cleaned_df, BASIC_DF)
+
     assert dfc.cleaned_sd == {}
     pd.testing.assert_frame_equal(dfc.processed_df, BASIC_DF)
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA

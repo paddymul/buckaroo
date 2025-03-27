@@ -229,43 +229,22 @@ class PandasAutocleaning:
         else:
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, existing_operations)
 
+        print("final_ops", final_ops, cleaning_method)
+        if ops_eq(final_ops,[]) and cleaning_method == "NoCleaning":
+            return [df, {}, "", []]
+            
 
-        if ops_eq(final_ops, existing_operations):
-            # if the ops haven't changed, do nothing
-            print("handle_ops_and_clean exiting because final_ops == existing")
-            return None
+        # if ops_eq(final_ops, existing_operations):
+        #     # if the ops haven't changed, do nothing
+        #     print("handle_ops_and_clean exiting because final_ops == existing")
+        #     return None
         
+        print("pre -run interpreter ", len(df), df.columns)
         cleaned_df = self._run_df_interpreter(df, final_ops)
-        #print("len(cleaned_df)", len(cleaned_df))
+        print("len(cleaned_df)", len(cleaned_df), cleaned_df.columns)
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
         generated_code = self._run_code_generator(final_ops)
-        #print(f"{merged_cleaned_df=}, {type(merged_cleaned_df)=}")
+
 
         return [merged_cleaned_df, cleaning_sd, generated_code, final_ops]
 
-
-
-    def handle_ops_and_clean_old(self, df, cleaning_method, quick_command_args, existing_operations):
-        if df is None:
-            #on first instantiation df is likely to be None,  do nothing and return
-            return None
-
-        quick_ops = generate_quick_ops(self.quick_command_klasses, quick_command_args)
-        print("quick_ops", quick_ops)
-        if cleaning_method == "":
-            if (len(existing_operations) + len(quick_ops)) == 0:
-                #no cleaning method was specified, just return the bare minimum
-                return [df, {},  "#empty generated code", merge_ops(existing_operations, [])]
-        self._setup_from_command_kls_list(cleaning_method)
-
-        cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
-        cleaning_operations.extend(quick_ops)
-        merged_operations = merge_ops(existing_operations, cleaning_operations)
-        
-        cleaned_df = self._run_df_interpreter(df, merged_operations)
-        #print("len(cleaned_df)", len(cleaned_df))
-        merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
-        generated_code = self._run_code_generator(merged_operations)
-        #print(f"{merged_cleaned_df=}, {type(merged_cleaned_df)=}")
-
-        return [merged_cleaned_df, cleaning_sd, generated_code, merged_operations]

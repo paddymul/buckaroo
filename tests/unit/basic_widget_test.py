@@ -90,6 +90,9 @@ def test_interpreter():
     assert 'str_col' in w.dataflow.cleaned_df.columns
     temp_ops = w.operations.copy()
     temp_ops.append([{"symbol":"dropcol"},{"symbol":"df"},"str_col"])
+
+    print("setting operations")
+    print("-"*80)
     w.operations = temp_ops
 
     tdf = w.dataflow.cleaned_df
