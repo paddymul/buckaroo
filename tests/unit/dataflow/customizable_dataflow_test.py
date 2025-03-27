@@ -45,15 +45,13 @@ class ACDFC(CustomizableDataflow):
 
 def test_widget_instatiation():
     dfc = ACDFC(BASIC_DF)
-    print("-" * 80)
-    print(dfc.widget_args_tuple[1])
-    print("-" * 80)
+
+    #make sure that all forms of the dataframe exiting form
+    #handle_ops_and_clean equal as we expect them to
     
-    #assert pd.testing.assert_frame_equal(dfc.processed_df, BASIC_DF)
     pd.testing.assert_frame_equal(dfc.widget_args_tuple[1], BASIC_DF)
     pd.testing.assert_frame_equal(dfc.cleaned_df, BASIC_DF)
     pd.testing.assert_frame_equal(dfc.processed_df, BASIC_DF)
-    ##assert dfc.widget_args_tuple[1] == BASIC_DF
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
@@ -86,7 +84,7 @@ def test_custom_dataflow():
     cdfc = TwoStyleDFC(BASIC_DF)
     #assert cdfc.widget_args_tuple[1] is BASIC_DF
     pd.testing.assert_frame_equal(cdfc.widget_args_tuple[1], BASIC_DF)
-    assert pd.testing.assert_frame_equal(cdfc.widget_args_tuple[1], BASIC_DF)
+    pd.testing.assert_frame_equal(cdfc.widget_args_tuple[1], BASIC_DF)
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
@@ -104,11 +102,11 @@ def test_hide_column_config_overrides():
     """
     verifies that column_config_overrides works properly and column b doesn't end up in column_config
     """
-    cdfc = CustomizableDataflow(BASIC_DF)
-    assert cdfc.widget_args_tuple[1] is BASIC_DF
+    cdfc = ACDFC(BASIC_DF)
+    pd.testing.assert_frame_equal(cdfc.widget_args_tuple[1], BASIC_DF)
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
-    cdfc2 = CustomizableDataflow(BASIC_DF,
+    cdfc2 = ACDFC(BASIC_DF,
                       column_config_overrides={'b': {'merge_rule': 'hidden'}}
                       )
 
@@ -116,7 +114,7 @@ def test_hide_column_config_overrides():
 
 
 def test_custom_summary_stats():
-    class DCDFC(CustomizableDataflow):
+    class DCDFC(ACDFC):
         analysis_klasses = [DistinctCount, StylingAnalysis]
 
     dc_dfc = DCDFC(BASIC_DF)
@@ -129,7 +127,7 @@ def test_custom_summary_stats():
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
 
 def test_init_sd():
-    class DCDFC(CustomizableDataflow):
+    class DCDFC(ACDFC):
         analysis_klasses = [DistinctCount, StylingAnalysis]
 
     dc_dfc = DCDFC(BASIC_DF, init_sd={'a':{'foo':8}})
@@ -152,7 +150,7 @@ class AlwaysFailStyling(StylingAnalysis):
 def test_always_fail_styling():
     """ styling should default to obj displayer if an error is thrown
     """
-    class DCDFC(CustomizableDataflow):
+    class DCDFC(ACDFC):
         analysis_klasses = [AlwaysFailStyling]
         pass
 
@@ -177,7 +175,7 @@ class PostProcessingAnalysis(ColAnalysis):
 
 
 def test_custom_post_processing():
-    class PostDCFC(CustomizableDataflow):
+    class PostDCFC(ACDFC):
         analysis_klasses = [PostProcessingAnalysis, StylingAnalysis]
 
     p_dfc = PostDCFC(BASIC_DF)
@@ -212,7 +210,7 @@ def test_hide_column_config_post_processing():
     """
     verifies that a PostProcessing function can hide columns 
     """
-    class PostDCFC(CustomizableDataflow):
+    class PostDCFC(ACDFC):
         analysis_klasses = [HidePostProcessingAnalysis, StylingAnalysis]
 
     p_dfc = PostDCFC(BASIC_DF)
@@ -233,7 +231,7 @@ def test_add_analysis():
     """
     verifies that a PostProcessing function can hide columns 
     """
-    class PostDCFC(CustomizableDataflow):
+    class PostDCFC(ACDFC):
         analysis_klasses = []
         #pass
 
@@ -269,7 +267,7 @@ def test_hide_column_config_post_processing2():
     This only works because we add an unknown column c, then remove it.
     returning cleaned_df and dropping 'b' doesn't work
     """
-    class PostDCFC(CustomizableDataflow):
+    class PostDCFC(ACDFC):
         analysis_klasses = [HidePostProcessingAnalysis2, StylingAnalysis]
 
     p_dfc = PostDCFC(BASIC_DF)
@@ -286,7 +284,7 @@ class AlwaysFailAnalysis(ColAnalysis):
     def computed_summary(foo):
         1/0
 def test_error_analysis():
-    class ErrorCustomDataflow(CustomizableDataflow):
+    class ErrorCustomDataflow(ACDFC):
         analysis_klasses = [AlwaysFailAnalysis]
 
     ErrorCustomDataflow(BASIC_DF)
@@ -304,7 +302,7 @@ class AlwaysFailPostProcessingAnalysis(ColAnalysis):
 
 
 def test_error_post_processing():
-    class ErrorCFC(CustomizableDataflow):
+    class ErrorCFC(ACDFC):
         analysis_klasses = [AlwaysFailPostProcessingAnalysis, StylingAnalysis]
 
     e_dfc = ErrorCFC(BASIC_DF)
