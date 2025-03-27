@@ -7,6 +7,7 @@ from buckaroo.dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget, BuckarooInfiniteWidget
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)         
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.dataflow.autocleaning import PandasAutocleaning
 
 EMPTY_DF_JSON = {
             'dfviewer_config': {
@@ -38,13 +39,30 @@ DFVIEWER_CONFIG_WITHOUT_B = {
     'extra_grid_config': {},
 }
 
+class ACDFC(CustomizableDataflow):
+    autocleaning_klass = PandasAutocleaning
+    autoclean_conf = tuple([NoCleaningConf])
 
 def test_widget_instatiation():
-    dfc = CustomizableDataflow(BASIC_DF)
-    assert dfc.widget_args_tuple[1] is BASIC_DF
+    dfc = ACDFC(BASIC_DF)
+    print("-" * 80)
+    print(dfc.widget_args_tuple[1])
+    print("-" * 80)
+    
+    #assert pd.testing.assert_frame_equal(dfc.processed_df, BASIC_DF)
+    pd.testing.assert_frame_equal(dfc.widget_args_tuple[1], BASIC_DF)
+    pd.testing.assert_frame_equal(dfc.cleaned_df, BASIC_DF)
+    pd.testing.assert_frame_equal(dfc.processed_df, BASIC_DF)
+    ##assert dfc.widget_args_tuple[1] == BASIC_DF
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
     assert dfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
+def test_widget_operations_instatiation():
+    dfc = ACDFC(BASIC_DF)
+    # dfc starts with operations of [{'meta':'no-op'], but the first
+    # run that should be changed to []
+
+    assert dfc.operations == []
 def test_custom_dataflow():
     """
     verifies that that both StylingAnalysis are called and that we get a
@@ -61,12 +79,14 @@ def test_custom_dataflow():
         summary_stats_key= '555555555'
 
 
-    class TwoStyleDFC(CustomizableDataflow):
+    class TwoStyleDFC(ACDFC):
         analysis_klasses = [StylingAnalysis, IntStyling]
         #analysis_klasses = [IntStyling]
         
     cdfc = TwoStyleDFC(BASIC_DF)
-    assert cdfc.widget_args_tuple[1] is BASIC_DF
+    #assert cdfc.widget_args_tuple[1] is BASIC_DF
+    pd.testing.assert_frame_equal(cdfc.widget_args_tuple[1], BASIC_DF)
+    assert pd.testing.assert_frame_equal(cdfc.widget_args_tuple[1], BASIC_DF)
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],

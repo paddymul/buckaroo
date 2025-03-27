@@ -47,6 +47,8 @@ class DataFlow(HasTraits):
     autoclean_conf = tuple()
 
     command_config = Dict({}).tag(sync=True)
+    operation_results = Dict({'transformed_df':None,
+                              'generated_py_code': ""})
 
 
     raw_df = Any('')
@@ -56,10 +58,13 @@ class DataFlow(HasTraits):
     cleaning_method = Unicode('NoCleaning')
     quick_command_args = Dict({})
 
-    operations = Any([]).tag(sync=True)
+    # we put an operation here that will be stripped out, this assures
+    # us that the interpeter is run through at least once
+    operations = Any([{'meta':'no-op'}]).tag(sync=True)
 
     cleaned = Any().tag(default=None)
     
+
     post_processing_method = Unicode('').tag(default='')
     processed_result = Any().tag(default=None)
 
@@ -94,12 +99,19 @@ class DataFlow(HasTraits):
     @observe('sampled_df', 'cleaning_method', 'quick_command_args', 'operations')
     @exception_protect('operation_result-protector')
     def _operation_result(self, change):
+        print("102 operation_result", id(self.sampled_df), self.cleaning_method, self.quick_command_args, self.operations)
         result = self.ac_obj.handle_ops_and_clean(
             self.sampled_df, self.cleaning_method, self.quick_command_args, self.operations)
         if result is None:
+            print("106 result is None, returning")
             return
         else:
             self.cleaned = result
+            print("110 setting self.cleaned")
+            print(self.cleaned_df)
+            self.operations = result[3]
+            print("finished resetting operations")
+            print(self.cleaned_df)
         self.operation_results = {'transformed_df':None,
                                   'generated_py_code': self.generated_code,
                                   #'transform_error': None
@@ -135,6 +147,7 @@ class DataFlow(HasTraits):
     @observe('cleaned', 'post_processing_method')
     @exception_protect('processed_result-protector')
     def _processed_result(self, change):
+        print("147 cleaned changed")
         #for now this is a no-op because I don't have a post_processing_function or mechanism
         self.processed_result = self._compute_processed_result(self.cleaned_df, self.post_processing_method)
         self.populate_df_meta()
@@ -237,7 +250,15 @@ class CustomizableDataflow(DataFlow):
         warnings.filterwarnings('default')
 
     def populate_df_meta(self):
+        if self.processed_df is None:
+            self.df_meta = {
+                'columns': 0,
+                # I need to recompute this when sampling changes
+                'filtered_rows': 0,
+                'rows_shown': 0,
+                'total_rows': 0}
 
+            return
         self.df_meta = {
             'columns': len(self.processed_df.columns),
             # I need to recompute this when sampling changes
