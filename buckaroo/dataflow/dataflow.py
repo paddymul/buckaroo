@@ -64,7 +64,6 @@ class DataFlow(HasTraits):
 
     cleaned = Any().tag(default=None)
     
-
     post_processing_method = Unicode('').tag(default='')
     processed_result = Any().tag(default=None)
 
