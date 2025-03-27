@@ -220,6 +220,10 @@ class PandasAutocleaning:
         if ops_eq(existing_operations, [{'meta':'no-op'}]):
 
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, [])
+            #FIXME, a little bit of a hack to reset cleaning_sd, but it helps tests pass. I
+            # don't know how any other properties could really be set
+            # when 'no-op' the initial state is true
+
             cleaning_sd = {}
             print("handle_ops_and_clean no-op, cleaning_sd", cleaning_sd)
         else:

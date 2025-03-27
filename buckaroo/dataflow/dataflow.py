@@ -60,7 +60,7 @@ class DataFlow(HasTraits):
 
     # we put an operation here that will be stripped out, this assures
     # us that the interpeter is run through at least once
-    operations = Any([{'meta':'no-op'}]).tag(sync=True)
+    operations = Any([]).tag(sync=True)
 
     cleaned = Any().tag(default=None)
     
@@ -217,7 +217,7 @@ class CustomizableDataflow(DataFlow):
     DFStatsClass = DfStats
     sampling_klass = Sampling
     df_display_klasses = {}
-
+    operations = Any([{'meta':'no-op'}]).tag(sync=True)
 
     def __init__(self, orig_df, debug=False,
                  column_config_overrides=None,
