@@ -261,6 +261,17 @@ edit box moves up and is only half visible */
 }
 
 
+/* unspecific rule that should only apply in a shaddow dom */
+.buckaroo_anywidget {
+  min-width:900px;
+}
+/* this should override the above rule.  for some reason in jupyter, the .buckaroo_anywidget div isn't injected */
+div div div .buckaroo_anywidget {
+  min-width:inherit;
+  /* border:5px solid brown; */
+}
+
+
 /* These are important to remove the blue outlines around the  */
 
 /*
