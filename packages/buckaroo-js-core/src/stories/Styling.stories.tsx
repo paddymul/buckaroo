@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import '../../dist/style.css';
+//import '../../dist/style.css';
+import '../style/full.css';
 //import _ from "lodash";
 
 const CSSPlay = ({a}: {
