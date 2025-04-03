@@ -272,33 +272,6 @@ body {
   color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  .ag-theme-alpine-auto-dark {
-    --ag-background-color: #181d1f;
-    --ag-foreground-color: #fff;
-    --ag-border-color: #68686e;
-    --ag-secondary-border-color: rgba(88, 86, 82, 0.5);
-    --ag-modal-overlay-background-color: rgba(24, 29, 31, 0.66);
-    --ag-header-background-color: #222628;
-    --ag-tooltip-background-color: #222628;
-    --ag-odd-row-background-color: #222628;
-    --ag-control-panel-background-color: #222628;
-    --ag-subheader-background-color: #000;
-    --ag-input-disabled-background-color: #282c2f;
-    --ag-input-focus-box-shadow: 0 0 2px 0.5px rgba(255, 255, 255, 0.5), 0 0 4px 3px var(--ag-input-focus-border-color);
-    --ag-card-shadow: 0 1px 20px 1px black;
-    --ag-disabled-foreground-color: rgba(255, 255, 255, 0.5);
-    --ag-chip-background-color: rgba(255, 255, 255, 0.07);
-    --ag-input-disabled-border-color: rgba(104, 104, 110, 0.3);
-    --ag-input-disabled-background-color: rgba(104, 104, 110, 0.07);
-    --ag-advanced-filter-join-pill-color: #7a3a37;
-    --ag-advanced-filter-column-pill-color: #355f2d;
-    --ag-advanced-filter-option-pill-color: #5a3168;
-    --ag-advanced-filter-value-pill-color: #374c86;
-    --ag-row-loading-skeleton-effect-color: rgba(202, 203, 204, 0.4);
-    color-scheme: dark;
-  }
-}
 
 @font-face {
   font-family: "agGridAlpine";
