@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom/client';
 
 //import style2 from "https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.css?raw";
 import distStyle from '../../dist/style.css?raw';
+//const distStyle = "";
 //import _ from "lodash";
 
 

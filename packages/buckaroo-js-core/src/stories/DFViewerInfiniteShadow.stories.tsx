@@ -3,10 +3,10 @@ import { DatasourceWrapper, DFViewerInfinite } from "../components/DFViewerParts
 import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/DFViewer";
 //import "../packages/buckaroo-js-core/dist/style.css";
-import "../style/dcf-npm.css"
-import '@ag-grid-community/styles/ag-grid.css'; 
-import '@ag-grid-community/styles/ag-theme-quartz.css';
+//import "../style/dcf-npm.css"
+//import '@ag-grid-community/styles/ag-grid.css'; 
 import "@ag-grid-community/styles/ag-theme-alpine.css";
+
 import { IDatasource, IGetRowsParams } from "@ag-grid-community/core";
 import _ from "lodash";
 import { ShadowDomWrapper } from "./StoryUtils";

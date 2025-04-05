@@ -20,9 +20,19 @@ import { OperationViewer } from "./components/Operations";
 import * as CommandUtils from "./components/CommandUtils";
 import * as utils from "./components/utils";
 import { StatusBar } from "./components/StatusBar";
-import '@ag-grid-community/styles/ag-grid.css'; 
-import '@ag-grid-community/styles/ag-theme-alpine.css';
+//import "../style/dcf-npm.css"
 import './style/dcf-npm.css'
+
+//import '@ag-grid-community/styles/ag-grid.css'; 
+//import '@ag-grid-community/styles/ag-grid.css'; 
+
+//import '@ag-grid-community/styles/ag-theme-quartz.css';
+
+//import "@ag-grid-community/styles/ag-theme-alpine.css";
+//import '@ag-grid-community/styles/ag-theme-alpine.css';
+import "@ag-grid-community/styles/ag-theme-alpine.css";
+
+
 import * as widgetUtils from "./widgetUtils";
 import { SampleButton, HeaderNoArgs, Counter } from "./SampleComponent";
 import _ from "lodash";
