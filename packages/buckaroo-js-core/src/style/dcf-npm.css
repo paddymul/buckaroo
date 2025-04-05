@@ -311,10 +311,12 @@ div div div .buckaroo_anywidget {
 
 /* class="theme-hanger ag-theme-alpine-dark" */
 .df-viewer .ag-theme-alpine,
-.df-viewer  .ag-theme-alpine-dark  {
+.df-viewer  .ag-theme-alpine-dark,
+.ag-theme-alpine-dark   {
     --ag-icon-font-family: 'agGridMaterial';
     border:5px solid pink;
-}
+
+  }
 
 /* content of agGridMaterialFont.css: */
 @font-face {

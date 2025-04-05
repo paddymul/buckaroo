@@ -1,11 +1,29 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import '../../dist/style.css';
+import  style from '../../dist/style.css?raw';
+import { useEffect, useRef } from "react";
+import React from "react";
+import ReactDOM from 'react-dom/client';
 //import '../style/full.css';
 //import _ from "lodash";
 
+
+//import style from './tmp/mockComponent.css'; 
+/*
+constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        const { shadowRoot } = this;
+        container = document.createElement('div');
+
+        styleTag = document.createElement('style');
+        styleTag.innerHTML = style;
+        shadowRoot.appendChild(styleTag);            
+
+        shadowRoot.appendChild(container);
+
 import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
-
+*/
 interface ShadowDomWrapperProps {
   children: React.ReactNode;
 }
@@ -19,9 +37,15 @@ const ShadowDomWrapper: React.FC<ShadowDomWrapperProps> = ({ children }) => {
       // Attach shadow root
       shadowRootRef.current = containerRef.current.attachShadow({ mode: 'open' });
     }
-
+    console.log("style", style)
     if (shadowRootRef.current) {
       const shadowContent = document.createElement('div');
+
+      const styleTag = document.createElement('style');
+      //@ts-ignore
+      styleTag.innerHTML = style;
+      shadowRootRef.current.appendChild(styleTag);            
+
       shadowRootRef.current.appendChild(shadowContent);
 
       const reactRoot = ReactDOM.createRoot(shadowContent);
@@ -43,7 +67,7 @@ const CSSPlay = ({a}: {
     a:number}) => {
 	console.log("a", a)
   return (<ShadowDomWrapper>
-      <div style={{height:500, width:800, border:"1px solid red"}} className={"ag-theme-alpine-dark"}>
+      <div style={{height:500, width:800}} className={"ag-theme-alpine-dark"}>
 	  <span className={"ag-sort-indicator-container"} style={{color:"green", height:50, width:50, border:"3px solid orange" }}  data-ref="eSortIndicator">
           <span data-ref="eSortOrder" className={"ag-sort-indicator-icon ag-sort-order ag-hidden"} aria-hidden="true">1</span>
           <span data-ref="eSortAsc" className={"ag-sort-indicator-icon ag-sort-ascending-icon"} aria-hidden="true">
