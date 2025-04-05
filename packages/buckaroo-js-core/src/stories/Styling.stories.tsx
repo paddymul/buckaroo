@@ -1,66 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import  style from '../../dist/style.css?raw';
-import { useEffect, useRef } from "react";
-import React from "react";
-import ReactDOM from 'react-dom/client';
-//import '../style/full.css';
-//import _ from "lodash";
+import { ShadowDomWrapper } from "./StoryUtils";
 
-
-//import style from './tmp/mockComponent.css'; 
-/*
-constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        const { shadowRoot } = this;
-        container = document.createElement('div');
-
-        styleTag = document.createElement('style');
-        styleTag.innerHTML = style;
-        shadowRoot.appendChild(styleTag);            
-
-        shadowRoot.appendChild(container);
-
-import React, { useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom/client';
-*/
-interface ShadowDomWrapperProps {
-  children: React.ReactNode;
-}
-
-const ShadowDomWrapper: React.FC<ShadowDomWrapperProps> = ({ children }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const shadowRootRef = useRef<ShadowRoot | null>(null);
-
-  useEffect(() => {
-    if (containerRef.current && !shadowRootRef.current) {
-      // Attach shadow root
-      shadowRootRef.current = containerRef.current.attachShadow({ mode: 'open' });
-    }
-    console.log("style", style)
-    if (shadowRootRef.current) {
-      const shadowContent = document.createElement('div');
-
-      const styleTag = document.createElement('style');
-      //@ts-ignore
-      styleTag.innerHTML = style;
-      shadowRootRef.current.appendChild(styleTag);            
-
-      shadowRootRef.current.appendChild(shadowContent);
-
-      const reactRoot = ReactDOM.createRoot(shadowContent);
-      reactRoot.render(<React.StrictMode>{children}</React.StrictMode>);
-
-      // Cleanup
-      return () => {
-        reactRoot.unmount();
-        shadowRootRef.current?.removeChild(shadowContent);
-      };
-    }
-  }, [children]);
-
-  return <div ref={containerRef}></div>;
-};
 
 
 const CSSPlay = ({a}: {
@@ -81,12 +21,6 @@ const CSSPlay = ({a}: {
      </ShadowDomWrapper>);
 }
 
-/*
-          <span data-ref="eSortDesc" class="ag-sort-indicator-icon ag-sort-descending-icon ag-hidden" aria-hidden="true"><span class="ag-icon ag-icon-desc" unselectable="on" role="presentation"></span></span>
-          <span data-ref="eSortMixed" class="ag-sort-indicator-icon ag-sort-mixed-icon ag-hidden" aria-hidden="true"><span class="ag-icon ag-icon-none" unselectable="on" role="presentation"></span></span>
-          <span data-ref="eSortNone" class="ag-sort-indicator-icon ag-sort-none-icon ag-hidden" aria-hidden="true"><span class="ag-icon ag-icon-none" unselectable="on" role="presentation"></span></span>
-
-  */
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
