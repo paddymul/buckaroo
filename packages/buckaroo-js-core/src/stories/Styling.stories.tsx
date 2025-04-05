@@ -3,22 +3,58 @@ import type { Meta, StoryObj } from "@storybook/react";
 import '../style/full.css';
 //import _ from "lodash";
 
+import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
+
+interface ShadowDomWrapperProps {
+  children: React.ReactNode;
+}
+
+const ShadowDomWrapper: React.FC<ShadowDomWrapperProps> = ({ children }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const shadowRootRef = useRef<ShadowRoot | null>(null);
+
+  useEffect(() => {
+    if (containerRef.current && !shadowRootRef.current) {
+      // Attach shadow root
+      shadowRootRef.current = containerRef.current.attachShadow({ mode: 'open' });
+    }
+
+    if (shadowRootRef.current) {
+      const shadowContent = document.createElement('div');
+      shadowRootRef.current.appendChild(shadowContent);
+
+      const reactRoot = ReactDOM.createRoot(shadowContent);
+      reactRoot.render(<React.StrictMode>{children}</React.StrictMode>);
+
+      // Cleanup
+      return () => {
+        reactRoot.unmount();
+        shadowRootRef.current?.removeChild(shadowContent);
+      };
+    }
+  }, [children]);
+
+  return <div ref={containerRef}></div>;
+};
+
+
 const CSSPlay = ({a}: {
     a:number}) => {
 	console.log("a", a)
-  return (
+  return (<ShadowDomWrapper>
       <div style={{height:500, width:800, border:"1px solid red"}} className={"ag-theme-alpine-dark"}>
-	  <span>\f103</span>
-	  <span class="ag-sort-indicator-container" style={{color:"green", height:50, width:50, border:"3px solid orange" }}  data-ref="eSortIndicator">
-              <span data-ref="eSortOrder" class="ag-sort-indicator-icon ag-sort-order ag-hidden" aria-hidden="true">1</span>
-              <span data-ref="eSortAsc" class="ag-sort-indicator-icon ag-sort-ascending-icon" aria-hidden="true">
-          <span class="ag-icon ag-icon-asc" style={{color:"black"}} unselectable="on" role="presentation">
+	  <span className={"ag-sort-indicator-container"} style={{color:"green", height:50, width:50, border:"3px solid orange" }}  data-ref="eSortIndicator">
+          <span data-ref="eSortOrder" className={"ag-sort-indicator-icon ag-sort-order ag-hidden"} aria-hidden="true">1</span>
+          <span data-ref="eSortAsc" className={"ag-sort-indicator-icon ag-sort-ascending-icon"} aria-hidden="true">
+          <span className={"ag-icon ag-icon-asc"} style={{color:"black"}} unselectable="on" role="presentation">
 	   </span></span>
 
 	  </span>
-	  <span class="ag-icon ag-icon-asc" unselectable="on" role="presentation">
+	  <span className={"ag-icon ag-icon-asc"} unselectable="on" role="presentation">
 	  </span>
-     </div>);
+     </div>
+     </ShadowDomWrapper>);
 }
 
 /*
