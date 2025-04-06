@@ -1,5 +1,7 @@
 // Copyright (c) Paddy Mullen
 // Distributed under the terms of the Modified BSD License.
+import './style/dcf-npm.css'
+
 
 import { ColumnsEditor } from "./components/ColumnsEditor";
 import { DFViewer } from "./components/DFViewerParts/DFViewer";
@@ -20,9 +22,6 @@ import { OperationViewer } from "./components/Operations";
 import * as CommandUtils from "./components/CommandUtils";
 import * as utils from "./components/utils";
 import { StatusBar } from "./components/StatusBar";
-import './style/dcf-npm.css'
-import "@ag-grid-community/styles/ag-grid.css";
-import "@ag-grid-community/styles/ag-theme-alpine.css";
 
 
 import * as widgetUtils from "./widgetUtils";
