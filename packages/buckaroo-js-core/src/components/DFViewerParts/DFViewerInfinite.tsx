@@ -18,7 +18,6 @@ import {
     IDatasource,
     ModuleRegistry,
     SortChangedEvent,
-    //  ViewportChangedEvent,
 } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import {
@@ -29,7 +28,6 @@ import {
     SetColumFunc,
 } from "./DFViewer";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
-//import { ag-theme-alpine-auto-dark  } from '@ag-grid-community/theming';
 import { themeAlpine} from '@ag-grid-community/theming';
 import { colorSchemeDark } from '@ag-grid-community/theming';
 
@@ -46,8 +44,10 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
     rowVerticalPaddingScale: 0.5,
     wrapperBorder: false,
     fontSize: 12,
-
+    dataFontSize: "12px",
+    headerFontSize: 14,
     iconSize: 10,
+    backgroundColor: "#181D1F",
     oddRowBackgroundColor: '#222628',
     headerVerticalPaddingScale: 0.6,
 //    cellHorizontalPadding: 3,
