@@ -33,12 +33,34 @@ import {
     SetColumFunc,
 } from "./DFViewer";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
-import { themeAlpine } from '@ag-grid-community/theming';
-
-
+//import { ag-theme-alpine-auto-dark  } from '@ag-grid-community/theming';
+import { themeAlpine} from '@ag-grid-community/theming';
+import { colorSchemeDark } from '@ag-grid-community/theming';
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
+
+
+const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
+//const myTheme = themeAlpine.withParams({
+    spacing:5,
+    browserColorScheme: "dark",
+    cellHorizontalPaddingScale: 0.3,
+    columnBorder: true,
+    rowBorder: false,
+    rowVerticalPaddingScale: 0.5,
+    wrapperBorder: false,
+    fontSize: 12,
+
+    iconSize: 10,
+    oddRowBackgroundColor: '#222628',
+    headerVerticalPaddingScale: 0.6,
+//    cellHorizontalPadding: 3,
+
+})
+
+//const myTheme = themeAlpine;
+console.log("themeAlpine", themeAlpine)
 
 export interface DatasourceWrapper {
     datasource: IDatasource;
@@ -145,7 +167,7 @@ export function DFViewerInfinite({
                 <pre>{error_info ? error_info : ""}</pre>
                 <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
-	                theme={themeAlpine}
+	    theme={myTheme}
                         loadThemeGoogleFonts
                         gridOptions={dsGridOptions}
                         datasource={data_wrapper.datasource}
