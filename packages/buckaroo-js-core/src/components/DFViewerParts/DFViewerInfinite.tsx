@@ -1,7 +1,4 @@
 import React, {
-    //  useRef,
-    CSSProperties,
-    useState,
     useCallback,
     useMemo,
 } from "react";
@@ -19,7 +16,6 @@ import {
     GridApi,
     GridOptions,
     IDatasource,
-    IGetRowsParams,
     ModuleRegistry,
     SortChangedEvent,
     //  ViewportChangedEvent,
@@ -42,7 +38,6 @@ ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
 
 const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
-//const myTheme = themeAlpine.withParams({
     spacing:5,
     browserColorScheme: "dark",
     cellHorizontalPaddingScale: 0.3,
@@ -59,8 +54,6 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
 
 })
 
-//const myTheme = themeAlpine;
-console.log("themeAlpine", themeAlpine)
 
 export interface DatasourceWrapper {
     datasource: IDatasource;
@@ -238,46 +231,4 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
         infiniteInitialRowCount: maxRowsWithoutScrolling + 50
     };
     return dsGridOptions;
-};
-
-export const StaticWrapDFViewerInfinite = ({
-    df_data,
-    df_viewer_config,
-    summary_stats_data,
-}: {
-    df_data: DFData;
-    df_viewer_config: DFViewerConfig;
-    summary_stats_data?: DFData;
-    style?: CSSProperties;
-}) => {
-    // used for demos to exercise DFViewerInfinite
-
-    const data_wrapper: DatasourceWrapper = {
-        length: df_data.length,
-
-        data_type: "DataSource",
-        datasource: {
-            getRows: (params: IGetRowsParams) => {
-                console.log("StaticWrapDFViewerInfinite", params);
-                params.successCallback(
-                    df_data.slice(params.startRow, params.endRow),
-                    df_data.length,
-                );
-            },
-        },
-    };
-
-    const [activeCol, setActiveCol] = useState("stoptime");
-
-    return (
-        <div style={{ height: 500 }}>
-            <DFViewerInfinite
-                data_wrapper={data_wrapper}
-                df_viewer_config={df_viewer_config}
-                summary_stats_data={summary_stats_data}
-                activeCol={activeCol}
-                setActiveCol={setActiveCol}
-            />
-        </div>
-    );
 };

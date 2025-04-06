@@ -7,7 +7,6 @@ import { ColumnsEditor } from "./components/ColumnsEditor";
 import { DFViewer } from "./components/DFViewerParts/DFViewer";
 import {
     DFViewerInfinite,
-    StaticWrapDFViewerInfinite,
 } from "./components/DFViewerParts/DFViewerInfinite";
 
 import { WidgetDCFCell } from "./components/DCFCell";
@@ -35,7 +34,6 @@ export default {
     WidgetDCFCell,
     DFViewer,
     DFViewerInfinite,
-    StaticWrapDFViewerInfinite,
     StatusBar,
     HistogramCell,
     CommandUtils,
