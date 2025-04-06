@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DatasourceWrapper, DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
-import { SetColumFunc } from "../components/DFViewerParts/DFViewer";
+import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
 
 import { IDatasource, IGetRowsParams } from "@ag-grid-community/core";
 import _ from "lodash";

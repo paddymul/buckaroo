@@ -4,7 +4,7 @@ import './style/dcf-npm.css'
 
 
 import { ColumnsEditor } from "./components/ColumnsEditor";
-import { DFViewer } from "./components/DFViewerParts/DFViewer";
+import { DFViewer } from "./components/DFViewerParts/DFViewerInfinite";
 import {
     DFViewerInfinite,
 } from "./components/DFViewerParts/DFViewerInfinite";

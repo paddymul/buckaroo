@@ -4,7 +4,7 @@ import { OperationResult } from "./DependentTabs";
 import { ColumnsEditor } from "./ColumnsEditor";
 
 import { DFData } from "./DFViewerParts/DFWhole";
-import { DFViewer } from "./DFViewerParts/DFViewer";
+import { DFViewer } from "./DFViewerParts/DFViewerInfinite";
 import { StatusBar } from "./StatusBar";
 import { BuckarooState } from "./WidgetTypes";
 import { BuckarooOptions } from "./WidgetTypes";

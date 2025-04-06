@@ -25,8 +25,8 @@ import {
     getGridOptions,
     getHeightStyle,
     HeightStyleI,
-    SetColumFunc,
-} from "./DFViewer";
+    SetColumFunc
+} from "./gridUtils";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
 import { themeAlpine} from '@ag-grid-community/theming';
 import { colorSchemeDark } from '@ag-grid-community/theming';
@@ -231,4 +231,26 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
         infiniteInitialRowCount: maxRowsWithoutScrolling + 50
     };
     return dsGridOptions;
-};
+};export function DFViewer({
+    df_data, df_viewer_config, summary_stats_data, activeCol, setActiveCol,
+}: {
+    df_data: DFData;
+    df_viewer_config: DFViewerConfig;
+    summary_stats_data?: DFData;
+    activeCol?: string;
+    setActiveCol?: SetColumFunc;
+}) {
+    return (
+        <DFViewerInfinite
+            data_wrapper={{
+                data_type: "Raw",
+                data: df_data,
+                length: df_data.length
+            }}
+            df_viewer_config={df_viewer_config}
+            summary_stats_data={summary_stats_data}
+            activeCol={activeCol}
+            setActiveCol={setActiveCol} />
+    );
+}
+
