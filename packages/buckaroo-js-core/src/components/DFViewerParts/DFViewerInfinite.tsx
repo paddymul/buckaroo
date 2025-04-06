@@ -33,6 +33,7 @@ import {
     SetColumFunc,
 } from "./DFViewer";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
+import { themeAlpine } from '@ag-grid-community/theming';
 
 
 
@@ -143,7 +144,9 @@ export function DFViewerInfinite({
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
                 <pre>{error_info ? error_info : ""}</pre>
                 <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
-                    <AgGridReact
+                <AgGridReact
+	                theme={themeAlpine}
+                        loadThemeGoogleFonts
                         gridOptions={dsGridOptions}
                         datasource={data_wrapper.datasource}
                         pinnedTopRowData={topRowData}
