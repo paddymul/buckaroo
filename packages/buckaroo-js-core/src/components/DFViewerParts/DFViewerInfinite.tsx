@@ -33,7 +33,10 @@ import {
     SetColumFunc,
 } from "./DFViewer";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
-//import '../../../dist/style.css';
+
+import "@ag-grid-community/styles/ag-grid.css";
+import "@ag-grid-community/styles/ag-theme-alpine.css";
+
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
