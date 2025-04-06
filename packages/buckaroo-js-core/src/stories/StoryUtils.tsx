@@ -1,4 +1,3 @@
-import  style from '../../dist/style.css?raw';
 import { useEffect, useRef } from "react";
 import React from "react";
 import ReactDOM from 'react-dom/client';
@@ -18,7 +17,7 @@ export const ShadowDomWrapper: React.FC<ShadowDomWrapperProps> = ({ children }) 
       // Attach shadow root
       shadowRootRef.current = containerRef.current.attachShadow({ mode: 'open' });
     }
-    console.log("style", style)
+    //console.log("distStyle", distStyle)
     if (shadowRootRef.current) {
       const shadowContent = document.createElement('div');
 
