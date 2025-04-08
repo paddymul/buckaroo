@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import React from "react";
 import ReactDOM from 'react-dom/client';
 
-import distStyle from '../../dist/style.css?raw';
+import distStyle from '../style/dcf-npm.css?raw';
 
 interface ShadowDomWrapperProps {
   children: React.ReactNode;
