@@ -31,6 +31,11 @@ def _():
 
 
 @app.cell
+def _():
+    return
+
+
+@app.cell
 def _(mo):
     mo.md(
         """
@@ -51,39 +56,7 @@ def heuristic():
 
 
 @app.cell
-def _(dirty_df, pd):
-    #df.apply(pd.to_numeric, errors='coerce')
-
-    _a = dirty_df['probably_int'].apply(pd.to_numeric, errors='coerce')
-    (~ _a.isnull())
-    _df2 = dirty_df.copy()
-    _df2['int_parse'] = (~ _a.isnull())
-    _df2
-    return
-
-
-@app.cell
-def _(dirty_df):
-    #numbers = re.findall(r'\d+', input_string)
-    _a = dirty_df['probably_int']
-    help(_a.str.replace) #(r'\d+', input_string))
-    return
-
-
-@app.cell
-def _(digits_and_period, dirty_df, pd, re):
-    _a = dirty_df['probably_int']
-    _digits_and_period = re.compile(r'[^\d\.]')
-    b = _a.str.replace(_digits_and_period, "", regex=True)
-
-    b = dirty_df['probably_int'].astype(str).str.replace(digits_and_period, "", regex=True)
-    parsable = (dirty_df['probably_int'].astype(str).str.isdigit()) | (b != "")
-    pd.DataFrame({'probably_int': dirty_df['probably_int'], 'stripped': b, 'stripped_parsable': b!= "", "parsable":parsable })
-    return b, parsable
-
-
-@app.cell
-def _(dirty_df, heuristic, pd, re):
+def _(heuristic, pd, re):
     # Here is what I would like configuring a heuristic system to look like
     digits_and_period = re.compile(r'[^\d\.]')
 
@@ -99,9 +72,33 @@ def _(dirty_df, heuristic, pd, re):
         parsable = (int_parsable | (stripped != ""))
         return {'strip_int_parse_fraction': parsable.sum() / len(ser)}
 
-    measure_int_parse(dirty_df['probably_int']), measure_strip_int_parse(dirty_df['probably_int'])
+    TRUE_SYNONYMS = ["true", "yes", "on", "1"]
+    FALSE_SYNONYMS = ["false", "no", "off", "0"]
+    BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
 
-    return digits_and_period, measure_int_parse, measure_strip_int_parse
+    @heuristic
+    def str_bool(ser):
+        #dirty_df['probably_bool'].str.lower().isin(BOOL_SYNONYMS)
+        matches = ser.str.lower().isin(BOOL_SYNONYMS)
+        return {'str_bool_fraction': matches.sum() / len(ser)}
+    
+    measures = [measure_int_parse, measure_strip_int_parse, str_bool]
+    return (
+        BOOL_SYNONYMS,
+        FALSE_SYNONYMS,
+        TRUE_SYNONYMS,
+        digits_and_period,
+        measure_int_parse,
+        measure_strip_int_parse,
+        measures,
+        str_bool,
+    )
+
+
+@app.cell
+def _(dirty_df, measures, pd):
+    pd.DataFrame({k: {m.__name__: list(m(dirty_df[k]).values())[0]  for m in measures}  for k in dirty_df.columns})
+    return
 
 
 @app.cell
