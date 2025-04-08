@@ -23,16 +23,11 @@ def _():
     import pandas as pd
     import re
     dirty_df = pd.DataFrame({'probably_int': [10, 'a', 20, 30, "3,000"],
-                             'mostly_us_dates': ["07/17/1982", "17/7/1983", "12/03/1991", "12/28/1996", "4/15/2024"],
+                             'mostly_us_dates': ["07/17/1982", "17/7/1983", "12/14/1991", "12/28/1996", "4/15/2024"],
                              'probably_bool': [True, "True", "Yes", "No", "False"]
                             })
     dirty_df
     return dirty_df, mo, pd, re
-
-
-@app.cell
-def _():
-    return
 
 
 @app.cell
@@ -81,8 +76,10 @@ def _(heuristic, pd, re):
         #dirty_df['probably_bool'].str.lower().isin(BOOL_SYNONYMS)
         matches = ser.str.lower().isin(BOOL_SYNONYMS)
         return {'str_bool_fraction': matches.sum() / len(ser)}
+
+
     
-    measures = [measure_int_parse, measure_strip_int_parse, str_bool]
+    measures = [measure_int_parse, measure_strip_int_parse, str_bool] 
     return (
         BOOL_SYNONYMS,
         FALSE_SYNONYMS,
@@ -102,7 +99,50 @@ def _(dirty_df, measures, pd):
 
 
 @app.cell
+def _(mo):
+    mo.md(
+        """
+        Ok, this is looking pretty good.  We have 3 heuristics, applied to 3 columns (but they are only made for two of the columns),  and we can see how frequently they get the right answer.
+
+        Let's add more measures
+        """
+    )
+    return
+
+
+@app.cell
+def _(dirty_df, heuristic, measures, pd):
+    @heuristic
+    def us_dates(ser):
+        parsed_dates = pd.to_datetime(ser, errors='coerce', format="%m/%d/%Y")
+        return {'us_date_fraction': (~ parsed_dates.isna()).sum() / len(ser)}
+
+    @heuristic
+    def euro_dates(ser):
+        parsed_dates = pd.to_datetime(ser, errors='coerce', format="%d/%m/%Y")
+        return {'us_date_fraction': (~ parsed_dates.isna()).sum() / len(ser)}
+    more_measures = measures + [us_dates, euro_dates]
+    pd.DataFrame({k: {m.__name__: list(m(dirty_df[k]).values())[0]  for m in more_measures}  for k in dirty_df.columns})
+    return euro_dates, more_measures, us_dates
+
+
+@app.cell
+def _(mo):
+    mo.md("""Things get interesting here.  Every row from mostly_us_dates parses as a number, even though the best date parsing only gets 0.8.  But we know that these are dates from looking at the data.  How should we resolve this?""")
+    return
+
+
+@app.cell
 def _():
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    #Also, our nested dictionary comprehension to dataframe is cute, but watch what happens when we have an error measure
+    #error_measures = measures + [lambda x: 1/0] + [us_dates]
+    #pd.DataFrame({k: {m.__name__: list(m(dirty_df[k]).values())[0]  for m in error_measures}  for k in dirty_df.columns})
+    # what column threw the error. what happened to the rest of the code?
     return
 
 
