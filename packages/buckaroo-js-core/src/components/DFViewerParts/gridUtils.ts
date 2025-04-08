@@ -30,6 +30,7 @@ import { getFormatterFromArgs, getCellRenderer, objFormatter, getFormatter } fro
 import { CSSProperties, Dispatch, SetStateAction } from "react";
 import { CommandConfigT } from "../CommandUtils";
 import { KeyAwareSmartRowCache, PayloadArgs } from "./SmartRowCache";
+import { colorSchemeDark, themeAlpine, Theme } from "@ag-grid-community/theming";
 
 
 // for now colDef stuff with less than 3 implementantions should stay in this file
@@ -387,3 +388,24 @@ export const getAutoSize = (
         type: "fitCellContents",
     };
 };
+
+
+
+export const myTheme: Theme = themeAlpine.withPart(colorSchemeDark).withParams({
+    spacing:5,
+    browserColorScheme: "dark",
+    cellHorizontalPaddingScale: 0.3,
+    columnBorder: true,
+    rowBorder: false,
+    rowVerticalPaddingScale: 0.5,
+    wrapperBorder: false,
+    fontSize: 12,
+    dataFontSize: "12px",
+    headerFontSize: 14,
+    iconSize: 10,
+    backgroundColor: "#181D1F",
+    oddRowBackgroundColor: '#222628',
+    headerVerticalPaddingScale: 0.6,
+//    cellHorizontalPadding: 3,
+
+})

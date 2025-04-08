@@ -9,6 +9,7 @@ import { BuckarooOptions } from "./WidgetTypes";
 import { BuckarooState, BKeys } from "./WidgetTypes";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import { CustomCellEditorProps } from '@ag-grid-community/react';
+import { myTheme } from "./DFViewerParts/gridUtils";
 
 export type setColumFunc = (newCol: string) => void;
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
@@ -266,6 +267,8 @@ export function StatusBar({
             <div style={{ height: heightOverride||50 }} className="theme-hanger ag-theme-alpine-dark">
                 <AgGridReact
                     ref={gridRef}
+                    theme={myTheme}
+                    loadThemeGoogleFonts
                     onCellEditingStopped={onGridReady}
                     onCellClicked={updateDict}
                     onGridReady={onGridReady}

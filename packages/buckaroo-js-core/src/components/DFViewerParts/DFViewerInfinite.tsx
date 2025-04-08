@@ -160,7 +160,7 @@ export function DFViewerInfinite({
                 <pre>{error_info ? error_info : ""}</pre>
                 <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
-	    theme={myTheme}
+	                    theme={myTheme}
                         loadThemeGoogleFonts
                         gridOptions={dsGridOptions}
                         datasource={data_wrapper.datasource}
@@ -195,10 +195,12 @@ const RowDataViewer = ({
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
             <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
+         	        theme={myTheme}
+                    loadThemeGoogleFonts
                     gridOptions={rdGridOptions}
                     pinnedTopRowData={topRowData}
-                    columnDefs={_.cloneDeep(rdGridOptions.columnDefs)}
-                ></AgGridReact>
+                    columnDefs={_.cloneDeep(rdGridOptions.columnDefs)}>
+                </AgGridReact>
             </div>
         </div>
     );
