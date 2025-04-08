@@ -175,7 +175,7 @@ div.dependent-tabs ul.tabs li.active {
     border-bottom-right-radius: 0;
 }
 
-.buckaroo-infinite-widget .df-viewer  .ag-root-wrapper {
+.buckaroo-widget .df-viewer  .ag-root-wrapper {
     /* We want the status bar and the main df-viewer to look like a
    continuous UI when used together.
 
