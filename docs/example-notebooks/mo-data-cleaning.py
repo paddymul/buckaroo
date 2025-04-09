@@ -210,7 +210,6 @@ def _(mo):
         """
         Side note.  These functions are tricky to write.  So many edge cases.
         I see why I and most people punt on writing this stuff.  It's tricky and shouldn't have to be repeated.  The `t_str_bool` was one of the ahrdest to write.  Look at the commented out mini test case
-
         """
     )
     return
@@ -223,7 +222,6 @@ def _(mo):
         Now to write the syntax for the heuristic class.
 
         The idea is that when each matching frac is the heighest percentage, apply that transform function to that column
-
         """
     )
     return
@@ -272,7 +270,6 @@ def _(mo):
         I can look at a dataset and see "start_station_latitude", and "start_station_longitude" and know that those are lat/long, and should be treated as a single coordinate.  I'm at a loss to think of how write a `frac` to detect this.
 
         Treating lat/long as a single tuple allows much easier downstream work.  What's the geographic center,  what's the geographic center over time
-
         """
     )
     return
@@ -294,9 +291,73 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
+        ## Buckaroo specific concerns
+        Up to this point, I have described a general system. Below is how Buckaroo approaches the problem. I'm happy to collaborate with anyone on all of it, but the general autocleaning discussion is much more broadly applicable.
+        """
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
         ## How Autocleaning fits with a low code UI
 
+        These are nice examples of a toy auto cleaning system. But they will be clunky to use. I don't think any single auto-cleaning system can correctly clean all datasets. It is also clear that auto-cleaning needs fine-grained overrides in a UI, or code export. The Buckaroo autocleaning system/low-code UI is capable of offering both.
 
+        ### Commands in Buckaroo
+
+        Commands are equivalent to `transform`s above.  They are built by writing classes that implement two functions.  `transform` takes a dataframe and returns a modified dataframe (ignore the other args for now). `transform_to_py` takes the same arguments and returns a string with the equivalent python code.
+
+        ```python
+        class FillNA(Command):
+            command_default = [s('fillna'), s('df'), "col", 8]
+            command_pattern = [[3, 'fillVal', 'type', 'integer']]
+
+            @staticmethod 
+            def transform(df, col, val):
+                df.fillna({col:val}, inplace=True)
+                return df
+
+            @staticmethod 
+            def transform_to_py(df, col, val):
+                return "    df.fillna({'%s':%r}, inplace=True)" % (col, val)
+
+        ```
+
+        ### A quick note about JLisp
+        Buckaroo represents lowcode programs as [JLisp](https://github.com/paddymul/buckaroo/blob/main/buckaroo/jlisp/lispy.py) which is a port of Peter Norvig's Lispy.py, that can interpret JSON Flavored lisp instead of paren lisp.
+        ```lisp
+        (fillna df "col_with_nas" 8)
+        ```
+        becomes
+        ```json
+        [{'symbol': 'fillna'}, {'symbol':'df'}, 'col_with_nas', 8]
+        ```
+
+        I created JLisp because I was going to write some type of interpreter that no one understood.  At least I could build on a solid foundation that there is a good general understanding of.
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ## The lowcode UI in Buckaroo
+
+        ![Lowcode image](public/Lowcode-UI.png)
+        ### Operation Detail editor
+        The lowcode UI in buckaroo is a specialized editor of operations (buckaroo term for JLisp programs).  Since all current commands operate on columns, first a column must be clicked, then an operation can be performed on that column.  Commands can take other arguments (enum, another column name, an int).
+
+        ### Operation timeline editor
+        The order of operations can also be seen. This concept is stolen from [CAD](https://www.youtube.com/watch?v=o5NsPOcXLho&t=202s) [software](https://help.autodesk.com/view/fusion360/ENU/?guid=ASM-USE-TIMELINE).
+        Operations can be clicked on to get a detail view where the arguments can be editted. Operations can also be deleted (and eventually drag and drop reordered)
+
+        ### It's ugly
+        Yep.  This was the first part of buckaroo I built, and I haven't revisited it because this is all an advanced hard to explain concept. The concepts are key at this point.
         """
     )
     return
