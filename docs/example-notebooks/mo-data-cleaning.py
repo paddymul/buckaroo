@@ -4,7 +4,7 @@ __generated_with = "0.12.2"
 app = marimo.App(width="medium")
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
@@ -31,7 +31,7 @@ def _():
     return dirty_df, mo, pd, re
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
@@ -102,7 +102,7 @@ def _(dirty_df, frac_measures, pd):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
@@ -130,7 +130,7 @@ def _(dirty_df, frac, frac_measures, pd):
     return f_euro_dates, f_us_dates, more_fracs
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
@@ -205,7 +205,7 @@ def _(
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
@@ -216,7 +216,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
@@ -243,7 +243,7 @@ def _(regular_int_parse, strip_int_parse, t_str_bool, t_us_dates):
     return heuristic, heuristic2
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -255,14 +255,14 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
         ## Multi Column operations
 
         ### Splitting columns
-        I frequently see cleanings where two values are jammed into a single string column. "2020 - 2024".  A `frac` function and a transform that returns two columns is needed here.  This will also mean the transform runtime is more complex than a list comprehension
+        I frequently see cleanings where two values are jammed into a single string column. `"2020 - 2024"`.  A `frac` function and a transform that returns two columns is needed here.  This will also mean the transform runtime is more complex than a list comprehension
 
         ### Combining columns
 
@@ -274,7 +274,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -286,7 +286,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -341,7 +341,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -362,7 +362,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
