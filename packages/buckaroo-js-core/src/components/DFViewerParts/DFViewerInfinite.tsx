@@ -160,7 +160,7 @@ export function DFViewerInfinite({
                 <pre>{error_info ? error_info : ""}</pre>
                 <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
-	                    theme={myTheme}
+	                theme={myTheme}
                         loadThemeGoogleFonts
                         gridOptions={dsGridOptions}
                         datasource={data_wrapper.datasource}
