@@ -77,21 +77,21 @@ def _(frac, pd, re):
     BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
 
     @frac
-    def str_bool(ser):
+    def f_str_bool(ser):
         #dirty_df['probably_bool'].str.lower().isin(BOOL_SYNONYMS)
         matches = ser.str.lower().isin(BOOL_SYNONYMS)
         return {'str_bool_fraction': matches.sum() / len(ser)}
 
-    frac_measures = [measure_int_parse, measure_strip_int_parse, str_bool]
+    frac_measures = [measure_int_parse, measure_strip_int_parse, f_str_bool]
     return (
         BOOL_SYNONYMS,
         FALSE_SYNONYMS,
         TRUE_SYNONYMS,
         digits_and_period,
+        f_str_bool,
         frac_measures,
         measure_int_parse,
         measure_strip_int_parse,
-        str_bool,
     )
 
 
@@ -116,17 +116,17 @@ def _(mo):
 @app.cell
 def _(dirty_df, frac, frac_measures, pd):
     @frac
-    def us_dates(ser):
+    def f_us_dates(ser):
         parsed_dates = pd.to_datetime(ser, errors='coerce', format="%m/%d/%Y")
         return {'us_date_fraction': (~ parsed_dates.isna()).sum() / len(ser)}
 
     @frac
-    def euro_dates(ser):
+    def f_euro_dates(ser):
         parsed_dates = pd.to_datetime(ser, errors='coerce', format="%d/%m/%Y")
         return {'us_date_fraction': (~ parsed_dates.isna()).sum() / len(ser)}
-    more_fracs = frac_measures + [us_dates, euro_dates]
+    more_fracs = frac_measures + [f_us_dates, f_euro_dates]
     pd.DataFrame({k: {m.__name__: list(m(dirty_df[k]).values())[0]  for m in more_fracs}  for k in dirty_df.columns})
-    return euro_dates, more_fracs, us_dates
+    return f_euro_dates, f_us_dates, more_fracs
 
 
 @app.cell
@@ -153,25 +153,17 @@ def transform():
 
 
 @app.cell
-def _(digits_and_period, pd):
-    _ser = pd.Series([10, 'a', 20, 30, "3,000"])
-    _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
-    _strip_parse = _ser.str.replace(digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce')
-    _combined = _reg_parse.fillna(_strip_parse)
-    pd.DataFrame({'_ser':_ser, 'combined': _combined, '_reg_parse':_reg_parse, '_strip_parse':_strip_parse})
-    return
-
-
-@app.cell
 def _(
     FALSE_SYNONYMS,
     TRUE_SYNONYMS,
     digits_and_period,
+    f_euro_dates,
+    f_str_bool,
+    f_us_dates,
     measure_int_parse,
     measure_strip_int_parse,
     pd,
     reg_parse,
-    str_bool,
     transform,
 ):
     @transform(measure_int_parse)
@@ -185,7 +177,7 @@ def _(
         _combined = reg_parse.fillna(_strip_parse)
         return _combined
 
-    @transform(str_bool)
+    @transform(f_str_bool)
     def t_str_bool(_ser):
         _int_sanitize = _ser.replace(1, True).replace(0, False) 
         _real_bools = _int_sanitize.isin([True, False])
@@ -194,8 +186,22 @@ def _(
         _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
         _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
         return _combined
+
+    @transform(f_us_dates)
+    def t_us_dates(ser):
+        return pd.to_datetime(ser, errors='coerce', format="%m/%d/%Y")
+
+    @transform(f_euro_dates)
+    def t_euro_dates(ser):
+        return pd.to_datetime(ser, errors='coerce', format="%d/%m/%Y")
     # t_str_bool(pd.Series(["asdf", True, "True", "1", 0, None, 1]))
-    return regular_int_parse, strip_int_parse, t_str_bool
+    return (
+        regular_int_parse,
+        strip_int_parse,
+        t_euro_dates,
+        t_str_bool,
+        t_us_dates,
+    )
 
 
 @app.cell
@@ -218,6 +224,34 @@ def _(mo):
 
         The idea is that when each matching frac is the heighest percentage, apply that transform function to that column
 
+        """
+    )
+    return
+
+
+app._unparsable_cell(
+    r"""
+    # base case heuristic is if this measure is the most popular of all heuristics, and it's frac is above value, then use this transform
+    heuristic = {t_str_bool:.7, regular_int_parse:.9, strip_int_parse:.7}
+    # but to make dates work we have to add other condtions and syntax
+    # because in our example mostly_us_dates always parses as strip_int_parse at frac=1
+    heuristic2 = {t_str_bool:('greatest', 'and' ('gt', .7)), 
+                  regular_int_parse:('greatest', 'and' ('gt', .9)),
+                  strip_int_parse:('greatest', 'and' ('gt' .7)), 
+                  t_us_dates:('only', ('gt', .6))}
+    # so we introduce the 'only' operator.  meaning, use this transform if and only if the frac , then the other conditional
+
+    """,
+    name="_"
+)
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ## Multiple heuristics.
+
         Writing `transforms` and `fracs` is tricky and will be done infrquently.  Writing heuristic sets will be done regularly, and lets you toggle through different views
         """
     )
@@ -225,9 +259,47 @@ def _(mo):
 
 
 @app.cell
-def _(regular_int_parse, strip_int_parse, t_str_bool):
-    heuristic = {t_str_bool:.7, regular_int_parse:.9, strip_int_parse:.7}
-    return (heuristic,)
+def _(mo):
+    mo.md(
+        r"""
+        ## Multi Column operations
+
+        ### Splitting columns
+        I frequently see cleanings where two values are jammed into a single string column. "2020 - 2024".  A `frac` function and a transform that returns two columns is needed here.  This will also mean the transform runtime is more complex than a list comprehension
+
+        ### Combining columns
+
+        I can look at a dataset and see "start_station_latitude", and "start_station_longitude" and know that those are lat/long, and should be treated as a single coordinate.  I'm at a loss to think of how write a `frac` to detect this.
+
+        Treating lat/long as a single tuple allows much easier downstream work.  What's the geographic center,  what's the geographic center over time
+
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ## Row level transforms
+
+        Dropping duplicate rows is obvious.  Drpping rows with nulls in a colum is obvious.  The `frac` and row level `heuristic` s for these are harder to figure out.
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ## How Autocleaning fits with a low code UI
+
+
+        """
+    )
+    return
 
 
 @app.cell(hide_code=True)
