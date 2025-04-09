@@ -8,9 +8,10 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         """
+        # Heuristic based auto cleaning
         We deal with data cleaning all the time as data scientists.  Most of it is repetitive doing the same thing over and over again
 
-        Buckaroo proposes some frac based cleaning techniques that can be toggled through
+        Buckaroo proposes some heurstic based cleaning techniques that can be toggled through
         """
     )
     return
@@ -227,21 +228,19 @@ def _(mo):
     return
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(regular_int_parse, strip_int_parse, t_str_bool, t_us_dates):
     # base case heuristic is if this measure is the most popular of all heuristics, and it's frac is above value, then use this transform
     heuristic = {t_str_bool:.7, regular_int_parse:.9, strip_int_parse:.7}
     # but to make dates work we have to add other condtions and syntax
     # because in our example mostly_us_dates always parses as strip_int_parse at frac=1
-    heuristic2 = {t_str_bool:('greatest', 'and' ('gt', .7)), 
-                  regular_int_parse:('greatest', 'and' ('gt', .9)),
-                  strip_int_parse:('greatest', 'and' ('gt' .7)), 
+    heuristic2 = {t_str_bool:('greatest', 'and', ('gt', .7)), 
+                  regular_int_parse:('greatest', 'and', ('gt', .9)),
+                  strip_int_parse:('greatest', 'and', ('gt', .7)), 
                   t_us_dates:('only', ('gt', .6))}
     # so we introduce the 'only' operator.  meaning, use this transform if and only if the frac , then the other conditional
 
-    """,
-    name="_"
-)
+    return heuristic, heuristic2
 
 
 @app.cell
@@ -357,7 +356,32 @@ def _(mo):
         Operations can be clicked on to get a detail view where the arguments can be editted. Operations can also be deleted (and eventually drag and drop reordered)
 
         ### It's ugly
-        Yep.  This was the first part of buckaroo I built, and I haven't revisited it because this is all an advanced hard to explain concept. The concepts are key at this point.
+        Yep.  This was the first part of buckaroo I built, and I haven't revisited it because this is all an advanced hard to explain concept. The concepts are key at this point. Styling updates coming soon.
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ## The lowcode UI and autocleaning together
+
+        In Buckaroo, autocleaning doesn't directly modify the dataframe, instead it generates `operation`s for the lowcode UI.
+
+        These operations are tagged from autocleaning, so they look like this
+        ```json
+        [{'symbol': 'strip_int_parse', 'meta':'autocleaning'}, {'symbol':'df'}, 'probably_int']
+        ```
+
+        Tagging in this way allows the UI to show which operations come from autocleaning.  Then when the user selects a different autocleaning method, all previous `operations` with `'meta':'autocleaning'` are removed from the operations, and new autocleaning operations are prepended to the user created operations.
+        ### Coming soon
+        If a user wants to retain a particular autocleaning operations, they can click a "promote to permanent" button
+        ## Exporting functioning code is key
+        Buckaroo seeks to have a good UX for cleaning data, but at some point you will want to write code.  I don't expect users to ever edit JLisp by hand, almost never write `frac` or `command`s, rarely write heuristics.  But I do expect them to regularly write python code.  Having that escape hatch is key.
+
+
         """
     )
     return
