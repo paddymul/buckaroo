@@ -3,7 +3,8 @@ from .buckaroo_widget import BuckarooInfiniteWidget
 import pandas as pd
 from datetime import datetime as dtdt
 import os
-
+from functools import cache
+from .marimo_utils import BuckarooDataFrame, marimo_monkeypatch
 
 
 def is_in_ipython():
