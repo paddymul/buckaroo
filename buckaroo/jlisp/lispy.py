@@ -408,11 +408,14 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
     
     
 
-
-    
-    
-    
-    
-    
-    
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and isinstance(sys.argv[1], str):
+        with open(sys.argv[1], 'r') as f:
+            lisp_code = f.read()
+            _, lisp_eval = make_interpreter()
+            result = lisp_eval(lisp_code)
+            print("result", result)
+            if result is not None:
+                print(to_string(result))
     
