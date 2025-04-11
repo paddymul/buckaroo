@@ -4,6 +4,17 @@ __generated_with = "0.12.2"
 app = marimo.App(width="medium")
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+        # Tour of Buckaroo
+        Buckaroo expedites the core task of data work by showing histograms and summary stats with every DataFrame.
+        """
+    )
+    return
+
+
 @app.cell
 def _():
     import marimo as mo
