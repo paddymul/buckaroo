@@ -296,9 +296,18 @@ def _(pd):
         'a': { 'color_map_config': {
           'color_rule': 'color_from_column',
           'col_name': 'a_colors'}}}
-
-    color_config = (_color_df, _color_from_col_config)
-    return (color_config,)
+    _color_from_col_md = """
+    ## color_from_column
+    `color_from_column` is used to explicitly set a background color in another column.  Any valid html color works
+    ```typescript
+    interface ColorFromColumn {
+        color_rule: "color_from_column";
+        val_column: string;
+    }
+    ```
+    """
+    color_from_col_config = (_color_df, _color_from_col_config, _color_from_col_md)
+    return (color_from_col_config,)
 
 
 @app.cell(hide_code=True)
@@ -334,6 +343,7 @@ def _(typed_df):
         'float_col': {'color_map_config': {
             'color_rule': 'color_map',
             'map_name': 'BLUE_TO_YELLOW',
+            'val_column': 'int_col'
         }}}
     _colormap_md = """
     ## color_map_config
@@ -354,6 +364,41 @@ def _(typed_df):
     """
     colormap_config = (typed_df, _colormap_config, _colormap_md)
     return (colormap_config,)
+
+
+@app.cell(hide_code=True)
+def _(DataFrame):
+    _explicit_colormap_df = DataFrame({
+        "flag_column": [0, 1, 2, 3, 4, 5, 6, 7, 4, 3, 3, 2, 1, 0]
+    })
+    _colormap_config = {
+        'flag_column': {'color_map_config': {
+            'color_rule': 'color_map',
+            'map_name': ["green", "blue", "red", "orange", "purple"]
+        }}}
+    _colormap_md = """
+    ## color_map_config
+    In this example we pass in an explicit color map. This is a bit tricky to use, there are some issues with the histogram ranges and how colors are selected. This is very useful for flagging a value from a discrete set of conditions.
+
+    `color_rule:"color_map"` selects a background based on a color_map, and where the cell value fits into that range.
+    `val_column` can be used to color the column based on values in a different column
+
+
+
+
+    ```typescript
+    export type ColorMap = "BLUE_TO_YELLOW" | "DIVERGING_RED_WHITE_BLUE" | string[];
+    interface ColorMapRules {
+        color_rule: "color_map";
+        map_name: ColorMap;
+        //optional, the column to base the ranges on. the proper
+        //histogram_bins must still be sent in for that column
+        val_column?: string;
+    }
+    ```
+    """
+    explicit_colormap_config = (_explicit_colormap_df, _colormap_config, _colormap_md)
+    return (explicit_colormap_config,)
 
 
 @app.cell(hide_code=True)
@@ -385,6 +430,7 @@ def _():
 def _(
     colormap_config,
     error_config,
+    explicit_colormap_config,
     float_config,
     histogram_config,
     img_config,
@@ -396,8 +442,11 @@ def _(
            "histogram_config": histogram_config, "img_config": img_config,
            "link_config": link_config,
            "colormap_config": colormap_config, "error_config": error_config, 
+           "explicit_colormap_config": explicit_colormap_config
            # disabled because of js bug with tooltips
            #"tooltip_config":tooltip_config, 
+           #"color_from_column": color_from_col_config
+
            }
 
     dropdown_dict = mo.ui.dropdown(
