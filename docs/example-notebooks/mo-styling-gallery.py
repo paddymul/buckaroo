@@ -25,21 +25,7 @@ def _():
 
 
 @app.cell
-def _(BuckarooInfiniteWidget, dropdown_dict, mo):
-    import json
-    import re
-    def format_json(obj):
-        """
-          Formats obj to json  string to remove unnecessary whitespace.
-          Returns:
-              The formatted JSON string.
-        """
-        json_string = json.dumps(obj, indent=4)
-        # Remove whitespace before closing curly braces
-        formatted_string =   re.sub(r'\s+}', '}', json_string)
-        #formatted_string = json_string
-        return formatted_string
-
+def _(BuckarooInfiniteWidget, dropdown_dict, format_json, mo):
     mo.vstack(
         [
             dropdown_dict,
@@ -51,7 +37,7 @@ def _(BuckarooInfiniteWidget, dropdown_dict, mo):
             BuckarooInfiniteWidget(dropdown_dict.value[0], column_config_overrides = dropdown_dict.value[1])
         ]
     )
-    return format_json, json, re
+    return
 
 
 @app.cell(hide_code=True)
@@ -281,8 +267,22 @@ def _(pd):
             'color_rule': 'color_not_null',
             'conditional_color': 'red',
             'exist_column': 'err_messages'}}}
+    _error_md = """
+    ## Color_map_config
+    color_map_config is a spearate property from `displayer` and can be combined with displayer
 
-    error_config = (_error_df, _error_config)
+    This example shows `color_not_null`.  A different background color is used when `exist_column` is not null.
+    This is very useful for highlighting errors
+    ```typescript
+    interface ColorWhenNotNullRules {
+        color_rule: "color_not_null";
+        conditional_color: string | "red";
+        exist_column: string;
+    }
+    ```
+
+    """
+    error_config = (_error_df, _error_config, _error_md)
     return (error_config,)
 
 
@@ -312,7 +312,19 @@ def _(np, pd):
     _tooltip_config = {
         'str_col':
             {'tooltip_config': { 'tooltip_type':'simple', 'val_column': 'int_col'}}}
-    tooltip_config = (typed_df, _tooltip_config)
+    _tooltip_md = """
+    ## Tooltip_config
+    Tooltips are configured with the `tooltip_config` property (not a `displayer`)
+    `val_column` is the column the tooltip should be pulled from.  Sometimes it is useful to have val_column be the current column if you want a narrower column but the full value also avaialable on hover.  
+    ```typescript
+    interface SimpleTooltip {
+        tooltip_type: "simple";
+        val_column: string;
+    }
+    ```
+    NB: Currently broken because of JS/ag-grid problems so this isn't currently included.
+    """
+    tooltip_config = (typed_df, _tooltip_config, _tooltip_md)
     return tooltip_config, typed_df
 
 
@@ -323,8 +335,24 @@ def _(typed_df):
             'color_rule': 'color_map',
             'map_name': 'BLUE_TO_YELLOW',
         }}}
+    _colormap_md = """
+    ## color_map_config
+    `color_rule:"color_map"` selects a background based on a color_map, and where the cell value fits into that range.
+    `val_column` can be used to color the column based on values in a different column
 
-    colormap_config = (typed_df, _colormap_config)
+
+    ```typescript
+    export type ColorMap = "BLUE_TO_YELLOW" | "DIVERGING_RED_WHITE_BLUE" | string[];
+    interface ColorMapRules {
+        color_rule: "color_map";
+        map_name: ColorMap;
+        //optional, the column to base the ranges on. the proper
+        //histogram_bins must still be sent in for that column
+        val_column?: string;
+    }
+    ```
+    """
+    colormap_config = (typed_df, _colormap_config, _colormap_md)
     return (colormap_config,)
 
 
@@ -336,16 +364,40 @@ def _():
 
     # this overrides pd.read_csv and pd.read_parquet to return BuckarooDataFrames which overrides displays as BuckarooWidget, not the default marimo table
     marimo_monkeypatch()
-    return DataFrame, marimo_monkeypatch, np
+    import json
+    import re
+    def format_json(obj):
+        """
+          Formats obj to json  string to remove unnecessary whitespace.
+          Returns:
+              The formatted JSON string.
+        """
+        json_string = json.dumps(obj, indent=4)
+        # Remove whitespace before closing curly braces
+        formatted_string =   re.sub(r'\s+}', '}', json_string)
+        #formatted_string = json_string
+        return formatted_string
+
+    return DataFrame, format_json, json, marimo_monkeypatch, np, re
 
 
 @app.cell
-def _(float_config, histogram_config, img_config, link_config, mo, str_config):
+def _(
+    colormap_config,
+    error_config,
+    float_config,
+    histogram_config,
+    img_config,
+    link_config,
+    mo,
+    str_config,
+):
     dfs = {"float_config": float_config, "str_config": str_config,
            "histogram_config": histogram_config, "img_config": img_config,
            "link_config": link_config,
-           #"error_config": error_config, "tooltip_config":tooltip_config,
-           #"colormap_config": colormap_config
+           "colormap_config": colormap_config, "error_config": error_config, 
+           # disabled because of js bug with tooltips
+           #"tooltip_config":tooltip_config, 
            }
 
     dropdown_dict = mo.ui.dropdown(
