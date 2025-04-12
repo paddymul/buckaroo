@@ -54,19 +54,10 @@ def _(BuckarooInfiniteWidget, dropdown_dict, mo):
     return format_json, json, re
 
 
-@app.cell
-def _(dropdown_dict, format_json, mo):
-    conf = dropdown_dict.value[1]
-    #print(json.dumps(conf, indent=4))
-    print(format_json(conf))
-    mo.ui.text_area(format_json(conf), disabled=True,max_length=500)
-    return (conf,)
-
-
 @app.cell(hide_code=True)
 def _(DataFrame):
     _ts_col = ["2020-01-01 01:00Z", "2020-01-01 02:00Z", "2020-02-28 02:00Z", "2020-03-15 02:00Z", None]
-    datetime_df = DataFrame(
+    _datetime_df = DataFrame(
         {'timestamp': _ts_col,
          'timestamp_obj_displayer': _ts_col,
          'timestamp_datetime_default_displayer':_ts_col,
@@ -78,13 +69,30 @@ def _(DataFrame):
         return {'displayer_args': {'displayer': 'datetimeLocaleString',
                                 'locale':locale,
                                 'args':args}}
-    datetime_config = {
+    _datetime_config = {
         'timestamp_obj_displayer':  {'displayer_args': {'displayer': 'obj'}},    
         'timestamp_datetime_default_displayer' : {'displayer_args':  {'displayer': 'datetimeDefault'}},
         'timestamp_datetime_locale_en-US' : _locale_col_conf('en-US'),
         'timestamp_datetime_locale_en-US-Long': _locale_col_conf('en-US', { 'weekday': 'long'}),
         'timestamp_datetime_locale_en-GB' : _locale_col_conf('en-GB')}
-    return datetime_config, datetime_df
+    _datetime_md = """
+    # Datetime displayers
+
+    These are used to control the display of datetime columns
+
+    ```typescript
+    interface DatetimeDefaultDisplayerA {
+        displayer: 'datetimeDefault';}
+    interface DatetimeLocaleDisplayerA {
+        displayer: 'datetimeLocaleString';
+        locale: 'en-US' | 'en-GB' | 'en-CA' | 'fr-FR' | 'es-ES' | 'de-DE' | 'ja-JP';
+      args: Intl.DateTimeFormatOptions;}
+    ```
+
+    Mozilla has additonal [docs for Intl DatetimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat)
+    """
+    datetime_config = (_datetime_df, _datetime_config, _datetime_md)
+    return (datetime_config,)
 
 
 @app.cell(hide_code=True)
@@ -103,8 +111,12 @@ def _(DataFrame):
     }
     _str_md = """
     ## String Displayer
-
     The string displayer allows you to set a max_length parameter
+    ```typescript
+    interface StringDisplayerA {
+        displayer: 'string';
+        max_length?: number;}
+    ```
     """
     str_config = (_str_df, _str_config, _str_md)
     return (str_config,)
@@ -129,7 +141,15 @@ def _(DataFrame):
         'float_float_displayer_3__3' : _float_col_conf(3,3),
         'float_float_displayer_3_13' : _float_col_conf(3,13)}
     _float_md = """
+    ## Float displayers
     the `float` displayer allows you to control the number of digits displayed after the decimal point.
+
+    ```typescript
+    interface FloatDisplayerA {
+        displayer: 'float';
+        min_fraction_digits: number;
+        max_fraction_digits: number;}
+    ```
 
     """
     float_config = (_float_df, _float_config, _float_md)
@@ -143,7 +163,17 @@ def _(pd):
                              'linkify' :
                              ['https://github.com/paddymul/buckaroo', 'https://github.com/pola-rs/polars']})
     _link_config = {'linkify': {'displayer_args':  {  'displayer': 'linkify'}}}
-    link_config = (_link_df, _link_config)
+    _link_md = """
+    ## Link Displayer
+    The link displayer is a special displayer that converts text into a link
+
+    ```typescript
+    interface LinkifyDisplayerA {
+        displayer: "linkify";
+    }
+    ```
+    """
+    link_config = (_link_df, _link_config, _link_md)
     return (link_config,)
 
 
@@ -177,7 +207,41 @@ def _(pd):
 
     _histogram_config = {
         'histogram_props': {'displayer_args': {'displayer': 'histogram'}}}
-    histogram_config = (_histogram_df, _histogram_config)
+    _histogram_md = """
+    ## Histogram Displayer
+
+        Histograms are normally shown in summary stats and pinned_rows, they can also be displayed in the main table.
+
+    ```typescript
+    interface HistogramDisplayerA {
+        displayer: "histogram";
+    }
+    ```
+    This table is displayed with the following data
+    ```python
+             [[{'name': 'NA', 'NA': 100.0}],
+              [{'name': 1, 'cat_pop': 44.0}, {'name': 'NA', 'NA': 56.0}],
+              [{'name': 'long_97', 'cat_pop': 0.0},
+               {'name': 'long_139', 'cat_pop': 0.0},
+               {'name': 'long_12', 'cat_pop': 0.0},
+               {'name': 'long_134', 'cat_pop': 0.0},
+               {'name': 'long_21', 'cat_pop': 0.0},
+               {'name': 'long_44', 'cat_pop': 0.0},
+               {'name': 'long_58', 'cat_pop': 0.0},
+               {'name': 'longtail', 'longtail': 77.0},
+               {'name': 'NA', 'NA': 20.0}],
+              [{'name': 'long_113', 'cat_pop': 0.0},
+               {'name': 'long_116', 'cat_pop': 0.0},
+               {'name': 'long_33', 'cat_pop': 0.0},
+               {'name': 'long_72', 'cat_pop': 0.0},
+               {'name': 'long_122', 'cat_pop': 0.0},
+               {'name': 'long_6', 'cat_pop': 0.0},
+               {'name': 'long_83', 'cat_pop': 0.0},
+               {'name': 'longtail', 'unique': 50.0, 'longtail': 47.0}]]
+    ```
+    """
+
+    histogram_config = (_histogram_df, _histogram_config, _histogram_md)
     return (histogram_config,)
 
 
@@ -191,8 +255,18 @@ def _(pd):
         'raw':           {'displayer_args': {'displayer': 'string', 'max_length':40}},
         'img_displayer': {'displayer_args': {'displayer': 'Base64PNGImageDisplayer'},
                       'ag_grid_specs' : {'width':150}}}
+    _img_md = """
+    # Image displayer
+    The image displayer is used to display an image from base64 data in a cell.
 
-    img_config = (_img_df, _img_config)
+    ```typescript
+    interface Base64PNGImageDisplayerA {
+        displayer: "Base64PNGImageDisplayer";
+    }
+    ```
+        """
+
+    img_config = (_img_df, _img_config, _img_md)
     return (img_config,)
 
 
@@ -266,10 +340,10 @@ def _():
 
 
 @app.cell
-def _(float_config, mo, str_config):
+def _(float_config, histogram_config, img_config, link_config, mo, str_config):
     dfs = {"float_config": float_config, "str_config": str_config,
-           #"histogram_config": histogram_config, "img_config": img_config,
-           #"link_config": link_config,
+           "histogram_config": histogram_config, "img_config": img_config,
+           "link_config": link_config,
            #"error_config": error_config, "tooltip_config":tooltip_config,
            #"colormap_config": colormap_config
            }
