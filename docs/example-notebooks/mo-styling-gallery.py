@@ -8,20 +8,21 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-        # Tour of Buckaroo
-        Buckaroo expedites the core task of data work by showing histograms and summary stats with every DataFrame.
+        # Buckaroo Styling Gallery
+        Buckaroo can be extensively styled.  This gallery shows many examples of the column configuration language.
+        In this case all of the configs are passed in via `column_config_overrides`. 
+        Each call looks approximately like
+        ```python
+        BuckarooInfiniteWidget(df, column_config_overrides={
+            "float_obj_displayer": {
+                "displayer_args": {
+                    "displayer": "obj"}}})
+        ```
+
+        It is also possible to write your own styling functions that look at summary stats and return configs for columns.  This is detailed in [Styling Howto](https://github.com/paddymul/buckaroo/blob/main/docs/example-notebooks/Styling-Howto.ipynb)
         """
     )
     return
-
-
-@app.cell
-def _():
-    import marimo as mo
-    import pandas as pd
-    import buckaroo
-    from buckaroo import BuckarooInfiniteWidget
-    return BuckarooInfiniteWidget, buckaroo, mo, pd
 
 
 @app.cell
@@ -232,10 +233,10 @@ def _(pd):
 
 
 @app.cell(hide_code=True)
-def _(pd):
+def _(DataFrame):
     _png_smiley = 'iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAApgAAAKYB3X3/OAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVEiJtZZPbBtFFMZ/M7ubXdtdb1xSFyeilBapySVU8h8OoFaooFSqiihIVIpQBKci6KEg9Q6H9kovIHoCIVQJJCKE1ENFjnAgcaSGC6rEnxBwA04Tx43t2FnvDAfjkNibxgHxnWb2e/u992bee7tCa00YFsffekFY+nUzFtjW0LrvjRXrCDIAaPLlW0nHL0SsZtVoaF98mLrx3pdhOqLtYPHChahZcYYO7KvPFxvRl5XPp1sN3adWiD1ZAqD6XYK1b/dvE5IWryTt2udLFedwc1+9kLp+vbbpoDh+6TklxBeAi9TL0taeWpdmZzQDry0AcO+jQ12RyohqqoYoo8RDwJrU+qXkjWtfi8Xxt58BdQuwQs9qC/afLwCw8tnQbqYAPsgxE1S6F3EAIXux2oQFKm0ihMsOF71dHYx+f3NND68ghCu1YIoePPQN1pGRABkJ6Bus96CutRZMydTl+TvuiRW1m3n0eDl0vRPcEysqdXn+jsQPsrHMquGeXEaY4Yk4wxWcY5V/9scqOMOVUFthatyTy8QyqwZ+kDURKoMWxNKr2EeqVKcTNOajqKoBgOE28U4tdQl5p5bwCw7BWquaZSzAPlwjlithJtp3pTImSqQRrb2Z8PHGigD4RZuNX6JYj6wj7O4TFLbCO/Mn/m8R+h6rYSUb3ekokRY6f/YukArN979jcW+V/S8g0eT/N3VN3kTqWbQ428m9/8k0P/1aIhF36PccEl6EhOcAUCrXKZXXWS3XKd2vc/TRBG9O5ELC17MmWubD2nKhUKZa26Ba2+D3P+4/MNCFwg59oWVeYhkzgN/JDR8deKBoD7Y+ljEjGZ0sosXVTvbc6RHirr2reNy1OXd6pJsQ+gqjk8VWFYmHrwBzW/n+uMPFiRwHB2I7ih8ciHFxIkd/3Omk5tCDV1t+2nNu5sxxpDFNx+huNhVT3/zMDz8usXC3ddaHBj1GHj/As08fwTS7Kt1HBTmyN29vdwAw+/wbwLVOJ3uAD1wi/dUH7Qei66PfyuRj4Ik9is+hglfbkbfR3cnZm7chlUWLdwmprtCohX4HUtlOcQjLYCu+fzGJH2QRKvP3UNz8bWk1qMxjGTOMThZ3kvgLI5AzFfo379UAAAAASUVORK5CYII='
 
-    _img_df = pd.DataFrame({'raw':    [_png_smiley, None],
+    _img_df = DataFrame({'raw':    [_png_smiley, None],
                     'img_displayer' : [_png_smiley, None]})
     _img_config = {
         'raw':           {'displayer_args': {'displayer': 'string', 'max_length':40}},
@@ -287,8 +288,8 @@ def _(pd):
 
 
 @app.cell(hide_code=True)
-def _(pd):
-    _color_df = pd.DataFrame({
+def _(DataFrame):
+    _color_df = DataFrame({
         'a': [10, 20, 30],
         'a_colors': ['red', '#d3a', 'green']})
 
@@ -311,10 +312,10 @@ def _(pd):
 
 
 @app.cell(hide_code=True)
-def _(np, pd):
+def _(DataFrame, np):
     _ROWS = 200
     #the next dataframe is used for multiple examples
-    typed_df = pd.DataFrame(
+    typed_df = DataFrame(
         {'int_col':np.random.randint(1,50, _ROWS),
          'float_col': np.random.randint(1,30, _ROWS)/.7,
          "str_col": ["foobar"]* _ROWS})
@@ -451,15 +452,19 @@ def _(
 
     dropdown_dict = mo.ui.dropdown(
         options=dfs,
-        value="float_config",
+        value="colormap_config",
         label="Choose the config",
     )
     return dfs, dropdown_dict
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
-    return
+    import marimo as mo
+    import pandas as pd
+    import buckaroo
+    from buckaroo import BuckarooInfiniteWidget
+    return BuckarooInfiniteWidget, buckaroo, mo, pd
 
 
 if __name__ == "__main__":
