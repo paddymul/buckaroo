@@ -26,14 +26,41 @@ def _():
 
 @app.cell
 def _(BuckarooInfiniteWidget, dropdown_dict, mo):
+    import json
+    import re
+    def format_json(obj):
+        """
+          Formats obj to json  string to remove unnecessary whitespace.
+          Returns:
+              The formatted JSON string.
+        """
+        json_string = json.dumps(obj, indent=4)
+        # Remove whitespace before closing curly braces
+        formatted_string =   re.sub(r'\s+}', '}', json_string)
+        #formatted_string = json_string
+        return formatted_string
+
     mo.vstack(
         [
             dropdown_dict,
-            #mo.ui.text(value=dropdown_dict.value),
+            mo.hstack([
+                mo.md(dropdown_dict.value[2]),
+                mo.ui.text_area(format_json(dropdown_dict.value[1]), disabled=True, max_length=500, rows=15, full_width=True)],
+                     widths="equal"
+                     ),
             BuckarooInfiniteWidget(dropdown_dict.value[0], column_config_overrides = dropdown_dict.value[1])
         ]
     )
-    return
+    return format_json, json, re
+
+
+@app.cell
+def _(dropdown_dict, format_json, mo):
+    conf = dropdown_dict.value[1]
+    #print(json.dumps(conf, indent=4))
+    print(format_json(conf))
+    mo.ui.text_area(format_json(conf), disabled=True,max_length=500)
+    return (conf,)
 
 
 @app.cell(hide_code=True)
@@ -74,7 +101,12 @@ def _(DataFrame):
         'strings_obj_displayer':  {'displayer_args': {'displayer': 'obj'}},      
         'strings_string_displayer': {'displayer_args': {'displayer': 'string'}},
     }
-    str_config = (_str_df, _str_config)
+    _str_md = """
+    ## String Displayer
+
+    The string displayer allows you to set a max_length parameter
+    """
+    str_config = (_str_df, _str_config, _str_md)
     return (str_config,)
 
 
@@ -96,7 +128,11 @@ def _(DataFrame):
         'float_float_displayer_0__3' : _float_col_conf(0,3),
         'float_float_displayer_3__3' : _float_col_conf(3,3),
         'float_float_displayer_3_13' : _float_col_conf(3,13)}
-    float_config = (_float_df, _float_config)
+    _float_md = """
+    the `float` displayer allows you to control the number of digits displayed after the decimal point.
+
+    """
+    float_config = (_float_df, _float_config, _float_md)
     return (float_config,)
 
 
@@ -230,22 +266,12 @@ def _():
 
 
 @app.cell
-def _(
-    colormap_config,
-    error_config,
-    float_config,
-    histogram_config,
-    img_config,
-    link_config,
-    mo,
-    str_config,
-    tooltip_config,
-):
+def _(float_config, mo, str_config):
     dfs = {"float_config": float_config, "str_config": str_config,
-           "histogram_config": histogram_config, "img_config": img_config,
-           "link_config": link_config,
-           "error_config": error_config, "tooltip_config":tooltip_config,
-           "colormap_config": colormap_config
+           #"histogram_config": histogram_config, "img_config": img_config,
+           #"link_config": link_config,
+           #"error_config": error_config, "tooltip_config":tooltip_config,
+           #"colormap_config": colormap_config
            }
 
     dropdown_dict = mo.ui.dropdown(
@@ -254,6 +280,11 @@ def _(
         label="Choose the config",
     )
     return dfs, dropdown_dict
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
