@@ -332,3 +332,27 @@ div div div .buckaroo_anywidget {
 .statusBar .ag-column-first .FakeSearchEditor input{ 
   outline:none;
 }
+
+
+/*  lm-Widget lm-Panel jp-OutputArea-output
+classNames of the anywidget el parent while in jupyter
+
+when in vs-code
+cell-output-ipywidget-background
+
+when in marimo
+contents light
+*/
+div.cell-output-ipywidget-background {
+    background:#1f1f1f !important;
+}
+.cell-output-ipywidget-background .status-bar {
+    margin-bottom:0;
+}
+
+.cell-output-ipywidget-background .df-viewer {
+    margin-top:0;
+}
+.cell-output-ipywidget-background .df-viewer  .theme-hanger{
+    margin-top:-12px;
+}
