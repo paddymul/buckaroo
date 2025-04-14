@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.12.9-dev6"
+__generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
@@ -293,7 +293,9 @@ def _(DataFrame, np):
     _ROWS = 200
     # the next dataframe is used for multiple examples
     typed_df = DataFrame({"int_col": np.random.randint(1, 50, _ROWS), "float_col": np.random.randint(1, 30, _ROWS) / 0.7, "str_col": ["foobar"] * _ROWS})
-    _tooltip_config = {"str_col": {"tooltip_config": {"tooltip_type": "simple", "val_column": "int_col"}}}
+    _tooltip_config = {"str_col": {"tooltip_config": {"tooltip_type": "simple", "val_column": "int_col"}},
+                      "int_col": {"tooltip_config": {"tooltip_type": "simple", "val_column": "str_col"}}
+                      }
     _tooltip_md = """
     ## Tooltip_config
     Tooltips are configured with the `tooltip_config` property (not a `displayer`)
@@ -366,6 +368,7 @@ def _(DataFrame):
 @app.cell
 def _(
     DFViewerInfinite,
+    color_from_col_config,
     colormap_config,
     error_config,
     explicit_colormap_config,
@@ -375,6 +378,7 @@ def _(
     link_config,
     mo,
     str_config,
+    tooltip_config,
 ):
     # The DFs and configs are defined in the above hidden cells.  Unhide them for details
     dfs = {
@@ -387,8 +391,8 @@ def _(
         "error_config": error_config,
         "explicit_colormap_config": explicit_colormap_config,
         # disabled because of js bug with tooltips
-        # "tooltip_config":tooltip_config,
-        # "color_from_column": color_from_col_config
+        "tooltip_config":tooltip_config,
+        "color_from_column": color_from_col_config
     }
 
 

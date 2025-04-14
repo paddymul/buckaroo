@@ -106,7 +106,11 @@ export const Tooltip: Story = {
     df_data:    [
       {index: 0, date: '06/11/2021',             date2: '06/11/2021', tt:'foo'},
       {index: 1, date: 'Nov, 22nd 2021',         date2: '22/11/2021', tt:'bar'},
-      {index: 2, date: '24th of November, 2021', date2: '24/11/2021', tt:'baz'}],
+      {index: 2, date: '24th of November, 2021', date2: '24/11/2021', tt:'baz'},
+      {index: 3, date: '24th of November, 2021', date2: '24/11/2021'},
+      {index: 4, date: '24th of November, 2021', date2: '24/11/2021', tt:9999},
+      {index: 5, date: '24th of November, 2021', date2: '24/11/2021', tt:'baz'}],
+
     df_viewer_config: {
       column_config: [
       { col_name: 'index', displayer_args: {'displayer':'obj'} },
