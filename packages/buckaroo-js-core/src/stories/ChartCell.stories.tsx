@@ -1,22 +1,19 @@
 //import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 //import { fn } from "@storybook/test";
-import { getMultiChartCell } from "../components/DFViewerParts/LineChartCell";
+import { getChartCell } from "../components/DFViewerParts/LineChartCell";
 import { ChartDisplayerA } from "../components/DFViewerParts/DFWhole";
 
 
 const getChartCellWrapper = ({value, dispArgs}: {value:any, dispArgs:ChartDisplayerA}) => {
-  console.log("10", dispArgs.colors)
-
-  const ChartCell = getMultiChartCell(dispArgs)
+  const ChartCell = getChartCell(dispArgs)
   return ChartCell({value});
 }
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Buckaroo/DFViewer/Renderers/LineChart",
-//  component:TypedLineChartCell,
-component:getChartCellWrapper,
+  title: "Buckaroo/DFViewer/Renderers/ChartCell",
+  component:getChartCellWrapper,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
     // info: https://storybook.js.org/docs/configure/story-layout

@@ -12,7 +12,7 @@ import _ from "lodash";
 import { HistogramCell } from "./HistogramCell";
 import { Base64PNGDisplayer, LinkCellRenderer, SVGDisplayer } from "./OtherRenderers";
 import { CellRendererArgs, FormatterArgs } from "./DFWhole";
-import { getMultiChartCell } from "./LineChartCell";
+import { getChartCell } from "./LineChartCell";
 
 /*
   this code should all be unit tested and in examples. Examples will
@@ -206,7 +206,7 @@ export function getCellRenderer(crArgs: CellRendererArgs) {
         case "histogram":
             return HistogramCell;
         case "chart":
-            return getMultiChartCell(crArgs)
+            return getChartCell(crArgs)
         case "linkify":
             return LinkCellRenderer;
         case "Base64PNGImageDisplayer":
