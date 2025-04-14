@@ -32,7 +32,7 @@ def _(DFViewerShortHelper, dropdown_dict, format_json, mo):
 
     mo.vstack(
         [
-            dropdown_dict,
+            mo.hstack([dropdown_dict]),
             DFViewerShortHelper(dropdown_dict.value[0], column_config_overrides=dropdown_dict.value[1]),
             mo.hstack([mo.md(dropdown_dict.value[2]), mo.ui.text_area(format_json(dropdown_dict.value[1]), disabled=True, max_length=500, rows=15, full_width=True)], widths="equal"),
         ]
@@ -153,7 +153,7 @@ def _(pd):
     return (link_config,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(pd):
     # I pulled this out into a separate variable so we can eventually
     # display it in a spearate code block
@@ -222,6 +222,79 @@ def _(pd):
 
     histogram_config = (_histogram_df, _histogram_config, _histogram_md)
     return (histogram_config,)
+
+
+@app.cell
+def _(pd):
+    # I pulled this out into a separate variable so we can eventually
+    # display it in a spearate code block
+
+    _chart_data = [
+        [{"lineRed":33.0, "areaGray":100, "barCustom3":40, "barCustom1":40, "name": '2000-01-01 00:00:00'},
+         {"lineRed": 33.0, "areaGray": 20, "name": '2001-01-01 00:00:00'},
+         {"lineRed": 66,  "areaGray":40, "barCustom2":60, "name":'unique'},
+         {"lineRed": 100, "areaGray":100, "barCustom1":40,"name":'end'}],
+        [{ "barCustom3":40, "barCustom1":40, "name": '2000-01-01 00:00:00'},
+         {"name": '2001-01-01 00:00:00'},
+         {"barCustom2":60,    "name":'unique'},
+         {"barCustom1":40,    "name":'end'}],
+        [{"areaRed":100, "name": '2000-01-01 00:00:00'},
+         {"areaRed": 20, "name": '2001-01-01 00:00:00'},
+         {"areaRed":40,  "name":'unique'},
+         {"areaBlue":100, "name":'end'}],
+        [{"lineRed":33.0,  "name": '2000-01-01 00:00:00'},
+         {"lineBlue": 33.0, "name": '2001-01-01 00:00:00'},
+         {"lineGray": 66, "name":'unique'},
+         {"lineGray": 100, "name":'end'}],
+        [
+            {"name": "long_113", "cat_pop": 0.0},
+            {"name": "long_116", "cat_pop": 0.0},
+            {"name": "long_33", "cat_pop": 0.0},
+            {"name": "long_72", "cat_pop": 0.0},
+            {"name": "long_122", "cat_pop": 0.0},
+            {"name": "long_6", "cat_pop": 0.0},
+            {"name": "long_83", "cat_pop": 0.0},
+            {"name": "longtail", "unique": 50.0, "longtail": 47.0},
+        ],
+    ]
+    _chart_df = pd.DataFrame({"names": ["everything", "bar custom only", "area", "line", "histogram"],
+                              "chart" : _chart_data,
+                              "chart_custom_color": _chart_data,
+                              "histogram":_chart_data
+                             })
+
+    #_histogram_config = {"histogram_props": {"displayer_args": {"displayer": "histogram"}}}
+    _chart_config = {
+        "chart_custom_color":  {"displayer_args": {"displayer":"chart",
+                    "colors":{"custom1_color":"pink", "custom2_color":"brown", "custom3_color":"beige"}}},
+        "chart":      {"displayer_args": {"displayer":"chart"}},
+        "histogram":  {"displayer_args": {"displayer":"histogram"}},
+    }
+
+
+    _chart_md = """
+    ## Chart Cell Displayer
+
+        Chart Cells are normally shown in summary stats and pinned_rows, they can also be displayed in the main table.
+
+    """
+
+    chart_config = (_chart_df, _chart_config, _chart_md)
+
+    return (chart_config,)
+
+
+@app.cell
+def _(DFViewerShortHelper, chart_config):
+    bw = DFViewerShortHelper(chart_config[0], column_config_overrides=chart_config[1])
+    bw
+    return (bw,)
+
+
+@app.cell
+def _(bw):
+    bw.df_display_args['main']['df_viewer_config']
+    return
 
 
 @app.cell(hide_code=True)
@@ -306,7 +379,6 @@ def _(DataFrame, np):
         val_column: string;
     }
     ```
-    NB: Currently broken because of JS/ag-grid problems so this isn't currently included.
     """
     tooltip_config = (typed_df, _tooltip_config, _tooltip_md)
     return tooltip_config, typed_df
@@ -353,13 +425,10 @@ def _(DataFrame):
                        }
     _colormap_md = """
     ## color_map_config
-    In this example we pass in an explicit color map. This is a bit tricky to use, there are some issues with the histogram ranges and how colors are selected. This is very useful for flagging a value from a discrete set of conditions.
+    In this example we pass in an explicit color map. This is very useful for flagging a value from a discrete set of conditions.
 
     `color_rule:"color_map"` selects a background based on a color_map, and where the cell value fits into that range.
     `val_column` can be used to color the column based on values in a different column
-
-
-
 
     ```typescript
     export type ColorMap = "BLUE_TO_YELLOW" | "DIVERGING_RED_WHITE_BLUE" | string[];
@@ -437,39 +506,7 @@ def _(
 
         label="Choose the config",
     )
-
-
-
     return DFViewerShortHelper, dfs, dropdown_dict
-
-
-@app.cell
-def _(dropdown_dict):
-    dropdown_dict
-    return
-
-
-@app.cell
-def _(dropdown_dict, mo, set_dd_val):
-    def iter_num(callback_str):
-        period, wrapped_iter = callback_str.split(" ")
-        return int(wrapped_iter[1:-1])
-    dd_keys = list(dropdown_dict.options.keys())
-    def change_dd(callback_str):
-        count = iter_num(callback_str)
-        offset = count % len(dd_keys)
-        #print(count, offset)
-        #print(dd_keys[offset])
-        set_dd_val(dd_keys[offset])
-    
-    refresh = mo.ui.refresh(
-        options= [1, 5, 10, 30],
-        default_interval=1,
-        label= "interval",
-        on_change= change_dd
-    )
-    refresh
-    return change_dd, dd_keys, iter_num, refresh
 
 
 @app.cell(hide_code=True)

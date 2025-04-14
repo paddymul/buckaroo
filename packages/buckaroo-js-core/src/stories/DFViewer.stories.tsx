@@ -146,3 +146,22 @@ export const ColorFromCol: Story = {
    }
   }
 }
+
+const lineChart = [
+  {lineRed:33.0,  name: '2000-01-01 00:00:00'},
+  {lineRed: 33.0, name: '2001-01-01 00:00:00'},
+  {lineRed: 66, name:'unique'},
+  {lineRed: 100, name:'end'},
+]
+export const Chart: Story = {
+  args: {
+    df_data:    [
+      {index: 0, chart1: lineChart}],
+    df_viewer_config: {
+      column_config: [
+        {col_name: 'index', displayer_args: {'displayer':'obj'} },
+        {col_name: 'chart1', displayer_args: {'displayer':'chart'}}],        
+      pinned_rows:[],
+   }
+  }
+}
