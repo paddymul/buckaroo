@@ -1,7 +1,7 @@
 //import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 //import { fn } from "@storybook/test";
-import { getChartCell } from "../components/DFViewerParts/LineChartCell";
+import { getChartCell } from "../components/DFViewerParts/ChartCell";
 import { ChartDisplayerA } from "../components/DFViewerParts/DFWhole";
 
 

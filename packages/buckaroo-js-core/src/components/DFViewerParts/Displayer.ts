@@ -12,7 +12,7 @@ import _ from "lodash";
 import { HistogramCell } from "./HistogramCell";
 import { Base64PNGDisplayer, LinkCellRenderer, SVGDisplayer } from "./OtherRenderers";
 import { CellRendererArgs, FormatterArgs } from "./DFWhole";
-import { getChartCell } from "./LineChartCell";
+import { getChartCell } from "./ChartCell";
 
 /*
   this code should all be unit tested and in examples. Examples will

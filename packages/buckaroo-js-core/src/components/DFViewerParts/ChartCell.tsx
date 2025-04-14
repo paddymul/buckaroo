@@ -101,7 +101,6 @@ export const ChartColors = {
 
 
 export const getChartCell = (multiChartCellProps: ChartDisplayerA) => {
-    console.log("getChartCell")
     const colorDefaults = {
         custom1_color: "teal",
         custom2_color: "orange",
@@ -111,7 +110,6 @@ export const getChartCell = (multiChartCellProps: ChartDisplayerA) => {
     const mergedColors = { ...colorDefaults, ...passedColors };
     const { custom1_color, custom2_color, custom3_color } = mergedColors;
     const ChartCell = (props: any) => {
-        console.log("ChartCell props", props)
         if (props === undefined) {
             return <span></span>;
         }
