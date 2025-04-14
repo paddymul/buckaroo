@@ -101,17 +101,19 @@ export const Primary: Story = {
   
     }
 }
-export const DateNoDisplay: Story = {
+export const Tooltip: Story = {
   args: {
-    df_data:    [{'index': 0, 'date': '06/11/2021', 'date2': '06/11/2021'},
-      {'index': 1, 'date': 'Nov, 22nd 2021', 'date2': '22/11/2021'},
-      {'index': 2, 'date': '24th of November, 2021', 'date2': '24/11/2021'}],
+    df_data:    [
+      {index: 0, date: '06/11/2021',             date2: '06/11/2021', tt:'foo'},
+      {index: 1, date: 'Nov, 22nd 2021',         date2: '22/11/2021', tt:'bar'},
+      {index: 2, date: '24th of November, 2021', date2: '24/11/2021', tt:'baz'}],
     df_viewer_config: {
       column_config: [
       { col_name: 'index', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'string'}},
-      { col_name: 'date2', displayer_args: {'displayer':'obj'} },
+      { col_name: 'date', displayer_args: {'displayer':'string'},
+        tooltip_config: { 'tooltip_type':'simple', 'val_column': 'tt'}
+    
+    },
       { col_name: 'date2', displayer_args: {'displayer':'string'}},
     ],
     pinned_rows:[],
