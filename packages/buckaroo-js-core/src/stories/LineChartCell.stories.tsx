@@ -35,29 +35,45 @@ type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {
   args: {histogramArr:[
-        {'cat_pop':33.0,
+        {'red':33.0,
           'name': '2000-01-01 00:00:00'},
-         {'cat_pop': 33.0,
+         {'red': 33.0,
           'name': '2001-01-01 00:00:00'},
-         {'cat_pop': 66, 'name':'unique'},
-         {'cat_pop': 100, 'name':'end'},
+         {'red': 66, 'name':'unique'},
+         {'red': 100, 'name':'end'},
       ]}
 };
 
+export const Area: Story = {
+  args: {histogramArr:[
+        {'name': '2000-01-01 00:00:00',
+          'areaUnique':100
+        },
+         {
+          'areaUnique': 20,
+          'name': '2001-01-01 00:00:00'},
+         {
+          'areaUnique':40,
+          'name':'unique'},
+         {
+          'areaUnique':100,
+          'name':'end'},
+      ]}
+};
 export const Composed: Story = {
   args: {histogramArr:[
-        {'cat_pop':33.0,
+        {'red':33.0,
           'name': '2000-01-01 00:00:00',
-          'unique':100
+          'areaUnique':100
         },
-         {'cat_pop': 33.0,
-          'unique': 20,
+         {'red': 33.0,
+          'areaUnique': 20,
           'name': '2001-01-01 00:00:00'},
-         {'cat_pop': 66, 
-          'unique':40,
+         {'red': 66, 
+          'areaUnique':40,
           'name':'unique'},
-         {'cat_pop': 100, 
-          'unique':100,
+         {'red': 100, 
+          'areaUnique':100,
           'name':'end'},
       ]}
 };
