@@ -124,3 +124,25 @@ export const Tooltip: Story = {
   }
 }
 };
+
+export const ColorFromCol: Story = {
+  args: {
+    df_data:    [
+      {index: 0, date: '06/11/2021',             color:"red"},
+      {index: 1, date: 'Nov, 22nd 2021',         color:"#f8f8a1"},
+      {index: 2, date: '24th of November, 2021', color:"teal"},
+      {index: 3, date: '24th of November, 2021', color:"#aaa"},
+      {index: 4, date: '24th of November, 2021'},
+      {index: 5, date: '24th of November, 2021'}],
+    df_viewer_config: {
+      column_config: [
+        {col_name: 'index', displayer_args: {'displayer':'obj'} },
+        {col_name: 'date', displayer_args: {'displayer':'string'},
+          color_map_config: {
+            color_rule: "color_from_column",
+            val_column: "color"}}],
+
+      pinned_rows:[],
+   }
+  }
+}

@@ -273,7 +273,7 @@ def _(pd):
 def _(DataFrame):
     _color_df = DataFrame({"a": [10, 20, 30], "a_colors": ["red", "#d3a", "green"]})
 
-    _color_from_col_config = {"a": {"color_map_config": {"color_rule": "color_from_column", "col_name": "a_colors"}}}
+    _color_from_col_config = {"a": {"color_map_config": {"color_rule": "color_from_column", "val_column": "a_colors"}}}
     _color_from_col_md = """
     ## color_from_column
     `color_from_column` is used to explicitly set a background color in another column.  Any valid html color works
