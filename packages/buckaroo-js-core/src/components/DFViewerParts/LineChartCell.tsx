@@ -112,6 +112,7 @@ export const getMultiChartCell = (multiChartCellProps:ChartDisplayerA) => {
     const {custom1_color, custom2_color, custom3_color} = mergedColors;
     
  const ChartCell = (props: any) => {
+    console.log("props", props)
     if (props === undefined ) {
         return <span></span>;
     }
@@ -122,11 +123,11 @@ export const getMultiChartCell = (multiChartCellProps:ChartDisplayerA) => {
         return <span></span>;
     }
     const histogramArr = potentialHistogramArr as LineObservation[];
-    return TypedLineChartCell({histogramArr});
+    return TypedLineChartCellInner({histogramArr});
 }
 
- const TypedLineChartCell = ({histogramArr}:{histogramArr:LineObservation[]}) => {
-    console.log("TypedLineChartCell")
+ const TypedLineChartCellInner = ({histogramArr}:{histogramArr:LineObservation[]}) => {
+    console.log("TypedLineChartCellInner")
     const dumbClickHandler = (rechartsArgs: any, _unused_react: any) => {
         // I can't find the type for rechartsArgs
         // these are probably the keys we care about

@@ -1,15 +1,20 @@
 //import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 //import { fn } from "@storybook/test";
-import { TypedLineChartCell } from "../components/DFViewerParts/LineChartCell";
+import { getMultiChartCell, TypedLineChartCell } from "../components/DFViewerParts/LineChartCell";
+import { ChartDisplayerA } from "../components/DFViewerParts/DFWhole";
 
 
-    
+const getChartCellWrapper = ({value, dispArgs}: {value:any, dispArgs:ChartDisplayerA}) => {
+  const ChartCell = getMultiChartCell(dispArgs)
+  return ChartCell({value});
+}
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "Buckaroo/DFViewer/Renderers/LineChart",
-  component:TypedLineChartCell,
+//  component:TypedLineChartCell,
+component:getChartCellWrapper,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
     // info: https://storybook.js.org/docs/configure/story-layout
@@ -28,52 +33,59 @@ const meta = {
   // actions panel once invoked:
   // https://storybook.js.org/docs/essentials/actions#action-args
   //args: { onClick: fn() },
-} satisfies Meta<typeof TypedLineChartCell>;
+} satisfies Meta<typeof getChartCellWrapper>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {
-  args: {histogramArr:[
-        {'red':33.0,
-          'name': '2000-01-01 00:00:00'},
-         {'red': 33.0,
-          'name': '2001-01-01 00:00:00'},
-         {'red': 66, 'name':'unique'},
-         {'red': 100, 'name':'end'},
-      ]}
+  args: {value: [
+        {lineRed:33.0,  name: '2000-01-01 00:00:00'},
+        {lineRed: 33.0, name: '2001-01-01 00:00:00'},
+        {lineRed: 66, name:'unique'},
+        {lineRed: 100, name:'end'},
+      ],
+      dispArgs: {displayer:"chart"}
+    }
 };
 
 export const Area: Story = {
-  args: {histogramArr:[
-        {'name': '2000-01-01 00:00:00',
-          'areaUnique':100
-        },
-         {
-          'areaUnique': 20,
-          'name': '2001-01-01 00:00:00'},
-         {
-          'areaUnique':40,
-          'name':'unique'},
-         {
-          'areaUnique':100,
-          'name':'end'},
-      ]}
+  args: {value:[
+        {areaUnique:100, name: '2000-01-01 00:00:00'},
+        {areaUnique: 20, name: '2001-01-01 00:00:00'},
+        {areaUnique:40,  name:'unique'},
+        {areaUnique:100, name:'end'},
+      ],
+      dispArgs: {displayer:"chart"}
+    }
 };
 export const Composed: Story = {
-  args: {histogramArr:[
-        {'red':33.0,
-          'name': '2000-01-01 00:00:00',
-          'areaUnique':100
-        },
-         {'red': 33.0,
-          'areaUnique': 20,
-          'name': '2001-01-01 00:00:00'},
-         {'red': 66, 
-          'areaUnique':40,
-          'name':'unique'},
-         {'red': 100, 
-          'areaUnique':100,
-          'name':'end'},
-      ]}
+  args: {value:[
+        {lineRed:33.0, areaGray:100, barCustom3:40, barCustom1:40,
+          name: '2000-01-01 00:00:00'},
+         {lineRed: 33.0, areaGray: 20,
+          name: '2001-01-01 00:00:00'},
+         {lineRed: 66,  areaGray:40, barCustom2:60,
+          name:'unique'},
+         {lineRed: 100, areaGray:100, barCustom1:40,
+          name:'end'},
+      ],
+       dispArgs: {displayer:"chart"}
+    }
+};
+
+export const ComposedCustomColor: Story = {
+  args: {value:[
+        {lineRed:33.0, areaGray:100, barCustom3:40, barCustom1:40,
+          name: '2000-01-01 00:00:00'},
+         {lineRed: 33.0, areaGray: 20,
+          name: '2001-01-01 00:00:00'},
+         {lineRed: 66,  areaGray:40, barCustom2:60,
+          name:'unique'},
+         {lineRed: 100, areaGray:100, barCustom1:40,
+          name:'end'},
+      ],
+       dispArgs: {displayer:"chart",
+         colors:{custom1_color:"pink", custom2_color:"brown", custom3_color:"beige"}}
+    }
 };
