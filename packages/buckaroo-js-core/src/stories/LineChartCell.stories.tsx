@@ -1,11 +1,13 @@
 //import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 //import { fn } from "@storybook/test";
-import { getMultiChartCell, TypedLineChartCell } from "../components/DFViewerParts/LineChartCell";
+import { getMultiChartCell } from "../components/DFViewerParts/LineChartCell";
 import { ChartDisplayerA } from "../components/DFViewerParts/DFWhole";
 
 
 const getChartCellWrapper = ({value, dispArgs}: {value:any, dispArgs:ChartDisplayerA}) => {
+  console.log("10", dispArgs.colors)
+
   const ChartCell = getMultiChartCell(dispArgs)
   return ChartCell({value});
 }

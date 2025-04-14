@@ -101,16 +101,15 @@ export const ChartColors = {
 
 
 export const getMultiChartCell = (multiChartCellProps:ChartDisplayerA) => {
-    console.log("getMultiChartCell 104")
     const colorDefaults = {
         custom1_color:"teal",
         custom2_color:"orange",
         custom3_color:"purple"
     }
-    const passedColors = multiChartCellProps.colors ? multiChartCellProps : {}
-    const mergedColors = {...colorDefaults, ...passedColors};
+    const passedColors = multiChartCellProps.colors ? multiChartCellProps.colors : {}
+    const mergedColors = { ...colorDefaults, ...passedColors };
     const {custom1_color, custom2_color, custom3_color} = mergedColors;
-    
+    console.log("custom1_color", custom1_color);
  const ChartCell = (props: any) => {
     console.log("props", props)
     if (props === undefined ) {
@@ -307,4 +306,4 @@ fill={custom3_color}
 };
     return ChartCell
 }
-export const TypedLineChartCell = getMultiChartCell({'displayer':'chart'});
+//export const TypedLineChartCell = getMultiChartCell({'displayer':'chart'});
