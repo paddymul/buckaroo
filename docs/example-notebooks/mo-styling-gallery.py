@@ -312,7 +312,7 @@ def _(DataFrame, np):
     return tooltip_config, typed_df
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(typed_df):
     _colormap_config = {"float_col": {"color_map_config": {"color_rule": "color_map", "map_name": "BLUE_TO_YELLOW", "val_column": "int_col"}}}
     _colormap_md = """
@@ -336,10 +336,21 @@ def _(typed_df):
     return (colormap_config,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(DataFrame):
-    _explicit_colormap_df = DataFrame({"flag_column": [0, 1, 2, 3, 4, 5, 6, 7, 4, 3, 3, 2, 1, 0]})
-    _colormap_config = {"flag_column": {"color_map_config": {"color_rule": "color_map", "map_name": ["green", "blue", "red", "orange", "purple"]}}}
+    _explicit_colormap_df = DataFrame({
+        "ten_vals_10_colors": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "ten_vals_5_colors": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "five_vals_10_colors": [0, 1, 2, 3, 4, None, None, None, None, None, None],
+        "five_vals_5_colors": [0, 1, 2, 3, 4, None, None, None, None, None, None]
+    })
+    _colors_10 = ["green", "blue", "red", "orange", "purple", "brown", "pink", "beige", "teal", "gray"]
+    _colors_5 =  ["green", "blue", "red", "orange", "purple"]
+    _colormap_config = {"ten_vals_10_colors": {"color_map_config": {"color_rule": "color_map", "map_name": _colors_10}},
+                        "ten_vals_5_colors": {"color_map_config": {"color_rule": "color_map", "map_name": _colors_5}},
+                        "five_vals_10_colors": {"color_map_config": {"color_rule": "color_map", "map_name": _colors_10}},
+                        "five_vals_5_colors": {"color_map_config": {"color_rule": "color_map", "map_name": _colors_5}},
+                       }
     _colormap_md = """
     ## color_map_config
     In this example we pass in an explicit color map. This is a bit tricky to use, there are some issues with the histogram ranges and how colors are selected. This is very useful for flagging a value from a discrete set of conditions.
@@ -366,6 +377,12 @@ def _(DataFrame):
 
 
 @app.cell
+def _(mo):
+    get_dd_val, set_dd_val = mo.state("colormap_config")
+    return get_dd_val, set_dd_val
+
+
+@app.cell
 def _(
     DFViewerInfinite,
     color_from_col_config,
@@ -373,6 +390,7 @@ def _(
     error_config,
     explicit_colormap_config,
     float_config,
+    get_dd_val,
     histogram_config,
     img_config,
     link_config,
@@ -390,7 +408,6 @@ def _(
         "colormap_config": colormap_config,
         "error_config": error_config,
         "explicit_colormap_config": explicit_colormap_config,
-        # disabled because of js bug with tooltips
         "tooltip_config":tooltip_config,
         "color_from_column": color_from_col_config
     }
@@ -415,10 +432,44 @@ def _(
 
     dropdown_dict = mo.ui.dropdown(
         options=dfs,
-        value="colormap_config",
+        #value="colormap_config",
+        value=get_dd_val(),
+
         label="Choose the config",
     )
+
+
+
     return DFViewerShortHelper, dfs, dropdown_dict
+
+
+@app.cell
+def _(dropdown_dict):
+    dropdown_dict
+    return
+
+
+@app.cell
+def _(dropdown_dict, mo, set_dd_val):
+    def iter_num(callback_str):
+        period, wrapped_iter = callback_str.split(" ")
+        return int(wrapped_iter[1:-1])
+    dd_keys = list(dropdown_dict.options.keys())
+    def change_dd(callback_str):
+        count = iter_num(callback_str)
+        offset = count % len(dd_keys)
+        #print(count, offset)
+        #print(dd_keys[offset])
+        set_dd_val(dd_keys[offset])
+    
+    refresh = mo.ui.refresh(
+        options= [1, 5, 10, 30],
+        default_interval=1,
+        label= "interval",
+        on_change= change_dd
+    )
+    refresh
+    return change_dd, dd_keys, iter_num, refresh
 
 
 @app.cell(hide_code=True)
