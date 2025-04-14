@@ -280,7 +280,6 @@ def _(pd):
     """
 
     chart_config = (_chart_df, _chart_config, _chart_md)
-
     return (chart_config,)
 
 

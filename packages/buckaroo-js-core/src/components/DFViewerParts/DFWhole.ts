@@ -87,6 +87,7 @@ export type CellRendererArgs =
 export type DisplayerArgs = FormatterArgs | CellRendererArgs;
 
 export const cellRendererDisplayers = [
+    "chart",
     "histogram",
     "linkify",
     "Base64PNGImageDisplayer",
