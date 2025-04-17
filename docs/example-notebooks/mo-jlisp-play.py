@@ -33,6 +33,38 @@ def _(s):
 
 
 @app.cell
+def _(s):
+    # How I want it to look
+    l_rules2 = {
+        ('col', 't_str_bool'):         [s('greatest'), s('>'), s('measure'), .7],
+        ('col', 'regular_int_parse'):  [s('greatest'), s('>'), s('measure'), .9],
+        ('col', 'strip_int_parse'):    [s('greatest'), s('>'), s('measure'), .7],
+        # ('only', ('gt', .6))}
+        ('col', 't_us_dates'):         [s('only'), s('>'), s('measure'), .7]}
+
+    #greatest and only are macros
+    return (l_rules2,)
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ```lisp
+        (
+        ('t_str_bool (greatest > measure .7))
+        ('regular_int_parse (greatest > measure .9))
+        ('strip_int_parse (greatest > measure .7))
+        ('t_us_dates (only > measure .7)
+         )
+
+        ```
+        """
+    )
+    return
+
+
+@app.cell
 def _(jl_eval, s):
     jl_eval([s('begin'), [s('define'), s('named_func'), [s('lambda'), [s('a')], [s('+'), s('a'), 3]]],
             [s('named_func'), 10]
@@ -85,6 +117,12 @@ def _(jl_eval, s):
 @app.cell
 def _():
     return
+
+
+@app.cell
+def _():
+    import marimo as mo
+    return (mo,)
 
 
 if __name__ == "__main__":
