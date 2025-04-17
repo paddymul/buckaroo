@@ -98,3 +98,22 @@ def test_assign_env():
                [s("set!"), s("var"), [s("*"), s("var"), 10]],
                s("var")]
     assert jl_eval(jl_form, {'var':3}) == 30
+
+
+def test_other():
+    jl_eval([s('begin'), s('df')], {'df':5}) == 5 # pass in a variable and return it
+    jl_eval([s('begin'), [s('define'), s('df2'), 8], s('df2')], {'df':5}) == 8 # define a variable
+    def dict_get(d, key, default=None):
+        return d.get(key, default)
+    #pass in a defined function from python
+    jl_eval([s('dict_get'), s('fruits'), 'apple'], {'dict_get': dict_get, 'fruits':{'apple':9}}) == 9 
+    jl_eval([s('dict_get'), s('fruits'), 'pear', 99], {'dict_get': dict_get, 'fruits':{'apple':9}}) == 9
+    jl_eval([s('>'), 4, 9]) # comparison
+
+    jl_eval([s('begin'), 
+             [s('define'), s('named_func'), [s('lambda'), [s('a')], 
+                                             [s('+'), s('a'), 3]]],
+             [s('named_func'), 10]
+             ])
+     # define a lambda, assign it to a variable 'named_func', then call it with an argument of 10
+     
