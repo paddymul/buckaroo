@@ -1,6 +1,6 @@
 import pytest
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
-from buckaroo.jlisp.lispy import make_interpreter #, LookupError
+from buckaroo.jlisp.lispy import make_interpreter, Symbol #, LookupError
 
 def test_split_operations():
 
@@ -157,6 +157,8 @@ def test_macro2():
 
     #assert sc_eval("""(and (> 3 5) 7)""") == False
 
+
+
 def test_macro_rule():
     jlisp_eval, sc_eval = make_interpreter()
 
@@ -175,20 +177,25 @@ def test_macro_rule():
     (define-macro rule (lambda args
         `(lambda unused ,@args)))
 
-
+    ;; convience for defining a conditional that will be evaulated with measure passed n
     (define-macro rule-measure (lambda args
         `(lambda (measure) ,@args)))
 
     (define-macro m> (lambda operand
         `(> measure ,@operand)))
+
+    (define-macro m< (lambda operand
+        `(< measure ,@operand)))
 )""")
     """(let ((a 1) (b 2)) (+ a b)n)"""
     assert sc_eval("""(let ((a (rule (> 3 5))) (b 2)) (a 8))""") == False
     assert sc_eval("""(let ((a (rule (< 3 5))) (b 2)) (a 8))""") == True
 
-
+    
     assert sc_eval("""(let ((measure 2)) (> measure 8))""") == False
+    # test a simple form of the m> macro
     assert sc_eval("""(let ((measure 2)) (m> 8))""") == False
+    #make sure m> doesn't always return False
     assert sc_eval("""(let ((measure 2)) (m> 1))""") == True
 
     # can we pass an expression into m>
@@ -201,3 +208,91 @@ def test_macro_rule():
 
     assert sc_eval("""(let ((a (rule-measure (m> 8))))  (a 2))""") == False
 
+
+def test_lambda_arg_handling():
+    jlisp_eval, sc_eval = make_interpreter()
+    #try to define a lambda that takes no arguments
+
+    # you must specify an argument that the lambda takes, but it isn't
+    # necessary to pass that argument when you call the lambda
+    assert sc_eval("""(let ((a (lambda foo (> 3 5)))) (a))""") == False
+    assert sc_eval("""(let ((a (lambda foo (< 3 5)))) (a))""") == True
+
+    # you can even pass args that the lambda doesn't have arguments for
+    assert sc_eval("""(let ((a (lambda foo (< 3 5)))) (a 3))""") == True
+    assert sc_eval("""(let ((a (lambda foo (< 3 5)))) (a 3 9))""") == True
+def test_gensym():
+    jlisp_eval, sc_eval = make_interpreter()
+    assert sc_eval("""(gensym)""") == "GENSYM-0"
+    #we get a unique one next time this is called
+    assert sc_eval("""(let ((a (gensym))) a)""") == "GENSYM-1"
+    # assert sc_eval("""(let ((a (gensym)))
+    #                            `(let ((,a 9))  (= ,a 9)))""") == True
+    assert sc_eval("""(begin
+
+        (define  a 20)
+    `,a)""") == 20
+    assert sc_eval("""(begin
+        (define  b (gensym))
+    `,b)""") == Symbol("GENSYM-2")
+
+    assert sc_eval("""(begin
+        (define  b (gensym))
+        (define b 20)
+    `,b)""") == 20
+
+    assert sc_eval("""(let ((a (gensym))) (symbol? a))""") == True
+    assert sc_eval("""(let ((a 5)) (symbol? a))""") == False
+
+
+def test_gensym2():
+    jlisp_eval, sc_eval = make_interpreter()
+    assert sc_eval("""(begin
+        (define  b (gensym))
+        (eval `(define ,b 20))
+    (eval `,b))""") == 20
+    assert sc_eval("""(begin
+        (define  c (gensym))
+        (eval `(define ,c 20))
+    `,c)""") == Symbol("GENSYM-1")
+    assert sc_eval("""(begin
+        (define  d (gensym))
+        (eval `(define ,d 20))
+    d)""") == Symbol("GENSYM-2")
+
+    assert sc_eval("""(begin
+        (define  e (gensym))
+        (eval `(define ,e 30))
+    (eval 'GENSYM-3))""") == 30
+
+    assert sc_eval("""(begin
+        (define  e (gensym))
+        (eval `(define ,e 20))
+    (symbol-value e))""") == 20
+    1/0
+
+
+    #HA here we can predict the symbol name and see that it is being assigned to
+    assert sc_eval("""(begin
+        (define  e (gensym))
+        (eval `(define ,e 20))
+    'e)""") == 20
+
+
+
+def test_gensym3():
+    jlisp_eval, sc_eval = make_interpreter()
+    assert sc_eval("""(begin
+        (define  a 5)
+    a)""") == 5
+
+    assert sc_eval("""(begin
+        (define  e (gensym))
+        (define GENSYM-0 20)
+    (symbol-value (symbol-value e)))""") == 20
+    # 1/0
+    # assert sc_eval("""(begin
+    #     (define  e (gensym))
+    #     (eval `(define ,e 20))
+    # (symbol-value (symbol-value e))""") == 20
+    # 1/0

@@ -8,7 +8,10 @@ from __future__ import division
 import re, io
 import sys
 
-class Symbol(str): pass
+class Symbol(str):
+    def __repr__(self):
+        return f"Symbol({str(self)})"
+    
 
 
 
@@ -140,7 +143,14 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         import math, cmath, operator as op
         self.update(vars(math))
         self.update(vars(cmath))
-        self.update({
+
+        _gensym_counter = [0]
+        def get_gensym():
+            symbol_name = f"GENSYM-{_gensym_counter[0]}"
+            _gensym_counter[0] += 1
+            return Sym(symbol_name)
+
+        self.update({'gensym':get_gensym,
          '+':op.add, '-':op.sub, '*':op.mul, '/':op.truediv, 'not':op.not_, 
          '>':op.gt, '<':op.lt, '>=':op.ge, '<=':op.le, '=':op.eq, 
          'equal?':op.eq, 'eq?':op.is_, 'length':len, 'cons':cons,
@@ -167,7 +177,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             self.parms, self.exp, self.env = parms, exp, env
         def __call__(self, *args): 
             return eval(self.exp, Env(self.parms, args, self.env))
-    
+
     def eval(x, env=global_env):
         "Evaluate an expression in an environment."
         while True:
@@ -178,6 +188,23 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             elif x[0] is _quote:     # (quote exp)
                 (_, exp) = x
                 return exp
+            elif x[0] is _symbol_value:
+                print("192 symbol_value", x)
+                second_arg = x[1]
+                if isa(second_arg, Symbol):
+                    return env.find(second_arg)[second_arg]
+                else:
+                    print("calling eval on second arg")
+                    possible_sym = eval(second_arg, env)
+                    assert isa(possible_sym, Symbol)
+                    return env.find(possible_sym)[possible_sym]
+                #initial_sym_obj
+                # second_sym_obj = 
+                # assert isa(second_sym_obj, Symbol)
+                # return env.find(second_sym_obj)[second_sym_obj]
+
+
+                # return 
             elif x[0] is _if:        # (if test conseq alt)
                 (_, test, conseq, alt) = x
                 x = (conseq if eval(test, env) else alt)
@@ -187,7 +214,9 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 return None
             elif x[0] is _define:    # (define var exp)
                 (_, var, exp) = x
+
                 env[var] = eval(exp, env)
+                print("200, _define", var, exp, env[var])
                 return None
             elif x[0] is _lambda:    # (lambda (var*) exp)
                 (_, vars, exp) = x
@@ -257,8 +286,8 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         return symbol_table[s]
 
     
-    _quote, _if, _set, _define, _lambda, _begin, _definemacro, = map(Sym, 
-    "quote   if   set!  define   lambda   begin   define-macro".split())
+    _quote, _if, _set, _define, _lambda, _begin, _definemacro, _symbol_value = map(Sym, 
+    "quote   if   set!  define   lambda   begin   define-macro symbol-value".split())
     
     _quasiquote, _unquote, _unquotesplicing = map(Sym,
     "quasiquote   unquote   unquote-splicing".split())
