@@ -150,3 +150,9 @@ def test_macro2():
     assert sc_eval("""(and 4 3)""") == 3
     assert sc_eval("""(> 3 5)""") == False
     assert sc_eval("""(and (> 3 5) 7)""") == False
+
+    #make sure we can use the macros from jlisp too
+    assert jlisp_eval([s('and'), 4, 3]) == 3
+    assert jlisp_eval([s('and'), [s('>'), 3, 5], 7]) == False
+
+    #assert sc_eval("""(and (> 3 5) 7)""") == False
