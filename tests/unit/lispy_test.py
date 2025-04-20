@@ -156,3 +156,48 @@ def test_macro2():
     assert jlisp_eval([s('and'), [s('>'), 3, 5], 7]) == False
 
     #assert sc_eval("""(and (> 3 5) 7)""") == False
+
+def test_macro_rule():
+    jlisp_eval, sc_eval = make_interpreter()
+
+    with pytest.raises(LookupError) as excinfo:
+        sc_eval("""(and 4 3)""")
+    sc_eval("""
+(begin
+   (define-macro and (lambda args 
+       (if (null? args) #t
+           (if (= (length args) 1) (car args)
+               `(if ,(car args) (and ,@(cdr args)) #f)))))
+
+;; More macros can go here
+
+    ;; Rule basically lets us define a lambda with less syntax
+    (define-macro rule (lambda args
+        `(lambda unused ,@args)))
+
+
+    (define-macro rule-measure (lambda args
+        `(lambda (measure) ,@args)))
+
+    (define-macro m> (lambda operand
+        `(> measure ,@operand)))
+)""")
+    """(let ((a 1) (b 2)) (+ a b)n)"""
+    assert sc_eval("""(let ((a (rule (> 3 5))) (b 2)) (a 8))""") == False
+    assert sc_eval("""(let ((a (rule (< 3 5))) (b 2)) (a 8))""") == True
+
+
+    assert sc_eval("""(let ((measure 2)) (> measure 8))""") == False
+    assert sc_eval("""(let ((measure 2)) (m> 8))""") == False
+    assert sc_eval("""(let ((measure 2)) (m> 1))""") == True
+
+    # can we pass an expression into m>
+    assert sc_eval("""(let ((measure 2)) (m> (- 5 9)))""") == True
+
+    #rule must be evaluated at a place where measure is defined
+    assert sc_eval("""(let ((measure 2))
+                           (let ((a (rule (m> 8))))  (a 'unused)))""") == False
+
+
+    assert sc_eval("""(let ((a (rule-measure (m> 8))))  (a 2))""") == False
+
