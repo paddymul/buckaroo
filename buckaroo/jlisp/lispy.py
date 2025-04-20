@@ -6,16 +6,11 @@
 
 from __future__ import division
 import re, io
+import sys
 
 class Symbol(str): pass
 
 
-class Procedure(object):
-    "A user-defined Scheme procedure."
-    def __init__(self, parms, exp, env):
-        self.parms, self.exp, self.env = parms, exp, env
-    def __call__(self, *args): 
-        return eval(self.exp, Env(self.parms, args, self.env))
 
 ################ parse, read, and user interaction
 
@@ -106,26 +101,6 @@ def callcc(proc):
 isa = isinstance
 
 
-def add_globals(self):
-    "Add some Scheme standard procedures."
-    import math, cmath, operator as op
-    self.update(vars(math))
-    self.update(vars(cmath))
-    self.update({
-     'equal?':op.eq, 'eq?':op.is_, 'length':len, 'cons':cons,
-     'car':lambda x:x[0], 'cdr':lambda x:x[1:], 'append':op.add,  
-     'list':lambda *x:list(x), 'list?': lambda x:isa(x,list),
-     'null?':lambda x:x==[], 'symbol?':lambda x: isa(x, Symbol),
-     'boolean?':lambda x: isa(x, bool), 'pair?':is_pair, 
-     'port?': lambda x:isa(x,file), 'apply':lambda proc,l: proc(*l), 
-     'eval':lambda x: eval(expand(x)), 'load':lambda fn: load(fn), 'call/cc':callcc,
-     'open-input-file':open,'close-input-port':lambda p: p.file.close(), 
-     'open-output-file':lambda f:open(f,'w'), 'close-output-port':lambda p: p.close(),
-     'eof-object?':lambda x:x is eof_object, 'read-char':readchar,
-     'read':read, 'write':lambda x,port=sys.stdout:port.write(to_string(x)),
-     'display':lambda x,port=sys.stdout:port.write(x if isa(x,str) else to_string(x))})
-    return self
-
 
 
 def make_interpreter(extra_funcs=None, extra_macros=None):
@@ -134,11 +109,65 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
     else:
         ef = extra_funcs
 
+    def readchar(inport):
+        "Read the next character from an input port."
+        if inport.line != '':
+            ch, inport.line = inport.line[0], inport.line[1:]
+            return ch
+        else:
+            return inport.file.read(1) or eof_object
+    
+    def read(inport):
+        "Read a Scheme expression from an input port."
+        def read_ahead(token):
+            if '(' == token: 
+                L = []
+                while True:
+                    token = inport.next_token()
+                    if token == ')': return L
+                    else: L.append(read_ahead(token))
+            elif ')' == token: raise SyntaxError('unexpected )')
+            elif token in quotes: return [quotes[token], read(inport)]
+            elif token is eof_object: raise SyntaxError('unexpected EOF in list')
+            else: return atom(token)
+        # body of read:
+        token1 = inport.next_token()
+        return eof_object if token1 is eof_object else read_ahead(token1)
+    
+
+    def add_globals(self):
+        "Add some Scheme standard procedures."
+        import math, cmath, operator as op
+        self.update(vars(math))
+        self.update(vars(cmath))
+        self.update({
+         '+':op.add, '-':op.sub, '*':op.mul, '/':op.truediv, 'not':op.not_, 
+         '>':op.gt, '<':op.lt, '>=':op.ge, '<=':op.le, '=':op.eq, 
+         'equal?':op.eq, 'eq?':op.is_, 'length':len, 'cons':cons,
+         'car':lambda x:x[0], 'cdr':lambda x:x[1:], 'append':op.add,  
+         'list':lambda *x:list(x), 'list?': lambda x:isa(x,list),
+         'null?':lambda x:x==[], 'symbol?':lambda x: isa(x, Symbol),
+         'boolean?':lambda x: isa(x, bool), 'pair?':is_pair, 
+         'port?': lambda x:isa(x,file), 'apply':lambda proc,l: proc(*l), 
+         'eval':lambda x: eval(expand(x)), 'load':lambda fn: load(fn), 'call/cc':callcc,
+         'open-input-file':open,'close-input-port':lambda p: p.file.close(), 
+         'open-output-file':lambda f:open(f,'w'), 'close-output-port':lambda p: p.close(),
+         'eof-object?':lambda x:x is eof_object, 'read-char':readchar,
+         'read':read, 'write':lambda x,port=sys.stdout:port.write(to_string(x)),
+         'display':lambda x,port=sys.stdout:port.write(x if isa(x,str) else to_string(x))})
+        return self
+
     global_env = add_globals(Env())
     global_env.update(ef)
 
     ################ eval (tail recursive)
-
+    class Procedure(object):
+        "A user-defined Scheme procedure."
+        def __init__(self, parms, exp, env):
+            self.parms, self.exp, self.env = parms, exp, env
+        def __call__(self, *args): 
+            return eval(self.exp, Env(self.parms, args, self.env))
+    
     def eval(x, env=global_env):
         "Evaluate an expression in an environment."
         while True:
@@ -240,31 +269,6 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         if isinstance(inport, str):
             inport = InPort(io.StringIO(inport))
         return expand(read(inport), toplevel=True)
-    
-    def readchar(inport):
-        "Read the next character from an input port."
-        if inport.line != '':
-            ch, inport.line = inport.line[0], inport.line[1:]
-            return ch
-        else:
-            return inport.file.read(1) or eof_object
-    
-    def read(inport):
-        "Read a Scheme expression from an input port."
-        def read_ahead(token):
-            if '(' == token: 
-                L = []
-                while True:
-                    token = inport.next_token()
-                    if token == ')': return L
-                    else: L.append(read_ahead(token))
-            elif ')' == token: raise SyntaxError('unexpected )')
-            elif token in quotes: return [quotes[token], read(inport)]
-            elif token is eof_object: raise SyntaxError('unexpected EOF in list')
-            else: return atom(token)
-        # body of read:
-        token1 = inport.next_token()
-        return eof_object if token1 is eof_object else read_ahead(token1)
     
     
     

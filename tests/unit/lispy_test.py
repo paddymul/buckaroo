@@ -1,5 +1,6 @@
+import pytest
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
-from buckaroo.jlisp.lispy import make_interpreter
+from buckaroo.jlisp.lispy import make_interpreter #, LookupError
 
 def test_split_operations():
 
@@ -101,6 +102,7 @@ def test_assign_env():
 
 
 def test_other():
+    jl_eval, sc_eval = make_interpreter()
     jl_eval([s('begin'), s('df')], {'df':5}) == 5 # pass in a variable and return it
     jl_eval([s('begin'), [s('define'), s('df2'), 8], s('df2')], {'df':5}) == 8 # define a variable
     def dict_get(d, key, default=None):
@@ -116,4 +118,35 @@ def test_other():
              [s('named_func'), 10]
              ])
      # define a lambda, assign it to a variable 'named_func', then call it with an argument of 10
-     
+
+def test_lambda_no_args():
+    """I don't know how to get a no arg lambda to work, punting for now """ 
+    [s('begin'), 
+            [s('define'), s('some_var'), 5],
+            [s('define'), s('named_func'), [s('lambda'), [], #[s('unused')], 
+                                                [s('+'), s('some_var'), 3]]],
+            [s('named_func')]
+        ]
+    assert True
+
+def test_macro2():
+    jlisp_eval, sc_eval = make_interpreter()
+
+    with pytest.raises(LookupError) as excinfo:
+        sc_eval("""(and 4 3)""")
+    sc_eval("""
+(begin
+   (define-macro and (lambda args 
+       (if (null? args) #t
+           (if (= (length args) 1) (car args)
+               `(if ,(car args) (and ,@(cdr args)) #f)))))
+        
+        (define-macro and (lambda args 
+        (if (null? args) #t
+           (if (= (length args) 1) (car args)
+               `(if ,(car args) (and ,@(cdr args)) #f)))))
+;; More macros can go here
+)""")
+    assert sc_eval("""(and 4 3)""") == 3
+    assert sc_eval("""(> 3 5)""") == False
+    assert sc_eval("""(and (> 3 5) 7)""") == False
