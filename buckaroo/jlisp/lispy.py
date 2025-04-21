@@ -233,7 +233,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                     x = proc.exp
                     env = Env(proc.parms, exps, proc.env)
                 else:
-
+                    print("exps", exps)
                     return proc(*exps)
 
 
@@ -299,7 +299,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         if isinstance(inport, str):
             inport = InPort(io.StringIO(inport))
         expanded  = expand(read(inport), toplevel=True)
-        #print("expanded", json.dumps(expanded, indent=4))
+        print("expanded", json.dumps(expanded, indent=4))
         return expanded
     
     
@@ -355,7 +355,9 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                     exp = expand(x[2])
                     if _def is _definemacro:     
                         require(x, toplevel, "define-macro only allowed at top level")
-                        proc = eval(exp)       
+                        print("358 define_macro", exp)
+                        proc = eval(exp)
+                        print("proc", proc)
                         require(x, callable(proc), "macro must be a procedure")
                         macro_table[v] = proc    # (define-macro v proc)
                         return None              #  => None; add v:proc to macro_table
@@ -367,7 +369,11 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 exp = expand(x[2])
                 if _def is _definemacro:     
                     require(x, toplevel, "define-macro only allowed at top level")
-                    proc = eval(exp)       
+
+                    print("373 define_macro", exp)
+                    proc = eval(exp)
+                    print("proc", proc)
+
                     require(x, callable(proc), "macro must be a procedure")
                     macro_table[v] = proc    # (define-macro v proc)
                     return None              #  => None; add v:proc to macro_table
@@ -395,6 +401,27 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         if not predicate: raise SyntaxError(to_string(x)+': '+msg)
     
     _append, _cons, _let = map(Sym, "append cons let".split())
+
+    def verify_symbol_like_form(form):
+        """There are many places where we ant either a symbol, or something that evaluates to a symbol  """
+        if isa(form, Symbol):
+            return True
+        if isa(form, list):
+            if form[0] is _symbol_value:
+                return True
+        return False
+
+    def extract_symbol(form):
+        assert verify_symbol_like_form(form)
+        if isa(form, Symbol):
+            return form
+        else:
+            ret_val = eval(form)
+            assert isa(ret_val, Symbol)
+            return ret_val
+        
+        
+        
     
     def expand_quasiquote(x):
         """Expand `x => 'x; `,x => x; `(,@x y) => (append x y) """
@@ -410,20 +437,46 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         else:
             return [_cons, expand_quasiquote(x[0]), expand_quasiquote(x[1:])]
     
+    def verify_let_binding_list(bindings):
+
+        for b in bindings:
+            if not isa(b,list):
+                print("binding must be a list", b)
+                1/0
+            if not len(b)==2:
+                print("binding must have length of 2", b)
+                1/0
+            if not verify_symbol_like_form(b[0]):
+                print("binding must have first element as a symbol like form", b, b[0], type(b[0]))
+                1/0
+
+            # if not all(isa(b, list) and len(b)==2 and isa(b[0], Symbol)):
+            #     print("problem with binding b", b)
+                
     def let(*args):
         args = list(args)
         x = cons(_let, args)
         require(x, len(args)>1)
         bindings, body = args[0], args[1:]
-        require(x, all(isa(b, list) and len(b)==2 and isa(b[0], Symbol)
-                       for b in bindings), "illegal binding list")
-        vars, vals = zip(*bindings)
+        print("x", x)
+        verify_let_binding_list(bindings)
+        # require(x, all(isa(b, list) and len(b)==2 and isa(b[0], Symbol)
+        #                for b in bindings), "illegal binding list")
+        var_forms, vals = zip(*bindings)
+        vars = list(map(extract_symbol, var_forms))
+        print("vars", vars)
         #return [[_lambda, list(vars)]+map(expand, body)] + map(expand, vals)
         expanded_body = [y for y in map(expand, body)]
         expanded_vals = [y for y in map(expand, vals)]
         return [[_lambda, list(vars)]+expanded_body] + expanded_vals
+
+
+    def symbol_value_3(symbol_form):
+        return [Sym("eval"), symbol_form]
+        
+        # [Symbol(lambda), Symbol(symbol-form), [Symbol(cons), [Symbol(quote), Symbol(eval)], [Symbol(append), Symbol(symbol-form), [Symbol(quote), []]]]]
     
-    macro_table = {_let:let} ## More macros can go here
+    macro_table = {_let:let, Sym("symbol-value3"):symbol_value_3} ## More macros can go here
     def local_eval(x, extra_env=global_env):
         if extra_env is not global_env:
             new_env = Env()

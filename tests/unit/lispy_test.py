@@ -269,7 +269,7 @@ def test_gensym2():
     (eval 'GENSYM-3))""") == 30
 
 
-def test_gensym3():
+def test_gensym_symbol_value():
     jlisp_eval, sc_eval = make_interpreter()
     assert sc_eval("""(begin
         (define  a 5)
@@ -300,13 +300,20 @@ def test_gensym3():
     assert isa(generated_symbol, Symbol)
 
 
-def test_gensym4():
+def test_define_with_symbol_value():
     jlisp_eval, sc_eval = make_interpreter()
     #make sure we can use symbol-value in define
     assert sc_eval("""(begin
         (define a (gensym))
         (define (symbol-value a) 50)
     (symbol-value (symbol-value a)))""") == 50
+def test_define_with_symbol_value_macro():
+    jlisp_eval, sc_eval = make_interpreter()
+    #make sure we can use symbol-value in define
+    assert sc_eval("""(begin
+        (define a (gensym))
+        (define (symbol-value3 a) 50)
+    (symbol-value3 a))""") == 50
 
 def test_define_lambda():
 
@@ -320,4 +327,74 @@ def test_define_lambda():
         """(begin
                (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))
                (fact 5))""") == 120
+
+def test_symbol_value_let():
+    jlisp_eval, sc_eval = make_interpreter()
+    with pytest.raises(LookupError) as excinfo:
+        #let bindings are evaluated separately and cannot reference one another
+        sc_eval(
+            """
+            (let ((a 3) (b (+ a 2)))  '(a b))""")
+
+    res = sc_eval(
+        """
+        (let ((a 3))
+            (let ((b (+ a 2)))  (list a b))))""")
+    assert res == [3,5]
+    res = sc_eval(
+        """
+        (let ((a (gensym)))
+            (let (((symbol-value3 a)  9)) (symbol-value3 (symbol-value3 a))))""")
+    print(res)
+    assert res == 9
+    
+def test_gensym_symbol_value_macro():
+    jlisp_eval, sc_eval = make_interpreter()
+
+
+    #     `(lambda (measure) ,@args)))
+
+    # (define-macro m> (lambda operand
+    #     `(> measure ,@operand)))
+
+
+
+    assert sc_eval("""(begin
+    (define-macro symbol-value2
+        (lambda symbol-form
+            `(eval ,@symbol-form)))
+        (define  b 6)
+    (symbol-value2 b)
+;    (eval b)
+)""") == 6
+
+
+
+    #make sure we can call symbol-value on a symbol returned from symbol-value
+    assert sc_eval("""(begin
+        (define  c (gensym))
+        (define GENSYM-0 20)
+    (symbol-value3 (symbol-value3 c)))""") == 20
+
+    assert sc_eval("""(begin
+        (define d (gensym))
+      d)""") == Symbol("GENSYM-1")
+
+    #make sure taht symbol-value works on a regularly defined symbol
+    assert sc_eval("""(begin
+        (define  b 6)
+       (symbol-value3 b)
+)""") == 6
+
+
+
+
+    assert sc_eval("""(begin
+        (define  e (gensym))
+        (eval `(define ,e 40))
+    (symbol-value3 (symbol-value3 e)))""") == 40
+
+    #make sure that the Generated sybol passes expected tests
+    generated_symbol = sc_eval("""(gensym)""")
+    assert isa(generated_symbol, Symbol)
 
