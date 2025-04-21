@@ -190,18 +190,16 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 (_, exp) = x
                 return exp
             elif x[0] is _symbol_value:
-                print("192 symbol_value", x)
+                #I'm not sure if symbol value could have been written
+                #as a macro that just calls eval, or if that would be
+                #better
                 second_arg = x[1]
                 if isa(second_arg, Symbol):
                     return env.find(second_arg)[second_arg]
                 else:
-                    print("calling eval on second arg")
                     possible_sym = eval(second_arg, env)
                     assert isa(possible_sym, Symbol)
                     return env.find(possible_sym)[possible_sym]
-
-
-                # return 
             elif x[0] is _if:        # (if test conseq alt)
                 (_, test, conseq, alt) = x
                 x = (conseq if eval(test, env) else alt)
@@ -212,16 +210,14 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             elif x[0] is _define:    # (define var exp)
                 import json
                 (_, var, exp) = x
-                print("_define 216, x", x)
-                print("_define 217, initial var", json.dumps(var), type(var), exp)
                 
                 if isa(var, list):
+                    # most likely this is a function call to symbol-value
                     expanded_var = eval(var, env)
-                    print("var is a list, calling eval", expanded_var, type(expanded_var))
+
                     assert isa(expanded_var, Symbol)
                     var = expanded_var
                 env[var] = eval(exp, env)
-                print("222, _define", var, exp, env[var])
                 return None
             elif x[0] is _lambda:    # (lambda (var*) exp)
                 (_, vars, exp) = x
@@ -303,7 +299,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         if isinstance(inport, str):
             inport = InPort(io.StringIO(inport))
         expanded  = expand(read(inport), toplevel=True)
-        print("expanded", json.dumps(expanded, indent=4))
+        #print("expanded", json.dumps(expanded, indent=4))
         return expanded
     
     
@@ -349,7 +345,12 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 f, args = v[0], v[1:]        #  => (define f (lambda (args) body))
 
                 if f is _symbol_value: # a bit of a hack
-                    print("346 expand", v)
+
+                    # this block is repetitive compared to the block
+                    # below, I'd like to move this a function to
+                    # reduce reptition and have a smaller testable
+                    # function
+
                     require(x, len(x)==3)        # (define non-var/list exp) => Error
                     exp = expand(x[2])
                     if _def is _definemacro:     
