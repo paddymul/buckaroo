@@ -259,7 +259,7 @@ def test_gensym2():
         (eval `(define ,c 25))
     `,c)""") == Symbol("GENSYM-1")
     assert sc_eval("""(begin
-        (define  d (gensym))
+p        (define  d (gensym))
         (eval `(define ,d 20))
     d)""") == Symbol("GENSYM-2")
 
@@ -402,3 +402,24 @@ def test_gensym_symbol_value_macro():
     generated_symbol = sc_eval("""(gensym)""")
     assert isa(generated_symbol, Symbol)
 
+def test_symbol_value_lambda():
+    jlisp_eval, sc_eval = make_interpreter()
+
+    """
+        (define-macro and (lambda args 
+       (if (null? args) #t
+           (if (= (length args) 1) (car args)
+               `(if ,(car args) (and ,@(cdr args)) #f)))))
+
+    """
+    res = sc_eval(
+        """
+        (begin
+            (define-macro gs-lambda (lambda args
+                (let ((w (gensym)))
+                    `(begin
+                         (display ',w)
+                         (let ((,w 20)) (list ',w ,w))))))
+        (gs-lambda))""")
+    assert res == [Symbol("GENSYM-0"), 20]
+    1/0
