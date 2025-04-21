@@ -340,12 +340,16 @@ def test_symbol_value_let():
         """
         (let ((a 3))
             (let ((b (+ a 2)))  (list a b))))""")
+
     assert res == [3,5]
+
     res = sc_eval(
         """
-        (let ((a (gensym)))
-            (let (((symbol-value3 a)  9)) (symbol-value3 (symbol-value3 a))))""")
-    print(res)
+        (let ((q (gensym)))
+            (let (((symbol-value3 q)  9))  (symbol-value3 q)))""")
+    print("here")
+    print("res", res)
+    1/0
     assert res == 9
     
 def test_gensym_symbol_value_macro():

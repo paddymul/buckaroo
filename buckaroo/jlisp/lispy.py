@@ -402,23 +402,6 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
     
     _append, _cons, _let = map(Sym, "append cons let".split())
 
-    def verify_symbol_like_form(form):
-        """There are many places where we ant either a symbol, or something that evaluates to a symbol  """
-        if isa(form, Symbol):
-            return True
-        if isa(form, list):
-            if form[0] is _symbol_value:
-                return True
-        return False
-
-    def extract_symbol(form):
-        assert verify_symbol_like_form(form)
-        if isa(form, Symbol):
-            return form
-        else:
-            ret_val = eval(form)
-            assert isa(ret_val, Symbol)
-            return ret_val
         
         
         
@@ -436,6 +419,27 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             return [_append, x[0][1], expand_quasiquote(x[1:])]
         else:
             return [_cons, expand_quasiquote(x[0]), expand_quasiquote(x[1:])]
+
+    def verify_symbol_like_form(form):
+        """There are many places where we ant either a symbol, or something that evaluates to a symbol  """
+        if isa(form, Symbol):
+            return True
+        if isa(form, list):
+            if form[0] is _symbol_value:
+                return True
+            if form[0] is Sym("eval"):
+                return True
+        return False
+
+    def extract_symbol(form):
+        assert verify_symbol_like_form(expand(form))
+        if isa(form, Symbol):
+            return form
+        else:
+            ret_val = eval(expand(form))
+            print("440, form", form)
+            assert isa(ret_val, Symbol)
+            return ret_val
     
     def verify_let_binding_list(bindings):
 
@@ -446,7 +450,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             if not len(b)==2:
                 print("binding must have length of 2", b)
                 1/0
-            if not verify_symbol_like_form(b[0]):
+            if not verify_symbol_like_form(expand(b[0])):
                 print("binding must have first element as a symbol like form", b, b[0], type(b[0]))
                 1/0
 
