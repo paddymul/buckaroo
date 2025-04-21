@@ -286,13 +286,35 @@ def test_gensym3():
         (define  a 5)
     a)""") == 5
 
+    #make sure taht symbol-value works on a regularly defined symbol
+    assert sc_eval("""(begin
+        (define  b 6)
+    (symbol-value b))""") == 6
+
+    #make sure we can call symbol-value on a symbol returned from symbol-value
+    assert sc_eval("""(begin
+        (define  c (gensym))
+        (define GENSYM-0 20)
+    (symbol-value (symbol-value c)))""") == 20
+
+    assert sc_eval("""(begin
+        (define d (gensym))
+     (symbol-value d))""") == Symbol("GENSYM-1")
+
     assert sc_eval("""(begin
         (define  e (gensym))
-        (define GENSYM-0 20)
-    (symbol-value (symbol-value e)))""") == 20
-    # 1/0
+        (eval `(define ,e 40))
+    (symbol-value (symbol-value e)))""") == 40
+
+
+def test_gensym4():
+    jlisp_eval, sc_eval = make_interpreter()
     # assert sc_eval("""(begin
-    #     (define  e (gensym))
-    #     (eval `(define ,e 20))
-    # (symbol-value (symbol-value e))""") == 20
-    # 1/0
+    #     (define a (gensym))
+    #     (define (symbol-value a) 50)
+    # (symbol-value (symbol-value a)))""") == 50
+    assert sc_eval("""(begin
+        (define a (gensym))
+        (define (symbol-value a) 50)
+)
+""") == 50

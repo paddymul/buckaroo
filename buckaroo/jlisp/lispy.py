@@ -198,10 +198,6 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                     possible_sym = eval(second_arg, env)
                     assert isa(possible_sym, Symbol)
                     return env.find(possible_sym)[possible_sym]
-                #initial_sym_obj
-                # second_sym_obj = 
-                # assert isa(second_sym_obj, Symbol)
-                # return env.find(second_sym_obj)[second_sym_obj]
 
 
                 # return 
@@ -213,8 +209,15 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 env.find(var)[var] = eval(exp, env)
                 return None
             elif x[0] is _define:    # (define var exp)
+                import json
                 (_, var, exp) = x
-
+                print("_define 216, x", x)
+                print("_define 217, initial var", json.dumps(var), type(var), exp)
+                if isa(var, list):
+                    print("var is a list, calling eval")
+                    expanded_var = eval(var, env)
+                    assert isa(var, Symbol)
+                    var = expanded_var
                 env[var] = eval(exp, env)
                 print("200, _define", var, exp, env[var])
                 return None
@@ -340,6 +343,10 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             _def, v, body = x[0], x[1], x[2:]
             if isa(v, list) and v:           # (define (f args) body)
                 f, args = v[0], v[1:]        #  => (define f (lambda (args) body))
+
+                if f is _symbol_value: # a bit of a hack
+                    print("346 expand", v)
+                    return v
                 return expand([_def, f, [_lambda, args]+body])
             else:
                 require(x, len(x)==3)        # (define non-var/list exp) => Error
