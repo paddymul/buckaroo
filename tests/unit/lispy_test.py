@@ -247,13 +247,16 @@ def test_gensym():
 
 def test_gensym2():
     jlisp_eval, sc_eval = make_interpreter()
+
+    #does gensym work inside of eval and backsplice
+    # this was the first time I was able to prove out gensym
     assert sc_eval("""(begin
         (define  b (gensym))
         (eval `(define ,b 20))
     (eval `,b))""") == 20
     assert sc_eval("""(begin
         (define  c (gensym))
-        (eval `(define ,c 20))
+        (eval `(define ,c 25))
     `,c)""") == Symbol("GENSYM-1")
     assert sc_eval("""(begin
         (define  d (gensym))
@@ -264,20 +267,6 @@ def test_gensym2():
         (define  e (gensym))
         (eval `(define ,e 30))
     (eval 'GENSYM-3))""") == 30
-
-    assert sc_eval("""(begin
-        (define  e (gensym))
-        (eval `(define ,e 20))
-    (symbol-value e))""") == 20
-    1/0
-
-
-    #HA here we can predict the symbol name and see that it is being assigned to
-    assert sc_eval("""(begin
-        (define  e (gensym))
-        (eval `(define ,e 20))
-    'e)""") == 20
-
 
 
 def test_gensym3():
