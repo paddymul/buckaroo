@@ -290,7 +290,7 @@ def test_gensym_symbol_value():
     #make sure we can call symbol-value on a symbol returned from symbol-value
     assert sc_eval("""(begin
         (define  c (gensym))
-        (define GENSYM-0 20)
+        (define GENSYM-1 20)
     (symbol-value (symbol-value c)))""") == 20
 
     # Show a more manual way of setting a value on a gensymed symbol
