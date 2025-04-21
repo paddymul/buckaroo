@@ -424,20 +424,25 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         return [[_lambda, list(vars)]+expanded_body] + expanded_vals
     
     macro_table = {_let:let} ## More macros can go here
-    def local_eval(x, extra_env=global_env):
-        if extra_env is not global_env:
-            new_env = Env()
-            new_env.update(global_env.copy())
-            new_env.update(extra_env)
-            return eval(expand(list_parse(x), toplevel=True), new_env)
-        #return generic_eval(expand(list_parse(x), macro_table, symbol_table, toplevel=True), local_env)
-        return eval(expand(list_parse(x), toplevel=True), global_env)
+    def jlisp_eval(x, extra_env=None):
+        if extra_env is None:
+            _env = global_env
+        else:
+            _env = Env()
+            _env.update(global_env.copy())
+            _env.update(extra_env)
+        return eval(expand(list_parse(x), toplevel=True), _env)
 
-    def lisp_eval(expr):
-        return eval(parse(expr))
+    def lisp_eval(expr, extra_env=None):
+        if extra_env is None:
+            _env = global_env
+        else:
+            _env = Env()
+            _env.update(global_env.copy())
+            _env.update(extra_env)
 
-
-    return local_eval, lisp_eval
+        return eval(parse(expr), _env)
+    return jlisp_eval, lisp_eval
     
     
 

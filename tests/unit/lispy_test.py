@@ -338,75 +338,22 @@ def test_gensym_in_macro():
                          (let ((,w 20)) (list ',w ,w))))))
         (gs-lambda))""")
     assert res == [Symbol("GENSYM-0"), 20]
-
-
-def Xtest_symbol_value_let():
+def test_define_macro_separate_invocations():
     jlisp_eval, sc_eval = make_interpreter()
-    # I can't get these tests to pass, even with extensive modification of the let macro
-    # But I don't think they should pass
-
-    with pytest.raises(LookupError) as excinfo:
-        #let bindings are evaluated separately and cannot reference one another
-        sc_eval(
-            """
-            (let ((a 3) (b (+ a 2)))  '(a b))""")
-
+    # show how gensym works in a macro
     res = sc_eval(
         """
-        (let ((a 3))
-            (let ((b (+ a 2)))  (list a b))))""")
-
-    assert res == [3,5]
-
+        (begin
+            (define-macro gs-lambda (lambda args
+                (let ((w (gensym)))
+                    `(begin
+                         (display ',w)
+                         (let ((,w 20)) (list ',w ,w))))))
+        (gs-lambda))""")
+    assert res == [Symbol("GENSYM-0"), 20]
     res = sc_eval(
         """
-        (let ((q (gensym)))
-            (let (((symbol-value q)  9))  (symbol-value q)))""")
-    print("here")
-    print("res", res)
-    1/0
-    assert res == 9
+        (begin
+        (gs-lambda))""")
+    assert res == [Symbol("GENSYM-1"), 20]
     
-def Xtest_gensym_symbol_value_macro():
-    jlisp_eval, sc_eval = make_interpreter()
-
-    # I can't get these tests to pass, even with extensive modification of the let macro
-    # But I don't think they should pass
-    assert sc_eval("""(begin
-    (define-macro symbol-value2
-        (lambda symbol-form
-            `(eval ,@symbol-form)))
-        (define  b 6)
-    (symbol-value2 b)
-;    (eval b)
-)""") == 6
-
-
-
-    #make sure we can call symbol-value on a symbol returned from symbol-value
-    assert sc_eval("""(begin
-        (define  c (gensym))
-        (define GENSYM-0 20)
-    (symbol-value3 (symbol-value3 c)))""") == 20
-
-    assert sc_eval("""(begin
-        (define d (gensym))
-      d)""") == Symbol("GENSYM-1")
-
-    #make sure taht symbol-value works on a regularly defined symbol
-    assert sc_eval("""(begin
-        (define  b 6)
-       (symbol-value3 b)
-)""") == 6
-
-
-
-
-    assert sc_eval("""(begin
-        (define  e (gensym))
-        (eval `(define ,e 40))
-    (symbol-value3 (symbol-value3 e)))""") == 40
-
-    #make sure that the Generated sybol passes expected tests
-    generated_symbol = sc_eval("""(gensym)""")
-    assert isa(generated_symbol, Symbol)
