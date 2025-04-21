@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.12.2"
+__generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
@@ -239,7 +239,6 @@ def _(regular_int_parse, strip_int_parse, t_str_bool, t_us_dates):
                   strip_int_parse:('greatest', 'and', ('gt', .7)), 
                   t_us_dates:('only', ('gt', .6))}
     # so we introduce the 'only' operator.  meaning, use this transform if and only if the frac , then the other conditional
-
     return heuristic, heuristic2
 
 
@@ -380,8 +379,6 @@ def _(mo):
         If a user wants to retain a particular autocleaning operations, they can click a "promote to permanent" button
         ## Exporting functioning code is key
         Buckaroo seeks to have a good UX for cleaning data, but at some point you will want to write code.  I don't expect users to ever edit JLisp by hand, almost never write `frac` or `command`s, rarely write heuristics.  But I do expect them to regularly write python code.  Having that escape hatch is key.
-
-
         """
     )
     return

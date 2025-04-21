@@ -23,6 +23,7 @@ def _():
 
 @app.cell
 def _(s):
+    #if the ruleset is sent straight to a jlisp intepreter, we should make each key a tuple, so we don't have a rule_name of 'symbol' which would trip up jlisp
     l_rules = {
         ('col', 't_str_bool'):         [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
         ('col', 'regular_int_parse'):  [s('lambda'), [s('measure')], [s('>'), s('measure'), .9]],
@@ -30,6 +31,42 @@ def _(s):
         # ('only', ('gt', .6))}
         ('col', 't_us_dates'):         [s('lambda'), [s('measure')], [s('and'), [s('>'), s('measure'), .7], 100]]}
     return (l_rules,)
+
+
+@app.cell
+def _(s):
+
+    l_rules2 = {
+        't_str_bool':         [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
+        'regular_int_parse':  [s('lambda'), [s('measure')], [s('>'), s('measure'), .9]],
+        'strip_int_parse':    [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
+        't_us_dates':         [s('lambda'), [s('measure')], [s('and'), [s('>'), s('measure'), .7], 100]]}
+    return (l_rules2,)
+
+
+@app.cell
+def _(jl_eval, s):
+    def interpret_rule(rule, measure):
+        # this is basically a macro that assigns the rule to a lambda body, then evaluates it.  
+        combined_expr = [s('begin'),
+                    [s('define'), s('named_func'), 
+                        [s('lambda'), [s('_unused')], rule]],
+                [s('named_func'), "unused_string"]
+            ]
+        return jl_eval(combined_expr, {'measure':measure})
+    assert interpret_rule([s('>'), s('measure'), .7], .6) == False
+    assert interpret_rule([s('>'), s('measure'), .7], .9) == True
+    assert interpret_rule([s('and'), [s('>'), s('measure'), .7], 100], .9) == True
+    return (interpret_rule,)
+
+
+@app.cell
+def interpret_ruleset():
+    def interpret_ruleset(rule_set, measure):
+        """ ruleset is the full set of rules, measures are the measures for an individual column"""
+
+        scores = {}
+    return (interpret_ruleset,)
 
 
 @app.cell
@@ -44,6 +81,11 @@ def _(s):
 
     #greatest and only are macros
     return (l_rules2,)
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
@@ -92,13 +134,60 @@ def _(jl_eval, s):
 
 
 @app.cell
-def _():
+def _(jl_eval, s):
+    jl_eval([s('if'), False, 9])
+    return
+
+
+@app.cell
+def _(sc_eval):
+    sc_eval("""x`(begin
+
+    (define-macro and (lambda args 
+       (if (null? args) #t
+           (if (= (length args) 1) (car args)
+               `(if ,(car args) (and ,@(cdr args)) #f)))))
+
+    ;; More macros can go here
+
+    )""")
     return
 
 
 @app.cell
 def _():
+    import operator
+    return (operator,)
+
+
+@app.cell
+def _(operator):
+    import json
+    print(json.dumps(dir(operator), indent=4))
+    return (json,)
+
+
+@app.cell
+def _(jl_eval, s):
+    jl_eval([s('and'), True, 8])
     return
+
+
+@app.cell
+def _(jl_eval, s):
+    jl_eval([s('define'), s('global_var'), 6])
+    jl_eval([s('begin'), ('global_var')])
+
+    return
+
+
+app._unparsable_cell(
+    r"""
+    jl_eval([s('begin'), 
+             [s('define'), s('res1'), [s('lambda'), [s('a')], 
+    """,
+    name="_"
+)
 
 
 @app.cell

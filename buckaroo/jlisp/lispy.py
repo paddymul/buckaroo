@@ -7,6 +7,7 @@
 from __future__ import division
 import re, io
 import sys
+import json
 
 class Symbol(str):
     def __repr__(self):
@@ -213,13 +214,14 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 (_, var, exp) = x
                 print("_define 216, x", x)
                 print("_define 217, initial var", json.dumps(var), type(var), exp)
+                
                 if isa(var, list):
-                    print("var is a list, calling eval")
                     expanded_var = eval(var, env)
-                    assert isa(var, Symbol)
+                    print("var is a list, calling eval", expanded_var, type(expanded_var))
+                    assert isa(expanded_var, Symbol)
                     var = expanded_var
                 env[var] = eval(exp, env)
-                print("200, _define", var, exp, env[var])
+                print("222, _define", var, exp, env[var])
                 return None
             elif x[0] is _lambda:    # (lambda (var*) exp)
                 (_, vars, exp) = x
@@ -300,7 +302,9 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         # Backwards compatibility: given a str, convert it to an InPort
         if isinstance(inport, str):
             inport = InPort(io.StringIO(inport))
-        return expand(read(inport), toplevel=True)
+        expanded  = expand(read(inport), toplevel=True)
+        print("expanded", json.dumps(expanded, indent=4))
+        return expanded
     
     
     
@@ -346,7 +350,15 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
 
                 if f is _symbol_value: # a bit of a hack
                     print("346 expand", v)
-                    return v
+                    require(x, len(x)==3)        # (define non-var/list exp) => Error
+                    exp = expand(x[2])
+                    if _def is _definemacro:     
+                        require(x, toplevel, "define-macro only allowed at top level")
+                        proc = eval(exp)       
+                        require(x, callable(proc), "macro must be a procedure")
+                        macro_table[v] = proc    # (define-macro v proc)
+                        return None              #  => None; add v:proc to macro_table
+                    return [_define, v, exp]
                 return expand([_def, f, [_lambda, args]+body])
             else:
                 require(x, len(x)==3)        # (define non-var/list exp) => Error

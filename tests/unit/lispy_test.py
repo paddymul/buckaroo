@@ -1,6 +1,6 @@
 import pytest
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
-from buckaroo.jlisp.lispy import make_interpreter, Symbol #, LookupError
+from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa
 
 def test_split_operations():
 
@@ -306,15 +306,16 @@ def test_gensym3():
         (eval `(define ,e 40))
     (symbol-value (symbol-value e)))""") == 40
 
+    #make sure that the Generated sybol passes expected tests
+    generated_symbol = sc_eval("""(gensym)""")
+    assert isa(generated_symbol, Symbol)
+
 
 def test_gensym4():
     jlisp_eval, sc_eval = make_interpreter()
-    # assert sc_eval("""(begin
-    #     (define a (gensym))
-    #     (define (symbol-value a) 50)
-    # (symbol-value (symbol-value a)))""") == 50
+    #make sure we can use symbol-value in define
     assert sc_eval("""(begin
         (define a (gensym))
         (define (symbol-value a) 50)
-)
-""") == 50
+    (symbol-value (symbol-value a)))""") == 50
+
