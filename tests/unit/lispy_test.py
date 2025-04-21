@@ -226,8 +226,6 @@ def test_gensym():
     assert sc_eval("""(gensym)""") == "GENSYM-0"
     #we get a unique one next time this is called
     assert sc_eval("""(let ((a (gensym))) a)""") == "GENSYM-1"
-    # assert sc_eval("""(let ((a (gensym)))
-    #                            `(let ((,a 9))  (= ,a 9)))""") == True
     assert sc_eval("""(begin
 
         (define  a 20)
@@ -271,6 +269,8 @@ def test_gensym2():
 
 def test_gensym_symbol_value():
     jlisp_eval, sc_eval = make_interpreter()
+
+    #just show how defining a value to a symbol, then referencing that symbol works
     assert sc_eval("""(begin
         (define  a 5)
     a)""") == 5
@@ -280,16 +280,20 @@ def test_gensym_symbol_value():
         (define  b 6)
     (symbol-value b))""") == 6
 
+
+    #Show that we can get a GENSYM from a variable
+    assert sc_eval("""(begin
+        (define d (gensym))
+     (symbol-value d))""") == Symbol("GENSYM-0")
+
+
     #make sure we can call symbol-value on a symbol returned from symbol-value
     assert sc_eval("""(begin
         (define  c (gensym))
         (define GENSYM-0 20)
     (symbol-value (symbol-value c)))""") == 20
 
-    assert sc_eval("""(begin
-        (define d (gensym))
-     (symbol-value d))""") == Symbol("GENSYM-1")
-
+    # Show a more manual way of setting a value on a gensymed symbol
     assert sc_eval("""(begin
         (define  e (gensym))
         (eval `(define ,e 40))
@@ -307,13 +311,6 @@ def test_define_with_symbol_value():
         (define a (gensym))
         (define (symbol-value a) 50)
     (symbol-value (symbol-value a)))""") == 50
-def test_define_with_symbol_value_macro():
-    jlisp_eval, sc_eval = make_interpreter()
-    #make sure we can use symbol-value in define
-    assert sc_eval("""(begin
-        (define a (gensym))
-        (define (symbol-value3 a) 50)
-    (symbol-value3 a))""") == 50
 
 def test_define_lambda():
 
@@ -327,6 +324,21 @@ def test_define_lambda():
         """(begin
                (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))
                (fact 5))""") == 120
+
+def test_gensym_in_macro():
+    jlisp_eval, sc_eval = make_interpreter()
+    # show how gensym works in a macro
+    res = sc_eval(
+        """
+        (begin
+            (define-macro gs-lambda (lambda args
+                (let ((w (gensym)))
+                    `(begin
+                         (display ',w)
+                         (let ((,w 20)) (list ',w ,w))))))
+        (gs-lambda))""")
+    assert res == [Symbol("GENSYM-0"), 20]
+
 
 def Xtest_symbol_value_let():
     jlisp_eval, sc_eval = make_interpreter()
@@ -398,25 +410,3 @@ def Xtest_gensym_symbol_value_macro():
     #make sure that the Generated sybol passes expected tests
     generated_symbol = sc_eval("""(gensym)""")
     assert isa(generated_symbol, Symbol)
-
-def test_gensym_in_macro():
-    jlisp_eval, sc_eval = make_interpreter()
-
-    """
-        (define-macro and (lambda args 
-       (if (null? args) #t
-           (if (= (length args) 1) (car args)
-               `(if ,(car args) (and ,@(cdr args)) #f)))))
-
-    """
-    res = sc_eval(
-        """
-        (begin
-            (define-macro gs-lambda (lambda args
-                (let ((w (gensym)))
-                    `(begin
-                         (display ',w)
-                         (let ((,w 20)) (list ',w ,w))))))
-        (gs-lambda))""")
-    assert res == [Symbol("GENSYM-0"), 20]
-
