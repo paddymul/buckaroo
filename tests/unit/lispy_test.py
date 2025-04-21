@@ -308,3 +308,16 @@ def test_gensym4():
         (define (symbol-value a) 50)
     (symbol-value (symbol-value a)))""") == 50
 
+def test_define_lambda():
+
+    jlisp_eval, sc_eval = make_interpreter()
+    # we made a change to define, lets test that it works
+    assert sc_eval(
+        """(begin
+               (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))
+               (fact 3))""") == 6
+    assert sc_eval(
+        """(begin
+               (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))
+               (fact 5))""") == 120
+
