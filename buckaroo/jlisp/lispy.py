@@ -158,6 +158,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
          'car':lambda x:x[0], 'cdr':lambda x:x[1:], 'append':op.add,  
          'list':lambda *x:list(x), 'list?': lambda x:isa(x,list),
          'null?':lambda x:x==[], 'symbol?':lambda x: isa(x, Symbol),
+         'none?': lambda x: x is None,
          'boolean?':lambda x: isa(x, bool), 'pair?':is_pair, 
          'port?': lambda x:isa(x,file), 'apply':lambda proc,l: proc(*l), 
          'eval':lambda x: eval(expand(x)), 'load':lambda fn: load(fn), 'call/cc':callcc,
@@ -271,7 +272,6 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                     quote_func = quotes[quote_char]
                     ret_list.append([quote_func, list_parse(next(lst))])
                 elif isinstance(x, dict):
-                    #print("x was a dict", x)
                     ret_list.append(x)
                     #raise("we dont't currently support atoms of dictionary")
                 else:
@@ -299,7 +299,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         if isinstance(inport, str):
             inport = InPort(io.StringIO(inport))
         expanded  = expand(read(inport), toplevel=True)
-        #print("expanded", json.dumps(expanded, indent=4))
+        print("expanded", expanded)
         return expanded
     
     
@@ -431,7 +431,10 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             _env = Env()
             _env.update(global_env.copy())
             _env.update(extra_env)
-        return eval(expand(list_parse(x), toplevel=True), _env)
+        expanded = expand(list_parse(x), toplevel=True)
+        print("jlisp _env", extra_env)
+        print(expanded)
+        return eval(expanded, _env)
 
     def lisp_eval(expr, extra_env=None):
         if extra_env is None:
@@ -440,7 +443,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             _env = Env()
             _env.update(global_env.copy())
             _env.update(extra_env)
-
+        print("scheme _env", extra_env)
         return eval(parse(expr), _env)
     return jlisp_eval, lisp_eval
     

@@ -3,6 +3,36 @@ from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
 from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa
 from functools import cache
 
+@cache
+def get_rule_interpreter():
+    """eval a string as scheme, a list as jlisp"""
+    jlisp_eval, sc_eval = make_interpreter()
+    sc_eval(MACROS)
+
+    def multi_eval(code, env=None):
+        if isinstance(code, list):
+            return jlisp_eval(code, env)
+        assert isinstance(code, str)
+        return sc_eval(code, env)
+    return multi_eval
+
+def eval_heuristic_rule(rule, measure):
+    _eval = get_rule_interpreter()
+    return _eval(rule, {'measure': measure})
+
+
+l_rules2 = {
+    't_str_bool':         [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
+    'regular_int_parse':  [s('lambda'), [s('measure')], [s('>'), s('measure'), .9]],
+    'strip_int_parse':    [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
+    't_us_dates':         [s('lambda'), [s('measure')], [s('and'), [s('>'), s('measure'), .7], 100]]}
+
+l_rules3 = {
+    't_str_bool':         [s('m>'), .7],
+    'regular_int_parse':  [s('m>'), .9],
+    'strip_int_parse':    [s('m>'), .7],
+    't_us_dates':         [s('primary'), [s('m>'), .7]]}
+
 MACROS = """
 (begin
    (define-macro and (lambda args 
@@ -20,46 +50,79 @@ MACROS = """
     (define-macro rule-measure (lambda args
         `(lambda (measure) ,@args)))
 
-    (define-macro m> (lambda operand
-        `(> measure ,@operand)))
 
     (define-macro m< (lambda operand
         `(< measure ,@operand)))
+    (define primary
+        (lambda (other-cond)
+            (if other-cond
+                (* other-cond 100)
+                other-cond)))
+
+    (define-macro m> (lambda operand
+        `(if (> measure ,@operand)
+             measure #f)))
+
+    (define-macro return-measure (lambda operand
+        `(if #t
+             measure 9)))
 )"""
 
-@cache
-def get_rule_interpreter():
-    """eval a string as scheme, a list as jlisp"""
-    jlisp_eval, sc_eval = make_interpreter()
-    sc_eval(MACROS)
-
-    def multi_eval(code, env=None):
-        if isinstance(code, list):
-            return jlisp_eval(code, env)
-        assert isinstance(code, str)
-        return sc_eval(code, None)
-    return multi_eval
 
 
-l_rules2 = {
-    't_str_bool':         [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
-    'regular_int_parse':  [s('lambda'), [s('measure')], [s('>'), s('measure'), .9]],
-    'strip_int_parse':    [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
-    't_us_dates':         [s('lambda'), [s('measure')], [s('and'), [s('>'), s('measure'), .7], 100]]}
 
-l_rules3 = {
-    't_str_bool':         [s('m>'), .7],
-    'regular_int_parse':  [s('m>'), .9],
-    'strip_int_parse':    [s('m>'), .7],
-    't_us_dates':         [s('only'), [s('m>'), .7]]}
+def test_macro_behaviour_rule():
 
+    assert eval_heuristic_rule([s('m>'), .7], .6) == False
+    assert eval_heuristic_rule('(m> .7)', .6) == False
 
-def eval_heuristic_rule(rule, measure):
-    _eval = get_rule_interpreter()
-    return _eval(rule, {'measure': measure})
     
-def test_heuristic_rule():
+
+    assert eval_heuristic_rule([s('if'), 4, s('measure'), 9], 3) == 3
     assert eval_heuristic_rule([s('m>'), .7], .8) == .8
+
+    assert eval_heuristic_rule('(m> .7)', .8)  == .8
+
+    #test if behaviour
+    assert eval_heuristic_rule([s('if'), 4, 5, 9], 3) == 5
+
+    
+    assert eval_heuristic_rule([s('symbol-value'), s('measure')], 3) == 3
+
+
+    assert eval_heuristic_rule([s('begin'),
+                                [s('display'), s('measure')],
+                                s('measure')],
+                                .7) == .7
+
+    
+def test_none_null():
+    assert eval_heuristic_rule([s('null?'), s('measure')], []) == True
+    assert eval_heuristic_rule([s('null?'), [s('m>'), .7]], .9) == False
+    assert eval_heuristic_rule([s('none?'), s('measure')], None) == True
+
+
+def test_heuristic_rule():
+    assert eval_heuristic_rule([s('begin'),
+                                [s('display'), s('measure')],
+                                s('measure')],
+                                .7) == .7
+    assert eval_heuristic_rule('(m> .7)', .8)  == .8
+    assert eval_heuristic_rule('(m> .7)', .5)  == False
+    assert eval_heuristic_rule([s('m>'), .7], .8) == .8
+    assert eval_heuristic_rule([s('m>'), .7], .6) == False
+    assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
+    assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
+
+
+
+# [
+#     [Symbol(primary),
+#          [Symbol(if),
+#               [Symbol(>), Symbol(measure), 0.7],
+#           Symbol(measure), None]
+#      ]
+# ]
 
 
 def xtest_other():    
