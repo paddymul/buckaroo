@@ -1,7 +1,7 @@
-import pytest
-from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
-from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa
+from buckaroo.jlisp.lisp_utils import s
+from buckaroo.jlisp.lispy import make_interpreter
 from functools import cache
+# noqa: E712
 
 @cache
 def get_rule_interpreter():
@@ -129,15 +129,15 @@ def test_heuristic_rule():
     assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
 
 
-def test_timing():
+def test_timing(): # noqa: E712
     import time
     start_time = time.perf_counter()
     for i in range(100):
         assert eval_heuristic_rule([s('m>'), .7], .6) == False
         assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
         assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
-        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
-        assert eval_heuristic_rule([s('m>'), .7], .6) == False
+        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False  
+        assert eval_heuristic_rule([s('m>'), .7], .6) == False  # noqa: E712
     end_time = time.perf_counter()
     execution_time = end_time - start_time
     print(f"Function execution time: {execution_time:.4f} seconds")

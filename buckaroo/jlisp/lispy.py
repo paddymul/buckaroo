@@ -7,7 +7,6 @@
 from __future__ import division
 import re, io
 import sys
-import json
 
 class Symbol(str):
     def __repr__(self):
@@ -160,8 +159,10 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
          'null?':lambda x:x==[], 'symbol?':lambda x: isa(x, Symbol),
          'none?': lambda x: x is None,
          'boolean?':lambda x: isa(x, bool), 'pair?':is_pair, 
-         'port?': lambda x:isa(x,file), 'apply':lambda proc,l: proc(*l), 
-         'eval':lambda x: eval(expand(x)), 'load':lambda fn: load(fn), 'call/cc':callcc,
+         'apply':lambda proc, _els: proc(*_els), 
+         'eval':lambda x: eval(expand(x)),
+          # 'load':lambda fn: load(fn), 'port?': lambda x:isa(x,file),
+         'call/cc':callcc,
          'open-input-file':open,'close-input-port':lambda p: p.file.close(), 
          'open-output-file':lambda f:open(f,'w'), 'close-output-port':lambda p: p.close(),
          'eof-object?':lambda x:x is eof_object, 'read-char':readchar,
@@ -209,7 +210,6 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                 env.find(var)[var] = eval(exp, env)
                 return None
             elif x[0] is _define:    # (define var exp)
-                import json
                 (_, var, exp) = x
                 
                 if isa(var, list):

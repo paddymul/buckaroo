@@ -132,7 +132,7 @@ def test_lambda_no_args():
 def test_macro2():
     jlisp_eval, sc_eval = make_interpreter()
 
-    with pytest.raises(LookupError) as excinfo:
+    with pytest.raises(LookupError) as _excinfo:
         sc_eval("""(and 4 3)""")
     sc_eval("""
 (begin
@@ -162,7 +162,7 @@ def test_macro2():
 def test_macro_rule():
     jlisp_eval, sc_eval = make_interpreter()
 
-    with pytest.raises(LookupError) as excinfo:
+    with pytest.raises(LookupError) as _excinfo:
         sc_eval("""(and 4 3)""")
     sc_eval("""
 (begin
