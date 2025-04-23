@@ -432,8 +432,8 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             _env.update(global_env.copy())
             _env.update(extra_env)
         expanded = expand(list_parse(x), toplevel=True)
-        print("jlisp _env", extra_env)
-        print(expanded)
+        # print("jlisp _env", extra_env)
+        # print(expanded)
         return eval(expanded, _env)
 
     def lisp_eval(expr, extra_env=None):
@@ -443,7 +443,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
             _env = Env()
             _env.update(global_env.copy())
             _env.update(extra_env)
-        print("scheme _env", extra_env)
+        # print("scheme _env", extra_env)
         return eval(parse(expr), _env)
     return jlisp_eval, lisp_eval
     

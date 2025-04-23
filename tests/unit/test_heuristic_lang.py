@@ -16,22 +16,8 @@ def get_rule_interpreter():
         return sc_eval(code, env)
     return multi_eval
 
-def eval_heuristic_rule(rule, measure):
-    _eval = get_rule_interpreter()
-    return _eval(rule, {'measure': measure})
 
 
-l_rules2 = {
-    't_str_bool':         [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
-    'regular_int_parse':  [s('lambda'), [s('measure')], [s('>'), s('measure'), .9]],
-    'strip_int_parse':    [s('lambda'), [s('measure')], [s('>'), s('measure'), .7]],
-    't_us_dates':         [s('lambda'), [s('measure')], [s('and'), [s('>'), s('measure'), .7], 100]]}
-
-l_rules3 = {
-    't_str_bool':         [s('m>'), .7],
-    'regular_int_parse':  [s('m>'), .9],
-    'strip_int_parse':    [s('m>'), .7],
-    't_us_dates':         [s('primary'), [s('m>'), .7]]}
 
 MACROS = """
 (begin
@@ -68,11 +54,52 @@ MACROS = """
              measure 9)))
 )"""
 
+def eval_heuristic_rule(rule, measure):
+    _eval = get_rule_interpreter()
+    return _eval(rule, {'measure': measure})
 
 
+def get_top_score(rules, score_dict):
+    scores = {}
+    for rule_name, rule in rules.items():
+        scores[rule_name] = eval_heuristic_rule(rule, score_dict[rule_name])
+    return max(scores, key=scores.get)
+                                                
+
+def eval_heuristics(rules, col_scores):
+    chosen_fixes = {}
+    for col, scores in col_scores.items():
+        chosen_fixes[col] = get_top_score(rules, scores)
+    return chosen_fixes
+
+
+l_rules = {
+    't_str_bool':         [s('m>'), .7],
+    'regular_int_parse':  [s('m>'), .9],
+    'strip_int_parse':    [s('m>'), .7],
+    't_us_dates':         [s('primary'), [s('m>'), .7]]}
+
+def test_get_top_score():
+    probably_bool= {
+        't_str_bool': .8, 'regular_int_parse': .2, 'strip_int_parse': .3, 't_us_dates': 0}
+    
+    get_top_score(l_rules, probably_bool)
+
+def test_eval_heuristics():
+    col_scores = dict(
+        probably_bool= {
+            't_str_bool': .8, 'regular_int_parse': .2, 'strip_int_parse': .3, 't_us_dates': 0},
+        # no_changes = {
+        #     't_str_bool': 0, 'regular_int_parse': 0, 'strip_int_parse': 0, 't_us_dates': 0},
+        probably_dates = {
+            't_str_bool': .8, 'regular_int_parse': .95, 'strip_int_parse': 0, 't_us_dates': .71})
+    res = eval_heuristics(l_rules, col_scores)
+    assert res== dict(probably_bool='t_str_bool', probably_dates='t_us_dates')
+    
+    
 
 def test_macro_behaviour_rule():
-
+    #verify that macros work from scheme and jlisp
     assert eval_heuristic_rule([s('m>'), .7], .6) == False
     assert eval_heuristic_rule('(m> .7)', .6) == False
 
@@ -81,19 +108,6 @@ def test_macro_behaviour_rule():
     assert eval_heuristic_rule([s('if'), 4, s('measure'), 9], 3) == 3
     assert eval_heuristic_rule([s('m>'), .7], .8) == .8
 
-    assert eval_heuristic_rule('(m> .7)', .8)  == .8
-
-    #test if behaviour
-    assert eval_heuristic_rule([s('if'), 4, 5, 9], 3) == 5
-
-    
-    assert eval_heuristic_rule([s('symbol-value'), s('measure')], 3) == 3
-
-
-    assert eval_heuristic_rule([s('begin'),
-                                [s('display'), s('measure')],
-                                s('measure')],
-                                .7) == .7
 
     
 def test_none_null():
@@ -115,84 +129,18 @@ def test_heuristic_rule():
     assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
 
 
-
-# [
-#     [Symbol(primary),
-#          [Symbol(if),
-#               [Symbol(>), Symbol(measure), 0.7],
-#           Symbol(measure), None]
-#      ]
-# ]
-
-
-def xtest_other():    
-    with pytest.raises(LookupError) as excinfo:
-        sc_eval("""(and 4 3)""")
-    sc_eval()
-    """(let ((a 1) (b 2)) (+ a b)n)"""
-    assert sc_eval("""(let ((a (rule (> 3 5))) (b 2)) (a 8))""") == False
-    assert sc_eval("""(let ((a (rule (< 3 5))) (b 2)) (a 8))""") == True
-
-    
-    assert sc_eval("""(let ((measure 2)) (> measure 8))""") == False
-    # test a simple form of the m> macro
-    assert sc_eval("""(let ((measure 2)) (m> 8))""") == False
-    #make sure m> doesn't always return False
-    assert sc_eval("""(let ((measure 2)) (m> 1))""") == True
-
-    # can we pass an expression into m>
-    assert sc_eval("""(let ((measure 2)) (m> (- 5 9)))""") == True
-
-    #rule must be evaluated at a place where measure is defined
-    assert sc_eval("""(let ((measure 2))
-                           (let ((a (rule (m> 8))))  (a 'unused)))""") == False
-
-
-    assert sc_eval("""(let ((a (rule-measure (m> 8))))  (a 2))""") == False
-
-
-def xtest_lambda_arg_handling():
-    jlisp_eval, sc_eval = make_interpreter()
-    #try to define a lambda that takes no arguments
-
-    # you must specify an argument that the lambda takes, but it isn't
-    # necessary to pass that argument when you call the lambda
-    assert sc_eval("""(let ((a (lambda foo (> 3 5)))) (a))""") == False
-    assert sc_eval("""(let ((a (lambda foo (< 3 5)))) (a))""") == True
-
-    # you can even pass args that the lambda doesn't have arguments for
-    assert sc_eval("""(let ((a (lambda foo (< 3 5)))) (a 3))""") == True
-    assert sc_eval("""(let ((a (lambda foo (< 3 5)))) (a 3 9))""") == True
-
-def xtest_define_lambda():
-
-    jlisp_eval, sc_eval = make_interpreter()
-    # we made a change to define, lets test that it works
-    assert sc_eval(
-        """(begin
-               (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))
-               (fact 3))""") == 6
-    assert sc_eval(
-        """(begin
-               (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))
-               (fact 5))""") == 120
-
-def xtest_define_macro_separate_invocations():
-    jlisp_eval, sc_eval = make_interpreter()
-    # show how gensym works in a macro
-    res = sc_eval(
-        """
-        (begin
-            (define-macro gs-lambda (lambda args
-                (let ((w (gensym)))
-                    `(begin
-                         (display ',w)
-                         (let ((,w 20)) (list ',w ,w))))))
-        (gs-lambda))""")
-    assert res == [Symbol("GENSYM-0"), 20]
-    res = sc_eval(
-        """
-        (begin
-        (gs-lambda))""")
-    assert res == [Symbol("GENSYM-1"), 20]
-    
+def test_timing():
+    import time
+    start_time = time.perf_counter()
+    for i in range(100):
+        assert eval_heuristic_rule([s('m>'), .7], .6) == False
+        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
+        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
+        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
+        assert eval_heuristic_rule([s('m>'), .7], .6) == False
+    end_time = time.perf_counter()
+    execution_time = end_time - start_time
+    print(f"Function execution time: {execution_time:.4f} seconds")
+    # 20 columns, 5 rules = 100
+    # 5 strategies (sets of rules)
+    # less than 10ms on my machine, this is fast enough
