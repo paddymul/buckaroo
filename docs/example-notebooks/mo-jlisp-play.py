@@ -6,13 +6,6 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    _col_scores = {'foo':3, 'bar':9}
-    max(_col_scores, key=_col_scores.get)
-    return
-
-
-@app.cell
-def _():
     from buckaroo.jlisp.lisp_utils import s
     from buckaroo.jlisp.lispy import make_interpreter
     jl_eval, sc_eval = make_interpreter()
