@@ -33,6 +33,17 @@ def _(s):
 
 
 @app.cell
+def _():
+    l_rules_scheme = {
+        't_str_bool':         '(m> .7)',
+        'regular_int_parse':  '(m> .8)',
+        'strip_int_parse':    '(m> .9)',
+        'none':               '(none-rule)',
+        't_us_dates':         '(primary (m> .7))'}
+    return (l_rules_scheme,)
+
+
+@app.cell
 def _(eval_heuristics, l_rules):
     col_scores = dict(
             probably_bool= {
@@ -42,7 +53,6 @@ def _(eval_heuristics, l_rules):
             probably_dates = {
                 't_str_bool': .8, 'regular_int_parse': .95, 'strip_int_parse': 0, 't_us_dates': .71})
     res = eval_heuristics(l_rules, col_scores)
-    #    assert res== dict(probably_bool='t_str_bool', probably_dates='t_us_dates')
     res
     return col_scores, res
 

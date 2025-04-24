@@ -222,9 +222,34 @@ def _(mo):
         """
         Now to write the syntax for the heuristic class.
 
-        The idea is that when each matching frac is the heighest percentage, apply that transform function to that column
+        The idea is that when each matching frac is the heighest percentage, apply that transform function to that column.
+
+        I decied to leverage JLisp to create a simple, flexible syntax for writing heuristics.
+        It looks like this
+        ```python
+        l_rules = {  #JLisp version
+            't_str_bool':         [s('m>'), .7],
+            'regular_int_parse':  [s('m>'), .9],
+            'strip_int_parse':    [s('m>'), .7],
+            'none':               [s('none-rule')],
+            't_us_dates':         [s('primary'), [s('m>'), .7]]},
+    
+        l_rules_scheme = { #scheme version.  They are very close
+            't_str_bool':         '(m> .7)',
+            'regular_int_parse':  '(m> .8)',
+            'strip_int_parse':    '(m> .9)',
+            'none':               '(none-rule)',
+            't_us_dates':         '(primary (m> .7))'}
+        ```
+        There are a couple of simple primitives.  Notablly `m>` which tests if the relevant measure is greater than a value.  A basic lisp is available, and this language is extensible, so I won't be limited.
+
         """
     )
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -268,6 +293,29 @@ def _(mo):
         I can look at a dataset and see "start_station_latitude", and "start_station_longitude" and know that those are lat/long, and should be treated as a single coordinate.  I'm at a loss to think of how write a `frac` to detect this.
 
         Treating lat/long as a single tuple allows much easier downstream work.  What's the geographic center,  what's the geographic center over time
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        ## Heuristic syntax for splitting columns
+        This is a place where we want to depend on extra fracs
+
+        from experience multiple numbers shoved into a single field would have a separating character. probably one of `,:-|;`
+        what would those rules look like?  Let's try this syntax on for size
+        ```lisp
+            (and 
+                (> (frac-get 'char_int') .75)    ; we want mostly integers characters
+                (< (frac-get 'char_letter') .1)  ; we don't want many letters
+                                                                                 ; not 100% sure on this syntax for a list of characters
+                (between (/ (sum (apply (lambda (chr) (dict-get char-freqs chr)) ',:-| ))
+                            (dict-get total-chars)) ; the fraction of split characters
+                         .01 .2))
+        ```
         """
     )
     return
