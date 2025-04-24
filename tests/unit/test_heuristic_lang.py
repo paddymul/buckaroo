@@ -5,6 +5,7 @@ l_rules = {
     't_str_bool':         [s('m>'), .7],
     'regular_int_parse':  [s('m>'), .9],
     'strip_int_parse':    [s('m>'), .7],
+    'none':               [s('none-rule')],
     't_us_dates':         [s('primary'), [s('m>'), .7]]}
 
 def test_get_top_score():
@@ -23,6 +24,14 @@ def test_eval_heuristics():
             't_str_bool': .8, 'regular_int_parse': .95, 'strip_int_parse': 0, 't_us_dates': .71})
     res = eval_heuristics(l_rules, col_scores)
     assert res== dict(probably_bool='t_str_bool', probably_dates='t_us_dates')
+
+def test_eval_heuristics_no_match():
+    col_scores = dict(
+        no_changes = {
+            't_str_bool': 0, 'regular_int_parse': 0, 'strip_int_parse': 0, 't_us_dates': 0})
+    res = eval_heuristics(l_rules, col_scores)
+    print("res", res)
+    assert res== dict(no_changes='none')
     
     
 

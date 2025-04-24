@@ -2,6 +2,22 @@ from buckaroo.jlisp.lispy import make_interpreter
 from functools import cache
 # noqa: E712
 
+
+#add to read from dictionaries
+def dict_get(d, key, default=None):
+    return d.get(key, default)
+ #pass in a defined function from python
+
+"""
+
+def dict_get(d, key, default=None):
+    return d.get(key, default)
+ #pass in a defined function from python
+jl_eval([s('dict_get'), s('fruits'), 'apple'], {'dict_get': dict_get, 'fruits':{'apple':9}}) == 9 
+jl_eval([s('dict_get'), s('fruits'), 'pear', 99], {'dict_get': dict_get, 'fruits':{'apple':9}}) == 99
+
+"""
+
 @cache
 def get_rule_interpreter():
     """eval a string as scheme, a list as jlisp"""
@@ -48,6 +64,7 @@ MACROS = """
         `(if (> measure ,@operand)
              measure #f)))
 
+    (define none-rule (lambda _unused .1))
     (define-macro return-measure (lambda operand
         `(if #t
              measure 9)))
@@ -61,7 +78,7 @@ def eval_heuristic_rule(rule, measure):
 def get_top_score(rules, score_dict):
     scores = {}
     for rule_name, rule in rules.items():
-        scores[rule_name] = eval_heuristic_rule(rule, score_dict[rule_name])
+        scores[rule_name] = eval_heuristic_rule(rule, score_dict.get(rule_name, 0))
     return max(scores, key=scores.get)
                                                 
 
