@@ -5,6 +5,7 @@ import { Operation, OperationDefaultArgs, sym } from "../components/OperationUti
 import { CommandArgSpec, CommandConfigT, symDf } from "../components/CommandUtils";
 
 
+import "../style/dcf-npm.css"
 const OperationViewerWrap = ({
     operations,
     activeColumn,
@@ -29,7 +30,7 @@ const OperationViewerWrap = ({
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
-  title: "Buckaroo/Chrome/OperationViewer",
+  title: "Buckaroo/Chrome/OperationViewer-in-stories-dir",
   component:OperationViewerWrap,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
