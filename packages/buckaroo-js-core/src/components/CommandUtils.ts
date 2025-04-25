@@ -10,6 +10,7 @@ export type ArgSpec = TypeSpec | EnumSpec | ColEnumSpec | NoArgs;
 
 export interface SymbolT {
     symbol: string;
+    meta?: {auto_clean?:boolean};
 }
 
 export interface SymbolDf {

@@ -167,6 +167,11 @@
   color: white;
 }
 
+.operations-list > div.auto_clean {
+  border:3px solid green;
+
+}
+
 .operations-list button {
   border: none;
   background: none;

@@ -26,6 +26,7 @@ export const OperationsList2: React.FC<OperationsListProps> = (
         }}>
             {operations.map((operation, index) => {
                 const currentKey = getOperationKey(operations, index);
+                const isAutoClean = operation[0].meta?.auto_clean === true;
                 return (<div 
                     key={index} 
                     style={{ 
@@ -33,10 +34,9 @@ export const OperationsList2: React.FC<OperationsListProps> = (
                         alignItems: 'center',
                         gap: '4px',
                         padding: '4px 8px',
-
                         borderRadius: '4px'
                     }}
-                    className={(activeKey===currentKey ? 'active': 'no-class')}
+                    className={`${activeKey===currentKey ? 'active': ''} ${isAutoClean ? 'auto_clean' : ''}`}
                     onClick={()=> setActiveKey(currentKey)}
                 >
                     <span>{operation[0].symbol}</span>

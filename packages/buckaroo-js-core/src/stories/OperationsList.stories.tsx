@@ -58,6 +58,17 @@ export const SingleOperation: Story = {
 
 };
 
+
+export const DataCleaningOps: Story = {
+    args: {
+        operations: [
+            [{symbol: "fillna", meta:{auto_clean:true} } , symDf, "col2", 5],
+            ...sampleOperations, ],
+//        setOperations: (ops: Operation[]) => console.log("Operations updated:", ops),
+    },
+
+};
+
 export const ManyOperations: Story = {
     args: {
         operations: [

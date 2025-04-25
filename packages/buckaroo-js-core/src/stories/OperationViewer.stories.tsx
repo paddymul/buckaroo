@@ -95,6 +95,28 @@ export const Primary: Story = {
   },
 };
 
+
+// Sample operations for stories
+const sampleOperations: Operation[] = [
+  [sym("dropcol"), symDf, "col1"],
+  [sym("fillna"), symDf, "col2", 5],
+  [sym("resample"), symDf, "month", "monthly", {}],
+];
+
+export const DataCleaningOps: Story = {
+  args: {
+      operations: [
+          [{symbol: "fillna", meta:{auto_clean:true} } , symDf, "col2", 5],
+          ...sampleOperations, ],
+          activeColumn: 'foo-column',
+          allColumns: ['foo-col', 'bar-col', 'baz-col'],
+          command_config:bakedCommandConfig          
+
+  },
+
+};
+
+
 export const NoOps: Story = {
   args: {
       operations:[],
