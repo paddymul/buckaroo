@@ -1,12 +1,15 @@
 import React from 'react';
-import { Operation, SetOperationsFunc } from './OperationUtils';
+import { getOperationKey, Operation, SetOperationsFunc } from './OperationUtils';
 
 export interface OperationsListProps {
     operations: Operation[];
     setOperations: SetOperationsFunc;
+    activeKey:string;
+    setActiveKey: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export const OperationsList: React.FC<OperationsListProps> = ({ operations, setOperations }) => {
+export const OperationsList2: React.FC<OperationsListProps> = (
+    { operations, setOperations, activeKey, setActiveKey }) => {
     const handleDeleteOperation = (index: number) => {
         const newOperations = [...operations];
         newOperations.splice(index, 1);
@@ -21,17 +24,20 @@ export const OperationsList: React.FC<OperationsListProps> = ({ operations, setO
             flexWrap: 'wrap',
             alignItems: 'center'
         }}>
-            {operations.map((operation, index) => (
-                <div 
+            {operations.map((operation, index) => {
+                const currentKey = getOperationKey(operations, index);
+                return (<div 
                     key={index} 
                     style={{ 
                         display: 'flex', 
                         alignItems: 'center',
                         gap: '4px',
                         padding: '4px 8px',
-                        backgroundColor: '#f0f0f0',
+
                         borderRadius: '4px'
                     }}
+                    className={(activeKey===currentKey ? 'active': 'no-class')}
+                    onClick={()=> setActiveKey(currentKey)}
                 >
                     <span>{operation[0].symbol}</span>
                     <span>{operation[2]}</span>
@@ -49,7 +55,6 @@ export const OperationsList: React.FC<OperationsListProps> = ({ operations, setO
                         ×
                     </button>
                 </div>
-            ))}
-        </div>
-    );
-}; 
+            )})}
+        </div>);
+        }

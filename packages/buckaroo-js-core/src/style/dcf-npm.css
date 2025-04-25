@@ -1,3 +1,7 @@
+.columns-editor {
+
+  border:1px solid red;
+}
 .column-list {
   width: 100%;
   font-size: 1rem;
@@ -80,33 +84,40 @@
   padding: 8px;
 }
 
-.command-viewer {
-  border: 1px solid;
+.operations-box {
+
+  border:1px solid blue;
+}
+.operations-viewer {
+  border: 1px solid purple;
   color: black;
   font-size: 1rem;
 }
-.command-viewer .operation-adder {
+
+.operations-list > div.active {background: beige;}
+.operations-list > div {     background:#f0f0f0 }
+.operations-viewer .operation-adder {
   clear: both;
 }
-.command-viewer .operation-adder span.column-name {
+.operations-viewer .operation-adder span.column-name {
   float: left;
   display: block;
   color: black;
 }
-.command-viewer .operation-adder fieldset {
+.operations-viewer .operation-adder fieldset {
   float: left;
 }
-.command-viewer .operations-box {
+.operations-viewer .operations-box {
   clear: left;
   display: flex;
   overflow: auto;
 }
-.command-viewer .operations-box h4 {
+.operations-viewer .operations-box h4 {
   font-size: 1em;
   border: 1px orange;
   color: black;
 }
-.command-viewer .operations-box div {
+.operations-viewer .operations-box div {
   overflow-x: scroll;
 }
 
