@@ -16,40 +16,51 @@ export const OperationsList2: React.FC<OperationsListProps> = (
         setOperations(newOperations);
     };
 
+    const handlePreserveCleaning = (index: number) => {
+        const newOperations = [...operations];
+        const operation = newOperations[index];
+        const symbol = { ...operation[0] };
+        if (symbol.meta) {
+            delete symbol.meta.auto_clean;
+            if (Object.keys(symbol.meta).length === 0) {
+                delete symbol.meta;
+            }
+        }
+        newOperations[index] = [symbol, ...operation.slice(1)] as Operation;
+        setOperations(newOperations);
+    };
+
     return (
-        <div className="operations-list" style={{ 
-            display: 'flex', 
-            flexDirection: 'row', 
-            gap: '8px',
-            flexWrap: 'wrap',
-            alignItems: 'center'
-        }}>
+        <div className="operations-list">
             {operations.map((operation, index) => {
                 const currentKey = getOperationKey(operations, index);
                 const isAutoClean = operation[0].meta?.auto_clean === true;
                 return (<div 
                     key={index} 
-                    style={{ 
-                        display: 'flex', 
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '4px 8px',
-                        borderRadius: '4px'
-                    }}
-                    className={`${activeKey===currentKey ? 'active': ''} ${isAutoClean ? 'auto_clean' : ''}`}
+                    className={`operation-item default-operation ${activeKey===currentKey ? 'active': ''} ${isAutoClean ? 'auto_clean' : ''}`}
                     onClick={()=> setActiveKey(currentKey)}
                 >
-                    <span>{operation[0].symbol}</span>
-                    <span>{operation[2]}</span>
-
+                    <div className="operation-content">
+                        <span className="symbol">{operation[0].symbol}</span>
+                        <span className="arg">{operation[2]}</span>
+                        {isAutoClean && (
+                            <button
+                                className="preserve-button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePreserveCleaning(index);
+                                }}
+                                title="Preserve this cleaning operation"
+                            >
+                                preserve
+                            </button>
+                        )}
+                    </div>
                     <button
-                        onClick={() => handleDeleteOperation(index)}
-                        style={{
-                            border: 'none',
-                            background: 'none',
-                            cursor: 'pointer',
-                            color: '#ff4444',
-                            padding: '2px 4px'
+                        className="delete-button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOperation(index);
                         }}
                     >
                         ×

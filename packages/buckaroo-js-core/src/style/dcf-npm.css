@@ -142,48 +142,109 @@
 .operations-list {
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: 8px;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
+  margin-top: 8px;
 }
 
-.operations-list > div {
+.operations-list .operation-item {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background-color: #e9ecef;
-  border-radius: 3px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
   cursor: pointer;
+  transition: all 0.2s;
+  width: 110px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.operations-list .operation-item:hover {
+  border-color: #adb5bd;
+}
+
+.operations-list .operation-item.active {
+  background-color: #e7f5ff;
+  border: 1px solid #74c0fc;
+  color: #1971c2;
+}
+
+.operations-list .operation-item.auto_clean {
+  border: 2px solid #40c057;
+}
+
+.operations-list .operation-item.default-operation {
+  background-color: white;
+  border: 1px solid #dee2e6;
+}
+
+.operations-list .operation-item.default-operation:hover {
+  border-color: #adb5bd;
+  background-color: #f8f9fa;
+}
+
+.operations-list .operation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0; /* Allows text truncation to work */
+}
+
+.operations-list .operation-content .symbol {
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.95em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operations-list .operation-content .arg {
+  font-size: 0.85em;
+  color: #868e96;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operations-list .preserve-button,
+.operations-list .delete-button {
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
   transition: all 0.2s;
 }
 
-.operations-list > div:hover {
-  background-color: #dee2e6;
-}
-
-.operations-list > div.active {
-  background-color: #007bff;
+.operations-list .preserve-button {
+  background-color: #40c057;
   color: white;
+  font-size: 0.8em;
+  padding: 3px 6px;
+  margin-top: 2px;
+  font-weight: 500;
+  width: 100%;
 }
 
-.operations-list > div.auto_clean {
-  border:3px solid green;
-
-}
-
-.operations-list button {
-  border: none;
+.operations-list .delete-button {
   background: none;
-  cursor: pointer;
-  color: #6c757d;
-  padding: 2px 4px;
-  font-size: 1.1em;
-  transition: color 0.2s;
+  color: #adb5bd;
+  padding: 0;
+  font-size: 1em;
+  line-height: 1;
+  margin-left: auto;
 }
 
-.operations-list button:hover {
-  color: #dc3545;
+.operations-list .preserve-button:hover {
+  background-color: #37b24d;
+}
+
+.operations-list .delete-button:hover {
+  color: #fa5252;
 }
 
 .operation-detail {
