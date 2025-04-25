@@ -85,61 +85,170 @@
 }
 
 .operations-box {
-
-  border:1px solid blue;
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
 }
+
+.operations-box h4 {
+  font-size: 1em;
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.operation-adder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.operation-adder span.column-name {
+  font-weight: 600;
+  color: #2c3e50;
+  padding: 4px 8px;
+  background-color: #e9ecef;
+  border-radius: 3px;
+}
+
+.operation-adder fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.operation-adder button {
+  padding: 4px 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+}
+
+.operation-adder button:hover {
+  background-color: #0056b3;
+}
+
+.operations-list {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.operations-list > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: #e9ecef;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.operations-list > div:hover {
+  background-color: #dee2e6;
+}
+
+.operations-list > div.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.operations-list button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 2px 4px;
+  font-size: 1.1em;
+  transition: color 0.2s;
+}
+
+.operations-list button:hover {
+  color: #dc3545;
+}
+
+.operation-detail {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.operation-detail .arg-getters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.operation-detail .arg-getters fieldset {
+  border: 1px solid #dee2e6;
+  border-radius: 3px;
+  padding: 8px;
+}
+
+.operation-detail .arg-getters div.col-enum {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.operation-detail .arg-getters div.col-enum table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.operation-detail .arg-getters div.col-enum table td,
+.operation-detail .arg-getters div.col-enum table th {
+  border: 1px solid #dee2e6;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.operation-detail .arg-getters div.col-enum table th {
+  background-color: #e9ecef;
+  font-weight: 600;
+}
+
 .operations-viewer {
-  border: 1px solid purple;
-  color: black;
-  font-size: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 0.95rem;
 }
 
-.operations-list > div.active {background: beige;}
-.operations-list > div {     background:#f0f0f0 }
 .operations-viewer .operation-adder {
   clear: both;
 }
-.operations-viewer .operation-adder span.column-name {
-  float: left;
-  display: block;
-  color: black;
-}
-.operations-viewer .operation-adder fieldset {
-  float: left;
-}
+
 .operations-viewer .operations-box {
   clear: left;
   display: flex;
   overflow: auto;
 }
+
 .operations-viewer .operations-box h4 {
   font-size: 1em;
   border: 1px orange;
   color: black;
 }
+
 .operations-viewer .operations-box div {
   overflow-x: scroll;
-}
-
-.operation-detail {
-  overflow: auto;
-}
-.operation-detail button {
-  float: left;
-}
-.operation-detail .arg-getters button {
-  float: left;
-}
-.operation-detail .arg-getters fieldset {
-  float: left;
-}
-.operation-detail .arg-getters div.col-enum {
-  float: left;
-  width: 800px;
-  overflow-x: scroll;
-}
-.operation-detail .arg-getters div.col-enum table td, .operation-detail .arg-getters div.col-enum table th {
-  border: 1px solid black;
 }
 
 .col-enum table {
