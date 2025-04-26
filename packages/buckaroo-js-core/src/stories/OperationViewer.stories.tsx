@@ -61,6 +61,8 @@ const bakedOperationDefaults: OperationDefaultArgs = {
     fillna: [sym('fillna'), symDf, 'col', 8],
     remove_outliers: [sym('remove_outliers'), symDf, 'col', 0.02],
     search: [sym('search'), symDf, 'col', 'term'],
+    format_us_date: [sym('format_us_date'), symDf, 'col'],
+
     resample: [sym('resample'), symDf, 'col', 'monthly', {}],
   };
 
@@ -106,8 +108,10 @@ const sampleOperations: Operation[] = [
 export const DataCleaningOps: Story = {
   args: {
       operations: [
-          [{symbol: "fillna", meta:{auto_clean:true} } , symDf, "col2", 5],
-          [{symbol: "remove_outliers", meta:{auto_clean:true} } , symDf, "col1", .1],
+          [{symbol: "fillna", meta:{auto_clean:true, clean_strategy:"light-int"} } , symDf, "fruit-type",  5],
+          [{symbol: "remove_outliers", meta:{auto_clean:true, clean_strategy:"light-int"} } , symDf, "col1", .1],
+          [{symbol: "format_us_date", meta:{clean_strategy:"aggressive"} } , symDf, "probably_dates"],
+
 
           ...sampleOperations, ],
           activeColumn: 'foo-column',

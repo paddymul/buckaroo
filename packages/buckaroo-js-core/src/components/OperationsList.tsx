@@ -43,6 +43,9 @@ export const OperationsList2: React.FC<OperationsListProps> = (
                     <div className="operation-content">
                         <span className="symbol">{operation[0].symbol}</span>
                         <span className="arg">{operation[2]}</span>
+                        {operation[0].meta?.clean_strategy && (
+                            <span className="clean-strategy">Strategy: {operation[0].meta.clean_strategy}</span>
+                        )}
                         {isAutoClean && (
                             <button
                                 className="preserve-button"
