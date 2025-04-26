@@ -594,6 +594,8 @@ describe('KeyAwareSmartRowCache tests', () => {
     })
 
         test('test trim functionality', () => {
+	//these tests aren't perfect, basically I'm trying to verify that trim got called at all.  But it depends heavily on internal settings inside of KeyAwareSmartRowCache and SmartRowCache, because it is checking for exact numbers of rows returned.
+
 	    let src:KeyAwareSmartRowCache;
 	    const mockRequestFn = jest.fn((pa:PayloadArgs) => {
 		const L = 7700
