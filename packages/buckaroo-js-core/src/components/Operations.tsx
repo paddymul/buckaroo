@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import _ from "lodash";
 import { Operation, SetOperationsFunc, OperationEventFunc } from "./OperationUtils";
 import { CommandConfigT } from "./CommandUtils";
@@ -6,11 +6,10 @@ import { replaceInArr } from "./utils";
 
 import { OperationDetail } from "./OperationDetail";
 import { OperationsList2 } from "./OperationsList";
-import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
+
 import { ColDef, GridOptions } from "@ag-grid-community/core";
 //import { CustomCellRendererProps } from '@ag-grid-community/react';
 
-import { updateAtMatch } from "./utils";
 import { ModuleRegistry } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 
