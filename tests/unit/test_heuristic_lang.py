@@ -19,6 +19,11 @@ BUT the enxt cleaning strategy will try to do something different to the same co
 Maybe an 'meta': {prevent_cleaning:True}... but that is on the operation, we want it on the column.  think about this a bit
 
 
+Also add a meta param that has the deicding _frac's from heuristics that chose a cleaning strategy for a given column.  Then that meta_param can be written out in python code as a comment.  call it "reasoning"
+
+
+The operation detail viewer can show these comments
+
 
 """
 
