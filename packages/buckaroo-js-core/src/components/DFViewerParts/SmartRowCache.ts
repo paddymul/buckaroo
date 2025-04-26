@@ -283,7 +283,7 @@ export const sizeSlice = (midPoint: number, offset: number, segments: Segment[])
 
 export const compactSegments = (segments: Segment[], dfs: DFData[], keep: Segment): [Segment[], DFData[]] => {
     const [retSegments, retDFs]: [Segment[], DFData[]] = [[], []];
-    console.log("284 segments", segments)
+    //console.log("284 segments", segments)
     for (var i = 0; i < segments.length; i++) {
         const [seg, df] = [segments[i], dfs[i]];
         if (segmentSubset(keep, seg)) {
@@ -352,7 +352,7 @@ export class SmartRowCache {
 
         if (this.lastRequest[0] === 0 && this.lastRequest[1] === 0) {
             //throw new Error("trying to trim with no requests, unexpected");
-            console.log("trying to trim with no requests, unexpected")
+            //console.log("trying to trim with no requests, unexpected")
             return
         }
         const last = this.lastRequest;
@@ -416,13 +416,11 @@ export class SmartRowCache {
         this.segments = newSegs;
         this.dfs = newDfs;
         this.trimCache()
-        //console.log("size,extents after trimCache", this.usedSize(), this.getExtents())
     }
 
     public hasRows(needSeg: Segment): RequestArgs {
         if(needSeg[0] === 0 && needSeg[1] === 0) {
-            console.log("setting lastRequest to [0,0] in hasRows")
-            debugger;
+            console.log("setting lastRequest to [0,0] in hasRows, this is unexpected")
         }
         this.lastRequest = needSeg;
         for (const ourSeg of this.segments) {
@@ -610,7 +608,7 @@ export class KeyAwareSmartRowCache {
             //@ts-ignore
             const now = (new Date()) - 1 as number
             const respTime = now - resp.key.request_time;
-            console.log(`response had ${seg[1]-seg[0]} rows took ${respTime}`)
+            //console.log(`response had ${seg[1]-seg[0]} rows took ${respTime}`)
         }
 
 	this.trim()
@@ -627,7 +625,7 @@ export class KeyAwareSmartRowCache {
 	}
 	    
 
-        console.log(`response before ${[resp.key.start, resp.key.origEnd, resp.key.end]} before add, preExtents ${preExtents}, post extents ${src.safeGetExtents()}`)
+        //console.log(`response before ${[resp.key.start, resp.key.origEnd, resp.key.end]} before add, preExtents ${preExtents}, post extents ${src.safeGetExtents()}`)
 
         src.sentLength = resp.length;
         if (_.has(this.waitingCallbacks, cbKey)) {
@@ -642,7 +640,6 @@ export class KeyAwareSmartRowCache {
     }
 
     public trim(): void {
-        console.log("trim")
 
 	if(this.usedSize() > this.maxSize) {
 	    const lastUsedKey = this.srcAccesses.keys().next().value;
