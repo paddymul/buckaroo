@@ -70,7 +70,7 @@ describe('OperationsList2', () => {
   });
 
   it('calls setActiveKey when an item is clicked', () => {
-    render(
+    const { rerender } = render(
       <OperationsList2
         operations={getTestOperations()}
         setOperations={setOperations}
@@ -81,12 +81,31 @@ describe('OperationsList2', () => {
     const item = screen.getByText('dropcol').closest('.operation-item');
     fireEvent.click(item!);
     expect(setActiveKey).toHaveBeenCalled();
+    
+    // Re-render with the new activeKey to verify the class is applied
+    rerender(
+      <OperationsList2
+        operations={getTestOperations()}
+        setOperations={setOperations}
+        activeKey={setActiveKey.mock.calls[0][0]}
+        setActiveKey={setActiveKey}
+      />
+    );
+    
+    // Use getAllByText and filter to find the active item
+    const activeItems = screen.getAllByText('dropcol')
+      .map(el => el.closest('.operation-item'))
+      .filter(el => el?.classList.contains('active'));
+    
+    expect(activeItems).toHaveLength(1);
+    expect(activeItems[0]).toHaveClass('active');
   });
 
   it('calls setOperations when delete is clicked', () => {
+    const testOperations = getTestOperations();
     render(
       <OperationsList2
-        operations={getTestOperations()}
+        operations={testOperations}
         setOperations={setOperations}
         activeKey={''}
         setActiveKey={setActiveKey}
@@ -95,6 +114,12 @@ describe('OperationsList2', () => {
     const deleteBtn = screen.getAllByRole('button', { name: /×/ })[0];
     fireEvent.click(deleteBtn);
     expect(setOperations).toHaveBeenCalled();
+    
+    // Verify the operation was actually removed
+    const updatedOperations = setOperations.mock.calls[0][0];
+    expect(updatedOperations).toHaveLength(testOperations.length - 1);
+    expect(updatedOperations[0][0].symbol).toBe('dropcol'); // First operation should now be the second one
+    expect(updatedOperations[1][0].symbol).toBe('remove_outliers'); // Second operation should now be the third one
   });
 
   it('calls setOperations when preserve is clicked', () => {
