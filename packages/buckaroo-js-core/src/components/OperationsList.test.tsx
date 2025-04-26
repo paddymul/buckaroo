@@ -12,12 +12,13 @@ const makeOp = (symbol: string, arg: string, meta: Meta = {}): Operation => [
   arg
 ];
 
+const getTestOperations = (): Operation[] => [
+  makeOp('fillna', 'col1', { auto_clean: true, clean_strategy: 'light-int' }),
+  makeOp('dropcol', 'col2'),
+  makeOp('remove_outliers', 'col3', { clean_strategy: 'aggressive' }),
+];
+
 describe('OperationsList2', () => {
-  const operations: Operation[] = [
-    makeOp('fillna', 'col1', { auto_clean: true, clean_strategy: 'light-int' }),
-    makeOp('dropcol', 'col2'),
-    makeOp('remove_outliers', 'col3', { clean_strategy: 'aggressive' }),
-  ];
   let setOperations: jest.Mock, setActiveKey: jest.Mock;
 
   beforeEach(() => {
@@ -26,10 +27,9 @@ describe('OperationsList2', () => {
   });
 
   it('renders all operations', () => {
-    throw new Error("Not implemented");
     render(
       <OperationsList2
-        operations={operations}
+        operations={getTestOperations()}
         setOperations={setOperations}
         activeKey={''}
         setActiveKey={setActiveKey}
@@ -43,7 +43,7 @@ describe('OperationsList2', () => {
   it('displays clean_strategy if present', () => {
     render(
       <OperationsList2
-        operations={operations}
+        operations={getTestOperations()}
         setOperations={setOperations}
         activeKey={''}
         setActiveKey={setActiveKey}
@@ -56,7 +56,7 @@ describe('OperationsList2', () => {
   it('applies auto_clean and active classes', () => {
     render(
       <OperationsList2
-        operations={operations}
+        operations={getTestOperations()}
         setOperations={setOperations}
         activeKey={'fillna0'}
         setActiveKey={setActiveKey}
@@ -72,7 +72,7 @@ describe('OperationsList2', () => {
   it('calls setActiveKey when an item is clicked', () => {
     render(
       <OperationsList2
-        operations={operations}
+        operations={getTestOperations()}
         setOperations={setOperations}
         activeKey={''}
         setActiveKey={setActiveKey}
@@ -86,7 +86,7 @@ describe('OperationsList2', () => {
   it('calls setOperations when delete is clicked', () => {
     render(
       <OperationsList2
-        operations={operations}
+        operations={getTestOperations()}
         setOperations={setOperations}
         activeKey={''}
         setActiveKey={setActiveKey}
@@ -100,7 +100,7 @@ describe('OperationsList2', () => {
   it('calls setOperations when preserve is clicked', () => {
     render(
       <OperationsList2
-        operations={operations}
+        operations={getTestOperations()}
         setOperations={setOperations}
         activeKey={''}
         setActiveKey={setActiveKey}
@@ -109,5 +109,28 @@ describe('OperationsList2', () => {
     const preserveBtn = screen.getByRole('button', { name: /preserve/ });
     fireEvent.click(preserveBtn);
     expect(setOperations).toHaveBeenCalled();
+    // Verify the operation was updated correctly
+    const updatedOperations = setOperations.mock.calls[0][0];
+    expect(updatedOperations[0][0].meta).not.toHaveProperty('auto_clean');
+    expect(updatedOperations[0][0].meta).toHaveProperty('clean_strategy', 'light-int');
+
   });
-}); 
+
+  it('only shows preserve button for operations with auto_clean: true', () => {
+    render(
+      <OperationsList2
+        operations={getTestOperations()}
+        setOperations={setOperations}
+        activeKey={''}
+        setActiveKey={setActiveKey}
+      />
+    );
+    // First operation has auto_clean: true
+    expect(screen.getByText('fillna').closest('.operation-item')).toHaveClass('auto_clean');
+    expect(screen.getByRole('button', { name: /preserve/ })).toBeInTheDocument();
+    
+    // Second operation has no auto_clean
+    expect(screen.getByText('dropcol').closest('.operation-item')).not.toHaveClass('auto_clean');
+    expect(screen.queryAllByRole('button', { name: /preserve/ })).toHaveLength(1);
+  });
+});
