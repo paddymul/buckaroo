@@ -1,6 +1,28 @@
 from buckaroo.auto_clean.heuristic_lang import eval_heuristic_rule, eval_heuristics, get_top_score
 from buckaroo.jlisp.lisp_utils import s
 
+"""
+This isn't heuristic lang but it is auto_celan.
+
+
+So the UI has added a concept of "preserve" where a cleaning operation as denoted by
+{'symbol':'func_name', 'meta':{'auto_clean':True, 'clean_strategy':'aggressive'}}
+becomes
+{'symbol':'func_name', 'meta':{'clean_strategy':'aggressive'}}
+
+this means that when the next set of auto_cleaning operations is
+generated, that particular operation won't be removed (only 'auto_clean':True operations are removed)
+
+BUT the enxt cleaning strategy will try to do something different to the same column.  We want to filter those operations out somehow... I think
+
+
+Maybe an 'meta': {prevent_cleaning:True}... but that is on the operation, we want it on the column.  think about this a bit
+
+
+
+"""
+
+
 l_rules = {
     't_str_bool':         [s('m>'), .7],
     'regular_int_parse':  [s('m>'), .9],
