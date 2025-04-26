@@ -107,6 +107,8 @@ export const DataCleaningOps: Story = {
   args: {
       operations: [
           [{symbol: "fillna", meta:{auto_clean:true} } , symDf, "col2", 5],
+          [{symbol: "remove_outliers", meta:{auto_clean:true} } , symDf, "col1", .1],
+
           ...sampleOperations, ],
           activeColumn: 'foo-column',
           allColumns: ['foo-col', 'bar-col', 'baz-col'],
