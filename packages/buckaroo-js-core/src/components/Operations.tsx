@@ -7,13 +7,6 @@ import { replaceInArr } from "./utils";
 import { OperationDetail } from "./OperationDetail";
 import { OperationsList2 } from "./OperationsList";
 
-import { ColDef, GridOptions } from "@ag-grid-community/core";
-//import { CustomCellRendererProps } from '@ag-grid-community/react';
-
-import { ModuleRegistry } from "@ag-grid-community/core";
-import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
-
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 
 
@@ -101,17 +94,16 @@ export const OperationViewer = ({
             setOperations(nextOperations);
         };
     }
-    const getColumns = (passedOperations: Operation[]): ColDef[] =>
+    const getColumns = (passedOperations: Operation[]): string[] =>
         _.map(Array.from(passedOperations.entries()), ([index, element]) => {
             const name = element[0]["symbol"];
             const key = name + index.toString();
-            const column = { field: key, headerName: name }; // width: 20, maxWidth: 60};
-            return column;
+	    return key;
         });
     const addOperation: OperationEventFunc = (newOperation: Operation) => {
         const newOperationArr = [...operations, newOperation];
         setOperations(newOperationArr);
-        const newOperationKey = getColumns(newOperationArr)[newOperationArr.length - 1].field;
+        const newOperationKey = getColumns(newOperationArr)[newOperationArr.length - 1]
         if (newOperationKey !== undefined) {
             setActiveKey(newOperationKey);
         }
