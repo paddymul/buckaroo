@@ -606,15 +606,15 @@ export class KeyAwareSmartRowCache {
 
         if(resp.key.request_time !== undefined ) {
             //@ts-ignore
-            const now = (new Date()) - 1 as number
-            const respTime = now - resp.key.request_time;
+            //const now = (new Date()) - 1 as number
+            //const _respTime = now - resp.key.request_time;
             //console.log(`response had ${seg[1]-seg[0]} rows took ${respTime}`)
         }
 
 	this.trim()
         const src = this.ensureRowCacheForPa(resp.key)
         const cbKey = getPayloadKey(resp.key)
-        const preExtents = src.safeGetExtents()
+        //const preExtents = src.safeGetExtents()
 
 	if(resp.length < resp.key.end && resp.key.start === 0) {
 	    // add tests

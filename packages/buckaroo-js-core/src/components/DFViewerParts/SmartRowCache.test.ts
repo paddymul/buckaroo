@@ -466,7 +466,7 @@ describe('KeyAwareSmartRowCache tests', () => {
     test('basic KeyAwareSmartRowCache tests', () => {
 	let src:KeyAwareSmartRowCache;
 
-	const mockRequestFn = jest.fn((pa:PayloadArgs) => {
+	const mockRequestFn = jest.fn((_pa:PayloadArgs) => {
 	    //console.log("reqFn", pa)
 	})
 
@@ -475,7 +475,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const pa1: PayloadArgs = {
 	    sourceName:"foo", start:0, end:20, origEnd:20}
 
-	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	const mockCbFn = jest.fn((_df:DFData, _length:number) => {
 	    //console.log("mockCbFn", df.length,  length )
 	})
 
@@ -504,7 +504,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const pa1: PayloadArgs = {
 	    sourceName:"foo", start:0, end:20, origEnd:20}
 
-	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	const mockCbFn = jest.fn((_df:DFData, _length:number) => {
 	    //console.log("mockCbFn", df.length,  length )
 	})
 	src.getRequestRows(pa1, mockCbFn, failNOP)
@@ -530,7 +530,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const pa1: PayloadArgs = {
 	    sourceName:"foo", start:0, end:20, origEnd:20}
 
-	const mockCbFn = jest.fn((df:DFData, length:number) => {})
+	const mockCbFn = jest.fn((_df:DFData, _length:number) => {})
 
 	src.getRequestRows(pa1, mockCbFn, failNOP)
 	expect(mockCbFn.mock.calls).toHaveLength(1);
@@ -540,7 +540,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const pa2: PayloadArgs = {
 	    sourceName:"foo", start:0, end:17, origEnd:17}
 
-	const mockCbFn2 = jest.fn((df:DFData, length:number) => {})
+	const mockCbFn2 = jest.fn((_df:DFData, _length:number) => {})
 	src.getRequestRows(pa2, mockCbFn2, failNOP)
 	const [respData2, sentLength2] = mockCbFn2.mock.calls[0];
 	expect(respData2.length).toStrictEqual(17)
@@ -573,7 +573,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const pa1: PayloadArgs = {
 	    sourceName:"foo", start:0, end:20, origEnd:20}
 
-	const mockCbFn = jest.fn((df:DFData, length:number) => {
+	const mockCbFn = jest.fn((df:DFData, _length:number) => {
 	    console.log("mockCbFn", df.length,  length )
 	})
 
@@ -585,7 +585,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	const pa2: PayloadArgs = {
 	    sourceName:"foo", start:770, end:820, origEnd:820}
 
-	const mockCbFn2 = jest.fn((df:DFData, length:number) => {})
+	const mockCbFn2 = jest.fn((_df:DFData, _length:number) => {})
 
 	src.getRequestRows(pa2, mockCbFn2, failNOP)
 	const [respData2, sentLength2] = mockCbFn2.mock.calls[0];
@@ -622,7 +622,7 @@ describe('KeyAwareSmartRowCache tests', () => {
 	    const pa1: PayloadArgs = {
 		sourceName:"foo", start:0, end:20, origEnd:20}
 
-	    const mockCbFn = jest.fn((df:DFData, length:number) => {})
+	    const mockCbFn = jest.fn((_df:DFData, _length:number) => {})
 	    src.getRequestRows(pa1, mockCbFn, failNOP)
 	    expect(src.usedSize()).toStrictEqual(20);
 
