@@ -1,8 +1,8 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { OperationsList2 } from "../components/OperationsList";
-import { getOperationKey, Operation, sym } from "../components/OperationUtils";
-import { symDf } from "../components/CommandUtils";
+import { getOperationKey, Operation } from "../components/OperationUtils";
+import { sampleOperations, dataCleaningOps, manyOperations } from "../components/OperationExamples";
 
 
 const OperationsListWrapper = ({ operations }: { operations: Operation[] }) => {
@@ -27,58 +27,32 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Sample operations for stories
-const sampleOperations: Operation[] = [
-    [sym("dropcol"), symDf, "col1"],
-    [sym("fillna"), symDf, "col2", 5],
-    [sym("resample"), symDf, "month", "monthly", {}],
-];
-
 export const Default: Story = {
     args: {
         operations: sampleOperations,
-//        setOperations: (ops: Operation[]) => console.log("Operations updated:", ops),
     },
-//    render: (args) => <OperationsListWrapper operations={args.operations} />,
 };
 
 export const Empty: Story = {
     args: {
         operations: [],
-  //      setOperations: (ops: Operation[]) => console.log("Operations updated:", ops),
     },
-
 };
 
 export const SingleOperation: Story = {
     args: {
         operations: [sampleOperations[0]],
-//        setOperations: (ops: Operation[]) => console.log("Operations updated:", ops),
     },
-
 };
 
-
-export const DataCleaningOps: Story = {
+export const DataCleaning: Story = {
     args: {
-        operations: [
-            [{symbol: "fillna", meta:{auto_clean:true} } , symDf, "fruit-type", 5],
-            
-            ...sampleOperations, ],
-//        setOperations: (ops: Operation[]) => console.log("Operations updated:", ops),
+        operations: dataCleaningOps,
     },
-
 };
 
 export const ManyOperations: Story = {
     args: {
-        operations: [
-            ...sampleOperations,
-            [sym("dropcol"), symDf, "col3"],
-            [sym("fillna"), symDf, "col4", 10],
-            [sym("resample"), symDf, "year", "yearly", {}],
-        ],
-//        setOperations: (ops: Operation[]) => console.log("Operations updated:", ops),
+        operations: manyOperations,
     },
-
 }; 

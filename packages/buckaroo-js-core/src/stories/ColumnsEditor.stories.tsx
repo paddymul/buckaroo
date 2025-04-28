@@ -1,39 +1,11 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ColumnsEditor } from "../components/ColumnsEditor";
-import { Operation, OperationResult } from "../components/DependentTabs";
-import { CommandConfigT } from "../components/CommandUtils";
+import { Operation } from "../components/OperationUtils";
+import { OperationResult } from "../components/DependentTabs";
 import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
-
-const bakedArgSpecs = {
-  dropcol: [null],
-  fillna: [[3, "fillVal", "type", "integer"] as [number, string, "type", "integer"]],
-  remove_outliers: [[3, "tail", "type", "float"] as [number, string, "type", "float"]],
-  search: [[3, "needle", "type", "string"] as [number, string, "type", "string"]],
-  resample: [
-    [3, "frequency", "enum", ["daily", "weekly", "monthly"]] as [number, string, "enum", string[]],
-    [4, "colMap", "colEnum", ["null", "sum", "mean", "count"]] as [number, string, "colEnum", string[]],
-  ],
-};
-
-const bakedOperationDefaults = {
-  dropcol: [{ symbol: "dropcol" }, { symbol: "df" }, "col"] as Operation,
-  fillna: [{ symbol: "fillna" }, { symbol: "df" }, "col", 8] as Operation,
-  remove_outliers: [{ symbol: "remove_outliers" }, { symbol: "df" }, "col", 0.02] as Operation,
-  search: [{ symbol: "search" }, { symbol: "df" }, "col", "term"] as Operation,
-  resample: [{ symbol: "resample" }, { symbol: "df" }, "col", "monthly", {}] as Operation,
-};
-
-const bakedCommandConfig: CommandConfigT = {
-  argspecs: bakedArgSpecs,
-  defaultArgs: bakedOperationDefaults,
-};
-
-const bakedOperations: Operation[] = [
-  [{ symbol: "dropcol" }, { symbol: "df" }, "col1"],
-  [{ symbol: "fillna" }, { symbol: "df" }, "col2", 5],
-  [{ symbol: "resample" }, { symbol: "df" }, "month", "monthly", {}],
-];
+import "../style/dcf-npm.css"
+import { sampleOperations, bakedCommandConfig, dataCleaningOps, manyOperations } from "../components/OperationExamples";
 
 const df_viewer_config: DFViewerConfig = {
   column_config: [
@@ -88,9 +60,73 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta> | any;
 
-export const Primary: Story = {
+export const Default: Story = {
   render: () => {
-    const [operations, setOperations] = useState<Operation[]>(bakedOperations);
+    const [operations, setOperations] = useState<Operation[]>(sampleOperations);
+    return (
+      <ColumnsEditor
+        df_viewer_config={df_viewer_config}
+        activeColumn="index"
+        operation_result={baseOperationResults}
+        command_config={bakedCommandConfig}
+        operations={operations}
+        setOperations={setOperations}
+      />
+    );
+  },
+};
+
+export const Empty: Story = {
+  render: () => {
+    const [operations, setOperations] = useState<Operation[]>([]);
+    return (
+      <ColumnsEditor
+        df_viewer_config={df_viewer_config}
+        activeColumn="index"
+        operation_result={baseOperationResults}
+        command_config={bakedCommandConfig}
+        operations={operations}
+        setOperations={setOperations}
+      />
+    );
+  },
+};
+
+export const SingleOperation: Story = {
+  render: () => {
+    const [operations, setOperations] = useState<Operation[]>([sampleOperations[0]]);
+    return (
+      <ColumnsEditor
+        df_viewer_config={df_viewer_config}
+        activeColumn="index"
+        operation_result={baseOperationResults}
+        command_config={bakedCommandConfig}
+        operations={operations}
+        setOperations={setOperations}
+      />
+    );
+  },
+};
+
+export const DataCleaning: Story = {
+  render: () => {
+    const [operations, setOperations] = useState<Operation[]>(dataCleaningOps);
+    return (
+      <ColumnsEditor
+        df_viewer_config={df_viewer_config}
+        activeColumn="index"
+        operation_result={baseOperationResults}
+        command_config={bakedCommandConfig}
+        operations={operations}
+        setOperations={setOperations}
+      />
+    );
+  },
+};
+
+export const ManyOperations: Story = {
+  render: () => {
+    const [operations, setOperations] = useState<Operation[]>(manyOperations);
     return (
       <ColumnsEditor
         df_viewer_config={df_viewer_config}
