@@ -5,6 +5,7 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 from buckaroo.dataflow.autocleaning import AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
 from buckaroo.customizations.pandas_commands import (
+    Command,
     SafeInt, DropCol, FillNA, GroupBy, NoOp, Search
 )
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
@@ -133,8 +134,6 @@ class HeuristicCleaningGenOps(ColAnalysis):
         'strip_int_parse_frac':    'strip_int_parse',
         'us_dates_frac':         'us_date'}
 
-        
-
 
     @classmethod
     def computed_summary(kls, column_metadata):
@@ -151,17 +150,106 @@ class HeuristicCleaningGenOps(ColAnalysis):
 
             return {'cleaning_ops':ops, 'add_orig': True}
 
+class IntParse(Command):
+    command_default = [s('regular_int_parse'), s('df'), "col"]
+    command_pattern = []
 
+    @staticmethod 
+    def transform(df, col):
+        df[col] = df[col].apply(pd.to_numeric, errors='coerce')
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return "    df['%s'] = df['%s'].apply(pd.to_numeric, errors='coerce')" % (col, col)
+
+class StripIntParse(Command):
+    command_default = [s('strip_int_parse'), s('df'), "col"]
+    command_pattern = []
+
+    @staticmethod 
+    def transform(df, col):
+        _digits_and_period = re.compile(r'[^\d\.]')
+        _ser = df[col]
+        _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
+        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce')
+        _combined = reg_parse.fillna(_strip_parse)
+        df[col] = _combined
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return f"""    _digits_and_period = re.compile(r'[^\\d\\.]')
+    _ser = df['{col}']
+    _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
+    _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce')
+    _combined = reg_parse.fillna(_strip_parse)
+    df['{col}'] = _combined"""
+
+
+class StrBool(Command):
+    command_default = [s('str_bool'), s('df'), "col"]
+    command_pattern = []
+
+    @staticmethod 
+    def transform(df, col):
+        TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
+        FALSE_SYNONYMS = ['false', 'no', 'off', '0']
+        _ser = df[col]
+        _int_sanitize = _ser.replace(1, True).replace(0, False) 
+        _real_bools = _int_sanitize.isin([True, False])
+        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
+        _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
+        _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+        _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
+        df[col] = _combined
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return f"""    TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
+    FALSE_SYNONYMS = ['false', 'no', 'off', '0']
+    _ser = df['{col}']
+    _int_sanitize = _ser.replace(1, True).replace(0, False) 
+    _real_bools = _int_sanitize.isin([True, False])
+    _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
+    _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
+    _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+    _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
+    df[col] = _combined"""
+
+
+
+
+class USDate(Command):
+    command_default = [s('us_date'), s('df'), "col"]
+    command_pattern = []
+
+    @staticmethod 
+    def transform(df, col):
+        df[col] = pd.to_datetime(df[col], errors='coerce', format="%m/%d/%Y")    
+        return df
+        
+    @staticmethod 
+    def transform_to_py(df, col):
+        return f"    df['{col}'] = pd.to_datetime(df['{col}'], errors='coerce', format='%m/%d/%Y')"
 
 class ACHeuristic(AutocleaningConfig):
+    """
+    add a check between rules_op_names to all of the included command classes
+    """
     autocleaning_analysis_klasses = [HeuristicFracs, HeuristicCleaningGenOps]
-    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
+    command_klasses = [
+        IntParse, StripIntParse, StrBool, USDate,
+        DropCol, FillNA, GroupBy, NoOp,
+        Search]
+    
     quick_command_klasses = [Search]
     name="default"
 
 
-EXPECTED_GEN_CODE = """def clean(df):
-    df['a'] = smart_to_int(df['a'])
+EXPECTED_GEN_CODE2 = """def clean(df):
+    df['a'] = df['a'].apply(pd.to_numeric, errors='coerce')
     return df"""
 
 def test_heuristic_autoclean_codegen():
@@ -171,4 +259,4 @@ def test_heuristic_autoclean_codegen():
         df, cleaning_method='default', quick_command_args={}, existing_operations=[])
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
-    assert generated_code == EXPECTED_GEN_CODE
+    assert generated_code == EXPECTED_GEN_CODE2
