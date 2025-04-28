@@ -35,7 +35,8 @@
   float: left;
 }
 .dependent-tabs {
-  font-size: 1rem;
+    font-size: 1rem;
+    border:1px solid red;
 }
 .dependent-tabs ul.tabs li {
   float: left;
