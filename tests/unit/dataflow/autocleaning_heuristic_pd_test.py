@@ -10,7 +10,7 @@ from buckaroo.customizations.pandas_commands import (
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
 from buckaroo.auto_clean.heuristic_lang import eval_heuristic_rule, eval_heuristics, get_top_score
 from buckaroo.jlisp.lisp_utils import s
-
+import re
 
 dirty_df = pd.DataFrame(
     {'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
@@ -59,6 +59,56 @@ def test_autoclean_codegen():
 
 
 
+
+def int_parse_frac(ser):
+    null_count =  (~ ser.apply(pd.to_numeric, errors='coerce').isnull()).sum()
+    return  null_count / len(ser)
+
+digits_and_period = re.compile(r'[^\d\.]')
+def strip_int_parse_frac(ser):
+    stripped = ser.str.replace(digits_and_period, "", regex=True)
+
+    #don't like the string conversion here, should still be vectorized
+    int_parsable = ser.astype(str).str.isdigit() 
+    parsable = (int_parsable | (stripped != ""))
+    return parsable.sum() / len(ser)
+
+
+TRUE_SYNONYMS = ["true", "yes", "on", "1"]
+FALSE_SYNONYMS = ["false", "no", "off", "0"]
+BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
+
+def str_bool_frac(ser):
+    matches = ser.str.lower().isin(BOOL_SYNONYMS)
+    return matches.sum() / len(ser)
+
+def us_dates_frac(ser):
+    parsed_dates = pd.to_datetime(ser, errors='coerce', format="%m/%d/%Y")
+    return (~ parsed_dates.isna()).sum() / len(ser)
+
+def euro_dates_frac(ser):
+    parsed_dates = pd.to_datetime(ser, errors='coerce', format="%d/%m/%Y")
+    return (~ parsed_dates.isna()).sum() / len(ser)
+
+
+
+class HeuristicFracs(ColAnalysis):
+
+    provides_defaults = dict(
+        str_bool_frac=0, regular_int_parse_frac=0, strip_int_parse_frac=0, us_dates_frac=0)
+
+    @staticmethod
+    def series_summary(sampled_ser, ser):
+        if not pd.api.types.is_string_dtype(ser):
+            return {}
+        
+        return dict(
+            str_bool_frac=str_bool_frac(ser),
+            regular_int_parse_frac=int_parse_frac(ser),
+            strip_int_parse_frac=strip_int_parse_frac(ser),
+            us_dates_frac=us_dates_frac(ser))
+
+
 class HeuristicCleaningGenOps(ColAnalysis):
     """
     This class is meant to be extended with idfferent rules passed in
@@ -67,15 +117,23 @@ class HeuristicCleaningGenOps(ColAnalysis):
 
     Then put this group of classes into their own AutocleaningConfig
     """
-    requires_summary = ['t_str_bool', 'regular_int_parse', 'strip_int_parse', 't_us_dates']
+    requires_summary = ['str_bool_frac', 'regular_int_parse_frac', 'strip_int_parse_frac', 'us_dates_frac']
     provides_defaults = {'cleaning_ops': []}
 
     rules = {
-        't_str_bool':         [s('m>'), .7],
-        'regular_int_parse':  [s('m>'), .9],
-        'strip_int_parse':    [s('m>'), .7],
+        'str_bool_frac':         [s('m>'), .7],
+        'regular_int_parse_frac':  [s('m>'), .9],
+        'strip_int_parse_frac':    [s('m>'), .7],
         'none':               [s('none-rule')],
-        't_us_dates':         [s('primary'), [s('m>'), .7]]}
+        'us_dates_frac':         [s('primary'), [s('m>'), .7]]}
+
+    rules_op_names = {
+        'str_bool_frac': 'str_bool',
+        'regular_int_parse_frac': 'regular_int_parse',
+        'strip_int_parse_frac':    'strip_int_parse',
+        'us_dates_frac':         'us_date'}
+
+        
 
 
     @classmethod
@@ -85,16 +143,18 @@ class HeuristicCleaningGenOps(ColAnalysis):
         if cleaning_op_name == 'none':
             return {'cleaning_ops': []}
         else:
-            return {'cleaning_ops': [
-                {'symbol': cleaning_op_name,
+            ops = [
+                {'symbol': kls.rules_op_names.get(cleaning_op_name, cleaning_op_name),
                  'meta':{ 'auto_clean': True, 'clean_strategy': kls.__name__}},
-                {'symbol': 'df'}],
-                    'add_orig': True}
+                {'symbol': 'df'}]
+            print("ops", ops)
+
+            return {'cleaning_ops':ops, 'add_orig': True}
 
 
 
 class ACHeuristic(AutocleaningConfig):
-    autocleaning_analysis_klasses = [DefaultSummaryStats, HeuristicCleaningGenOps, PdCleaningStats]
+    autocleaning_analysis_klasses = [HeuristicFracs, HeuristicCleaningGenOps]
     command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
     quick_command_klasses = [Search]
     name="default"
