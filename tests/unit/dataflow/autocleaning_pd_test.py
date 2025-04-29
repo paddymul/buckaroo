@@ -255,14 +255,6 @@ class SentinelCleaningGenOps(ColAnalysis):
         print("ops", ops)
         return {'cleaning_ops': ops}
 
-
-
-# class ACConf(AutocleaningConfig):
-#     autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
-#     command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
-#     quick_command_klasses = [Search]
-#     name="default"
-
 class SentinelConfig(AutocleaningConfig):
     """
     add a check between rules_op_names to all of the included command classes
@@ -287,7 +279,6 @@ def test_autoclean_dataflow():
 
     assert sdf.operations == []
     sdf.cleaning_method = "default"
-    print(sdf.operations)
     assert len(sdf.operations) > 0
 
 def test_autoclean_full_widget():
@@ -312,10 +303,7 @@ def test_autoclean_full_widget():
     }
 
     assert bw.dataflow.cleaning_method == 'default'
-
-
-
-    print(bw.operations)
+    # make sure the widget oprations were updated
     assert len(bw.operations) > 0
 
 
