@@ -13,7 +13,7 @@ from buckaroo.customizations.pandas_commands import (
     SafeInt, DropCol, FillNA, GroupBy, NoOp, Search, OnlyOutliers
 )
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
-
+from buckaroo.dataflow.dataflow import CustomizableDataflow
 
 dirty_df = pd.DataFrame(
     {'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
@@ -41,18 +41,14 @@ class CleaningGenOps(ColAnalysis):
             return {'cleaning_ops': []}
 
 
-def xtest_cleaning_stats():
-    dfs = DfStats(dirty_df, [DefaultSummaryStats])
-
-    # "3", "4", "5", "5"   4 out of 10
-    assert dfs.sdf['b']['int_parse'] == 0.4
-    assert dfs.sdf['b']['int_parse_fail'] == 0.6
-
 
 SAFE_INT_TOKEN = [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}]
 
 
 def test_format_ops():
+    """
+    make sure that format_ops joins the correct column names to ops
+    """
     column_meta = {
         'a': {'cleaning_ops':SAFE_INT_TOKEN },
         'b': {'cleaning_ops': [
@@ -231,6 +227,97 @@ def test_autoclean_codegen():
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
     assert generated_code == EXPECTED_GEN_CODE
+
+
+from buckaroo.customizations.pandas_commands import (
+    Command,
+    SafeInt, DropCol, FillNA, GroupBy, NoOp, Search)
+from buckaroo.customizations.pandas_cleaning_commands import (
+    IntParse, StripIntParse, StrBool, USDate)
+from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
+from buckaroo.dataflow.autocleaning import AutocleaningConfig
+
+from buckaroo.jlisp.lisp_utils import s
+
+class SentinelCleaningGenOps(ColAnalysis):
+    """
+    This class just calls no-op on each column
+    """
+    requires_summary = []
+    provides_defaults = {'cleaning_ops': []}
+
+
+    @classmethod
+    def computed_summary(kls, column_metadata):
+        ops = [
+            {'symbol': "noop", 'meta':{ 'auto_clean': True}},
+            {'symbol': 'df'}]
+        print("ops", ops)
+        return {'cleaning_ops': ops}
+
+
+
+# class ACConf(AutocleaningConfig):
+#     autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
+#     command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
+#     quick_command_klasses = [Search]
+#     name="default"
+
+class SentinelConfig(AutocleaningConfig):
+    """
+    add a check between rules_op_names to all of the included command classes
+    """
+    autocleaning_analysis_klasses = [SentinelCleaningGenOps]
+    command_klasses = [
+        DropCol, FillNA, GroupBy, NoOp, Search]
+    
+    quick_command_klasses = [Search]
+    name="default"
+
+def test_autoclean_dataflow():
+    """
+    verify that different autocleaning confs are actually called
+    """
+    class SentinelDataflow(CustomizableDataflow):
+        autocleaning_klass = PandasAutocleaning
+        autoclean_conf = tuple([SentinelConfig, NoCleaningConf])
+
+    sdf = SentinelDataflow(dirty_df)
+    sdf. cleaning_method = 'NoCleaning'
+
+    assert sdf.operations == []
+    sdf.cleaning_method = "default"
+    print(sdf.operations)
+    assert len(sdf.operations) > 0
+
+def test_autoclean_full_widget():
+    """
+    verify that different autocleaning confs are actually called
+    """
+    class SentinelBuckaroo(BuckarooWidget):
+        autocleaning_klass = PandasAutocleaning
+        autoclean_conf = tuple([SentinelConfig, NoCleaningConf])
+
+    bw = SentinelBuckaroo(dirty_df)
+    assert bw.operations == []
+
+    bw.buckaroo_state = {
+        "cleaning_method": "default",
+        "post_processing": "",
+        "sampled": False,
+        "show_commands": "on",
+        "df_display": "main",
+        "search_string": "",
+        "quick_command_args": {}
+    }
+
+    assert bw.dataflow.cleaning_method == 'default'
+
+
+
+    print(bw.operations)
+    assert len(bw.operations) > 0
+
 
 def test_drop_col():
     """make sure we can that make_origs doesn't throw an error when

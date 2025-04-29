@@ -180,6 +180,8 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
         old, new = change['old'], change['new']
         if not old['post_processing'] == new['post_processing']: 
             self.dataflow.post_processing_method = new['post_processing']
+        if not old['cleaning_method'] == new['cleaning_method']: 
+            self.dataflow.cleaning_method = new['cleaning_method']
         if not old['quick_command_args'] == new['quick_command_args']: 
             self.dataflow.quick_command_args = new['quick_command_args']
 

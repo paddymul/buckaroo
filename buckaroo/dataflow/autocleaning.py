@@ -41,7 +41,8 @@ class SentinelAutocleaning:
         return [cleaned_df, {}, generated_code, merged_operations]
 
 def merge_ops(existing_ops, cleaning_ops):
-    """ strip cleaning_ops from existing_ops, reinsert cleaning_ops at the beginning """
+    """strip cleaning_ops from existing_ops, reinsert cleaning_ops at
+    the beginning, leave the non auto_clean True ops"""
     old_cleaning_ops, user_gen_ops = split_operations(existing_ops)
     merged = cleaning_ops.copy()
     merged.extend(user_gen_ops)  # we want the user cleaning ops to come last
@@ -160,8 +161,6 @@ class PandasAutocleaning:
     def _run_cleaning(self, df, cleaning_method):
         dfs = self.DFStatsKlass(df, self.autocleaning_analysis_klasses, debug=True)
         gen_ops = format_ops(dfs.sdf)
-
-        #cleaning_sd = {}
         return gen_ops, dfs.sdf
 
     @staticmethod
