@@ -1,6 +1,6 @@
 import pytest
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
-from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa
+from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa, UserFuncException
 
 def test_split_operations():
 
@@ -86,7 +86,7 @@ def test_error_handle():
         return "never reached"
 
     _eval, _parse = make_interpreter()
-    with pytest.raises(ZeroDivisionError) as _excinfo:
+    with pytest.raises(UserFuncException) as _excinfo:
         _eval([s('throw_error')], {'throw_error':throw_error} )
 
 def test_assignment():

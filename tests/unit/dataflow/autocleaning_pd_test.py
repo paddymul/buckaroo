@@ -1,9 +1,9 @@
+import traceback
 import pandas as pd
 import numpy as np
 from buckaroo import BuckarooWidget
 from buckaroo.customizations.analysis import (
     DefaultSummaryStats, PdCleaningStats)
-from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning, generate_quick_ops
@@ -78,22 +78,10 @@ def test_merge_ops():
     print("@"*80)
     assert merge_ops(existing_ops, cleaning_ops) == expected_merged
 
-class ThrowError(Command):
-    command_default = [s('throw_error'), s('df'), "col"]
-    command_pattern = []
-
-    @staticmethod 
-    def transform(df, col):
-        1/0
-        return df
-
-    @staticmethod 
-    def transform_to_py(df, col):
-        return "    df['%s'] = df['%s'].apply(pd.to_numeric, errors='coerce')" % (col, col)
 
 class ACConf(AutocleaningConfig):
     autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
-    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search, ThrowError]
+    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
     quick_command_klasses = [Search]
     name="default"
 
@@ -188,8 +176,6 @@ def test_handle_clean_df():
         'a_orig': ["30",  "40"]})
     assert cleaned_df.to_dict() == expected.to_dict()
 
-
-
 class ThrowError(Command):
     command_default = [s('throw_error'), s('df'), "col"]
     command_pattern = []
@@ -203,12 +189,29 @@ class ThrowError(Command):
     def transform_to_py(df, col):
         return "    df['%s'] = df['%s'].apply(pd.to_numeric, errors='coerce')" % (col, col)
 
+
+def error_func():
+    3/0
+    
+class ThrowNestedError(Command):
+    command_default = [s('throw_nested_error'), s('df'), "col"]
+    command_pattern = []
+
+    @staticmethod 
+    def transform(df, col):
+        """ This is  used for testing traceback filtering """
+        error_func()
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return "    df['%s'] = df['%s'].apply(pd.to_numeric, errors='coerce')" % (col, col)
+
 class ACErrorConf(AutocleaningConfig):
     autocleaning_analysis_klasses = [DefaultSummaryStats]
-    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search, ThrowError]
+    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search, ThrowError, ThrowNestedError]
     quick_command_klasses = [Search]
     name="NoCleaning"
-
 
 def test_run_df_interpreter():
     """ this is testing a semi private method
@@ -218,18 +221,16 @@ def test_run_df_interpreter():
     ac = PandasAutocleaning([ACErrorConf])
     df = pd.DataFrame({'a': ["30", "40"]})
 
-    output_df, error_flagged_ops = ac._run_df_interpreter(
+    output_df = ac._run_df_interpreter(
         df,
         [
             [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']])
     expected = pd.DataFrame({'a': [30, 40]})
     assert output_df.to_dict() == expected.to_dict()
 
-import sys
-import traceback
+
 def find_error_op(df, operations, interpreter_func):
 
-    found_errors = [False] * len(operations)
     L = len(operations)
     low, high  = 0, L-1
     first_run = True
@@ -239,7 +240,6 @@ def find_error_op(df, operations, interpreter_func):
 
     formatted_exception = None
     while first_run or (high-low) > 1:
-        print("start", low, i, high)
         test_ops = operations[:(i+1)]
         try:
             res = interpreter_func(df, test_ops)
@@ -254,7 +254,6 @@ def find_error_op(df, operations, interpreter_func):
         first_run = False
         i = low + (high - low)//2
 
-
     if high == 1:
         try:
             res = interpreter_func(df, [operations[0]])
@@ -264,12 +263,32 @@ def find_error_op(df, operations, interpreter_func):
             return [df, 0, formatted_exception]
     return [res, high, formatted_exception]
 
+def Xtest_find_error_ops_traceback():
+    """ I only want to show users errors from their stuff
+    """
+    ac = PandasAutocleaning([ACErrorConf])
+    df = pd.DataFrame({'a': ["30", "40"]})
+
+    def run_func(df_a, ops):
+        return ac._run_df_interpreter(df_a, ops)
+
+    #ERROR = [{'symbol': 'throw_error'}, {'symbol': 'df'}, 'a']
+    NESTED_ERROR = [{'symbol': 'throw_nested_error'}, {'symbol': 'df'}, 'a']
+    #output_df, error_op, formatted_exception = find_error_op(df, [ERROR], run_func)
+    output_df, error_op, formatted_exception = find_error_op(df, [NESTED_ERROR], run_func)
+
+    # Figure out a way to filter the traceback to just user written
+    # code, not the internals of the jlisp interpreter
+    # Currently punting
+
+    #assert formatted_exception == []
+
+
 def test_find_error_ops():
     """ this is testing a semi private method
 
     I want to test error handling, so we can tag it on operations that cause errors
     """
-    #ac = PandasAutocleaning([ACConf, NoCleaningConf])
     ac = PandasAutocleaning([ACErrorConf])
     df = pd.DataFrame({'a': ["30", "40"]})
 
@@ -289,10 +308,6 @@ def test_find_error_ops():
 
     output_df, error_op, formatted_exception = find_error_op(df, [ERROR], run_func)
     assert error_op == 0
-    # the formatted exception is a mess and it is brittle with a lot
-    #of line numbers, punting for now
-    #assert formatted_exception == []
-
 
     output_df, error_op, formatted_exception = find_error_op(df, [NOOP, ERROR], run_func)
     assert error_op == 1
@@ -322,9 +337,6 @@ def test_find_error_ops():
     assert error_op == 3
 
 
-
-
-    
 def test_quick_commands_run():
     """
     test that quick_commands work with autocleaning disabled
@@ -376,17 +388,6 @@ def test_autoclean_codegen():
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
     assert generated_code == EXPECTED_GEN_CODE
-
-
-from buckaroo.customizations.pandas_commands import (
-    Command,
-    SafeInt, DropCol, FillNA, GroupBy, NoOp, Search)
-from buckaroo.customizations.pandas_cleaning_commands import (
-    IntParse, StripIntParse, StrBool, USDate)
-from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
-from buckaroo.dataflow.autocleaning import AutocleaningConfig
-
-from buckaroo.jlisp.lisp_utils import s
 
 class SentinelCleaningGenOps(ColAnalysis):
     """
