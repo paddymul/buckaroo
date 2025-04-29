@@ -175,6 +175,23 @@ def test_handle_clean_df():
         'a_orig': ["30",  "40"]})
     assert cleaned_df.to_dict() == expected.to_dict()
 
+
+def test_run_df_interpreter():
+    """ this is testing a semi private method
+
+    I want to test error handling, so we can tag it on operations that cause errors
+    """
+    ac = PandasAutocleaning([ACConf, NoCleaningConf])
+    df = pd.DataFrame({'a': ["30", "40"]})
+
+    output_df, error_flagged_ops = ac._run_df_interpreter(
+        df,
+        [
+            [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']])
+    expected = pd.DataFrame({'a': [30, 40]})
+    assert output_df.to_dict() == expected.to_dict()
+
+
     
 def test_quick_commands_run():
     """
