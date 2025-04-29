@@ -226,6 +226,7 @@ def test_run_df_interpreter():
     assert output_df.to_dict() == expected.to_dict()
 
 import sys
+import traceback
 def find_error_op(df, operations, interpreter_func):
 
     found_errors = [False] * len(operations)
@@ -235,30 +236,33 @@ def find_error_op(df, operations, interpreter_func):
 
     res = None
     i = high
+
+    formatted_exception = None
     while first_run or (high-low) > 1:
         print("start", low, i, high)
         test_ops = operations[:(i+1)]
         try:
             res = interpreter_func(df, test_ops)
             if first_run:
-                return [res, -1]
+                return [res, -1, None]
             low = i
         except Exception as e:
-            high = i
 
-            print(sys.exc_info())
+            high = i
+            formatted_exception = traceback.format_exception(e)
 
         first_run = False
         i = low + (high - low)//2
-        print("end", low, i, high)
+
 
     if high == 1:
         try:
             res = interpreter_func(df, [operations[0]])
-            return [res, 1]
+            return [res, 1, None]
         except Exception as e:
-            return [df, 0]
-    return [res, high]
+            formatted_exception = traceback.format_exception(e)
+            return [df, 0, formatted_exception]
+    return [res, high, formatted_exception]
 
 def test_find_error_ops():
     """ this is testing a semi private method
@@ -276,38 +280,48 @@ def test_find_error_ops():
     ERROR = [{'symbol': 'throw_error'}, {'symbol': 'df'}, 'a']
 
 
-    output_df, error_op = find_error_op(df, [ERROR, NOOP, NOOP, NOOP], run_func)
+    # This is probably paranoid and overkill, but off by one errors
+    # are very easy with binary search. Errors can also occur with
+    # odd/even lists
+    
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, NOOP], run_func)
+    assert error_op == -1
+
+    output_df, error_op, formatted_exception = find_error_op(df, [ERROR], run_func)
+    assert error_op == 0
+    # the formatted exception is a mess and it is brittle with a lot
+    #of line numbers, punting for now
+    #assert formatted_exception == []
+
+
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, ERROR], run_func)
+    assert error_op == 1
+
+    output_df, error_op, formatted_exception = find_error_op(df, [ERROR, NOOP], run_func)
+    assert error_op == 0
+    ######################################
+    output_df, error_op, formatted_exception = find_error_op(df, [ERROR, NOOP, NOOP], run_func)
     assert error_op == 0
 
-    output_df, error_op = find_error_op(df, [ERROR, NOOP], run_func)
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, ERROR, NOOP], run_func)
+    assert error_op == 1
+
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, NOOP, ERROR], run_func)
+    assert error_op == 2
+    ############################
+    output_df, error_op, formatted_exception = find_error_op(df, [ERROR, NOOP, NOOP, NOOP], run_func)
     assert error_op == 0
 
-    output_df, error_op = find_error_op(df, [NOOP, NOOP, NOOP, ERROR], run_func)
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, ERROR, NOOP, NOOP], run_func)
+    assert error_op == 1
+
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, NOOP, ERROR, NOOP], run_func)
+    assert error_op == 2
+
+    output_df, error_op, formatted_exception = find_error_op(df, [NOOP, NOOP, NOOP, ERROR], run_func)
     assert error_op == 3
 
 
-    output_df, error_op = find_error_op(df, [NOOP, NOOP], run_func)
-    assert error_op == -1
-
-    output_df, error_op = find_error_op(df, [NOOP, ERROR, NOOP, NOOP], run_func)
-    assert error_op == 1
-    
-    output_df, error_op = find_error_op(df, [ERROR, NOOP, NOOP], run_func)
-    assert error_op == 0
-
-    output_df, error_op = find_error_op(df, [NOOP, ERROR, NOOP], run_func)
-    assert error_op == 1
-
-    output_df, error_op = find_error_op(df, [NOOP, NOOP, ERROR], run_func)
-    assert error_op == 2
-
-
-
-    output_df, error_op = find_error_op(df, [NOOP, ERROR], run_func)
-    assert error_op == 1
-
-    output_df, error_op = find_error_op(df, [ERROR], run_func)
-    assert error_op == 0
 
 
     
