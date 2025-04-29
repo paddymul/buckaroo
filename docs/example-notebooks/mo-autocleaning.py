@@ -85,15 +85,14 @@ def _(pd):
 
         @staticmethod
         def series_summary(sampled_ser, ser):
-            if not pd.api.types.is_string_dtype(ser):
+            if not (pd.api.types.is_string_dtype(ser) or pd.api.types.is_object_dtype(ser)):
                 return {}
-        
+
             return dict(
                 str_bool_frac=str_bool_frac(ser),
                 regular_int_parse_frac=int_parse_frac(ser),
                 strip_int_parse_frac=strip_int_parse_frac(ser),
                 us_dates_frac=us_dates_frac(ser))
-
     return (
         BOOL_SYNONYMS,
         ColAnalysis,
@@ -111,9 +110,9 @@ def _(pd):
 
 
 @app.cell
-def _(ColAnalysis, get_top_score):
-
+def _(ColAnalysis):
     from buckaroo.jlisp.lisp_utils import s
+    from buckaroo.auto_clean.heuristic_lang import get_top_score
 
     class HeuristicCleaningGenOps(ColAnalysis):
         """
@@ -144,6 +143,7 @@ def _(ColAnalysis, get_top_score):
         def computed_summary(kls, column_metadata):
 
             cleaning_op_name = get_top_score(kls.rules, column_metadata)
+            print("cleaning_op_name", cleaning_op_name, column_metadata)
             if cleaning_op_name == 'none':
                 return {'cleaning_ops': []}
             else:
@@ -154,9 +154,7 @@ def _(ColAnalysis, get_top_score):
                 print("ops", ops)
 
                 return {'cleaning_ops':ops, 'add_orig': True}
-
-
-    return HeuristicCleaningGenOps, s
+    return HeuristicCleaningGenOps, get_top_score, s
 
 
 @app.cell
@@ -199,7 +197,7 @@ def _(AggresiveCleaningGenOps, BuckarooInfiniteWidget, HeuristicFracs):
             IntParse, StripIntParse, StrBool, USDate,
             DropCol, FillNA, GroupBy, NoOp,
             Search]
-    
+
         quick_command_klasses = [Search]
         name="default"
 
@@ -228,8 +226,8 @@ def _(AggresiveCleaningGenOps, BuckarooInfiniteWidget, HeuristicFracs):
 @app.cell
 def _(ACBuckaroo, pd):
     dirty_df = pd.DataFrame(
-        {'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
-         'b':["3", "4", "a", "5", "5",  "b", "b", None, None, None]})
+        {'a':[10,  20,  30,   40,  10, 20.3, None,],
+         'b':["3", "4", "a", "5", "5",  "b", None ]})
 
     #bw2 = ACBuckaroo(citibike_df)
     bw2 = ACBuckaroo(dirty_df)
@@ -239,7 +237,6 @@ def _(ACBuckaroo, pd):
 
 @app.cell
 def _(bw2):
-
     bw2.buckaroo_state = {
       "cleaning_method": "default",
       "post_processing": "",
@@ -249,13 +246,12 @@ def _(bw2):
       "search_string": "",
       "quick_command_args": {}
     }
-
     return
 
 
 @app.cell
 def _(bw2):
-    bw2.buckaroo_state
+    bw2.dataflow.processed_df
     return
 
 
