@@ -151,7 +151,7 @@ class PandasAutocleaning:
         if len(full_ops) == 1:
             return df
         
-        return self.df_interpreter(full_ops , df), full_ops
+        return self.df_interpreter(full_ops , df)
 
     def _run_code_generator(self, operations):
         if len(operations) == 0:
@@ -229,7 +229,7 @@ class PandasAutocleaning:
             return [df, {}, "", []]
 
 
-        cleaned_df, error_ops = self._run_df_interpreter(df, final_ops)
+        cleaned_df = self._run_df_interpreter(df, final_ops)
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
         generated_code = self._run_code_generator(final_ops)
         return [merged_cleaned_df, cleaning_sd, generated_code, final_ops]

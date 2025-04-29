@@ -78,9 +78,22 @@ def test_merge_ops():
     print("@"*80)
     assert merge_ops(existing_ops, cleaning_ops) == expected_merged
 
+class ThrowError(Command):
+    command_default = [s('throw_error'), s('df'), "col"]
+    command_pattern = []
+
+    @staticmethod 
+    def transform(df, col):
+        1/0
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return "    df['%s'] = df['%s'].apply(pd.to_numeric, errors='coerce')" % (col, col)
+
 class ACConf(AutocleaningConfig):
     autocleaning_analysis_klasses = [DefaultSummaryStats, CleaningGenOps, PdCleaningStats]
-    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search]
+    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search, ThrowError]
     quick_command_klasses = [Search]
     name="default"
 
@@ -176,12 +189,33 @@ def test_handle_clean_df():
     assert cleaned_df.to_dict() == expected.to_dict()
 
 
+
+class ThrowError(Command):
+    command_default = [s('throw_error'), s('df'), "col"]
+    command_pattern = []
+
+    @staticmethod 
+    def transform(df, col):
+        1/0
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return "    df['%s'] = df['%s'].apply(pd.to_numeric, errors='coerce')" % (col, col)
+
+class ACErrorConf(AutocleaningConfig):
+    autocleaning_analysis_klasses = [DefaultSummaryStats]
+    command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search, ThrowError]
+    quick_command_klasses = [Search]
+    name="NoCleaning"
+
+
 def test_run_df_interpreter():
     """ this is testing a semi private method
 
     I want to test error handling, so we can tag it on operations that cause errors
     """
-    ac = PandasAutocleaning([ACConf, NoCleaningConf])
+    ac = PandasAutocleaning([ACErrorConf])
     df = pd.DataFrame({'a': ["30", "40"]})
 
     output_df, error_flagged_ops = ac._run_df_interpreter(
@@ -190,6 +224,90 @@ def test_run_df_interpreter():
             [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a']])
     expected = pd.DataFrame({'a': [30, 40]})
     assert output_df.to_dict() == expected.to_dict()
+
+import sys
+def find_error_op(df, operations, interpreter_func):
+
+    found_errors = [False] * len(operations)
+    L = len(operations)
+    low, high  = 0, L-1
+    first_run = True
+
+    res = None
+    i = high
+    while first_run or (high-low) > 1:
+        print("start", low, i, high)
+        test_ops = operations[:(i+1)]
+        try:
+            res = interpreter_func(df, test_ops)
+            if first_run:
+                return [res, -1]
+            low = i
+        except Exception as e:
+            high = i
+
+            print(sys.exc_info())
+
+        first_run = False
+        i = low + (high - low)//2
+        print("end", low, i, high)
+
+    if high == 1:
+        try:
+            res = interpreter_func(df, [operations[0]])
+            return [res, 1]
+        except Exception as e:
+            return [df, 0]
+    return [res, high]
+
+def test_find_error_ops():
+    """ this is testing a semi private method
+
+    I want to test error handling, so we can tag it on operations that cause errors
+    """
+    #ac = PandasAutocleaning([ACConf, NoCleaningConf])
+    ac = PandasAutocleaning([ACErrorConf])
+    df = pd.DataFrame({'a': ["30", "40"]})
+
+    def run_func(df_a, ops):
+        return ac._run_df_interpreter(df_a, ops)
+
+    NOOP = [{'symbol': 'noop'}, {'symbol': 'df'}, 'a']
+    ERROR = [{'symbol': 'throw_error'}, {'symbol': 'df'}, 'a']
+
+
+    output_df, error_op = find_error_op(df, [ERROR, NOOP, NOOP, NOOP], run_func)
+    assert error_op == 0
+
+    output_df, error_op = find_error_op(df, [ERROR, NOOP], run_func)
+    assert error_op == 0
+
+    output_df, error_op = find_error_op(df, [NOOP, NOOP, NOOP, ERROR], run_func)
+    assert error_op == 3
+
+
+    output_df, error_op = find_error_op(df, [NOOP, NOOP], run_func)
+    assert error_op == -1
+
+    output_df, error_op = find_error_op(df, [NOOP, ERROR, NOOP, NOOP], run_func)
+    assert error_op == 1
+    
+    output_df, error_op = find_error_op(df, [ERROR, NOOP, NOOP], run_func)
+    assert error_op == 0
+
+    output_df, error_op = find_error_op(df, [NOOP, ERROR, NOOP], run_func)
+    assert error_op == 1
+
+    output_df, error_op = find_error_op(df, [NOOP, NOOP, ERROR], run_func)
+    assert error_op == 2
+
+
+
+    output_df, error_op = find_error_op(df, [NOOP, ERROR], run_func)
+    assert error_op == 1
+
+    output_df, error_op = find_error_op(df, [ERROR], run_func)
+    assert error_op == 0
 
 
     
