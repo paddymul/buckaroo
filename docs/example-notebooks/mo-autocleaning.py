@@ -8,9 +8,10 @@ app = marimo.App(width="medium")
 def _(ACBuckaroo, pd):
     dirty_df = pd.DataFrame(
         {'a':[10,  20,  30,   40,  10, 20.3, None,],
-         'b':["3", "4", "a", "5", "5",  "b", None ]})
-
-    #bw2 = ACBuckaroo(citibike_df)
+         'b':["3", "4", "a", "5", "5",  "b9", None ],
+         'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002"],
+         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1"]
+        })
     bw2 = ACBuckaroo(dirty_df)
     bw2
     return bw2, dirty_df
@@ -57,9 +58,6 @@ def _(
         df['{col}'] = _combined"""
 
     class AggressiveAC(AutocleaningConfig):
-        """
-        add a check between rules_op_names to all of the included command classes
-        """
         autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
         command_klasses = [
             IntParse, StripIntParse, StrBool, USDate,
@@ -69,14 +67,26 @@ def _(
         quick_command_klasses = [Search]
         name="aggressive"
 
+    class ConvservativeCleaningGenops(AggresiveCleaningGenOps):
+        rules = {
+            'str_bool_frac':         [s('m>'), .9],
+            'regular_int_parse_frac':  [s('m>'), .9],
+            'strip_int_parse_frac':    [s('m>'), .9],
+            'none':               [s('none-rule')],
+            'us_dates_frac':         [s('primary'), [s('m>'), .8]]}
 
+    class ConservativeAC(AggressiveAC):
+        autocleaning_analysis_klasses = [HeuristicFracs, ConvservativeCleaningGenops]
+        name="conservative"
     class ACBuckaroo(BuckarooInfiniteWidget):
-        autoclean_conf = tuple([AggressiveAC, NoCleaningConf])
+        autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
     return (
         ACBuckaroo,
         AggressiveAC,
         AutocleaningConfig,
         Command,
+        ConservativeAC,
+        ConvservativeCleaningGenops,
         DropCol,
         FillNA,
         GroupBy,
@@ -154,10 +164,7 @@ def _(pd):
         parsed_dates = pd.to_datetime(ser, errors='coerce', format="%d/%m/%Y")
         return (~ parsed_dates.isna()).sum() / len(ser)
 
-
-
     class HeuristicFracs(ColAnalysis):
-
         provides_defaults = dict(
             str_bool_frac=0, regular_int_parse_frac=0, strip_int_parse_frac=0, us_dates_frac=0)
 
@@ -194,7 +201,7 @@ def _(ColAnalysis):
 
     class HeuristicCleaningGenOps(ColAnalysis):
         """
-        This class is meant to be extended with idfferent rules passed in
+        This class is meant to be extended with different rules passed in
 
         create other ColAnalysis classes that satisfy requires_summary
 
@@ -215,7 +222,6 @@ def _(ColAnalysis):
             'regular_int_parse_frac': 'regular_int_parse',
             'strip_int_parse_frac':    'strip_int_parse',
             'us_dates_frac':         'us_date'}
-
 
         @classmethod
         def computed_summary(kls, column_metadata):
@@ -239,7 +245,7 @@ def _(HeuristicCleaningGenOps, s):
         provides_defaults = {'cleaning_ops': []}
 
         rules = {
-            'str_bool_frac':         [s('m>'), .7],
+            'str_bool_frac':         [s('m>'), .6],
             'regular_int_parse_frac':  [s('m>'), .9],
             'strip_int_parse_frac':    [s('m>'), .7],
             'none':               [s('none-rule')],
@@ -251,6 +257,11 @@ def _(HeuristicCleaningGenOps, s):
             'strip_int_parse_frac':    'strip_int_parse',
             'us_dates_frac':         'us_date'}
     return (AggresiveCleaningGenOps,)
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
