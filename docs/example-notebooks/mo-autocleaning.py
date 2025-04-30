@@ -17,16 +17,46 @@ def _(ACBuckaroo, pd):
 
 
 @app.cell
-def _(AggresiveCleaningGenOps, BuckarooInfiniteWidget, HeuristicFracs):
+def _(
+    AggresiveCleaningGenOps,
+    BuckarooInfiniteWidget,
+    HeuristicFracs,
+    pd,
+    re,
+    s,
+):
     from buckaroo.customizations.pandas_commands import (
         Command,
         SafeInt, DropCol, FillNA, GroupBy, NoOp, Search)
     from buckaroo.customizations.pandas_cleaning_commands import (
-        IntParse, StripIntParse, StrBool, USDate)
+        IntParse, StrBool, USDate)
     from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
     from buckaroo.dataflow.autocleaning import AutocleaningConfig
 
-    class ACHeuristic(AutocleaningConfig):
+    class StripIntParse(Command):
+        command_default = [s('strip_int_parse'), s('df'), "col"]
+        command_pattern = []
+
+        @staticmethod 
+        def transform(df, col):
+            _digits_and_period = re.compile(r'[^\d\.]')
+            _ser = df[col]
+            _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
+            _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
+            _combined = _reg_parse.fillna(_strip_parse)
+            df[col] = _combined
+            return df
+
+        @staticmethod 
+        def transform_to_py(df, col):
+            return f"""    _digits_and_period = re.compile(r'[^\\d\\.]')
+        _ser = df['{col}']
+        _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
+        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
+        _combined = _reg_parse.fillna(_strip_parse)
+        df['{col}'] = _combined"""
+
+    class AggressiveAC(AutocleaningConfig):
         """
         add a check between rules_op_names to all of the included command classes
         """
@@ -37,23 +67,15 @@ def _(AggresiveCleaningGenOps, BuckarooInfiniteWidget, HeuristicFracs):
             Search]
 
         quick_command_klasses = [Search]
-        name="default"
+        name="aggressive"
 
-    class BlankCleaning(AutocleaningConfig):
-        """
-
-        """
-        quick_command_klasses = [Search]
-        name=""
 
     class ACBuckaroo(BuckarooInfiniteWidget):
-        autoclean_conf = tuple([ACHeuristic, NoCleaningConf])
-        #autoclean_conf = tuple([ACHeuristic])
+        autoclean_conf = tuple([AggressiveAC, NoCleaningConf])
     return (
         ACBuckaroo,
-        ACHeuristic,
+        AggressiveAC,
         AutocleaningConfig,
-        BlankCleaning,
         Command,
         DropCol,
         FillNA,
@@ -84,15 +106,6 @@ def _():
     citibike_df
 
     bw = BuckarooInfiniteWidget(citibike_df)
-    bw.buckaroo_state = {
-      "cleaning_method": "NoCleaning",
-      "post_processing": "",
-      "sampled": False,
-      "show_commands": "on",
-      "df_display": "main",
-      "search_string": "",
-      "quick_command_args": {}
-    }
     #bw
     return (
         BuckarooInfiniteWidget,
@@ -208,7 +221,6 @@ def _(ColAnalysis):
         def computed_summary(kls, column_metadata):
 
             cleaning_op_name = get_top_score(kls.rules, column_metadata)
-            print("cleaning_op_name", cleaning_op_name, column_metadata)
             if cleaning_op_name == 'none':
                 return {'cleaning_ops': []}
             else:
@@ -216,8 +228,6 @@ def _(ColAnalysis):
                     {'symbol': kls.rules_op_names.get(cleaning_op_name, cleaning_op_name),
                      'meta':{ 'auto_clean': True, 'clean_strategy': kls.__name__}},
                     {'symbol': 'df'}]
-                print("ops", ops)
-
                 return {'cleaning_ops':ops, 'add_orig': True}
     return HeuristicCleaningGenOps, get_top_score, s
 
@@ -241,28 +251,6 @@ def _(HeuristicCleaningGenOps, s):
             'strip_int_parse_frac':    'strip_int_parse',
             'us_dates_frac':         'us_date'}
     return (AggresiveCleaningGenOps,)
-
-
-@app.cell
-def _(bw2):
-    bw2.buckaroo_options
-    return
-
-
-@app.cell
-def _(bw2):
-    bw2.buckaroo_state
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _():
-    return
 
 
 if __name__ == "__main__":

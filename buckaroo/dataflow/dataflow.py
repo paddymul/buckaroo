@@ -266,9 +266,9 @@ class CustomizableDataflow(DataFlow):
 
     def populate_auto_clean_options(self):
         new_buckaroo_options = self.buckaroo_options.copy()
-        ac_ops = ['']
-        ac_ops.extend(list(self.ac_obj.config_dict.keys()))
-        new_buckaroo_options['cleaning_method'] = ac_ops
+        #ac_ops = ['']
+        #ac_ops.extend(list(self.ac_obj.config_dict.keys()))
+        new_buckaroo_options['cleaning_method'] = list(self.ac_obj.config_dict.keys())
         self.buckaroo_options = new_buckaroo_options
 
     def populate_df_meta(self):

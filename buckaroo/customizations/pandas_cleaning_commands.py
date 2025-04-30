@@ -25,7 +25,7 @@ class StripIntParse(Command):
         _digits_and_period = re.compile(r'[^\d\.]')
         _ser = df[col]
         _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
-        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce')
+        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
         _combined = _reg_parse.fillna(_strip_parse)
         df[col] = _combined
         return df
@@ -35,8 +35,8 @@ class StripIntParse(Command):
         return f"""    _digits_and_period = re.compile(r'[^\\d\\.]')
     _ser = df['{col}']
     _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
-    _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce')
-    _combined = reg_parse.fillna(_strip_parse)
+    _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
+    _combined = _reg_parse.fillna(_strip_parse)
     df['{col}'] = _combined"""
 
 

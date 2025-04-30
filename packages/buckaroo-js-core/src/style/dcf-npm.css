@@ -64,6 +64,7 @@
 .dependent-tabs .output-area {
   clear: both;
   float: none;
+  padding:0;
 }
 
 .python-displayer, .command-displayer {

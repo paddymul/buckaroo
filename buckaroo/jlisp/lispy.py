@@ -295,10 +295,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
         if isinstance(inport, str):
             inport = InPort(io.StringIO(inport))
         expanded  = expand(read(inport), toplevel=True)
-        print("expanded", expanded)
         return expanded
-    
-    
     
     def atom(token):
         'Numbers become numbers; #t and #f are booleans; "..." string; otherwise Symbol.'

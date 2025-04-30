@@ -209,7 +209,8 @@ export function StatusBar({
             headerTooltip: "Show Commands",
             width: 30,
         },
-        { field: "cleaning_method", headerName: "Ξ", headerTooltip: "Auto_clean", width: 30 },
+        { field: "cleaning_method", headerName: "cleaning", 
+            headerTooltip: "Auto cleaning method", width: 80 },
         {
             field: "help",
             headerName: "?",
