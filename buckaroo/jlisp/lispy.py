@@ -11,10 +11,6 @@ import sys
 class Symbol(str):
     def __repr__(self):
         return f"Symbol({str(self)})"
-class UserFuncException(Exception):
-    pass
-
-
 
 ################ parse, read, and user interaction
 
@@ -235,11 +231,7 @@ def make_interpreter(extra_funcs=None, extra_macros=None):
                     x = proc.exp
                     env = Env(proc.parms, exps, proc.env)
                 else:
-                    try:
-                        return proc(*exps)
-                    except Exception as e:
-                        raise UserFuncException("UserFuncException") from e
-                        
+                    return proc(*exps)
 
 
     def is_unparsed_atom_a_symbol(obj):

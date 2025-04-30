@@ -211,7 +211,7 @@ class ACErrorConf(AutocleaningConfig):
     autocleaning_analysis_klasses = [DefaultSummaryStats]
     command_klasses = [DropCol, FillNA, GroupBy, NoOp, SafeInt, Search, ThrowError, ThrowNestedError]
     quick_command_klasses = [Search]
-    name="NoCleaning"
+    name=""
 
 def test_run_df_interpreter():
     """ this is testing a semi private method
@@ -344,7 +344,7 @@ def test_quick_commands_run():
     ac = PandasAutocleaning([ACConf, NoCleaningConf])
     df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
     cleaning_result = ac.handle_ops_and_clean(
-        df, cleaning_method="NoCleaning", quick_command_args={'search':['aa']}, existing_operations=[])
+        df, cleaning_method="", quick_command_args={'search':['aa']}, existing_operations=[])
     cleaned_df, cleaning_sd, generated_code, merged_operations = cleaning_result
 
     expected = pd.DataFrame({
@@ -425,7 +425,7 @@ def test_autoclean_dataflow():
         autoclean_conf = tuple([SentinelConfig, NoCleaningConf])
 
     sdf = SentinelDataflow(dirty_df)
-    sdf. cleaning_method = 'NoCleaning'
+    sdf.cleaning_method = ''
 
     assert sdf.operations == []
     sdf.cleaning_method = "default"

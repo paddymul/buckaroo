@@ -164,7 +164,7 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
     
     #information about the current configuration of buckaroo
     buckaroo_state = Dict({
-        'cleaning_method': 'NoCleaning',
+        'cleaning_method': '',
         'post_processing': '',
         'sampled': False,
         'show_commands': False,

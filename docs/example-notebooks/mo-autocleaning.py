@@ -5,6 +5,71 @@ app = marimo.App(width="medium")
 
 
 @app.cell
+def _(ACBuckaroo, pd):
+    dirty_df = pd.DataFrame(
+        {'a':[10,  20,  30,   40,  10, 20.3, None,],
+         'b':["3", "4", "a", "5", "5",  "b", None ]})
+
+    #bw2 = ACBuckaroo(citibike_df)
+    bw2 = ACBuckaroo(dirty_df)
+    bw2
+    return bw2, dirty_df
+
+
+@app.cell
+def _(AggresiveCleaningGenOps, BuckarooInfiniteWidget, HeuristicFracs):
+    from buckaroo.customizations.pandas_commands import (
+        Command,
+        SafeInt, DropCol, FillNA, GroupBy, NoOp, Search)
+    from buckaroo.customizations.pandas_cleaning_commands import (
+        IntParse, StripIntParse, StrBool, USDate)
+    from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
+    from buckaroo.dataflow.autocleaning import AutocleaningConfig
+
+    class ACHeuristic(AutocleaningConfig):
+        """
+        add a check between rules_op_names to all of the included command classes
+        """
+        autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
+        command_klasses = [
+            IntParse, StripIntParse, StrBool, USDate,
+            DropCol, FillNA, GroupBy, NoOp,
+            Search]
+
+        quick_command_klasses = [Search]
+        name="default"
+
+    class BlankCleaning(AutocleaningConfig):
+        """
+
+        """
+        quick_command_klasses = [Search]
+        name=""
+
+    class ACBuckaroo(BuckarooInfiniteWidget):
+        autoclean_conf = tuple([ACHeuristic, NoCleaningConf])
+        #autoclean_conf = tuple([ACHeuristic])
+    return (
+        ACBuckaroo,
+        ACHeuristic,
+        AutocleaningConfig,
+        BlankCleaning,
+        Command,
+        DropCol,
+        FillNA,
+        GroupBy,
+        IntParse,
+        NoCleaningConf,
+        NoOp,
+        SafeInt,
+        Search,
+        StrBool,
+        StripIntParse,
+        USDate,
+    )
+
+
+@app.cell
 def _():
     import marimo as mo
     import pandas as pd
@@ -28,7 +93,7 @@ def _():
       "search_string": "",
       "quick_command_args": {}
     }
-    bw
+    #bw
     return (
         BuckarooInfiniteWidget,
         DataFrame,
@@ -179,79 +244,19 @@ def _(HeuristicCleaningGenOps, s):
 
 
 @app.cell
-def _(AggresiveCleaningGenOps, BuckarooInfiniteWidget, HeuristicFracs):
-    from buckaroo.customizations.pandas_commands import (
-        Command,
-        SafeInt, DropCol, FillNA, GroupBy, NoOp, Search)
-    from buckaroo.customizations.pandas_cleaning_commands import (
-        IntParse, StripIntParse, StrBool, USDate)
-    from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
-    from buckaroo.dataflow.autocleaning import AutocleaningConfig
-
-    class ACHeuristic(AutocleaningConfig):
-        """
-        add a check between rules_op_names to all of the included command classes
-        """
-        autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
-        command_klasses = [
-            IntParse, StripIntParse, StrBool, USDate,
-            DropCol, FillNA, GroupBy, NoOp,
-            Search]
-
-        quick_command_klasses = [Search]
-        name="default"
-
-    class ACBuckaroo(BuckarooInfiniteWidget):
-        autoclean_conf = tuple([ACHeuristic, NoCleaningConf])
-        #autoclean_conf = tuple([ACHeuristic])
-    return (
-        ACBuckaroo,
-        ACHeuristic,
-        AutocleaningConfig,
-        Command,
-        DropCol,
-        FillNA,
-        GroupBy,
-        IntParse,
-        NoCleaningConf,
-        NoOp,
-        SafeInt,
-        Search,
-        StrBool,
-        StripIntParse,
-        USDate,
-    )
-
-
-@app.cell
-def _(ACBuckaroo, pd):
-    dirty_df = pd.DataFrame(
-        {'a':[10,  20,  30,   40,  10, 20.3, None,],
-         'b':["3", "4", "a", "5", "5",  "b", None ]})
-
-    #bw2 = ACBuckaroo(citibike_df)
-    bw2 = ACBuckaroo(dirty_df)
-    bw2
-    return bw2, dirty_df
-
-
-@app.cell
 def _(bw2):
-    bw2.buckaroo_state = {
-      "cleaning_method": "default",
-      "post_processing": "",
-      "sampled": False,
-      "show_commands": "on",
-      "df_display": "main",
-      "search_string": "",
-      "quick_command_args": {}
-    }
+    bw2.buckaroo_options
     return
 
 
 @app.cell
 def _(bw2):
-    bw2.dataflow.processed_df
+    bw2.buckaroo_state
+    return
+
+
+@app.cell
+def _():
     return
 
 

@@ -8,6 +8,9 @@ from buckaroo.buckaroo_widget import BuckarooWidget, BuckarooInfiniteWidget
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)         
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
+from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
+from buckaroo.dataflow.autocleaning import AutocleaningConfig
+
 
 EMPTY_DF_JSON = {
             'dfviewer_config': {
@@ -318,6 +321,18 @@ def test_error_post_processing():
     e_dfc.post_processing_method = 'always_fail'
     assert e_dfc.processed_df.values == [["division by zero"]]
 
+def test_buckaroo_options_cleaning():
+
+    class AC2(AutocleaningConfig):
+        name="AC2"
+    
+    class LocCDF(ACDFC):
+        autoclean_conf = tuple([AC2, NoCleaningConf])
+
+    dfc = LocCDF(BASIC_DF)
+    assert dfc.buckaroo_options['cleaning_method'] ==  ['', 'AC2', '']
+
+
 def test_column_config_override_widget():
     ROWS = 200
     typed_df = pd.DataFrame(
@@ -443,8 +458,8 @@ def test_bstate_commands():
     base_a_klasses.extend([TransposeProcessing])
 
     bw = BuckarooWidget(typed_df)
-    assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
-    assert bw.dataflow.cleaning_method == 'NoCleaning'
+    assert bw.buckaroo_state['cleaning_method'] == ''
+    assert bw.dataflow.cleaning_method == ''
     class VCBuckarooWidget(BuckarooWidget):
         #analysis_klasses = base_a_klasses
         autoclean_conf = tuple([NoCleaningConf]) 
@@ -479,8 +494,8 @@ def test_bstate_commands2():
     base_a_klasses.extend([TransposeProcessing])
 
     bw = BuckarooWidget(typed_df)
-    assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
-    assert bw.dataflow.cleaning_method == 'NoCleaning'
+    assert bw.buckaroo_state['cleaning_method'] == ''
+    assert bw.dataflow.cleaning_method == ''
     class VCBuckarooWidget(BuckarooInfiniteWidget):
         #analysis_klasses = base_a_klasses
         autoclean_conf = tuple([NoCleaningConf]) 
@@ -525,8 +540,8 @@ def test_bstate_commands3():
     base_a_klasses.extend([TransposeProcessing])
 
     bw = BuckarooWidget(typed_df)
-    assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
-    assert bw.dataflow.cleaning_method == 'NoCleaning'
+    assert bw.buckaroo_state['cleaning_method'] == ''
+    assert bw.dataflow.cleaning_method == ''
     class VCBuckarooWidget(BuckarooWidget):
         #analysis_klasses = base_a_klasses
         autoclean_conf = tuple([NoCleaningConf]) 

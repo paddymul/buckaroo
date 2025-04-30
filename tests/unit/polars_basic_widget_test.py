@@ -248,8 +248,8 @@ def test_polars_search():
         {'a':[10,20,30,40], 'b': ['a', 'aa', 'ab', 'bb']})
 
     bw = PolarsBuckarooWidget(df)
-    assert bw.buckaroo_state['cleaning_method'] == 'NoCleaning'
-    assert bw.dataflow.cleaning_method == 'NoCleaning'
+    assert bw.buckaroo_state['cleaning_method'] == ''
+    assert bw.dataflow.cleaning_method == ''
     # class VCBuckarooWidget(BuckarooWidget):
     #     #analysis_klasses = base_a_klasses
     #     autoclean_conf = tuple([NoCleaningConf]) 

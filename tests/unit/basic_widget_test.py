@@ -11,6 +11,9 @@ from buckaroo.customizations.analysis import (TypingStats, ComputedDefaultSummar
 from buckaroo.customizations.histogram import (Histogram)
 from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
+from buckaroo.dataflow.autocleaning import AutocleaningConfig
+
 
 
 simple_df = pd.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
@@ -139,6 +142,21 @@ def test_init_sd():
 
 
 
+def test_buckaroo_options_populate():
+    """
+    test that buckaroo_options are populated properly given AC Confs
+    """
+
+    df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
+    class AC2(AutocleaningConfig):
+        name="AC2"
+    class ACBuckaroo(BuckarooWidget):
+        autoclean_conf = tuple([AC2, NoCleaningConf])
+    
+    bw = ACBuckaroo(df)
+    assert bw.buckaroo_options["cleaning_method"] == ["", "AC2", ""]
+
+
 def test_quick_commands_run():
     """
     test that quick_commands work with autocleaning disabled
@@ -146,7 +164,7 @@ def test_quick_commands_run():
 
     df = pd.DataFrame({'a': ["30", "40"], 'b': ['aa', 'bb']})
     bw = BuckarooWidget(df)
-    bw.buckaroo_state = {'cleaning_method': 'NoCleaning',
+    bw.buckaroo_state = {'cleaning_method': '',
                          'post_processing': '',
                          'sampled': False,
                          'show_commands': False,

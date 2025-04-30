@@ -114,7 +114,7 @@ class PandasAutocleaning:
 
     DFStatsKlass = DfStats
     #until we plumb in swapping configs, just stick with default
-    def __init__(self, ac_configs=tuple([AutocleaningConfig()]), conf_name="NoCleaning"):
+    def __init__(self, ac_configs=tuple([AutocleaningConfig()]), conf_name=""):
 
         self.config_dict = {}
         for conf in ac_configs:
@@ -214,7 +214,7 @@ class PandasAutocleaning:
         cleaning_ops, cleaning_sd = self.produce_cleaning_ops(df, cleaning_method)
 
         # [{'meta':'no-op'}] is a sentinel for the initial state
-        if ops_eq(existing_operations, [{'meta':'no-op'}]) and cleaning_method == "NoCleaning":
+        if ops_eq(existing_operations, [{'meta':'no-op'}]) and cleaning_method == "":
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, [])
             #FIXME, a little bit of a hack to reset cleaning_sd, but it helps tests pass. I
             # don't know how any other properties could really be set
@@ -223,7 +223,7 @@ class PandasAutocleaning:
         else:
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, existing_operations)
 
-        if ops_eq(final_ops,[]) and cleaning_method == "NoCleaning":
+        if ops_eq(final_ops,[]) and cleaning_method == "":
             #nothing to be done here, no point in running the interpreter
             #this also has the nice effect of not copying the DF, which the interpreter does
             return [df, {}, "", []]

@@ -26,6 +26,8 @@ def split_operations(full_operations):
 
     machine_generated, user_entered = [], []
     for command in full_operations:
+        if not isinstance(command, list):
+            print("command should be a list", command)
         assert isinstance(command, list)
         sym_atom = command[0]
         if is_symbol(sym_atom):

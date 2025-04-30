@@ -145,17 +145,19 @@ export function StatusBar({
 
     const excludeKeys = ["quick_command_args", "search", "show_displayed_rows"];
     const updateDict = (event: any) => {
+        console.log("updateDict", event);
         const colName = event.column.getColId();
         if (_.includes(excludeKeys, colName)) {
             return;
         }
         if (_.includes(_.keys(buckarooState), colName)) {
             const nbstate = newBuckarooState(colName as BKeys);
+            console.log("updateDict about to set", nbstate);
             setBuckarooState(nbstate);
         }
     };
 
-    const handleCellChange = useCallback((params: { oldValue: any; newValue: any }) => {
+    const handleSearchCellChange = useCallback((params: { oldValue: any; newValue: any }) => {
         const { oldValue, newValue } = params;
         if (oldValue !== newValue && newValue !== null) {
             //console.log('Edited cell:', newValue);
@@ -163,7 +165,7 @@ export function StatusBar({
                 ...buckarooState,
                 quick_command_args: { search: [newValue] },
             };
-            //console.log('handleCellChange', buckarooState, newState);
+
             setBuckarooState(newState);
         }
     }, []);
@@ -177,7 +179,7 @@ export function StatusBar({
             cellEditor: SearchEditor,
             cellRenderer: fakeSearchCell,
 
-            onCellValueChanged: handleCellChange,
+            onCellValueChanged: handleSearchCellChange,
         },
 
         {
@@ -207,7 +209,7 @@ export function StatusBar({
             headerTooltip: "Show Commands",
             width: 30,
         },
-        { field: "sampled", headerName: "Ξ", headerTooltip: "Sampled", width: 30 },
+        { field: "cleaning_method", headerName: "Ξ", headerTooltip: "Auto_clean", width: 30 },
         {
             field: "help",
             headerName: "?",
@@ -234,8 +236,8 @@ export function StatusBar({
             total_rows: basicIntFormatter.format(dfMeta.total_rows),
             columns: dfMeta.columns,
             rows_shown: basicIntFormatter.format(dfMeta.rows_shown),
-            sampled: buckarooState.sampled || "0",
-            auto_clean: buckarooState.auto_clean || "0",
+            //sampled: buckarooState.sampled || "0",
+            cleaning_method: buckarooState.cleaning_method || "0",
             df_display: buckarooState.df_display,
             filtered_rows: basicIntFormatter.format(dfMeta.filtered_rows),
             post_processing: buckarooState.post_processing,
@@ -252,13 +254,6 @@ export function StatusBar({
 
     const onGridReady = useCallback((params: {api:GridApi}) => {
         console.log("onGridReady statusbar", params)
-
-        // const eParams:StartEditingCellParams = {
-        //     rowIndex:0, colKey:"search"
-        // }
-        // params.api.startEditingCell(eParams)
-  //      params.api.clearFocusedCell();
-
     }, []);
 
     const defaultColDef = {
@@ -267,23 +262,7 @@ export function StatusBar({
 
     const statusTheme: Theme = myTheme.withParams({
         headerFontSize: 14,
-        rowVerticalPaddingScale: 0.8,
-        
-        /*
-        spacing:5,
-        cellHorizontalPaddingScale: 0.3,
-        browserColorScheme: "dark",
-        columnBorder: true,
-        rowBorder: false,
-        wrapperBorder: false,
-        fontSize: 12,
-        dataFontSize: "12px",
-        iconSize: 10,
-        backgroundColor: "#181D1F",
-        oddRowBackgroundColor: '#222628',
-        */
-    //    cellHorizontalPadding: 3,
-    
+        rowVerticalPaddingScale: 0.8,    
     })
     return (
         <div className="status-bar">

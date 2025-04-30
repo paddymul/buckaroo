@@ -1,6 +1,8 @@
 import pytest
 from buckaroo.jlisp.lisp_utils import split_operations, lists_match, s
-from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa, UserFuncException
+from buckaroo.jlisp.lispy import make_interpreter, Symbol, isa
+
+
 
 def test_split_operations():
 
@@ -77,17 +79,21 @@ def test_functions():
     _eval, _parse = make_interpreter()
     assert _eval([s('always5')], {'always5':always5, 'add5':add5} ) == 5
 
-def test_error_handle():
-    """
-    verify that functions passed into the environment can be called
-    """
-    def throw_error():
-        1/0
-        return "never reached"
+# def test_error_handle():
+#     """
+#     verify that functions passed into the environment can be called
+#     """
+#     def throw_error():
+#         1/0
+#         return "never reached"
 
-    _eval, _parse = make_interpreter()
-    with pytest.raises(UserFuncException) as _excinfo:
-        _eval([s('throw_error')], {'throw_error':throw_error} )
+#     _eval, _parse = make_interpreter()
+#     with pytest.raises(UserFuncException) as _excinfo:
+#         _eval([s('throw_error')], {'throw_error':throw_error} )
+#         print(_excinfo)
+#     print(_excinfo)
+    
+#     8/0
 
 def test_assignment():
     """

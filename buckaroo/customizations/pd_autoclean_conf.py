@@ -51,5 +51,5 @@ class NoCleaningConf(AutocleaningConfig):
     autocleaning_analysis_klasses = []
     command_klasses = BASE_COMMANDS
     quick_command_klasses = [Search]
-    name="NoCleaning"
+    name=""
 

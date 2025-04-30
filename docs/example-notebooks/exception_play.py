@@ -53,16 +53,7 @@ def _(sys):
 
 
 @app.cell
-def _(
-    ErrorObjects,
-    Optional,
-    c,
-    handle_traceback2,
-    internal_layer1,
-    io,
-    sys,
-    traceback,
-):
+def _(ErrorObjects, Optional, c, io, sys, traceback):
     class UserFuncExceptionTB(Exception):
         pass
 
@@ -73,7 +64,7 @@ def _(
         except Exception as e:
             print("intercepted")
             tb = sys.exception().__traceback__
-            raise UserFuncExceptionTB(...).with_traceback(tb)
+            raise UserFuncExceptionTB(e).with_traceback(tb)
     #with_traceback is recommended in python docs https://docs.python.org/3/library/exceptions.html#BaseException.with_traceback
 
     def internal_layer1_tb():
@@ -82,11 +73,13 @@ def _(
     def internal_layer2_tb():
         wrap_tb()
 
+    saved_e = []
     def handle_traceback_tb():
         try:
-            internal_layer1()
+            internal_layer1_tb()
         except UserFuncExceptionTB as e:
             print("here")
+            saved_e.append(e)
             unwrapped_exception: Optional[BaseException] = e.__cause__
             exception: Optional[ErrorObjects] = unwrapped_exception
 
@@ -114,20 +107,65 @@ def _(
             sys.stderr.write(tmpio.read())
         except Exception as e:
             print("other exception", e)
-    handle_traceback2()
+    handle_traceback_tb()
 
     return (
         UserFuncExceptionTB,
         handle_traceback_tb,
         internal_layer1_tb,
         internal_layer2_tb,
+        saved_e,
         wrap_tb,
     )
 
 
 @app.cell
+def _(saved_e):
+    ab = saved_e[0]
+    ab.args
+    return (ab,)
+
+
+@app.cell
+def _(ab):
+    dir(ab.__traceback__)
+    return
+
+
+@app.cell
+def _(ab):
+    dir(ab.__traceback__.tb_frame)
+    return
+
+
+@app.cell
+def _(ab):
+    _tb = ab.__traceback__
+    _tbf = _tb.tb_frame
+    #_tb.tb_lasti, _tbf.f_code
+    _tbf.f_trace_lines
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
 def _(b_calls_c):
     b_calls_c()
+    return
+
+
+@app.cell
+def _(saved_e):
+    saved_e
     return
 
 
