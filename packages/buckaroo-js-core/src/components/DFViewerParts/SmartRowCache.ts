@@ -497,6 +497,7 @@ export class KeyAwareSmartRowCache {
         const srcKey = getSourcePayloadKey(pa)
         const seg: Segment = [pa.start, pa.origEnd];
 	if (!this.srcAccesses.has(srcKey)) {
+	    console.log("500 hasRows, returning False because couldn't find srcKey")
             return false
         }
 	const src = this.srcAccesses.get(srcKey);
@@ -508,6 +509,7 @@ export class KeyAwareSmartRowCache {
         if (reqArgs === true) {
             return true
         }
+	console.log("500 hasRows, returning False because src didn't have rows")
         return false
     }
 
@@ -589,7 +591,7 @@ export class KeyAwareSmartRowCache {
 
     public ensureRowCacheForPa(pa:PayloadArgs): SmartRowCache {
         const srcKey = getSourcePayloadKey(pa)
-
+	console.log("592 ensureRowCacheForPa", srcKey, this.srcAccesses.has(srcKey))
 	if (!this.srcAccesses.has(srcKey)){
             this.srcAccesses.set(srcKey, new SmartRowCache());
         }

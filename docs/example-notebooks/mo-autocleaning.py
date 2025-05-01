@@ -6,15 +6,16 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _(ACBuckaroo, pd):
+    extra_rows = 1
     dirty_df = pd.DataFrame(
-        {'a':[10,  20,  30,   40,  10, 20.3, None,],
-         'b':["3", "4", "a", "5", "5",  "b9", None ],
-         'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002"],
-         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1"]
+        {'a':[10,  20,  30,   40,  10, 20.3, None,] * extra_rows,
+         'b':["3", "4", "a", "5", "5",  "b9", None ] * extra_rows,
+         'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002"] * extra_rows,
+         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1"] * extra_rows,
         })
     bw2 = ACBuckaroo(dirty_df)
     bw2
-    return bw2, dirty_df
+    return bw2, dirty_df, extra_rows
 
 
 @app.cell
@@ -86,8 +87,6 @@ def _(
         def _handle_payload_args(self, new_payload_args):
             time.sleep(5)
             super()._handle_payload_args(new_payload_args)
-
-
     return (
         ACBuckaroo,
         AggressiveAC,
