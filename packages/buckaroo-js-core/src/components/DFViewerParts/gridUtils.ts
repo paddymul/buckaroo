@@ -19,7 +19,8 @@ import {
     DFViewerConfig,
     ComponentConfig,
 } from "./DFWhole";
-import _, { zipObject } from "lodash";
+
+import * as _ from "lodash";
 import { getTextCellRenderer } from "./OtherRenderers";
 import { getStyler } from "./Styler";
 import { DFData, SDFMeasure, SDFT } from "./DFWhole";
@@ -168,7 +169,7 @@ export function extractSDFT(summaryStatsDf: DFData): SDFT {
             histogram_log_bins: _.get(maybeHistogramLogBins, colName, []) as number[],
         };
     });
-    return zipObject(allColumns, vals) as SDFT;
+    return _.zipObject(allColumns, vals) as SDFT;
 }
 
 export const getPayloadKey = (payloadArgs: PayloadArgs): string => {

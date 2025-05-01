@@ -8,7 +8,7 @@ import {
     getAutoSize,
     getGridOptions
 } from './gridUtils';
-import _ from "lodash";
+import * as _ from "lodash";
 import { DFData, DFViewerConfig, PinnedRowConfig } from "./DFWhole";
 import { getFloatFormatter } from './Displayer';
 import { ValueFormatterParams, ColDef } from '@ag-grid-community/core';
