@@ -140,7 +140,7 @@ export function DFViewerInfinite({
     
     if (data_wrapper.data_type === "Raw") {
         const rdGridOptions: GridOptions = {
-            ...gridOptions,
+            ...(_.omit(gridOptions, ['columnDefs'])),
             rowData: data_wrapper.data,
             suppressNoRowsOverlay: true,
         };
@@ -154,7 +154,8 @@ export function DFViewerInfinite({
             />
         );
     } else if (data_wrapper.data_type === "DataSource") {
-        const dsGridOptions = getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling );
+        const dsGridOptions = _.omit(getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling ),
+            ['columnDefs']);
         const localTheme: Theme = myTheme.withParams({});
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>

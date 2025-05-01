@@ -271,7 +271,7 @@ export const getGridOptions = (
             }
         },
         defaultColDef,
-        columnDefs,
+        //columnDefs,
         domLayout,
         autoSizeStrategy,
 
