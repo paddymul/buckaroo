@@ -1,6 +1,5 @@
-import json
 import pandas as pd
-from buckaroo.jlisp.lisp_utils import split_operations, s, sQ
+from buckaroo.jlisp.lisp_utils import s, sQ, merge_ops, format_ops, ops_eq
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
@@ -39,36 +38,6 @@ class SentinelAutocleaning:
         else:
             cleaned_df = df
         return [cleaned_df, {}, generated_code, merged_operations]
-
-def merge_ops(existing_ops, cleaning_ops):
-    """strip cleaning_ops from existing_ops, reinsert cleaning_ops at
-    the beginning, leave the non auto_clean True ops"""
-    old_cleaning_ops, user_gen_ops = split_operations(existing_ops)
-    merged = cleaning_ops.copy()
-    merged.extend(user_gen_ops)  # we want the user cleaning ops to come last
-    return merged
-
-
-
-def format_ops(column_meta):
-    """
-    translate summary_dict with cleaning_ops to real, usable instructions
-    """
-    ret_ops = []
-    for k,v in column_meta.items():
-        if k == 'index':
-            continue
-        if 'cleaning_ops' not in v:
-            continue
-        ops = v['cleaning_ops']
-        if len(ops) > 0:
-            temp_ops = ops.copy()
-            temp_ops.insert(2, k)
-            ret_ops.append(temp_ops)
-    return ret_ops
-
-def ops_eq(ops_a, ops_b):
-    return json.dumps(ops_a) == json.dumps(ops_b)
 
 class AutocleaningConfig:
     command_klasses = [DefaultCommandKlsList]

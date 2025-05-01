@@ -1,3 +1,4 @@
+import json
 """
 It would be awesome to have cleaning and verification commands that add new columns with related names
 
@@ -39,19 +40,43 @@ def split_operations(full_operations):
         raise Exception("Unexpected token %r" % command)
     return machine_generated, user_entered
 
+
+def merge_ops(existing_ops, cleaning_ops):
+    """strip cleaning_ops from existing_ops, reinsert cleaning_ops at
+    the beginning, leave the non auto_clean True ops"""
+    old_cleaning_ops, user_gen_ops = split_operations(existing_ops)
+    merged = cleaning_ops.copy()
+    merged.extend(user_gen_ops)  # we want the user cleaning ops to come last
+    return merged
+
+
+
+def format_ops(column_meta):
+    """
+    translate summary_dict with cleaning_ops to real, usable instructions
+    """
+    ret_ops = []
+    for k,v in column_meta.items():
+        if k == 'index':
+            continue
+        if 'cleaning_ops' not in v:
+            continue
+        ops = v['cleaning_ops']
+        if len(ops) > 0:
+            temp_ops = ops.copy()
+            temp_ops.insert(2, k)
+            ret_ops.append(temp_ops)
+    return ret_ops
+
+def ops_eq(ops_a, ops_b):
+    return json.dumps(ops_a) == json.dumps(ops_b)
+
+
 def lists_match(l1, l2):
     #https://note.nkmk.me/en/python-list-compare/#checking-the-exact-match-of-lists
     if len(l1) != len(l2):
         return False
     return all(x == y and type(x) is type(y) for x, y in zip(l1, l2))
-
-            
-def qc_sym(symbol_name):
-    """ auto_clean:True because we want this cleared when switching cleaning
-    deprecated, use sQ instead
-    """
-    1/0
-            
 
 
 def s(symbol_name:str, **extra_meta_kwargs):
