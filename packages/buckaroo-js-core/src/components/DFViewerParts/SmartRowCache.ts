@@ -316,7 +316,7 @@ export class SmartRowCache {
 
     public segments: Segment[] = []
     private dfs: DFData[] = []
-    public sentLength: number = 0;
+    public sentLength: number = -1;
     // These tuning factors are sensitive.
     // there are other serverside and ag-grid tuning factors too.
     // those are "rowRequestSize" from ag-grid verify prop name
@@ -422,6 +422,10 @@ export class SmartRowCache {
         if(needSeg[0] === 0 && needSeg[1] === 0) {
             console.log("setting lastRequest to [0,0] in hasRows, this is unexpected")
         }
+	if (this.sentLength > -1 && needSeg[1] > this.sentLength) {
+	    const newSeg:Segment = [needSeg[0], this.sentLength]
+	    return this.hasRows(newSeg)
+	}
         this.lastRequest = needSeg;
         for (const ourSeg of this.segments) {
             if (segmentsOverlap(ourSeg, needSeg)) {

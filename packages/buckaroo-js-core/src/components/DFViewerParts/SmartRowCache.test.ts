@@ -418,6 +418,22 @@ describe('SmartRowCache tests', () => {
 	expect(src.hasRows([0,30])).toStrictEqual({"start": 26, "end": 30})
 	
     })
+
+
+    test('basic SmartRowCache verify hasRows return True when full dataset size known and less than request', () => {
+
+	const src = new SmartRowCache()
+	src.maxSize = 35
+
+	src.addRows.apply(src, genRows(0, 25));
+	src.sentLength = 25;
+				       
+	expect(src.hasRows([0,25])).toBe(true)
+
+	// this should be true because even though we don't have up to 30, the dataset is only 25 long
+	expect(src.hasRows([0,30])).toBe(true)
+    })
+
     test('SmartRowCache oppositeTrim side ', () => {
 
 	const src = new SmartRowCache()
