@@ -85,7 +85,7 @@ def _(
         autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
 
         def _handle_payload_args(self, new_payload_args):
-            time.sleep(5)
+            time.sleep(3)
             super()._handle_payload_args(new_payload_args)
     return (
         ACBuckaroo,

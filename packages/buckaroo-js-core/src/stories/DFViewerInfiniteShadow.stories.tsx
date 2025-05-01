@@ -1,11 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { DatasourceWrapper, DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
-import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
+import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
+import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
-
-import { IDatasource, IGetRowsParams } from "@ag-grid-community/core";
-import _ from "lodash";
 import { ShadowDomWrapper } from "./StoryUtils";
+import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom } from "../components/DFViewerParts/DFViewerDataHelper";
 
 const DFViewerInfiniteWrap = ({
     data,
@@ -16,31 +14,15 @@ const DFViewerInfiniteWrap = ({
     outside_df_params,
     error_info,
 }: {
-    data: DFData;
+    data: any[];
     df_viewer_config: DFViewerConfig;
-    summary_stats_data?: DFData;
+    summary_stats_data?: any[];
     activeCol?: string;
     setActiveCol?: SetColumFunc;
-    // these are the parameters that could affect the table,
-    // dfviewer doesn't need to understand them, but it does need to use
-    // them as keys to get updated data
     outside_df_params?: any;
     error_info?: string;
 }) => {
-
-  const tempDataSource:IDatasource = {
-    rowCount:data.length,
-    getRows(params:IGetRowsParams) {
-      const slicedData = data.slice(params.startRow, params.endRow);
-      params.successCallback(slicedData, data.length)
-
-    }
-  };
-  const data_wrapper:DatasourceWrapper = {
-    datasource:tempDataSource,
-    data_type:"DataSource",
-    length:data.length
-  }
+  const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data);
   return (
     <ShadowDomWrapper>
      <div style={{height:500, width:800}}>
@@ -56,12 +38,10 @@ const DFViewerInfiniteWrap = ({
      </ShadowDomWrapper>);
 }
 
-    
-
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "Buckaroo/DFViewer/DFViewerInfiniteShadow",
-  component:DFViewerInfiniteWrap,
+  component: DFViewerInfiniteWrap,
   parameters: {
     // Optional parameter to center the component in the Canvas. More
     // info: https://storybook.js.org/docs/configure/story-layout
@@ -135,33 +115,8 @@ export const Primary: Story = {
     }
 }
 
-const dictOfArraystoDFData = (dict:Record<string, any[]>):DFData => {
-  const keys = _.keys(dict);
-  const length = dict[keys[0]].length;
 
-  return _.times(length, index => {
-    return _.reduce(keys, (result, key) => {
-        //@ts-ignore
-        result[key] = dict[key][index];
-        return result;
-      }, {});
-  });
-}
 
-const arange = (N:number):number[] => {
-  const retArr:number[] = [];
-  for(var i =0; i< N; i++){
-    retArr.push(i)
-  }
-  return retArr
-}
-const NRandom = (N:number, low:number, high:number):number[] => {
-  const retArr:number[] = [];
-  for(var i =0; i< N; i++){
-    retArr.push(Math.floor((Math.random() * (high-low))+low))
-  }
-  return retArr
-}
 
 const N = 10_000;
 console.log("156")
@@ -169,7 +124,7 @@ console.log(dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)   }))
 
 export const Large: Story = {
   args: {
-    data:dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)   }),
+    data: dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)}),
     df_viewer_config: {
       column_config: [
       {

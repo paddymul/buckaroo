@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { DatasourceOrRaw, DFViewerInfinite, RawDataWrapper } from "../components/DFViewerParts/DFViewerInfinite";
-import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
+import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
+import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
+import { DatasourceOrRaw, RawDataWrapper, createRawDataWrapper } from "../components/DFViewerParts/DFViewerDataHelper";
 
 const DFViewerInfiniteWrap = ({
     data_wrapper,
@@ -14,12 +15,9 @@ const DFViewerInfiniteWrap = ({
 }: {
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
-    summary_stats_data?: DFData;
+    summary_stats_data?: any[];
     activeCol?: string;
     setActiveCol?: SetColumFunc;
-    // these are the parameters that could affect the table,
-    // dfviewer doesn't need to understand them, but it does need to use
-    // them as keys to get updated data
     outside_df_params?: any;
     error_info?: string;
 }) => {
@@ -66,14 +64,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const rd:RawDataWrapper = {
-  data: [
+const rd: RawDataWrapper = createRawDataWrapper([
     {'a':20, 'b':"foo"},
     {'a':30, 'b':"bar"}
-  ],
-  length:2,
-  data_type:'Raw'
-}
+]);
+
 export const Primary: Story = {
   args: {
     data_wrapper:rd,
