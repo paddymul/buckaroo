@@ -125,20 +125,8 @@ const primaryConfigPrimary:DFViewerConfig = {
         },
       ],
       pinned_rows: [],
-    };
-
-export const Primary: Story = {
-  args: {
-    //@ts-ignore
-    // the undefineds aren't allowed in the type but do happen in the wild
-    data: data,
-    df_viewer_config: primaryConfigPrimary,
-    secondary_df_viewer_config:primaryConfigPrimary,
-  },
-};
-
-const N = 5_000;
-const LargeConfig:DFViewerConfig = {
+   };
+    const LargeConfig:DFViewerConfig = {
       column_config: [
       floatColumn('a', 2, 8),
       integerColumn('a', 2, 3),
@@ -146,48 +134,60 @@ const LargeConfig:DFViewerConfig = {
     ],
         pinned_rows:[]
   }
+  const PinnedRowConfig:DFViewerConfig = {
+    column_config: [
+      objColumn('a'),
+      objColumn('b'),
+      objColumn('c'),
+      objColumn('d'),
+    ],
+    pinned_rows: [{
+      'primary_key_val': 'histogram',
+      'displayer_args': { 'displayer': 'histogram' }
+    }]
+  };
+  const IntFloatConfig:DFViewerConfig =  {
+    column_config: [
+    floatColumn('a', 2, 8),
+    integerColumn('a', 2, 3),
+    objColumn('b'),
+  ],
+  pinned_rows:[],
+  component_config: {dfvHeight:200}
+};
 
+export const Primary: Story = {
+  args: {
+    //@ts-ignore
+    // the undefineds aren't allowed in the type but do happen in the wild
+    data: data,
+    df_viewer_config: primaryConfigPrimary,
+    secondary_df_viewer_config:LargeConfig
+  },
+};
+
+const N = 5_000;
 
 export const Large: Story = {
   args: {
     data: dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)}),
     df_viewer_config: LargeConfig,
-    secondary_df_viewer_config: LargeConfig,
+    secondary_df_viewer_config: PinnedRowConfig,
     }
 
 }
-const PinnedRowConfig:DFViewerConfig = {
-      column_config: [
-        objColumn('a'),
-        objColumn('b'),
-        objColumn('c'),
-        objColumn('d'),
-      ],
-      pinned_rows: [{
-        'primary_key_val': 'histogram',
-        'displayer_args': { 'displayer': 'histogram' }
-      }]
-    };
 
 
 export const PinnedRows: Story = {
   args: {
     data: [], 
     df_viewer_config: PinnedRowConfig,
-    secondary_df_viewer_config: PinnedRowConfig,
+    secondary_df_viewer_config: IntFloatConfig,
     summary_stats_data: HistogramSummaryStats
 
   }
 }
-const IntFloatConfig:DFViewerConfig =  {
-      column_config: [
-      floatColumn('a', 2, 8),
-      integerColumn('a', 2, 3),
-      objColumn('b'),
-    ],
-    pinned_rows:[],
-    component_config: {dfvHeight:200}
-  };
+
 
 
 const MEDIUM= 300;
@@ -196,6 +196,6 @@ export const MedDFVHeight: Story = {
   args: {
     data:dictOfArraystoDFData({'a':NRandom(MEDIUM, 3,50), 'b':arange(MEDIUM)   }),
     df_viewer_config: IntFloatConfig,
-
+    secondary_df_viewer_config: PinnedRowConfig,
     }
 }
