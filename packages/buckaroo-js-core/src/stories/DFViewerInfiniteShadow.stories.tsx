@@ -3,7 +3,7 @@ import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
-import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom } from "../components/DFViewerParts/DFViewerDataHelper";
+import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 
 const DFViewerInfiniteWrap = ({
     data,
@@ -193,73 +193,12 @@ export const PinnedRows: Story = {
         'displayer_args': { 'displayer': 'histogram' }
       }]
     },
-    summary_stats_data: [{
-      'index': 'histogram',
-      'a': [{ 'name': 'np.int64(35) - 39.0', 'tail': 1 },
-      { 'name': '40-68', 'population': 29.0 },
-      { 'name': '68-96', 'population': 16.0 },
-      { 'name': '96-125', 'population': 14.0 },
-      { 'name': '125-153', 'population': 11.0 },
-      { 'name': '153-181', 'population': 10.0 },
-      { 'name': '181-209', 'population': 8.0 },
-      { 'name': '209-237', 'population': 5.0 },
-      { 'name': '237-266', 'population': 3.0 },
-      { 'name': '266-294', 'population': 2.0 },
-      { 'name': '294-322', 'population': 2.0 },
-      { 'name': '323.1500000000001 - np.int64(373)', 'tail': 1 }],
-      'b': [{ 'name': 'np.int64(0) - 0.0', 'tail': 1 },
-      { 'name': '2-4', 'population': 10.0 },
-      { 'name': '4-6', 'population': 10.0 },
-      { 'name': '6-7', 'population': 10.0 },
-      { 'name': '7-9', 'population': 10.0 },
-      { 'name': '9-11', 'population': 10.0 },
-      { 'name': '11-13', 'population': 10.0 },
-      { 'name': '13-15', 'population': 10.0 },
-      { 'name': '15-16', 'population': 10.0 },
-      { 'name': '16-18', 'population': 10.0 },
-      { 'name': '18-20', 'population': 10.0 },
-      { 'name': '21.0 - np.int64(21)', 'tail': 1 }],
-      'c': [{ 'name': 'np.int64(1) - 1.0', 'tail': 1 },
-      { 'name': '2-7', 'population': 11.0 },
-      { 'name': '7-11', 'population': 11.0 },
-      { 'name': '11-16', 'population': 9.0 },
-      { 'name': '16-21', 'population': 7.0 },
-      { 'name': '21-26', 'population': 11.0 },
-      { 'name': '26-30', 'population': 11.0 },
-      { 'name': '30-35', 'population': 9.0 },
-      { 'name': '35-40', 'population': 11.0 },
-      { 'name': '40-44', 'population': 10.0 },
-      { 'name': '44-49', 'population': 11.0 },
-      { 'name': '50.0 - np.int64(50)', 'tail': 1 }],
-      'd': [{ 'name': 1, 'cat_pop': 38.0 },
-      { 'name': 2, 'cat_pop': 21.0 },
-      { 'name': 3, 'cat_pop': 21.0 },
-      { 'name': 4, 'cat_pop': 20.0 }]
-    }]
+    summary_stats_data: HistogramSummaryStats
 
   }
 }
 
 
-export const DateNoDisplay: Story = {
-  args: {
-    data:
-    [{'index': 0, 'date': '06/11/2021', 'date2': '06/11/2021'},
-      {'index': 1, 'date': 'Nov, 22nd 2021', 'date2': '22/11/2021'},
-      {'index': 2, 'date': '24th of November, 2021', 'date2': '24/11/2021'}],
-    df_viewer_config: {
-      column_config: [
-      { col_name: 'index', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'string'}},
-      { col_name: 'date2', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date2', displayer_args: {'displayer':'string'}},
-    ],
-    pinned_rows:[],
-
-  }
-}
-};
 
 const MEDIUM= 300;
 

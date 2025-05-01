@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
-import { DatasourceOrRaw, RawDataWrapper, createRawDataWrapper } from "../components/DFViewerParts/DFViewerDataHelper";
+import { DatasourceOrRaw, 
+  rd, RawDataWrapper, createRawDataWrapper } from "../components/DFViewerParts/DFViewerDataHelper";
 
 const DFViewerInfiniteWrap = ({
     data_wrapper,
@@ -64,11 +65,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const rd: RawDataWrapper = createRawDataWrapper([
-    {'a':20, 'b':"foo"},
-    {'a':30, 'b':"bar"}
-]);
-
 export const Primary: Story = {
   args: {
     data_wrapper:rd,
@@ -102,23 +98,3 @@ export const Primary: Story = {
   
     }
 }
-export const DateNoDisplay: Story = {
-  args: {
-    data_wrapper: {data_type:'Raw',
-      data:    [{'index': 0, 'date': '06/11/2021', 'date2': '06/11/2021'},
-      {'index': 1, 'date': 'Nov, 22nd 2021', 'date2': '22/11/2021'},
-      {'index': 2, 'date': '24th of November, 2021', 'date2': '24/11/2021'}],
-      length:3
-    },
-    df_viewer_config: {
-      column_config: [
-      { col_name: 'index', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'string'}},
-      { col_name: 'date2', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date2', displayer_args: {'displayer':'string'}},
-    ],
-    pinned_rows:[],
-  }
-}
-};
