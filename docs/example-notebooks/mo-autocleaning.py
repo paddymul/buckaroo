@@ -196,7 +196,7 @@ def _(pd):
 
 @app.cell
 def _(ColAnalysis):
-    from buckaroo.jlisp.lisp_utils import s
+    from buckaroo.jlisp.lisp_utils import s, sA
     from buckaroo.auto_clean.heuristic_lang import get_top_score
 
     class HeuristicCleaningGenOps(ColAnalysis):
@@ -225,17 +225,17 @@ def _(ColAnalysis):
 
         @classmethod
         def computed_summary(kls, column_metadata):
+            #{'symbol': kls.rules_op_names.get(cleaning_op_name, cleaning_op_name),
+            #         'meta':{ 'auto_clean': True, 'clean_strategy': kls.__name__}},
 
             cleaning_op_name = get_top_score(kls.rules, column_metadata)
             if cleaning_op_name == 'none':
                 return {'cleaning_ops': []}
             else:
-                ops = [
-                    {'symbol': kls.rules_op_names.get(cleaning_op_name, cleaning_op_name),
-                     'meta':{ 'auto_clean': True, 'clean_strategy': kls.__name__}},
+                ops = [sA(kls.rules_op_names.get(cleaning_op_name, cleaning_op_name), clean_strategy= kls.__name__, clean_col=column_metadata['col_name'] ),
                     {'symbol': 'df'}]
                 return {'cleaning_ops':ops, 'add_orig': True}
-    return HeuristicCleaningGenOps, get_top_score, s
+    return HeuristicCleaningGenOps, get_top_score, s, sA
 
 
 @app.cell
