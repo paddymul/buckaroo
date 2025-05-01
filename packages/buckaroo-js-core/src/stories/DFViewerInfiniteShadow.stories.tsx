@@ -4,10 +4,12 @@ import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
+import { useState } from "react";
 
 const DFViewerInfiniteWrap = ({
     data,
     df_viewer_config,
+    secondary_df_viewer_config,
     summary_stats_data,
     activeCol,
     setActiveCol,
@@ -16,19 +18,31 @@ const DFViewerInfiniteWrap = ({
 }: {
     data: any[];
     df_viewer_config: DFViewerConfig;
+    secondary_df_viewer_config?: DFViewerConfig;
     summary_stats_data?: any[];
     activeCol?: string;
     setActiveCol?: SetColumFunc;
     outside_df_params?: any;
     error_info?: string;
 }) => {
+  const [useSecondaryConfig, setUseSecondaryConfig] = useState(false);
   const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data);
+  const activeConfig = useSecondaryConfig ? (secondary_df_viewer_config || df_viewer_config) : df_viewer_config;
+
   return (
     <ShadowDomWrapper>
      <div style={{height:500, width:800}}>
+      <div style={{marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px'}}>
+        <button 
+          onClick={() => setUseSecondaryConfig(!useSecondaryConfig)}
+        >
+          Toggle Config
+        </button>
+        <span>Current Config: {useSecondaryConfig ? 'Secondary' : 'Primary'}</span>
+      </div>
       <DFViewerInfinite
       data_wrapper={data_wrapper}
-      df_viewer_config={df_viewer_config}
+      df_viewer_config={activeConfig}
       summary_stats_data={summary_stats_data}
       activeCol={activeCol}
       setActiveCol={setActiveCol}
@@ -77,46 +91,75 @@ export const Primary: Story = {
   args: {
     //@ts-ignore
     // the undefineds aren't allowed in the type but do happen in the wild
-    data:data,
+    data: data,
     df_viewer_config: {
       column_config: [
-      {
-        col_name: 'a',
-        displayer_args: {
-          displayer: 'float',
-          min_fraction_digits: 2,
-          max_fraction_digits: 8,
+        {
+          col_name: 'a',
+          displayer_args: {
+            displayer: 'float',
+            min_fraction_digits: 2,
+            max_fraction_digits: 8,
+          },
         },
-        //tooltip_config: { tooltip_type: 'summary_series' },
-      },
-      {
-        col_name: 'a',
-        displayer_args: {
-          displayer: 'integer',
-          min_digits:2, max_digits:3
+        {
+          col_name: 'a',
+          displayer_args: {
+            displayer: 'integer',
+            min_digits: 2,
+            max_digits: 3,
+          },
         },
-      },
-      {
-        col_name: 'b',
-        displayer_args: {
-          displayer: 'obj',
+        {
+          col_name: 'b',
+          displayer_args: {
+            displayer: 'obj',
+          },
         },
-      },
-      {
-        col_name: 'b',
-        displayer_args: {
-          displayer: 'string',
+        {
+          col_name: 'b',
+          displayer_args: {
+            displayer: 'string',
+          },
         },
-      }
-    ],
-    pinned_rows:[]
+      ],
+      pinned_rows: [],
+    },
+    secondary_df_viewer_config: {
+      column_config: [
+        {
+          col_name: 'a',
+          displayer_args: {
+            displayer: 'float',
+            min_fraction_digits: 2,
+            max_fraction_digits: 8,
+          },
+        },
+        {
+          col_name: 'a',
+          displayer_args: {
+            displayer: 'integer',
+            min_digits: 2,
+            max_digits: 3,
+          },
+        },
+        {
+          col_name: 'b',
+          displayer_args: {
+            displayer: 'obj',
+          },
+        },
+        {
+          col_name: 'b',
+          displayer_args: {
+            displayer: 'string',
+          },
+        },
+      ],
+      pinned_rows: [],
+    },
   },
-  
-    }
-}
-
-
-
+};
 
 const N = 10_000;
 console.log("156")
