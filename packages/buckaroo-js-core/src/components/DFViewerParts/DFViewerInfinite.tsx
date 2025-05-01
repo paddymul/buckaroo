@@ -167,7 +167,6 @@ export function DFViewerInfinite({
             setActiveCol as SetColumFunc,
             df_viewer_config,
             defaultColDef,
-            _.cloneDeep(styledColumns),
             hs.domLayout,
             getAutoSize(styledColumns.length),
         ),
@@ -180,7 +179,7 @@ export function DFViewerInfinite({
             ...(_.omit(gridOptions, ['columnDefs'])),
             rowData: data_wrapper.data,
             suppressNoRowsOverlay: true,
-            onFirstDataRendered: (params) => {
+            onFirstDataRendered: (_params) => {
                 console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
                 console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
             }
@@ -208,7 +207,7 @@ export function DFViewerInfinite({
                     loadThemeGoogleFonts
                     gridOptions={{
                         ...dsGridOptions,
-                        onFirstDataRendered: (params) => {
+                        onFirstDataRendered: (_params) => {
                             console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
                             console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
                         }

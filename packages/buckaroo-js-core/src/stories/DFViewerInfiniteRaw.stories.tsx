@@ -3,7 +3,7 @@ import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
 import { DatasourceOrRaw, 
-  rd, RawDataWrapper, createRawDataWrapper } from "../components/DFViewerParts/DFViewerDataHelper";
+  rd } from "../components/DFViewerParts/DFViewerDataHelper";
 
 const DFViewerInfiniteWrap = ({
     data_wrapper,

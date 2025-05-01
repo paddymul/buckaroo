@@ -232,7 +232,6 @@ export const getGridOptions = (
     setActiveCol: SetColumFunc,
     df_viewer_config: DFViewerConfig,
     defaultColDef: ColDef,
-    columnDefs: ColDef[],
     domLayout: DomLayoutType,
     autoSizeStrategy: PossibleAutosizeStrategy
 ): GridOptions => {

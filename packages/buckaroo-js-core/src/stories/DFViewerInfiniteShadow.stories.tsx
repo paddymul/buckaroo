@@ -39,7 +39,6 @@ const DFViewerInfiniteWrap = ({
     activeCol,
     setActiveCol,
     outside_df_params,
-    error_info,
 }: {
     data: any[];
     df_viewer_config: DFViewerConfig;
@@ -48,7 +47,6 @@ const DFViewerInfiniteWrap = ({
     activeCol?: string;
     setActiveCol?: SetColumFunc;
     outside_df_params?: any;
-    error_info?: string;
 }) => {
   const [useSecondaryConfig, setUseSecondaryConfig] = useState(false);
   const [showError, setShowError] = useState(false);
