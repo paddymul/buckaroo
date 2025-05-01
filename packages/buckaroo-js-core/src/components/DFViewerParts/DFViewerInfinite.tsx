@@ -1,6 +1,8 @@
 import React, {
     useCallback,
     useMemo,
+    useEffect,
+    useRef,
 } from "react";
 import _ from "lodash";
 import { DFData, DFDataRow, DFViewerConfig } from "./DFWhole";
@@ -89,6 +91,41 @@ export function DFViewerInfinite({
     outside_df_params?: any;
     error_info?: string;
 }) {
+    const renderStartTime = useRef<number>(Date.now());
+    const lastProps = useRef<any>(null);
+    
+    useEffect(() => {
+        const now = Date.now();
+        const timeSinceLastRender = now - renderStartTime.current;
+        console.log(`[DFViewerInfinite] Render started at ${new Date(now).toISOString()}`);
+        console.log(`[DFViewerInfinite] Time since last render: ${timeSinceLastRender}ms`);
+        
+        if (lastProps.current) {
+            const changes = Object.keys(lastProps.current).filter(key => {
+                return lastProps.current[key] !== {
+                    data_wrapper,
+                    df_viewer_config,
+                    summary_stats_data,
+                    activeCol,
+                    outside_df_params,
+                    error_info
+                }[key];
+            });
+            console.log(`[DFViewerInfinite] Props that changed:`, changes);
+        }
+        
+        lastProps.current = {
+            data_wrapper,
+            df_viewer_config,
+            summary_stats_data,
+            activeCol,
+            outside_df_params,
+            error_info
+        };
+        
+        renderStartTime.current = now;
+    }, [data_wrapper, df_viewer_config, summary_stats_data, activeCol, outside_df_params, error_info]);
+
     const styledColumns = useMemo(() => {
         const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
         const selectBackground =
@@ -143,6 +180,10 @@ export function DFViewerInfinite({
             ...(_.omit(gridOptions, ['columnDefs'])),
             rowData: data_wrapper.data,
             suppressNoRowsOverlay: true,
+            onFirstDataRendered: (params) => {
+                console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
+                console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
+            }
         };
 
         return (
@@ -154,22 +195,29 @@ export function DFViewerInfinite({
             />
         );
     } else if (data_wrapper.data_type === "DataSource") {
-        const dsGridOptions = _.omit(getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling ),
+        const dsGridOptions = _.omit(getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling),
             ['columnDefs']);
         const localTheme: Theme = myTheme.withParams({});
+        
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
                 <pre>{error_info ? error_info : ""}</pre>
                 <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
-	                theme={localTheme}
-                        loadThemeGoogleFonts
-                        gridOptions={dsGridOptions}
-                        datasource={data_wrapper.datasource}
-                        pinnedTopRowData={topRowData}
-                        columnDefs={_.cloneDeep(styledColumns)}
-                        context={{ outside_df_params }}
-                    ></AgGridReact>
+                    theme={localTheme}
+                    loadThemeGoogleFonts
+                    gridOptions={{
+                        ...dsGridOptions,
+                        onFirstDataRendered: (params) => {
+                            console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
+                            console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
+                        }
+                    }}
+                    datasource={data_wrapper.datasource}
+                    pinnedTopRowData={topRowData}
+                    columnDefs={styledColumns}
+                    context={{ outside_df_params }}
+                ></AgGridReact>
                 </div>
             </div>
         );

@@ -51,8 +51,10 @@ const DFViewerInfiniteWrap = ({
     error_info?: string;
 }) => {
   const [useSecondaryConfig, setUseSecondaryConfig] = useState(false);
+  const [showError, setShowError] = useState(false);
   const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data);
   const activeConfig = useSecondaryConfig ? (secondary_df_viewer_config || df_viewer_config) : df_viewer_config;
+  const currentError = showError ? "some error" : undefined;
 
   return (
     <ShadowDomWrapper>
@@ -64,6 +66,12 @@ const DFViewerInfiniteWrap = ({
           Toggle Config
         </button>
         <span>Current Config: {useSecondaryConfig ? 'Secondary' : 'Primary'}</span>
+        <button 
+          onClick={() => setShowError(!showError)}
+        >
+          Toggle Error
+        </button>
+        <span>Error State: {showError ? 'Error' : 'No Error'}</span>
       </div>
       <DFViewerInfinite
       data_wrapper={data_wrapper}
@@ -72,7 +80,7 @@ const DFViewerInfiniteWrap = ({
       activeCol={activeCol}
       setActiveCol={setActiveCol}
       outside_df_params={outside_df_params}
-      error_info={error_info} />
+      error_info={currentError} />
      </div>
      </ShadowDomWrapper>);
 }
