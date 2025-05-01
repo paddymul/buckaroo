@@ -113,8 +113,8 @@ def test_pandas_all_stats():
 
     sbw = SimpleBuckaroo(pd_test_df)
     assert sbw.dataflow.merged_sd == {
-        'index': {'mean': 2.5, 'null_count': 0, 'quin99': 4.0},
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
+        'index': {'mean': 2.5, 'null_count': 0, 'quin99': 4.0, 'col_name':'index'},
+        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'col_name':'normal_int_series'}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
 

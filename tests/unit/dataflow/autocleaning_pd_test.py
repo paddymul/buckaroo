@@ -389,6 +389,19 @@ def test_autoclean_codegen():
 
     assert generated_code == EXPECTED_GEN_CODE
 
+class NoOp2(Command):
+    #used for testing command stuff
+    command_default = [s('noop2'), s('df'), "col"]
+    command_pattern = [None]
+
+    @staticmethod 
+    def transform(df, col):
+        return df
+
+    @staticmethod 
+    def transform_to_py(df, col):
+        return "    #noop2"
+
 class SentinelCleaningGenOps(ColAnalysis):
     """
     This class just calls no-op on each column
@@ -411,10 +424,41 @@ class SentinelConfig(AutocleaningConfig):
     """
     autocleaning_analysis_klasses = [SentinelCleaningGenOps]
     command_klasses = [
-        DropCol, FillNA, GroupBy, NoOp, Search]
+        DropCol, FillNA, GroupBy, NoOp, Search, NoOp2]
     
     quick_command_klasses = [Search]
-    name="default"
+    name="sentinel1"
+
+
+
+class SentinelCleaningGenOps2(ColAnalysis):
+    """
+    This class just generated noop2 for 'b_col'
+    """
+    requires_summary = []
+    provides_defaults = {'cleaning_ops': []}
+
+
+    @classmethod
+    def computed_summary(kls, column_metadata):
+        if column_metadata['col_name'] == 'b_col':
+            ops = [
+                {'symbol': "noop2", 'meta':{ 'auto_clean': True}},
+                {'symbol': 'df'}]
+            print("ops", ops)
+            return {'cleaning_ops': ops}
+        return {}
+
+class SentinelConfig2(AutocleaningConfig):
+    """
+    add a check between rules_op_names to all of the included command classes
+    """
+    autocleaning_analysis_klasses = [SentinelCleaningGenOps2]
+    command_klasses = [
+        DropCol, FillNA, GroupBy, NoOp, Search, NoOp2]
+    
+    quick_command_klasses = [Search]
+    name="sentinel2"
 
 def test_autoclean_dataflow():
     """
@@ -428,7 +472,7 @@ def test_autoclean_dataflow():
     sdf.cleaning_method = ''
 
     assert sdf.operations == []
-    sdf.cleaning_method = "default"
+    sdf.cleaning_method = "sentinel1"
     assert len(sdf.operations) > 0
 
 def test_autoclean_full_widget():
@@ -443,7 +487,7 @@ def test_autoclean_full_widget():
     assert bw.operations == []
 
     bw.buckaroo_state = {
-        "cleaning_method": "default",
+        "cleaning_method": "sentinel1",
         "post_processing": "",
         "sampled": False,
         "show_commands": "on",
@@ -452,8 +496,35 @@ def test_autoclean_full_widget():
         "quick_command_args": {}
     }
 
-    assert bw.dataflow.cleaning_method == 'default'
+    assert bw.dataflow.cleaning_method == 'sentinel1'
     # make sure the widget oprations were updated
+    assert len(bw.operations) > 0
+
+def test_autoclean_merge_ops():
+    """Make sure that remvoing {'auto_clean':True} from an operation
+    as preserve does, retains taht operation when switching between
+    auto_cleaning methods
+
+    """
+    class SentinelBuckaroo(BuckarooWidget):
+        autocleaning_klass = PandasAutocleaning
+        autoclean_conf = tuple([SentinelConfig, SentinelConfig2, NoCleaningConf])
+
+    bw = SentinelBuckaroo(dirty_df)
+    assert bw.operations == []
+
+    bw.buckaroo_state = {
+        "cleaning_method": "sentinel1",
+        "post_processing": "",
+        "sampled": False,
+        "show_commands": "on",
+        "df_display": "main",
+        "search_string": "",
+        "quick_command_args": {}
+    }
+
+    assert bw.dataflow.cleaning_method == 'sentinel1'
+
     assert len(bw.operations) > 0
 
 

@@ -126,8 +126,9 @@ def test_custom_summary_stats():
     summary_sd = dc_dfc.widget_args_tuple[2]
     print(summary_sd)
     print("^"*80)
-    assert summary_sd == {'index': {'distinct_count': 3}, 
-                          'a': {'distinct_count':2}, 'b': {'distinct_count':3}}
+    assert summary_sd == {'index': {'distinct_count': 3, 'col_name':'index'}, 
+                          'a': {'distinct_count':2, 'col_name':'a'},
+                          'b': {'distinct_count':3, 'col_name':'b'}}
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
 
 def test_init_sd():
@@ -140,8 +141,9 @@ def test_init_sd():
     print(summary_sd)
     print("^"*80)
     assert dc_dfc.merged_sd == {
-        'index': {'distinct_count': 3}, 
-        'a': {'distinct_count':2, 'foo':8}, 'b': {'distinct_count':3}}
+        'index': {'distinct_count': 3, 'col_name':'index'}, 
+        'a': {'distinct_count':2, 'foo':8, 'col_name':'a'},
+        'b': {'distinct_count':3, 'col_name':'b'}}
 
 class AlwaysFailStyling(StylingAnalysis):
     requires_summary = []
@@ -474,6 +476,8 @@ def test_bstate_commands():
         [qc_sym('search'), s('df'), "col", "needle"]]
     assert len(vcb.dataflow.processed_df) == 2
     assert vcb.df_meta['filtered_rows'] == 2
+
+
 
 def test_bstate_commands2():
     """
