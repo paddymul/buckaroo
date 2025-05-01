@@ -1,6 +1,6 @@
 import json
 import pandas as pd
-from buckaroo.jlisp.lisp_utils import split_operations, s, qc_sym
+from buckaroo.jlisp.lisp_utils import split_operations, s, sQ
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from ..customizations.all_transforms import configure_buckaroo, DefaultCommandKlsList
 
@@ -99,7 +99,7 @@ def generate_quick_ops(command_list, quick_args):
         for form, arg  in zip(c.quick_args_pattern, val):
             arg_pos = form[0]
             op[arg_pos] = arg
-        op[0] = qc_sym(sym_name)
+        op[0] = sQ(sym_name)
         ret_ops.append(op)
     return ret_ops
 

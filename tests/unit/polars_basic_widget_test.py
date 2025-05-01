@@ -8,7 +8,7 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget, PolarsBuckarooInfiniteWidget
 from buckaroo.dataflow.dataflow import StylingAnalysis
-from buckaroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.jlisp.lisp_utils import (s, sQ)
 
 def test_basic_instantiation():
     PolarsBuckarooWidget(
@@ -263,7 +263,7 @@ def test_polars_search():
 
     #probably something in autocleaning config should be responsible for generating these commands
     assert bw.dataflow.merged_operations == [
-        [qc_sym('search'), s('df'), "col", "a"]]
+        [sQ('search'), s('df'), "col", "a"]]
 
     assert len(bw.dataflow.processed_df) == 3
 
@@ -273,7 +273,7 @@ def test_polars_search():
 
     #probably something in autocleaning config should be responsible for generating these commands
     assert bw.dataflow.merged_operations == [
-        [qc_sym('search'), s('df'), "col", "aa"]]
+        [sQ('search'), s('df'), "col", "aa"]]
 
     assert len(bw.dataflow.processed_df) == 1
 

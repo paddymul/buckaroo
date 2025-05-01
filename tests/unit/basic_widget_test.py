@@ -10,7 +10,7 @@ from buckaroo.dataflow.dataflow_extras import StylingAnalysis
 from buckaroo.customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from buckaroo.customizations.histogram import (Histogram)
 from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
-from buckaroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.jlisp.lisp_utils import (s, sQ)
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
 from buckaroo.dataflow.autocleaning import AutocleaningConfig
 
@@ -176,7 +176,7 @@ def test_quick_commands_run():
         'a': ["30"],
         'b': ['aa']})
     assert bw.dataflow.quick_command_args == {'search': ['aa']}
-    assert bw.dataflow.merged_operations == [[qc_sym('search'), s('df'), "col", "aa"]]
+    assert bw.dataflow.merged_operations == [[sQ('search'), s('df'), "col", "aa"]]
     assert bw.dataflow.processed_df.to_dict() == expected.to_dict()
     assert bw.dataflow.processed_df.to_dict() == expected.to_dict()
 
@@ -185,7 +185,7 @@ def test_quick_commands_run():
     # I need unmerging logic to make this work
     # dataflow.merged_operations is the combination of quick_args (and possibly cleaning_ops) + operations that are executed.  Resetting bw.operations after this is merged would result in a loop
     # the ops from cleaning and quick_args are tagged so that they can be treated differently, changing cleaning or quick_args shouldn't affect manually editted operations
-    #assert bw.operations == [[qc_sym('search'), s('df'), "col", "aa"]]
+    #assert bw.operations == [[sQ('search'), s('df'), "col", "aa"]]
 
 
 

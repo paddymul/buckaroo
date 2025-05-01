@@ -5,7 +5,7 @@ from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget, BuckarooInfiniteWidget
-from buckaroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.jlisp.lisp_utils import (s, sQ)
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
 from buckaroo.dataflow.autocleaning import AutocleaningConfig
@@ -473,7 +473,7 @@ def test_bstate_commands():
 
     #probably something in autocleaning config should be responsible for generating these commands
     assert vcb.dataflow.merged_operations == [
-        [qc_sym('search'), s('df'), "col", "needle"]]
+        [sQ('search'), s('df'), "col", "needle"]]
     assert len(vcb.dataflow.processed_df) == 2
     assert vcb.df_meta['filtered_rows'] == 2
 
@@ -511,7 +511,7 @@ def test_bstate_commands2():
 
     #probably something in autocleaning config should be responsible for generating these commands
     assert vcb.dataflow.merged_operations == [
-        [qc_sym('search'), s('df'), "col", "needle"]]
+        [sQ('search'), s('df'), "col", "needle"]]
     assert len(vcb.dataflow.processed_df) == 2
     assert vcb.df_meta['filtered_rows'] == 2
 
@@ -557,7 +557,7 @@ def test_bstate_commands3():
 
     #probably something in autocleaning config should be responsible for generating these commands
     assert vcb.dataflow.merged_operations == [
-        [qc_sym('search'), s('df'), "col", "needle"]]
+        [sQ('search'), s('df'), "col", "needle"]]
     assert len(vcb.dataflow.processed_df) == 2
     assert vcb.df_meta['filtered_rows'] == 2
 

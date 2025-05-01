@@ -7,7 +7,7 @@ from buckaroo.customizations.analysis import (
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning, generate_quick_ops
-from buckaroo.jlisp.lisp_utils import (s, qc_sym)
+from buckaroo.jlisp.lisp_utils import (s, sA, sQ)
 from buckaroo.customizations.pandas_commands import (
     Command,
     SafeInt, DropCol, FillNA, GroupBy, NoOp, Search, OnlyOutliers
@@ -351,7 +351,7 @@ def test_quick_commands_run():
         'a': ["30"],
         'b': ['aa']})
 
-    assert merged_operations == [[qc_sym('search'), s('df'), "col", "aa"]]
+    assert merged_operations == [[sQ('search'), s('df'), "col", "aa"]]
     assert cleaned_df.to_dict() == expected.to_dict()
 
 
@@ -412,9 +412,8 @@ class SentinelCleaningGenOps(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        ops = [
-            {'symbol': "noop", 'meta':{ 'auto_clean': True}},
-            {'symbol': 'df'}]
+        ops = [sA('noop'), s('df')]
+
         print("ops", ops)
         return {'cleaning_ops': ops}
 
@@ -441,9 +440,9 @@ class SentinelCleaningGenOps2(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        if column_metadata['col_name'] == 'b_col':
+        if column_metadata['col_name'] == 'c':
             ops = [
-                {'symbol': "noop2", 'meta':{ 'auto_clean': True}},
+                sA('noop2'),
                 {'symbol': 'df'}]
             print("ops", ops)
             return {'cleaning_ops': ops}
@@ -459,6 +458,63 @@ class SentinelConfig2(AutocleaningConfig):
     
     quick_command_klasses = [Search]
     name="sentinel2"
+
+def test_autoclean_merge_ops():
+    """Make sure that remvoing {'auto_clean':True} from an operation
+    as preserve does, retains taht operation when switching between
+    auto_cleaning methods
+
+    """
+    class SentinelBuckaroo(BuckarooWidget):
+        autocleaning_klass = PandasAutocleaning
+        autoclean_conf = tuple([SentinelConfig, SentinelConfig2, NoCleaningConf])
+
+    dirty_df = pd.DataFrame(
+            {'a':[10,  20,  30,   40,  10, 20.3,   5, None, None, None],
+             'b':["3", "4", "a", "5", "5",  "b", "b", None, None, None],
+             'c':["3", "4", "a", "5", "5",  "b", "b", None, None, None],
+             })
+
+    bw = SentinelBuckaroo(dirty_df)
+    assert bw.operations == []
+
+    bw.buckaroo_state = {
+        "cleaning_method": "sentinel1",
+        "post_processing": "",
+        "sampled": False,
+        "show_commands": "on",
+        "df_display": "main",
+        "search_string": "",
+        "quick_command_args": {}
+    }
+
+    assert bw.dataflow.cleaning_method == 'sentinel1'
+
+    assert bw.operations ==  [
+        [sA('noop') , s('df'), 'a'],
+        [sA('noop') , s('df'), 'b'],
+        [sA('noop') , s('df'), 'c']]
+        
+
+    # come up with a convience method for updating a single prop of buckaroo_state
+    bw.buckaroo_state = {
+        "cleaning_method": "sentinel2",
+        "post_processing": "",
+        "sampled": False,
+        "show_commands": "on",
+        "df_display": "main",
+        "search_string": "",
+        "quick_command_args": {}
+    }
+    assert bw.operations ==  [
+        [sA('noop2') , s('df'), 'c']]
+
+    bw.operations = [
+        [s('noop2') , s('df'), 'c']]
+
+    assert bw.operations == [
+        [s('noop2') , s('df'), 'c']]
+
 
 def test_autoclean_dataflow():
     """
@@ -498,33 +554,6 @@ def test_autoclean_full_widget():
 
     assert bw.dataflow.cleaning_method == 'sentinel1'
     # make sure the widget oprations were updated
-    assert len(bw.operations) > 0
-
-def test_autoclean_merge_ops():
-    """Make sure that remvoing {'auto_clean':True} from an operation
-    as preserve does, retains taht operation when switching between
-    auto_cleaning methods
-
-    """
-    class SentinelBuckaroo(BuckarooWidget):
-        autocleaning_klass = PandasAutocleaning
-        autoclean_conf = tuple([SentinelConfig, SentinelConfig2, NoCleaningConf])
-
-    bw = SentinelBuckaroo(dirty_df)
-    assert bw.operations == []
-
-    bw.buckaroo_state = {
-        "cleaning_method": "sentinel1",
-        "post_processing": "",
-        "sampled": False,
-        "show_commands": "on",
-        "df_display": "main",
-        "search_string": "",
-        "quick_command_args": {}
-    }
-
-    assert bw.dataflow.cleaning_method == 'sentinel1'
-
     assert len(bw.operations) > 0
 
 
@@ -575,17 +604,17 @@ def test_quick_commands():
 
 
     search_only_produced_commands = generate_quick_ops(quick_commands, {"search": ["asdf"]})
-    assert search_only_produced_commands == [[qc_sym('search'), s('df'), "col", "asdf"]]
+    assert search_only_produced_commands == [[sQ('search'), s('df'), "col", "asdf"]]
 
     #note only_outliers needs quick_command to substitute into the col place, not the last arg
     oo_produced_commands = generate_quick_ops(quick_commands, {"only_outliers": ["col_B"]})
-    assert oo_produced_commands == [[qc_sym('only_outliers'), s('df'), "col_B", .01]]
+    assert oo_produced_commands == [[sQ('only_outliers'), s('df'), "col_B", .01]]
 
     both_produced_commands = generate_quick_ops(
         quick_commands, {"search": ["asdf"], "only_outliers": ["col_B"]})
     assert both_produced_commands == [
-        [qc_sym('search'), s('df'), "col", "asdf"],
-        [qc_sym('only_outliers'), s('df'), "col_B", .01]
+        [sQ('search'), s('df'), "col", "asdf"],
+        [sQ('only_outliers'), s('df'), "col_B", .01]
     ]
 
 
@@ -593,8 +622,8 @@ def test_quick_commands():
     both_produced_commands_reversed = generate_quick_ops(
         quick_commands[::-1], {"search": ["asdf"], "only_outliers": ["col_B"]})
     assert both_produced_commands_reversed == [
-        [qc_sym('only_outliers'), s('df'), "col_B", .01],
-        [qc_sym('search'), s('df'), "col", "asdf"]]
+        [sQ('only_outliers'), s('df'), "col_B", .01],
+        [sQ('search'), s('df'), "col", "asdf"]]
 
 
 class TwoArgSearch(Command):
@@ -612,7 +641,7 @@ def test_two_arg_quick_command():
     
 
     two_arg_search_produced_commands = generate_quick_ops([TwoArgSearch], {"search_two": ["FFFasdf", 9]})
-    assert two_arg_search_produced_commands == [[qc_sym('search_two'), s('df'), "col", "FFFasdf", 9]]
+    assert two_arg_search_produced_commands == [[sQ('search_two'), s('df'), "col", "FFFasdf", 9]]
     
 
 

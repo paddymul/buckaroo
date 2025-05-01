@@ -47,8 +47,34 @@ def lists_match(l1, l2):
 
             
 def qc_sym(symbol_name):
-    return {'symbol':symbol_name, 'meta':{'auto_clean': True, 'quick_command':True}}
+    """ auto_clean:True because we want this cleared when switching cleaning
+    deprecated, use sQ instead
+    """
+    1/0
+            
 
-def s(symbol_name):
-    return {'symbol':symbol_name}
+
+def s(symbol_name:str, **extra_meta_kwargs):
+    "return a symbol with auto_clean:True"
+    meta = extra_meta_kwargs.copy()
+    if meta:
+        return {'symbol': symbol_name, 'meta': meta}
+    return {'symbol': symbol_name}
     
+    
+
+def sA(symbol_name:str, **extra_meta_kwargs):
+    "return a symbol with auto_clean:True"
+    meta = extra_meta_kwargs.copy()
+    meta['auto_clean'] = True
+    return {'symbol': symbol_name, 'meta': meta}
+
+def sQ(symbol_name, **extra_meta_kwargs):
+    """ auto_clean:True because we want this cleared when switching cleaning
+    TODO: rename to sQ
+    """
+    meta = extra_meta_kwargs.copy()
+    meta['auto_clean'] = True
+    meta['quick_command'] = True
+    return {'symbol': symbol_name, 'meta': meta}
+
