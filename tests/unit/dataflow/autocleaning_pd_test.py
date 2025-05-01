@@ -376,9 +376,7 @@ class SentinelCleaningGenOps(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        ops = [sA('noop'), s('df')]
-
-        print("ops", ops)
+        ops = [sA('noop', clean_col=column_metadata['col_name']), s('df')]
         return {'cleaning_ops': ops}
 
 class SentinelConfig(AutocleaningConfig):
@@ -406,7 +404,7 @@ class SentinelCleaningGenOps2(ColAnalysis):
     def computed_summary(kls, column_metadata):
         if column_metadata['col_name'] == 'c':
             ops = [
-                sA('noop2'),
+                sA('noop2', clean_col='c'),
                 {'symbol': 'df'}]
             print("ops", ops)
             return {'cleaning_ops': ops}
@@ -453,11 +451,10 @@ def test_autoclean_merge_ops():
     }
 
     assert bw.dataflow.cleaning_method == 'sentinel1'
-
     assert bw.operations ==  [
-        [sA('noop') , s('df'), 'a'],
-        [sA('noop') , s('df'), 'b'],
-        [sA('noop') , s('df'), 'c']]
+        [sA('noop', clean_col='a'), s('df'), 'a'],
+        [sA('noop', clean_col='b'), s('df'), 'b'],
+        [sA('noop', clean_col='c'), s('df'), 'c']]
         
 
     # come up with a convience method for updating a single prop of buckaroo_state
@@ -471,13 +468,13 @@ def test_autoclean_merge_ops():
         "quick_command_args": {}
     }
     assert bw.operations ==  [
-        [sA('noop2') , s('df'), 'c']]
+        [sA('noop2', clean_col='c') , s('df'), 'c']]
 
     bw.operations = [
-        [s('noop2') , s('df'), 'c']]
+        [s('noop2', clean_col='c') , s('df'), 'c']]
 
     assert bw.operations == [
-        [s('noop2') , s('df'), 'c']]
+        [s('noop2', clean_col='c') , s('df'), 'c']]
 
 
 def test_autoclean_dataflow():
