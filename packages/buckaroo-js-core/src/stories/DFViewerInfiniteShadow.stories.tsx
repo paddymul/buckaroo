@@ -1,10 +1,35 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
-import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
+import { DFViewerConfig, ColumnConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 import { useState } from "react";
+
+const objColumn = (col_name: string): ColumnConfig => ({
+  col_name,
+  displayer_args: {
+    displayer: 'obj' as const,
+  },
+});
+
+const floatColumn = (col_name: string, min_fraction_digits: number, max_fraction_digits: number): ColumnConfig => ({
+  col_name,
+  displayer_args: {
+    displayer: 'float' as const,
+    min_fraction_digits,
+    max_fraction_digits,
+  },
+});
+
+const integerColumn = (col_name: string, min_digits: number, max_digits: number): ColumnConfig => ({
+  col_name,
+  displayer_args: {
+    displayer: 'integer' as const,
+    min_digits,
+    max_digits,
+  },
+});
 
 const DFViewerInfiniteWrap = ({
     data,
@@ -89,28 +114,9 @@ const data = [
 
 const primaryConfigPrimary:DFViewerConfig = {
       column_config: [
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'float',
-            min_fraction_digits: 2,
-            max_fraction_digits: 8,
-          },
-        },
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'integer',
-            min_digits: 2,
-            max_digits: 3,
-          },
-        },
-        {
-          col_name: 'b',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
+        floatColumn('a', 2, 8),
+        integerColumn('a', 2, 3),
+        objColumn('b'),
         {
           col_name: 'b',
           displayer_args: {
@@ -134,28 +140,9 @@ export const Primary: Story = {
 const N = 5_000;
 const LargeConfig:DFViewerConfig = {
       column_config: [
-      {
-        col_name: 'a',
-        displayer_args: {
-          displayer: 'float',
-          min_fraction_digits: 2,
-          max_fraction_digits: 8,
-        },
-        //tooltip_config: { tooltip_type: 'summary_series' },
-      },
-      {
-        col_name: 'a',
-        displayer_args: {
-          displayer: 'integer',
-          min_digits:2, max_digits:3
-        },
-      },
-      {
-        col_name: 'b',
-        displayer_args: {
-          displayer: 'obj',
-        },
-      },
+      floatColumn('a', 2, 8),
+      integerColumn('a', 2, 3),
+      objColumn('b'),
     ],
         pinned_rows:[]
   }
@@ -169,33 +156,12 @@ export const Large: Story = {
     }
 
 }
-export const PinnedRowConfig:DFViewerConfig = {
+const PinnedRowConfig:DFViewerConfig = {
       column_config: [
-
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
-        {
-          col_name: 'b',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
-        {
-          col_name: 'c',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
-        {
-          col_name: 'd',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
+        objColumn('a'),
+        objColumn('b'),
+        objColumn('c'),
+        objColumn('d'),
       ],
       pinned_rows: [{
         'primary_key_val': 'histogram',
@@ -213,36 +179,14 @@ export const PinnedRows: Story = {
 
   }
 }
-export const IntFloatConfig:DFViewerConfig =  {
+const IntFloatConfig:DFViewerConfig =  {
       column_config: [
-      {
-        col_name: 'a',
-        displayer_args: {
-          displayer: 'float',
-          min_fraction_digits: 2,
-          max_fraction_digits: 8,
-        },
-        //tooltip_config: { tooltip_type: 'summary_series' },
-      },
-      {
-        col_name: 'a',
-        displayer_args: {
-          displayer: 'integer',
-          min_digits:2, max_digits:3
-        },
-      },
-      {
-        col_name: 'b',
-        displayer_args: {
-          displayer: 'obj',
-        },
-      },
+      floatColumn('a', 2, 8),
+      integerColumn('a', 2, 3),
+      objColumn('b'),
     ],
     pinned_rows:[],
-
     component_config: {dfvHeight:200}
-
-
   };
 
 
