@@ -5,7 +5,7 @@ from buckaroo import BuckarooWidget
 from buckaroo.customizations.analysis import (
     DefaultSummaryStats, PdCleaningStats)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
-from buckaroo.dataflow.autocleaning import merge_ops, format_ops, AutocleaningConfig
+from buckaroo.dataflow.autocleaning import AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning, generate_quick_ops
 from buckaroo.jlisp.lisp_utils import (s, sA, sQ)
 from buckaroo.customizations.pandas_commands import (
@@ -41,42 +41,6 @@ class CleaningGenOps(ColAnalysis):
             return {'cleaning_ops': []}
 
 
-
-SAFE_INT_TOKEN = [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}]
-
-
-def test_format_ops():
-    """
-    make sure that format_ops joins the correct column names to ops
-    """
-    column_meta = {
-        'a': {'cleaning_ops':SAFE_INT_TOKEN },
-        'b': {'cleaning_ops': [
-            {'symbol': 'replace_dirty', 'meta':{'auto_clean': True}},
-            {'symbol': 'df'}, '\n', None]}}
-
-    expected_ops = [
-        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'a'],
-        [{'symbol': 'replace_dirty', 'meta':{'auto_clean': True}}, {'symbol': 'df'}, 'b', '\n', None]]
-    assert format_ops(column_meta) == expected_ops
-
-
-def test_merge_ops():
-    existing_ops = [
-        [{'symbol': 'safe_int', 'meta':{'auto_clean': True}}, 'a'],
-        [{'symbol': 'usergen'}, 'foo_column']
-    ]
-
-    cleaning_ops = [
-        [{'symbol': 'new_cleaning', 'meta':{'auto_clean': True}}, 'a']]
-
-    expected_merged = [
-        [{'symbol': 'new_cleaning', 'meta':{'auto_clean': True}}, 'a'],
-        [{'symbol': 'usergen'}, 'foo_column']
-    ]
-    print( merge_ops(existing_ops, cleaning_ops))
-    print("@"*80)
-    assert merge_ops(existing_ops, cleaning_ops) == expected_merged
 
 
 class ACConf(AutocleaningConfig):

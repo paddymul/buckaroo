@@ -189,7 +189,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 "E712"
 ]
 
-"tests/unit/lispy_test.py" = [
+"tests/unit/jlisp/lispy_test.py" = [
 "E712"
 ]
 #__init__.py and widget utils does some bare excepts because it absolutely cannot error

@@ -1,17 +1,17 @@
 from buckaroo.jlisp.lisp_utils import (
-    merge_ops, format_ops, lists_match, split_operations
+    merge_ops, format_ops, lists_match, split_operations, s, sA, ops_eq
                                        )
 
 
 def test_split_operations():
 
     full_ops = [
-        [{"symbol":"dropcol", "meta":{"precleaning":True}},{"symbol":"df"},"starttime"],
+        [{"symbol":"dropcol", "meta":{"auto_clean":True}},{"symbol":"df"},"starttime"],
         [{"symbol":"dropcol"},{"symbol":"df"},"starttime"],
     ]
 
     EXPECTED_cleaning_ops = [
-        [{"symbol":"dropcol", "meta":{"precleaning":True}},{"symbol":"df"},"starttime"]]
+        [{"symbol":"dropcol", "meta":{"auto_clean":True}},{"symbol":"df"},"starttime"]]
     
     EXPECTED_user_gen_ops = [
         [{"symbol":"dropcol"},{"symbol":"df"},"starttime"]]
@@ -65,3 +65,41 @@ def test_merge_ops():
     print( merge_ops(existing_ops, cleaning_ops))
     print("@"*80)
     assert merge_ops(existing_ops, cleaning_ops) == expected_merged
+
+def test_merge_ops_conflict():
+    """
+    When a user clicks preserve, on an autoclean operation. we don't want subsequent cleaning to do a different clean on that column
+    """
+
+    gen_ops =  [
+        [sA('noop2', clean_col='c') , s('df'), 'c']]
+
+    user_ops  = [
+        [s('noop2', clean_col='c') , s('df'), 'c']]
+
+    merged_ops = merge_ops(user_ops, gen_ops)
+    assert ops_eq(merged_ops, user_ops)
+
+def test_merge_ops_conflict2():
+    gen_ops =  [
+        [sA('noop', clean_col='a') , s('df'), 'a'],
+        [sA('noop', clean_col='b') , s('df'), 'b'],
+        [sA('noop', clean_col='c') , s('df'), 'c']]
+
+    #a user 'preserved' the op on b.
+    # these are the ops that the frontend will send back to buckaroo
+    user_ops =  [
+        [sA('noop', clean_col='a') , s('df'), 'a'],
+        [s('noop', clean_col='b') , s('df'), 'b'],
+        [sA('noop', clean_col='c') , s('df'), 'c']]
+
+
+    expected_merge_ops = [
+        [sA('noop', clean_col='a') , s('df'), 'a'],
+        [sA('noop', clean_col='c') , s('df'), 'c'],
+        #this should be moved to the end because user_ops come after clean_ops
+        [s('noop', clean_col='b') , s('df'), 'b']]
+
+
+    merged_ops = merge_ops(user_ops, gen_ops)
+    assert ops_eq(merged_ops, expected_merge_ops)

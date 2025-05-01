@@ -16,7 +16,7 @@ def is_symbol(obj):
     return isinstance(obj, dict) and "symbol" in obj
 
 def is_generated_symbol(obj):
-    return is_symbol(obj) and obj.get("meta", False)
+    return is_symbol(obj) and obj.get("meta", False) and obj['meta'].get('auto_clean', False)
 
 def split_operations(full_operations):
     """
@@ -41,13 +41,24 @@ def split_operations(full_operations):
     return machine_generated, user_entered
 
 
+def sym_meta_get(sym, meta_key:str) -> str:
+    assert is_symbol(sym)
+    meta = sym.get('meta', {})
+    return meta.get(meta_key, None)
+    
+
+def op_meta_get(operation, meta_key:str)-> str: #takes a full Operation
+    return sym_meta_get(operation[0], meta_key)
+
 def merge_ops(existing_ops, cleaning_ops):
     """strip cleaning_ops from existing_ops, reinsert cleaning_ops at
     the beginning, leave the non auto_clean True ops"""
     old_cleaning_ops, user_gen_ops = split_operations(existing_ops)
+    clean_cols = set([op_meta_get(op, 'clean_col') for op in user_gen_ops]) - {None}
     merged = cleaning_ops.copy()
-    merged.extend(user_gen_ops)  # we want the user cleaning ops to come last
-    return merged
+    stripped_merged = [op for op in merged if op_meta_get(op, 'clean_col') not in clean_cols]
+    stripped_merged.extend(user_gen_ops)  # we want the user cleaning ops to come last
+    return stripped_merged
 
 
 
@@ -96,7 +107,6 @@ def sA(symbol_name:str, **extra_meta_kwargs):
 
 def sQ(symbol_name, **extra_meta_kwargs):
     """ auto_clean:True because we want this cleared when switching cleaning
-    TODO: rename to sQ
     """
     meta = extra_meta_kwargs.copy()
     meta['auto_clean'] = True
