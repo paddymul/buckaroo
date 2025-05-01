@@ -87,88 +87,52 @@ const data = [
 
   ];
 
+const primaryConfigPrimary:DFViewerConfig = {
+      column_config: [
+        {
+          col_name: 'a',
+          displayer_args: {
+            displayer: 'float',
+            min_fraction_digits: 2,
+            max_fraction_digits: 8,
+          },
+        },
+        {
+          col_name: 'a',
+          displayer_args: {
+            displayer: 'integer',
+            min_digits: 2,
+            max_digits: 3,
+          },
+        },
+        {
+          col_name: 'b',
+          displayer_args: {
+            displayer: 'obj',
+          },
+        },
+        {
+          col_name: 'b',
+          displayer_args: {
+            displayer: 'string',
+          },
+        },
+      ],
+      pinned_rows: [],
+    };
+
 export const Primary: Story = {
   args: {
     //@ts-ignore
     // the undefineds aren't allowed in the type but do happen in the wild
     data: data,
-    df_viewer_config: {
-      column_config: [
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'float',
-            min_fraction_digits: 2,
-            max_fraction_digits: 8,
-          },
-        },
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'integer',
-            min_digits: 2,
-            max_digits: 3,
-          },
-        },
-        {
-          col_name: 'b',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
-        {
-          col_name: 'b',
-          displayer_args: {
-            displayer: 'string',
-          },
-        },
-      ],
-      pinned_rows: [],
-    },
-    secondary_df_viewer_config: {
-      column_config: [
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'float',
-            min_fraction_digits: 2,
-            max_fraction_digits: 8,
-          },
-        },
-        {
-          col_name: 'a',
-          displayer_args: {
-            displayer: 'integer',
-            min_digits: 2,
-            max_digits: 3,
-          },
-        },
-        {
-          col_name: 'b',
-          displayer_args: {
-            displayer: 'obj',
-          },
-        },
-        {
-          col_name: 'b',
-          displayer_args: {
-            displayer: 'string',
-          },
-        },
-      ],
-      pinned_rows: [],
-    },
+    df_viewer_config: primaryConfigPrimary,
+    secondary_df_viewer_config:primaryConfigPrimary,
   },
 };
 
-const N = 10_000;
-console.log("156")
-console.log(dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)   }))
-
-export const Large: Story = {
-  args: {
-    data: dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)}),
-    df_viewer_config: {
+const N = 5_000;
+const LargeConfig:DFViewerConfig = {
       column_config: [
       {
         col_name: 'a',
@@ -193,17 +157,19 @@ export const Large: Story = {
         },
       },
     ],
-    pinned_rows:[]
-  },
-  
-    }
-}
+        pinned_rows:[]
+  }
 
 
-export const PinnedRows: Story = {
+export const Large: Story = {
   args: {
-    data: [], //dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)   }),
-    df_viewer_config: {
+    data: dictOfArraystoDFData({'a':NRandom(N, 3,50), 'b':arange(N)}),
+    df_viewer_config: LargeConfig,
+    secondary_df_viewer_config: LargeConfig,
+    }
+
+}
+export const PinnedRowConfig:DFViewerConfig = {
       column_config: [
 
         {
@@ -235,20 +201,19 @@ export const PinnedRows: Story = {
         'primary_key_val': 'histogram',
         'displayer_args': { 'displayer': 'histogram' }
       }]
-    },
+    };
+
+
+export const PinnedRows: Story = {
+  args: {
+    data: [], 
+    df_viewer_config: PinnedRowConfig,
+    secondary_df_viewer_config: PinnedRowConfig,
     summary_stats_data: HistogramSummaryStats
 
   }
 }
-
-
-
-const MEDIUM= 300;
-
-export const MedDFVHeight: Story = {
-  args: {
-    data:dictOfArraystoDFData({'a':NRandom(MEDIUM, 3,50), 'b':arange(MEDIUM)   }),
-    df_viewer_config: {
+export const IntFloatConfig:DFViewerConfig =  {
       column_config: [
       {
         col_name: 'a',
@@ -274,8 +239,19 @@ export const MedDFVHeight: Story = {
       },
     ],
     pinned_rows:[],
+
     component_config: {dfvHeight:200}
-  },
-  
+
+
+  };
+
+
+const MEDIUM= 300;
+
+export const MedDFVHeight: Story = {
+  args: {
+    data:dictOfArraystoDFData({'a':NRandom(MEDIUM, 3,50), 'b':arange(MEDIUM)   }),
+    df_viewer_config: IntFloatConfig,
+
     }
 }
