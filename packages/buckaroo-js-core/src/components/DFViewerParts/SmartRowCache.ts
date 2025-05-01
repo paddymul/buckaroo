@@ -405,7 +405,7 @@ export class SmartRowCache {
         const newSegLength = newSegment[1] - newSegment[0]
         if (newDf.length !== newSegLength) {
             //throw new Error(`addRows called with a df smaller that newSegLenth ${newSegLength} ${newSegment} ${newDf.length}`)
-            console.log(`addRows called with a df smaller that newSegLenth ${newSegLength} ${newSegment} ${newDf.length}`)
+            //console.log(`addRows called with a df smaller that newSegLenth ${newSegLength} ${newSegment} ${newDf.length}`)
 	    if ((newSegment[0] + newDf.length) === this.sentLength) {
 		const endSegment:Segment = [newSegment[0], this.sentLength];
 		return this.addRows(endSegment, newDf);
@@ -434,8 +434,7 @@ export class SmartRowCache {
     public getRows(range: Segment): DFData {
         if (this.hasRows(range) === true) {
             if(range[0] === 0 && range[1] === 0) {
-                console.log("setting lastRequest to [0,0] in getRows")
-                debugger;
+                console.log("unexpected setting lastRequest to [0,0] in getRows")
             }
             this.lastRequest = range;
             return getRange(this.segments, this.dfs, range)
@@ -530,7 +529,7 @@ export class KeyAwareSmartRowCache {
 
 	if (src.sentLength !== 0 &&  src.sentLength < pa.end) {
 	    const newSeg:Segment = [pa.start, src.sentLength];
-	    console.log("at failing point", newSeg, src.getExtents())
+	    //console.log("at failing point", newSeg, src.getExtents())
 	    return src.getRows(newSeg);
 	}
         return src.getRows(seg);

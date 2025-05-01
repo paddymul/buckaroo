@@ -108,7 +108,6 @@ export function dfToAgrid(
             ...getTooltipParams(single_series_summary_df, f.tooltip_config),
             ...f.ag_grid_specs,
         };
-        console.log("colDef", colDef)
         return colDef;
     });
     return retColumns;
@@ -191,10 +190,13 @@ export interface TimedIDatasource extends IDatasource {
 export const getDs = (
     src: KeyAwareSmartRowCache,
 ): TimedIDatasource => {
+    const createTime =  new Date();
     const dsLoc: TimedIDatasource = {
-        createTime: new Date(),
+        createTime,
         rowCount: undefined,
         getRows: (params: IGetRowsParams) => {
+	    //@ts-ignore
+	    console.log("gridUtils 198 calling getRows createTime", createTime, ((new Date()) - createTime));
             const sm = params.sortModel;
             const outside_params_string = JSON.stringify(params.context?.outside_df_params);
             const dsPayloadArgs = {
@@ -206,7 +208,8 @@ export const getDs = (
                 sort_direction: sm.length === 1 ? sm[0].sort : undefined,
             };
             const successWrapper = (df:DFData, length:number) => {
-                //console.log("successWrapper called 217", 
+		//@ts-ignore
+                console.log("successWrapper called 217",  createTime, ((new Date()) - createTime));
                 //   [dsPayloadArgs.start, dsPayloadArgs.end], length)
                 params.successCallback(df, length)
             }
@@ -348,7 +351,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
 
     const inIframeClass = inIframe ? "inIframe" : "";
-    console.log("heightstyle", dfvHeight)
+    console.log("gridUtils 350 heightstyle", dfvHeight)
     if (isGoogleColab || inVSCcode() ) {
         return {
             classMode: "regular-mode",

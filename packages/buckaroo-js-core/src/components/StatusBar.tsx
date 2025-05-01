@@ -28,8 +28,6 @@ const helpCell = function (_params: any) {
 
 export const fakeSearchCell = function (_params: any) {
     const value = _params.value;
-    console.log("_params", _params);
-    console.log("_params.api", _params.api)
 
     const [searchVal, setSearchVal] = useState<string>(value||'');
     const setVal = () => {
@@ -117,7 +115,9 @@ export function StatusBar({
     buckarooOptions: BuckarooOptions;
     heightOverride?: number;
 }) {
-    console.log("heightOverride", heightOverride)
+    if (false) {
+	console.log("heightOverride", heightOverride);
+    }
     const optionCycles = buckarooOptions;
     const idxs = _.fromPairs(
         _.map(_.keys(optionCycles), (k) => [
@@ -145,14 +145,12 @@ export function StatusBar({
 
     const excludeKeys = ["quick_command_args", "search", "show_displayed_rows"];
     const updateDict = (event: any) => {
-        console.log("updateDict", event);
         const colName = event.column.getColId();
         if (_.includes(excludeKeys, colName)) {
             return;
         }
         if (_.includes(_.keys(buckarooState), colName)) {
             const nbstate = newBuckarooState(colName as BKeys);
-            console.log("updateDict about to set", nbstate);
             setBuckarooState(nbstate);
         }
     };
@@ -254,7 +252,7 @@ export function StatusBar({
     const gridRef = useRef<AgGridReact<unknown>>(null);
 
     const onGridReady = useCallback((params: {api:GridApi}) => {
-        console.log("onGridReady statusbar", params)
+        console.log("StatusBar252 onGridReady statusbar", params)
     }, []);
 
     const defaultColDef = {
