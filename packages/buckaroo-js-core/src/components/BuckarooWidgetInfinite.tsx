@@ -134,9 +134,10 @@ export function BuckarooInfiniteWidget({
         // so having it live between relaods is key
         //const [respError, setRespError] = useState<string | undefined>(undefined);
 
-
-        const mainDs = useMemo(() => {
-            console.log("recreating data source because operations changed", new Date());
+    const outerTime = new Date();
+    const mainDs = useMemo(() => {
+	//@ts-ignore
+        console.log("recreating data source because operations changed", outerTime, ((new Date()) - outerTime))
             src.debugCacheState();
             return getDs(src);
             // getting a new datasource when operations or post-processing changes - necessary for forcing ag-grid complete updated
@@ -145,7 +146,8 @@ export function BuckarooInfiniteWidget({
             // buckaroo_state props change
             //
             // putting buckaroo_state.post_processing doesn't work properly
-        }, [operations, buckaroo_state]);
+        //}, [operations, buckaroo_state]);
+        }, [operations, buckaroo_state.post_processing, buckaroo_state.cleaning_method]);
         const [activeCol, setActiveCol] = useState("stoptime");
 
         const cDisp = df_display_args[buckaroo_state.df_display];
