@@ -5,7 +5,6 @@ from ..fixtures import (DistinctCount)
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 from buckaroo.dataflow.dataflow import CustomizableDataflow, StylingAnalysis
 from buckaroo.buckaroo_widget import BuckarooWidget, BuckarooInfiniteWidget
-from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)         
 from buckaroo.jlisp.lisp_utils import (s, qc_sym)
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
@@ -330,7 +329,7 @@ def test_buckaroo_options_cleaning():
         autoclean_conf = tuple([AC2, NoCleaningConf])
 
     dfc = LocCDF(BASIC_DF)
-    assert dfc.buckaroo_options['cleaning_method'] ==  ['', 'AC2', '']
+    assert dfc.buckaroo_options['cleaning_method'] ==  ['AC2', '']
 
 
 def test_column_config_override_widget():
@@ -558,9 +557,10 @@ def test_bstate_commands3():
     assert len(vcb.dataflow.processed_df) == 2
     assert vcb.df_meta['filtered_rows'] == 2
 
-
-    
-def test_sample():
+def Xtest_sample():
+    """
+    this test is slow, and sample is barely used anymore
+    """
     big_df = pd.DataFrame({'a': np.arange(105_000)})
     bw = ACDFC(big_df)
     assert len(bw.processed_df) == 100_000

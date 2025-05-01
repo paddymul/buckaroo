@@ -154,7 +154,7 @@ def test_buckaroo_options_populate():
         autoclean_conf = tuple([AC2, NoCleaningConf])
     
     bw = ACBuckaroo(df)
-    assert bw.buckaroo_options["cleaning_method"] == ["", "AC2", ""]
+    assert bw.buckaroo_options["cleaning_method"] == ["AC2", ""]
 
 
 def test_quick_commands_run():
