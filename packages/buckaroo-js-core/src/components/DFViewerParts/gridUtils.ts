@@ -157,6 +157,9 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
 }
 
 export function extractSDFT(summaryStatsDf: DFData): SDFT {
+    /*  histogram_bins are special cased because of how they are passed to rendereres in pinned_rows
+	I think
+     */
     const maybeHistogramBins = _.find(summaryStatsDf, { index: "histogram_bins" }) || {};
     const maybeHistogramLogBins = _.find(summaryStatsDf, { index: "histogram_log_bins" }) || {};
     const allColumns: string[] = _.without(

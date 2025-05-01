@@ -37,7 +37,7 @@ describe("testing utility functions in gridUtils ", () => {
     expect(res5).toBe("1.5  ");
   });
 
-  it("should convert to expected format", () => {
+  it("should extract sdfts when only that is present from summary stats looking DFData ", () => {
     const basicSDF:DFData = [
       {'index': 'histogram_bins',     'a':[2,3]},
       {'index': 'histogram_log_bins', 'a':[20,30], 'b': [10, 20]}
@@ -57,7 +57,18 @@ describe("testing utility functions in gridUtils ", () => {
         { index: "row2", value: 2 }
       ];
       const result = extractSDFT(data);
-      expect(result).toEqual(data);
+	expect(result).toEqual({});
+    });
+    it("should extract SDFT when present ", () => {
+      const data: DFData = [
+        { index: "row1", a:20 },
+	{ index: 'histogram_bins', a:[2,3]},
+        { index: "row2", a:30, b:20},
+      ];
+      const result = extractSDFT(data);
+	expect(result).toEqual({
+	    'a': {'histogram_bins': [2,3], 'histogram_log_bins':[]}})
+
     });
   });
 
