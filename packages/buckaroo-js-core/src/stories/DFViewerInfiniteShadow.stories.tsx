@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig, ColumnConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
-//import { ShadowDomWrapper } from "./StoryUtils";
+import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 import { useState } from "react";
 
@@ -56,7 +56,7 @@ const DFViewerInfiniteWrap = ({
   const currentError = showError ? "some error" : undefined;
 
   return (
-
+    <ShadowDomWrapper>
      <div style={{height:500, width:800}}>
       <div style={{marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px'}}>
         <button 
@@ -81,8 +81,7 @@ const DFViewerInfiniteWrap = ({
       outside_df_params={outside_df_params}
       error_info={currentError} />
      </div>
-
-     );
+     </ShadowDomWrapper>);
 }
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
