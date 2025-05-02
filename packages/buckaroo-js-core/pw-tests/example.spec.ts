@@ -36,13 +36,11 @@ const setupCounter = (page, expectedLog) => {
     const noRowsToShowLocator = page.locator('.ag-overlay-no-rows-center');
     await cellLocator.or(cellWrapperLocator).or(noRowsToShowLocator).or(fullWidthRow).first().waitFor({ state: 'visible' });
 }
-test('has title', async ({ page }) => {
+
+test('DFVIewerInfiniteShadow renders in basic case', async ({ page }) => {
     await page.goto('http://localhost:6006/iframe.html?viewMode=story&id=buckaroo-dfviewer-dfviewerinfiniteshadow--primary&globals=&args=')
     const RenderLogMsg= "[DFViewerInfinite] Total render time:"
     setupCounter(page, RenderLogMsg)
-
-  //await page.locator('.ag-header-cell-label').first().click();
-//    await page.waitForTimeout(1000);
     await waitForGridReady(page);
     const rc = await getRowContents(page, 0);
     expect(rc).toStrictEqual(["20.00      ", "  20", "foo", "foo", ]);
@@ -53,4 +51,15 @@ test('has title', async ({ page }) => {
     expect(logCounts[RenderLogMsg]).toBe(2);
     const rc2 = await getRowContents(page, 0);
     expect(rc2).toStrictEqual(["20.00      ", "  20", "foo", ]);
+});
+
+test('DFVIewerInfinite Raw works', async ({ page }) => {
+    await page.goto('http://localhost:6006/iframe.html?viewMode=story&id=buckaroo-dfviewer-dfviewerinfiniteraw--primary&globals=&args=')
+    const RenderLogMsg= "[DFViewerInfinite] Total render time:"
+    setupCounter(page, RenderLogMsg)
+
+    await waitForGridReady(page);
+    const rc = await getRowContents(page, 0);
+    expect(rc).toStrictEqual(["20.00", "20", "foo", ]);
+    expect(logCounts[RenderLogMsg]).toBe(1);
 });
