@@ -1,4 +1,4 @@
-import React, {
+import {
     useCallback,
     useMemo,
     useEffect,
@@ -30,7 +30,7 @@ import {
     SetColumFunc
 } from "./gridUtils";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
-import { Theme, themeAlpine} from '@ag-grid-community/theming';
+import { themeAlpine} from '@ag-grid-community/theming';
 import { colorSchemeDark } from '@ag-grid-community/theming';
 
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
@@ -55,7 +55,6 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
 //    cellHorizontalPadding: 3,
 
 })
-const localTheme: Theme = myTheme.withParams({});
 
 
 export interface DatasourceWrapper {
@@ -171,35 +170,18 @@ export function DFViewerInfinite({
             defaultColDef,
             hs.domLayout,
             getAutoSize(styledColumns.length),
+
         ),
+        onFirstDataRendered: (_params) => {
+            console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
+            console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
+        },
         columnDefs:styledColumns,
         getRowId,
         rowModelType: "clientSide",
     };
-    
-    if (data_wrapper.data_type === "Raw") {
-        const rdGridOptions: GridOptions = {
-            ...gridOptions,
-            rowData: data_wrapper.data,
-            suppressNoRowsOverlay: true,
-            onFirstDataRendered: (_params) => {
-                console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
-                console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
-            }
-        };
-
-        return (
-            <RowDataViewer
-                hs={hs}
-                divClass={divClass}
-                rdGridOptions={rdGridOptions}
-                topRowData={topRowData}
-            />
-        );
-    } else if (data_wrapper.data_type === "DataSource") {
-        const dsGridOptions = getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling );
-
-        
+   
+        const [finalGridOptions, datasource] = getFinalGridOptions(data_wrapper, gridOptions, hs);
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
                 <pre>{error_info ? error_info : ""}</pre>
@@ -207,55 +189,48 @@ export function DFViewerInfinite({
                 <AgGridReact
                     theme={myTheme}
                     loadThemeGoogleFonts
-                    gridOptions={{
-                        ...dsGridOptions,
-                        onFirstDataRendered: (_params) => {
-                            console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
-                            console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
-                        }
-                    }}
-                    datasource={data_wrapper.datasource}
+                    gridOptions={finalGridOptions}
+
+                    datasource={datasource}
                     pinnedTopRowData={topRowData}
                     columnDefs={styledColumns}
                     context={{ outside_df_params }}
+
+
                 ></AgGridReact>
                 </div>
             </div>
         );
-    } else {
         return <div>Error</div>;
-    }
+
 }
 // used to make sure there is a different element returned when
 // Raw is used, so the component properly swaps over.
 // Otherwise pinnedRows appear above the last scrolled position
 // of the InfiniteRowSource vs having an empty data set.
+const getFinalGridOptions =( 
+    data_wrapper: DatasourceOrRaw, gridOptions:GridOptions, hs: HeightStyleI,
+     ): [GridOptions, IDatasource] => {
+    if (data_wrapper.data_type === "Raw") {
+        const fakeDatasource:IDatasource = {
+            rowCount:data_wrapper.data.length,
+            getRows: (_params: any) => {
+                console.debug("fake datasource get rows called, unexpected");
+                throw new Error("fake datasource get rows called, unexpected");
+            }
+        }
+        return [{
+            ...gridOptions,
+            rowData: data_wrapper.data,
+            suppressNoRowsOverlay: true,
 
-const RowDataViewer = ({
-    hs,
-    divClass,
-    rdGridOptions,
-    topRowData,
-}: {
-    hs: HeightStyleI;
-    divClass: string;
-    rdGridOptions: GridOptions;
-    topRowData: DFData;
-}): React.JSX.Element => {
-    return (
-        <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-            <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
-                <AgGridReact
-         	        theme={myTheme}
-                    loadThemeGoogleFonts
-                    gridOptions={rdGridOptions}
-                    pinnedTopRowData={topRowData}
-                    columnDefs={rdGridOptions.columnDefs}>
-                </AgGridReact>
-            </div>
-        </div>
-    );
-};
+        }, fakeDatasource];
+    } else if (data_wrapper.data_type === "DataSource") {
+        return [getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling ), data_wrapper.datasource];
+    } else {
+        throw new Error(`Unexpected data_wrapper.data_type on  ${data_wrapper}`)
+    }
+ }
 
 const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:number):
  GridOptions => {
