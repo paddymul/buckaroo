@@ -170,6 +170,7 @@ export function DFViewerInfinite({
             hs.domLayout,
             getAutoSize(styledColumns.length),
         ),
+        columnDefs:styledColumns,
         getRowId,
         rowModelType: "clientSide",
     };

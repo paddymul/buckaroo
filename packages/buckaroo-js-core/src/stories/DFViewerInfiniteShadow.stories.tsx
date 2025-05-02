@@ -48,7 +48,7 @@ const DFViewerInfiniteWrap = ({
     setActiveCol?: SetColumFunc;
     outside_df_params?: any;
 }) => {
-  console.log("error_info", error_info);
+  //console.log("error_info", error_info);
   const [useSecondaryConfig, setUseSecondaryConfig] = useState(false);
   const [showError, setShowError] = useState(false);
   const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data);
