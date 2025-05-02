@@ -55,6 +55,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
 //    cellHorizontalPadding: 3,
 
 })
+const localTheme: Theme = myTheme.withParams({});
 
 
 export interface DatasourceWrapper {
@@ -136,12 +137,13 @@ export function DFViewerInfinite({
         });
         return styledColumns;
     }, [df_viewer_config, summary_stats_data, activeCol]);
-    const defaultColDef = {
+    const defaultColDef = useMemo( () => {
+        return {
         sortable: true,
         type: "rightAligned",
         enableCellChangeFlash: false,
-        cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows),
-    };
+        cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
+    }, [df_viewer_config.pinned_rows]);
 
     //const gridRef = useRef<AgGridReact<unknown>>(null);
     const pinned_rows = df_viewer_config.pinned_rows;
@@ -197,14 +199,13 @@ export function DFViewerInfinite({
     } else if (data_wrapper.data_type === "DataSource") {
         const dsGridOptions = getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling );
 
-        const localTheme: Theme = myTheme.withParams({});
         
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
                 <pre>{error_info ? error_info : ""}</pre>
                 <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
                 <AgGridReact
-                    theme={localTheme}
+                    theme={myTheme}
                     loadThemeGoogleFonts
                     gridOptions={{
                         ...dsGridOptions,
@@ -249,7 +250,7 @@ const RowDataViewer = ({
                     loadThemeGoogleFonts
                     gridOptions={rdGridOptions}
                     pinnedTopRowData={topRowData}
-                    columnDefs={_.cloneDeep(rdGridOptions.columnDefs)}>
+                    columnDefs={rdGridOptions.columnDefs}>
                 </AgGridReact>
             </div>
         </div>
