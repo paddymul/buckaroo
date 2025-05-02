@@ -1,10 +1,15 @@
+import { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+export async function waitForCells(page: Page) {
+    await page.locator('.ag-overlay').first().waitFor({ state: 'hidden' });
+    await page.locator('.ag-cell').first().waitFor({ state: 'visible' });
+}
 
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
+test('has title', async ({ page }) => {
+    await page.goto('http://localhost:6006/iframe.html?viewMode=docs&id=buckaroo-dfviewer-dfviewerinfiniteshadow--docs&globals=')
+    
+    await waitForCells(page)
 });
 
 test('get started link', async ({ page }) => {
