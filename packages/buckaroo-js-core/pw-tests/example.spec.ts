@@ -42,13 +42,15 @@ test('has title', async ({ page }) => {
     setupCounter(page, RenderLogMsg)
 
   //await page.locator('.ag-header-cell-label').first().click();
-    await page.waitForTimeout(1000);
+//    await page.waitForTimeout(1000);
     await waitForGridReady(page);
     const rc = await getRowContents(page, 0);
     expect(rc).toStrictEqual(["20.00      ", "  20", "foo", "foo", ]);
     expect(logCounts[RenderLogMsg]).toBe(1);
 
     await page.getByRole('button', { name: 'Toggle Config' }).click();
+    //await page.waitForTimeout(1000);
     expect(logCounts[RenderLogMsg]).toBe(2);
-
+    const rc2 = await getRowContents(page, 0);
+    expect(rc2).toStrictEqual(["20.00      ", "  20", "foo", ]);
 });

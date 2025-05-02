@@ -169,7 +169,7 @@ export const Primary: Story = {
     // the undefineds aren't allowed in the type but do happen in the wild
     data: data,
     df_viewer_config: primaryConfigPrimary,
-    secondary_df_viewer_config:LargeConfig
+    secondary_df_viewer_config:IntFloatConfig
   },
 };
 
