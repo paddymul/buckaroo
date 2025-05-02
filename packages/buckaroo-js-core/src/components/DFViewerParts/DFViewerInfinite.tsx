@@ -176,7 +176,7 @@ export function DFViewerInfinite({
     
     if (data_wrapper.data_type === "Raw") {
         const rdGridOptions: GridOptions = {
-            ...(_.omit(gridOptions, ['columnDefs'])),
+            ...gridOptions,
             rowData: data_wrapper.data,
             suppressNoRowsOverlay: true,
             onFirstDataRendered: (_params) => {
@@ -194,8 +194,8 @@ export function DFViewerInfinite({
             />
         );
     } else if (data_wrapper.data_type === "DataSource") {
-        const dsGridOptions = _.omit(getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling),
-            ['columnDefs']);
+        const dsGridOptions = getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling );
+
         const localTheme: Theme = myTheme.withParams({});
         
         return (
