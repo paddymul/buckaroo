@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig, ColumnConfig } from "../components/DFViewerParts/DFWhole";
-import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
+import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 import { useState } from "react";
@@ -36,16 +36,12 @@ const DFViewerInfiniteWrap = ({
     df_viewer_config,
     secondary_df_viewer_config,
     summary_stats_data,
-    activeCol,
-    setActiveCol,
     outside_df_params,
 }: {
     data: any[];
     df_viewer_config: DFViewerConfig;
     secondary_df_viewer_config?: DFViewerConfig;
     summary_stats_data?: any[];
-    activeCol?: string;
-    setActiveCol?: SetColumFunc;
     outside_df_params?: any;
 }) => {
   //console.log("error_info", error_info);
@@ -54,6 +50,8 @@ const DFViewerInfiniteWrap = ({
   const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data);
   const activeConfig = useSecondaryConfig ? (secondary_df_viewer_config || df_viewer_config) : df_viewer_config;
   const currentError = showError ? "some error" : undefined;
+
+  const [activeCol, setActiveCol] = useState("b");
 
   return (
     <ShadowDomWrapper>

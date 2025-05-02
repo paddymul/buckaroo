@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
-import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
+import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 
 import "../style/dcf-npm.css"
 import { DFViewer } from "../components/DFViewerParts/DFViewerInfinite";
@@ -16,7 +16,7 @@ const DFViewerWrap = ({
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
     activeCol?: string;
-    setActiveCol?: SetColumFunc;
+    setActiveCol?: SetColumnFunc;
     // these are the parameters that could affect the table,
     // dfviewer doesn't need to understand them, but it does need to use
     // them as keys to get updated data

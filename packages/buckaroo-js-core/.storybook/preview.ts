@@ -1,4 +1,4 @@
-import './wdyr';
+//import './wdyr';
 import type { Preview } from '@storybook/react';
 
 const preview: Preview = {

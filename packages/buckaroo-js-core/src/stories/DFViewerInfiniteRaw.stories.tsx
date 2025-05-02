@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig } from "../components/DFViewerParts/DFWhole";
-import { SetColumFunc } from "../components/DFViewerParts/gridUtils";
+import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 import { DatasourceOrRaw, 
   rd } from "../components/DFViewerParts/DFViewerDataHelper";
 
@@ -18,7 +18,7 @@ const DFViewerInfiniteWrap = ({
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: any[];
     activeCol?: string;
-    setActiveCol?: SetColumFunc;
+    setActiveCol?: SetColumnFunc;
     outside_df_params?: any;
     error_info?: string;
 }) => {

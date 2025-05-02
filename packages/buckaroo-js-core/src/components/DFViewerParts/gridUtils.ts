@@ -38,11 +38,9 @@ import { colorSchemeDark, themeAlpine, Theme } from "@ag-grid-community/theming"
 // as implementations grow large or with many implmentations, they should move to separate files
 // like displayer
 
-export function addToColDef(
+export function getCellRendererorFormatter(
     dispArgs: DisplayerArgs,
-    //@ts-ignore
-    summary_stats_column: SDFMeasure,
-) {
+):ColDef {
     const formatter = getFormatterFromArgs(dispArgs);
     if (formatter !== undefined) {
         const colDefExtras: ColDef = { valueFormatter: formatter };
@@ -55,7 +53,8 @@ export function addToColDef(
             cellRenderer: getCellRenderer(crArgs),
         };
     }
-    return undefined;
+    //this is probably an error
+    return {};
 }
 
 
@@ -103,8 +102,8 @@ export function dfToAgrid(
             field: f.col_name,
             headerName: f.col_name,
             cellDataType: false,
-            cellStyle: {}, // necessary for colormapped columns to have a default
-            ...addToColDef(f.displayer_args, hdf[f.col_name]),
+            cellStyle: undefined, // necessary for colormapped columns to have a default
+            ...getCellRendererorFormatter(f.displayer_args),
             ...color_map_config,
             ...getTooltipParams(single_series_summary_df, f.tooltip_config),
             ...f.ag_grid_specs,
@@ -121,6 +120,7 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
     };
     return (params: ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
         if (params.node.rowPinned) {
+            
             const pk = _.get(params.node.data, "index");
             if (pk === undefined) {
                 return anyRenderer; // default renderer
@@ -228,57 +228,22 @@ export const getDs = (
     };
     return dsLoc;
 };
-export type SetColumFunc = (newCol: string) => void;
+export type SetColumnFunc = (newCol: string) => void;
 export type PossibleAutosizeStrategy = SizeColumnsToFitProvidedWidthStrategy |
     SizeColumnsToContentStrategy;
 
 export const getGridOptions = (
-    setActiveCol: SetColumFunc,
-    df_viewer_config: DFViewerConfig,
-    defaultColDef: ColDef,
     domLayout: DomLayoutType,
     autoSizeStrategy: PossibleAutosizeStrategy
 ): GridOptions => {
     const gridOptions: GridOptions = {
-        rowSelection: "single",
-
-        enableCellTextSelection: true,
-        onRowClicked: (event) => {
-            const sel = document.getSelection();
-            if (sel === null) {
-                return;
-            }
-            const range = document.createRange();
-            const el = event?.event?.target;
-            if (el === null || el === undefined) {
-                return;
-            }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            range.selectNodeContents(el);
-            sel.removeAllRanges();
-            sel.addRange(range);
-        },
-        tooltipShowDelay: 0,
-
         // defaultColDef needs to be specifically passed in as a prop to the component, not defined here,
         // otherwise updates aren't reactive
-        onCellClicked: (event) => {
-            const colName = event.column.getColId();
-            if (setActiveCol === undefined || colName === undefined) {
-                console.log("returning because setActiveCol is undefined");
-                return;
-            } else {
-                console.log("calling setActiveCol with", colName);
-                setActiveCol(colName);
-            }
-        },
-        defaultColDef,
-        //columnDefs,
+
+
         domLayout,
         autoSizeStrategy,
 
-        ...(df_viewer_config.extra_grid_config ? df_viewer_config.extra_grid_config : {}),
     };
     return gridOptions;
 };

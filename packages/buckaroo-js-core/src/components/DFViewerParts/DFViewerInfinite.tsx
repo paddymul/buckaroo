@@ -8,7 +8,6 @@ import _ from "lodash";
 import { DFData, DFDataRow, DFViewerConfig } from "./DFWhole";
 
 import { dfToAgrid, extractPinnedRows } from "./gridUtils";
-import { replaceAtMatch } from "../utils";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
 
 import { getCellRendererSelector } from "./gridUtils";
@@ -20,6 +19,7 @@ import {
     IDatasource,
     ModuleRegistry,
     SortChangedEvent,
+    CellClassParams
 } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import {
@@ -27,7 +27,7 @@ import {
     getGridOptions,
     getHeightStyle,
     HeightStyleI,
-    SetColumFunc
+    SetColumnFunc
 } from "./gridUtils";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
 import { themeAlpine} from '@ag-grid-community/theming';
@@ -71,6 +71,45 @@ export interface RawDataWrapper {
 
 export type DatasourceOrRaw = DatasourceWrapper | RawDataWrapper;
 
+const staticGridOptions:GridOptions = {
+    rowSelection: "single",
+    enableCellTextSelection: true,
+    tooltipShowDelay: 0,
+    onRowClicked: (event) => {
+        const sel = document.getSelection();
+        if (sel === null) {
+            return;
+        }
+        const range = document.createRange();
+        const el = event?.event?.target;
+        if (el === null || el === undefined) {
+            return;
+        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    },
+};
+
+/* these are gridOptions that should be fairly constant */
+const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOptions):GridOptions => {
+    return {
+        ...staticGridOptions,
+        ...(extra_grid_config ? extra_grid_config : {}),
+        onCellClicked: (event) => {
+            const colName = event.column.getColId();
+            if (setActiveCol === undefined || colName === undefined) {
+                console.log("returning because setActiveCol is undefined");
+                return;
+            } else {
+                console.log("calling setActiveCol with", colName);
+                setActiveCol(colName);
+            }
+        },
+    }
+};
 export function DFViewerInfinite({
     data_wrapper,
     df_viewer_config,
@@ -84,7 +123,7 @@ export function DFViewerInfinite({
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
     activeCol?: string;
-    setActiveCol?: SetColumFunc;
+    setActiveCol: SetColumnFunc;
     // these are the parameters that could affect the table,
     // dfviewer doesn't need to understand them, but it does need to use
     // them as keys to get updated data
@@ -127,23 +166,33 @@ export function DFViewerInfinite({
     }, [data_wrapper, df_viewer_config, summary_stats_data, activeCol, outside_df_params, error_info]);
 
     const styledColumns = useMemo(() => {
-        const agColsPure = dfToAgrid(df_viewer_config, summary_stats_data || []);
-        const selectBackground =
-            df_viewer_config?.component_config?.selectionBackground ||
-            "var(--ag-range-selection-background-color-3)";
-        const styledColumns = replaceAtMatch(_.clone(agColsPure), activeCol || "___never", {
-            cellStyle: { background: selectBackground },
-        });
-        return styledColumns;
-    }, [df_viewer_config, summary_stats_data, activeCol]);
+        return dfToAgrid(df_viewer_config, summary_stats_data || []);
+    }, [df_viewer_config, summary_stats_data]);
+    const selectBackground =  df_viewer_config?.component_config?.selectionBackground ||  "var(--ag-range-selection-background-color-3)";
+
     const defaultColDef = useMemo( () => {
         return {
-        sortable: true,
-        type: "rightAligned",
-        enableCellChangeFlash: false,
-        cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
-    }, [df_viewer_config.pinned_rows]);
+            sortable: true,
+            type: "rightAligned",
+            cellStyle: (params:CellClassParams) => {
+                const colDef = params.column.getColDef();
+                const field = colDef.field;
+                const activeCol = params.context?.activeCol;
+                ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
+                if(activeCol  === field) {
+                    //return {background:selectBackground}
+                    return {background:"green"}
 
+                }
+                return {background:"red"}
+            },
+            enableCellChangeFlash: false,
+            cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
+    }, [df_viewer_config.pinned_rows]);
+    const extra_context = {
+        activeCol,
+        pinned_rows_config:df_viewer_config.pinned_rows
+    }
     //const gridRef = useRef<AgGridReact<unknown>>(null);
     const pinned_rows = df_viewer_config.pinned_rows;
     const topRowData = (
@@ -164,13 +213,10 @@ export function DFViewerInfinite({
     );
 
     const gridOptions: GridOptions = {
+        ...outerGridOptions(setActiveCol, df_viewer_config.extra_grid_config),
         ...getGridOptions(
-            setActiveCol as SetColumFunc,
-            df_viewer_config,
-            defaultColDef,
             hs.domLayout,
             getAutoSize(styledColumns.length),
-
         ),
         onFirstDataRendered: (_params) => {
             console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
@@ -190,11 +236,11 @@ export function DFViewerInfinite({
                     theme={myTheme}
                     loadThemeGoogleFonts
                     gridOptions={finalGridOptions}
-
+                    defaultColDef={defaultColDef}
                     datasource={datasource}
                     pinnedTopRowData={topRowData}
                     columnDefs={styledColumns}
-                    context={{ outside_df_params }}
+                    context={{ outside_df_params, ...extra_context }}
 
 
                 ></AgGridReact>
@@ -266,8 +312,13 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
     activeCol?: string;
-    setActiveCol?: SetColumFunc;
+    setActiveCol?: SetColumnFunc;
 }) {
+    const defaultSetColumnFunc = (newCol:string):void => {
+        console.log("defaultSetColumnFunc", newCol)
+    }
+    const sac:SetColumnFunc = setActiveCol || defaultSetColumnFunc;
+    
     return (
         <DFViewerInfinite
             data_wrapper={{
@@ -278,7 +329,7 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
             df_viewer_config={df_viewer_config}
             summary_stats_data={summary_stats_data}
             activeCol={activeCol}
-            setActiveCol={setActiveCol} />
+            setActiveCol={sac} />
     );
 }
 
