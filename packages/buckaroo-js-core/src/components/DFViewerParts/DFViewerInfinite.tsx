@@ -5,9 +5,9 @@ import {
     useRef,
 } from "react";
 import _ from "lodash";
-import { DFData, DFDataRow, DFViewerConfig, SDFT, ColumnConfig } from "./DFWhole";
+import { DFData, DFDataRow, DFViewerConfig, SDFT } from "./DFWhole";
 
-import { dfToAgrid, extractPinnedRows, extractSDFT, extractSingleSeriesSummary } from "./gridUtils";
+import { dfToAgrid, extractPinnedRows, extractSDFT } from "./gridUtils";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
 
 import { getCellRendererSelector } from "./gridUtils";
@@ -20,7 +20,6 @@ import {
     ModuleRegistry,
     SortChangedEvent,
     CellClassParams,
-    ColDef
 } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import {

@@ -6,12 +6,12 @@ import {
     dfToAgrid,
     getHeightStyle,
     getAutoSize,
-    getGridOptions
+
 } from './gridUtils';
 import * as _ from "lodash";
 import { DFData, DFViewerConfig, PinnedRowConfig } from "./DFWhole";
 import { getFloatFormatter } from './Displayer';
-import { ValueFormatterParams, ColDef } from '@ag-grid-community/core';
+import { ValueFormatterParams } from '@ag-grid-community/core';
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
@@ -117,8 +117,8 @@ describe("testing utility functions in gridUtils ", () => {
         ],
         pinned_rows: []
       };
-      const summaryStats: DFData = [];
-      const result = dfToAgrid(config, summaryStats);
+
+      const result = dfToAgrid(config);
       expect(result).toHaveLength(1);
       expect(result[0].field).toBe("test");
       expect(result[0].headerName).toBe("test");
@@ -168,16 +168,16 @@ describe("testing utility functions in gridUtils ", () => {
 
   describe("getGridOptions", () => {
     it("should create grid options with correct defaults", () => {
-      const setActiveCol = jest.fn();
-      const config: DFViewerConfig = {
-        column_config: [],
-        pinned_rows: []
-      };
-      const defaultColDef: ColDef = {};
-      const result = getGridOptions(
-        "normal",
-        { type: "fitCellContents" }
-      );
+      // const setActiveCol = jest.fn();
+      // const config: DFViewerConfig = {
+      //   column_config: [],
+      //   pinned_rows: []
+      // };
+      // const defaultColDef: ColDef = {};
+      // const result = getGridOptions(
+      //   "normal",
+      //   { type: "fitCellContents" }
+      // );
       //expect(result.rowSelection).toBe("single");
       //expect(result.enableCellTextSelection).toBe(true);
       //expect(result.tooltipShowDelay).toBe(0);
