@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 
@@ -24,6 +25,10 @@ const DFViewerWrap = ({
     error_info?: string;
 }) => {
 
+  if(setActiveCol === undefined) {
+    //@ts-ignore
+    let [activeCol, setActiveCol] = useState('b');
+  }
   return (
      <div style={{height:500, width:800}}>
       <DFViewer

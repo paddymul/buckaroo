@@ -22,17 +22,22 @@ const DFViewerInfiniteWrap = ({
     outside_df_params?: any;
     error_info?: string;
 }) => {
+  const defaultSetColumnFunc = (newCol:string):void => {
+    console.log("defaultSetColumnFunc", newCol)
+  }
+  const sac:SetColumnFunc = setActiveCol || defaultSetColumnFunc;
+
 
   return (
      <div style={{height:500, width:800}}>
       <DFViewerInfinite
-      data_wrapper={data_wrapper}
-      df_viewer_config={df_viewer_config}
-      summary_stats_data={summary_stats_data}
-      activeCol={activeCol}
-      setActiveCol={setActiveCol}
-      outside_df_params={outside_df_params}
-      error_info={error_info} />
+        data_wrapper={data_wrapper}
+        df_viewer_config={df_viewer_config}
+        summary_stats_data={summary_stats_data}
+        activeCol={activeCol}
+        setActiveCol={sac}
+        outside_df_params={outside_df_params}
+        error_info={error_info} />
      </div>);
 }
 
