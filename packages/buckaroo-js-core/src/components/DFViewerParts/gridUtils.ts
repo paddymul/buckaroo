@@ -83,16 +83,15 @@ export function extractSingleSeriesSummary(
 
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
-    full_summary_stats_df: DFData,
 ): ColDef[] {
     //more convienient df format for some formatters
     //const hdf = extractSDFT(full_summary_stats_df || []);
 
     const retColumns: ColDef[] = dfviewer_config.column_config.map((f: ColumnConfig) => {
-        const single_series_summary_df = extractSingleSeriesSummary(
-            full_summary_stats_df,
-            f.col_name,
-        );
+        // const single_series_summary_df = extractSingleSeriesSummary(
+        //     full_summary_stats_df,
+        //     f.col_name,
+        // );
 
         const color_map_config = f.color_map_config
             ? getStyler(f.color_map_config) : {};
@@ -104,7 +103,7 @@ export function dfToAgrid(
             cellStyle: undefined, // necessary for colormapped columns to have a default
             ...getCellRendererorFormatter(f.displayer_args),
             ...color_map_config,
-            ...getTooltipParams(single_series_summary_df, f.tooltip_config),
+            ...getTooltipParams(f.tooltip_config),
             ...f.ag_grid_specs,
         };
         return colDef;

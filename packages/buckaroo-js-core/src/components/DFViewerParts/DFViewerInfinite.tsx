@@ -167,7 +167,7 @@ export function DFViewerInfinite({
     }, [data_wrapper, df_viewer_config, summary_stats_data, activeCol, outside_df_params, error_info]);
 
     const styledColumns = useMemo(() => {
-        return dfToAgrid(df_viewer_config, summary_stats_data || []);
+        return dfToAgrid(df_viewer_config);
     }, [df_viewer_config, summary_stats_data]);
     //const selectBackground =  df_viewer_config?.component_config?.selectionBackground ||  "var(--ag-range-selection-background-color-3)";
 
