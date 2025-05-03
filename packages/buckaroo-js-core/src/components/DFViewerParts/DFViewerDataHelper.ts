@@ -113,6 +113,14 @@ export const HistogramSummaryStats:DFData = [{
       { 'name': 2, 'cat_pop': 21.0 },
       { 'name': 3, 'cat_pop': 21.0 },
       { 'name': 4, 'cat_pop': 20.0 }]
-    }]
+    },
+    {
+    index: 'histogram_bins',
+    //hand entered for a, not completely accurate
+    a: [ 2., 21.5, 41., 60.5, 80., 99.5, 119., 138.5, 158, 177.5, 197 ],
+    b: [ 2, 4, 6, 7, 9, 11, 13, 15, 16, 18, 21],
+    c: [ 2, 7, 11, 16, 21, 26, 30, 35, 40, 44, 50]
+    }
+  ]
 
     
