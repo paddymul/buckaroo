@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig, ColumnConfig } from "../components/DFViewerParts/DFWhole";
-import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
+//import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 import { useState } from "react";
@@ -189,10 +189,46 @@ export const PinnedRows: Story = {
     df_viewer_config: PinnedRowConfig,
     secondary_df_viewer_config: IntFloatConfig,
     summary_stats_data: HistogramSummaryStats
-
   }
 }
 
+export const ColorMapExample: Story = {
+
+  args: {
+    data: [
+      {a:50,  b:5,   c: 8},
+      {a:70,  b:10,  c: 3},
+      {a:300, b:3,   c:42},
+      {a:200, b:19,  c:20},
+    ],
+    df_viewer_config: {
+      column_config: [
+        {col_name:'a', 
+          displayer_args: { displayer:'obj' },
+            color_map_config: {
+                color_rule: "color_map",
+                map_name: "BLUE_TO_YELLOW",
+                val_column: "b"
+        }},
+        {col_name:'b', 
+          displayer_args: { displayer:'obj' },
+            color_map_config: {
+                color_rule: "color_map",
+                map_name: "BLUE_TO_YELLOW",
+                val_column: "c"
+        }},
+        floatColumn('c', 1,4)
+      ],
+
+      pinned_rows: [{
+        'primary_key_val': 'histogram',
+        'displayer_args': { 'displayer': 'histogram' }
+      }]
+    },
+    summary_stats_data: HistogramSummaryStats
+
+  }
+}
 
 
 const MEDIUM= 300;
