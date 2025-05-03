@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { Page } from '@playwright/test';
-import {waitForCells, getRowContents, getRowCount } from './ag-pw-utils';
+import {waitForCells, getRowContents, getRowCount, getCellLocator } from './ag-pw-utils';
 const waitForLog = async (page, expectedLog) => {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     const handler = (msg) => {
       if (msg.text().includes(expectedLog)) {
         page.off('console', handler);
@@ -63,3 +63,17 @@ test('DFVIewerInfinite Raw works', async ({ page }) => {
     expect(rc).toStrictEqual(["20.00", "20", "foo", ]);
     expect(logCounts[RenderLogMsg]).toBe(1);
 });
+
+test('test color_map works', async ({ page }) => {
+    await page.goto('http://localhost:6006/iframe.html?viewMode=story&id=buckaroo-dfviewer-dfviewerinfiniteshadow--color-map-example&globals=&args=')
+    await waitForGridReady(page);
+    const el200 = await page.getByText('200');
+    const cell = await getCellLocator(page, 'a', 2);
+    const innerTexts = await cell.allInnerTexts();
+    expect(innerTexts).toStrictEqual(["300"]);
+    
+  const color = await cell.evaluate((element) =>
+    window.getComputedStyle(element).getPropertyValue("background-color")
+  );
+  expect(color).toBe("rgb(83, 143, 239)")
+})
