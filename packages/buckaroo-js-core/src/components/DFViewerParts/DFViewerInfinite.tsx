@@ -191,22 +191,10 @@ export function DFViewerInfinite({
             cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
     }, [df_viewer_config.pinned_rows]);
     const histogram_stats:SDFT = extractSDFT(summary_stats_data||[]);
-    /*
-    const tempPairs = df_viewer_config.column_config.map((f: ColumnConfig) => {
-        const singleSeriesSummary = extractSingleSeriesSummary(
-            summary_stats_data || [],
-            f.col_name,
-        )
-        console.log("200 singleSeriesSummary", f.col_name, singleSeriesSummary)
-        return [f.col_name, singleSeriesSummary ];})
-    const col_to_single_series_summary = _.fromPairs(tempPairs);
-    */
-
 
     const extra_context = {
         activeCol,
         histogram_stats,
-        //col_to_single_series_summary,
         pinned_rows_config:df_viewer_config.pinned_rows
     }
     //const gridRef = useRef<AgGridReact<unknown>>(null);

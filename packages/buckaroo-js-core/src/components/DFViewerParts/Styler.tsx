@@ -72,14 +72,6 @@ export function colorMap(cmr: ColorMapRules) {
             return baseReturn
         }
         const histogram_edges = summary_stats_cell.histogram_bins;
-        /*
-        if (summary_stats_cell && summary_stats_cell.histogram_bins !== undefined) {
-            return colorMap(cmr, summary_stats_cell.histogram_bins);
-        } else {
-            console.log("histogram bins not found for color_map");
-            return {};
-        }
-        */
 
 
         function numberToColor(val: number) {
