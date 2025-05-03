@@ -65,6 +65,12 @@ test('DFVIewerInfinite Raw works', async ({ page }) => {
 });
 
 test('test color_map works', async ({ page }) => {
+    /*
+      color maps are complex, depending on summary_stats histogram_bins.   and compelx rendering setups.
+
+      
+
+      */
     await page.goto('http://localhost:6006/iframe.html?viewMode=story&id=buckaroo-dfviewer-dfviewerinfiniteshadow--color-map-example&globals=&args=')
     await waitForGridReady(page);
     const el200 = await page.getByText('200');
