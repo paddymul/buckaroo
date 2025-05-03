@@ -5,9 +5,9 @@ import {
     useRef,
 } from "react";
 import _ from "lodash";
-import { DFData, DFDataRow, DFViewerConfig } from "./DFWhole";
+import { DFData, DFDataRow, DFViewerConfig, SDFT, ColumnConfig } from "./DFWhole";
 
-import { dfToAgrid, extractPinnedRows } from "./gridUtils";
+import { dfToAgrid, extractPinnedRows, extractSDFT, extractSingleSeriesSummary } from "./gridUtils";
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
 
 import { getCellRendererSelector } from "./gridUtils";
@@ -19,7 +19,8 @@ import {
     IDatasource,
     ModuleRegistry,
     SortChangedEvent,
-    CellClassParams
+    CellClassParams,
+    ColDef
 } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import {
@@ -189,8 +190,23 @@ export function DFViewerInfinite({
             enableCellChangeFlash: false,
             cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
     }, [df_viewer_config.pinned_rows]);
+    const histogram_stats:SDFT = extractSDFT(summary_stats_data||[]);
+    /*
+    const tempPairs = df_viewer_config.column_config.map((f: ColumnConfig) => {
+        const singleSeriesSummary = extractSingleSeriesSummary(
+            summary_stats_data || [],
+            f.col_name,
+        )
+        console.log("200 singleSeriesSummary", f.col_name, singleSeriesSummary)
+        return [f.col_name, singleSeriesSummary ];})
+    const col_to_single_series_summary = _.fromPairs(tempPairs);
+    */
+
+
     const extra_context = {
         activeCol,
+        histogram_stats,
+        //col_to_single_series_summary,
         pinned_rows_config:df_viewer_config.pinned_rows
     }
     //const gridRef = useRef<AgGridReact<unknown>>(null);
@@ -226,7 +242,7 @@ export function DFViewerInfinite({
         getRowId,
         rowModelType: "clientSide",
     };
-   
+
         const [finalGridOptions, datasource] = getFinalGridOptions(data_wrapper, gridOptions, hs);
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>

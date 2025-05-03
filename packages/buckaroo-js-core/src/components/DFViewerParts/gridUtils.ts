@@ -86,7 +86,7 @@ export function dfToAgrid(
     full_summary_stats_df: DFData,
 ): ColDef[] {
     //more convienient df format for some formatters
-    const hdf = extractSDFT(full_summary_stats_df || []);
+    //const hdf = extractSDFT(full_summary_stats_df || []);
 
     const retColumns: ColDef[] = dfviewer_config.column_config.map((f: ColumnConfig) => {
         const single_series_summary_df = extractSingleSeriesSummary(
@@ -95,8 +95,7 @@ export function dfToAgrid(
         );
 
         const color_map_config = f.color_map_config
-            ? getStyler(f.color_map_config, f.col_name, hdf)
-            : {};
+            ? getStyler(f.color_map_config) : {};
 
         const colDef: ColDef = {
             field: f.col_name,
@@ -239,11 +238,8 @@ export const getGridOptions = (
     const gridOptions: GridOptions = {
         // defaultColDef needs to be specifically passed in as a prop to the component, not defined here,
         // otherwise updates aren't reactive
-
-
         domLayout,
         autoSizeStrategy,
-
     };
     return gridOptions;
 };
