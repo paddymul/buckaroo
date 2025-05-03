@@ -269,6 +269,28 @@ export const getHeightStyle = (df_viewer_config: DFViewerConfig, numRows: number
     });
     return hs;
 };
+
+export const getHeightStyle2 = (
+    maxDataPinnedRows:number, // the maximum number of pinned rows across configs with data (not summary_stats which has no data)
+    maxRows:number, // the maximum of pinned rows across configs or total_rows
+    component_config?: ComponentConfig, //Very rarely set
+    rowHeight?:number //very rarely set
+): HeightStyleI => {
+    /*
+    rewritten for better caching
+    */
+    const hs = heightStyle({
+        numRows: maxRows,
+        pinnedRowLen: maxDataPinnedRows,
+        location: window.location,
+        compC: component_config,
+        rowHeight: rowHeight,
+    });
+    return hs;
+};
+
+
+
 const inVSCcode = () => {
     // vscIPYWidgets will be present on window when rendered in VSCode
     //@ts-ignore

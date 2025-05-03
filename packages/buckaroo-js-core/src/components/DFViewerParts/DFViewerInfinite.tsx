@@ -1,8 +1,8 @@
 import {
     useCallback,
     useMemo,
-    useEffect,
-    useRef,
+//    useEffect,
+//    useRef,
 } from "react";
 import _ from "lodash";
 import { DFData, DFDataRow, DFViewerConfig, SDFT } from "./DFWhole";
@@ -25,7 +25,7 @@ import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-mod
 import {
     getAutoSize,
     getGridOptions,
-    getHeightStyle,
+    getHeightStyle2,
     HeightStyleI,
     SetColumnFunc
 } from "./gridUtils";
@@ -130,9 +130,64 @@ export function DFViewerInfinite({
     outside_df_params?: any;
     error_info?: string;
 }) {
-    const renderStartTime = useRef<number>(Date.now());
+    /*
+    The idea is to do some pre-setup here for 
+    */
+    const renderStartTime = useMemo(() => Date.now(), []);
+    const totalRows=5;
+
+    const hs:HeightStyleI = useMemo(() => {
+        return getHeightStyle2(
+            2,
+            totalRows,
+            df_viewer_config?.component_config,
+            df_viewer_config?.extra_grid_config?.rowHeight
+        )}, [
+            df_viewer_config?.component_config,
+            df_viewer_config?.extra_grid_config?.rowHeight]
+    );
+
+    return <DFViewerInfiniteInner
+                data_wrapper={data_wrapper}
+                df_viewer_config={df_viewer_config}
+                summary_stats_data={summary_stats_data||[]}
+                activeCol={activeCol||""}
+                setActiveCol={setActiveCol}
+                outside_df_params={outside_df_params}
+                error_info={error_info}
+                renderStartTime={renderStartTime}
+                hs={hs}
+                />
+}
+export function DFViewerInfiniteInner({
+    data_wrapper,
+    df_viewer_config,
+    summary_stats_data,
+    activeCol,
+    setActiveCol,
+    outside_df_params,
+    error_info,
+    renderStartTime,
+    hs
+}: {
+    data_wrapper: DatasourceOrRaw;
+    df_viewer_config: DFViewerConfig;
+    summary_stats_data: DFData;
+    activeCol: string;
+    setActiveCol: SetColumnFunc;
+    // these are the parameters that could affect the table,
+    // dfviewer doesn't need to understand them, but it does need to use
+    // them as keys to get updated data
+    outside_df_params?: any;
+    error_info?: string;
+    renderStartTime:any;
+    hs:HeightStyleI
+}) {
+
+
+    /*
     const lastProps = useRef<any>(null);
-    
+
     useEffect(() => {
         const now = Date.now();
         const timeSinceLastRender = now - renderStartTime.current;
@@ -164,11 +219,10 @@ export function DFViewerInfinite({
         
         renderStartTime.current = now;
     }, [data_wrapper, df_viewer_config, summary_stats_data, activeCol, outside_df_params, error_info]);
-
+    */
     const styledColumns = useMemo(() => {
         return dfToAgrid(df_viewer_config);
-    }, [df_viewer_config, summary_stats_data]);
-    //const selectBackground =  df_viewer_config?.component_config?.selectionBackground ||  "var(--ag-range-selection-background-color-3)";
+    }, [df_viewer_config]);
 
     const defaultColDef = useMemo( () => {
         return {
@@ -189,7 +243,7 @@ export function DFViewerInfinite({
             enableCellChangeFlash: false,
             cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
     }, [df_viewer_config.pinned_rows]);
-    const histogram_stats:SDFT = extractSDFT(summary_stats_data||[]);
+    const histogram_stats:SDFT = extractSDFT(summary_stats_data);
 
     const extra_context = {
         activeCol,
@@ -198,13 +252,8 @@ export function DFViewerInfinite({
     }
     //const gridRef = useRef<AgGridReact<unknown>>(null);
     const pinned_rows = df_viewer_config.pinned_rows;
-    const topRowData = (
-        summary_stats_data
-            ? extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : [])
-            : []
-    ) as DFDataRow[];
+    const topRowData = extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
 
-    const hs = getHeightStyle(df_viewer_config, data_wrapper.length);
 
     const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
     const getRowId = useCallback(
@@ -215,7 +264,9 @@ export function DFViewerInfinite({
         [outside_df_params],
     );
 
-    const gridOptions: GridOptions = {
+    const gridOptions: GridOptions = useMemo( () => {
+        console.log("gridOptions 268");
+        return {
         ...outerGridOptions(setActiveCol, df_viewer_config.extra_grid_config),
         ...getGridOptions(
             hs.domLayout,
@@ -223,18 +274,25 @@ export function DFViewerInfinite({
         ),
         onFirstDataRendered: (_params) => {
             console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
-            console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime.current}ms`);
+            console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime}ms`);
         },
         columnDefs:styledColumns,
         getRowId,
-        rowModelType: "clientSide",
-    };
+        rowModelType: "clientSide"}
 
-        const [finalGridOptions, datasource] = getFinalGridOptions(data_wrapper, gridOptions, hs);
+    }, [styledColumns.length, JSON.stringify(styledColumns), hs, df_viewer_config.extra_grid_config, setActiveCol ]);
+
+        const [finalGridOptions, datasource] = useMemo( () => {
+            console.log("gridOptions 287");
+            return getFinalGridOptions(data_wrapper, gridOptions, hs);},
+            [data_wrapper, gridOptions, hs]);
         return (
             <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
                 <pre>{error_info ? error_info : ""}</pre>
-                <div style={hs.applicableStyle} className={`theme-hanger ${divClass}`}>
+                <div style={{...hs.applicableStyle,
+                border:"3px solid green"
+                }}
+                 className={`theme-hanger ${divClass}`}>
                 <AgGridReact
                     theme={myTheme}
                     loadThemeGoogleFonts
@@ -250,9 +308,9 @@ export function DFViewerInfinite({
                 </div>
             </div>
         );
-        return <div>Error</div>;
 
 }
+
 // used to make sure there is a different element returned when
 // Raw is used, so the component properly swaps over.
 // Otherwise pinnedRows appear above the last scrolled position
