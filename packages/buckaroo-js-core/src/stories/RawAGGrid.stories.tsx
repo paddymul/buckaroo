@@ -60,29 +60,17 @@ const ControlsWrapper = (
     {colDefs:Record<string, ColDef[]>,
      data:Record<string, DFData>}
     ) => {
-    const [useSecondaryConfig, setUseSecondaryConfig] = useState(false);
-    const [showError, setShowError] = useState(false);
+
     // New state for selects
     const colDefKeys = Object.keys(colDefs);
     const dataKeys = Object.keys(data);
     const [activeColDefKey, setActiveColDefKey] = useState(colDefKeys[0] || '');
     const [activeDataKey, setActiveDataKey] = useState(dataKeys[0] || '');
-    const errString = showError ? 'Error' : 'No Error';
+
 
     return (
         <div style={{ height: 500, width: 800 }}> 
-            <button
-              onClick={() => setUseSecondaryConfig(!useSecondaryConfig)}
-            >
-              Toggle Config
-            </button>
-            <span>Current Config: {useSecondaryConfig ? 'Secondary' : 'Primary'}</span>
-            <button
-              onClick={() => setShowError(!showError)}
-            >
-              Toggle Error
-            </button>
-            <span>Error State: {errString}</span>
+  
             
             <SelectBox
               label="ColDef"

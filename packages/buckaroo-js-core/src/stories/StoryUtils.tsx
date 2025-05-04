@@ -49,9 +49,17 @@ type SelectBoxProps<T extends string> = {
 };
 
 export const SelectBox = <T extends string>({ label, options, value, onChange }: SelectBoxProps<T>) => {
+  const handleLabelClick = () => {
+    const currentIndex = options.indexOf(value);
+    const nextIndex = (currentIndex + 1) % options.length;
+    onChange(options[nextIndex]);
+  };
+
   return (
     <label style={{ margin: '0 10px' }}>
-      {label}:
+      <span onClick={handleLabelClick} style={{ cursor: 'pointer' }}>
+        {label}:
+      </span>
       <select 
         value={value} 
         onChange={(e) => onChange(e.target.value as T)}
