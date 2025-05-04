@@ -23,12 +23,18 @@ export const createRawDataWrapper = (data: any[]): RawDataWrapper => ({
   data_type: 'Raw'
 });
 
-export const createDatasourceWrapper = (data: DFData): DatasourceWrapper => {
+export const createDatasourceWrapper = (data: DFData, delay_in_milliseconds: number = 0): DatasourceWrapper => {
   const tempDataSource: IDatasource = {
     rowCount: data.length,
     getRows(params: IGetRowsParams) {
       const slicedData = data.slice(params.startRow, params.endRow);
-      params.successCallback(slicedData, data.length);
+      if (delay_in_milliseconds > 0) {
+        setTimeout(() => {
+          params.successCallback(slicedData, data.length);
+        }, delay_in_milliseconds);
+      } else {
+        params.successCallback(slicedData, data.length);
+      }
     }
   };
 

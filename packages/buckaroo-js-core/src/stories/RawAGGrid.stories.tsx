@@ -1,6 +1,8 @@
-import {useState } from "react";
+import {useState, useMemo } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFData } from "../components/DFViewerParts/DFWhole";
+import { createDatasourceWrapper, DatasourceWrapper } from "../components/DFViewerParts/DFViewerDataHelper";
+
 import {SelectBox } from './StoryUtils'
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
 import {
@@ -9,6 +11,7 @@ import {
     ModuleRegistry,
     ColDef
 } from "@ag-grid-community/core";
+
 import { themeAlpine} from '@ag-grid-community/theming';
 import { colorSchemeDark } from '@ag-grid-community/theming';
 
@@ -37,8 +40,8 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
 
 })
 const SubComponent = (
-    { colDefs, data } :
-    { colDefs:ColDef[], data:DFData}
+    { colDefs, data, datasource } :
+    { colDefs:ColDef[], data:DFData, datasource:DatasourceWrapper}
 ) => {
     //@ts-ignore
     console.log("SubComponent, rendered", (new Date())-1)
@@ -67,6 +70,10 @@ const ControlsWrapper = (
     const [activeColDefKey, setActiveColDefKey] = useState(colDefKeys[0] || '');
     const [activeDataKey, setActiveDataKey] = useState(dataKeys[0] || '');
 
+    const dataSource = useMemo(()=> {
+        console.log("memo call to createDataSourceWrapper")
+        return createDatasourceWrapper(data[activeDataKey], 5_000)},
+    [activeDataKey]);
 
     return (
         <div style={{ height: 500, width: 800 }}> 
@@ -86,7 +93,9 @@ const ControlsWrapper = (
               onChange={setActiveDataKey}
             />
             
-            <SubComponent colDefs={colDefs[activeColDefKey]} data={data[activeDataKey]} />
+            <SubComponent colDefs={colDefs[activeColDefKey]} data={data[activeDataKey]}
+                          datasource={dataSource}
+             />
           </div>);
 }
 
@@ -142,7 +151,17 @@ const config2:ColDef[] = [
 export const Default: Story = {
     args: {
         colDefs:{colormapconfig: config1, IntFloatConfig:config2 },
-        data: {'simple':[
+        data: {simple:[
+            {a:50,  b:5,   c: 8},
+            {a:70,  b:10,  c: 3},
+            {a:300, b:3,   c:42},
+            {a:200, b:19,  c:20},
+          ],
+          double: [
+            {a:50,  b:5,   c: 8},
+            {a:70,  b:10,  c: 3},
+            {a:300, b:3,   c:42},
+            {a:200, b:19,  c:20},
             {a:50,  b:5,   c: 8},
             {a:70,  b:10,  c: 3},
             {a:300, b:3,   c:42},
