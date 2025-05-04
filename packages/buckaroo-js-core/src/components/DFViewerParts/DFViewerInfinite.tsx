@@ -133,26 +133,37 @@ export function DFViewerInfinite({
     /*
     The idea is to do some pre-setup here for 
     */
-    const renderStartTime = useMemo(() => Date.now(), []);
+    const renderStartTime = useMemo(() => {
+        //console.log("137renderStartTime");
+        return Date.now();
+    } , []);
     const totalRows=5;
 
+    const compConfig =  df_viewer_config?.component_config;
+    const rh = df_viewer_config?.extra_grid_config?.rowHeight;
+
+    const hsCacheKey = JSON.stringify([totalRows,
+        compConfig,
+        rh]);
+    //console.log("hsCacheKey", hsCacheKey);
     const hs:HeightStyleI = useMemo(() => {
         return getHeightStyle2(
             2,
             totalRows,
             df_viewer_config?.component_config,
             df_viewer_config?.extra_grid_config?.rowHeight
-        )}, [
-            df_viewer_config?.component_config,
-            df_viewer_config?.extra_grid_config?.rowHeight]
+        )}, [hsCacheKey]
     );
     const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
-
-
+    const finalStyle = useMemo( () => {
+        //console.log("final style")
+        return { ...hs.applicableStyle, border: "3px solid green", overflow: "hidden" }
+    }, [JSON.stringify(hs.applicableStyle)])
+    console.log("151 applicableStyle", hs.applicableStyle);
     return (
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-            <pre>{error_info ? error_info : ""}</pre>
-            <div style={{ ...hs.applicableStyle, border: "3px solid green", overflow: "hidden" }}
+            <pre>{error_info ? error_info : "_"}</pre>
+            <div style={finalStyle}
                 className={`theme-hanger ${divClass}`}>
                 <DFViewerInfiniteInner
                     data_wrapper={data_wrapper}
@@ -270,7 +281,6 @@ export function DFViewerInfiniteInner({
     );
 
     const gridOptions: GridOptions = useMemo( () => {
-        console.log("gridOptions 268");
         return {
         ...outerGridOptions(setActiveCol, df_viewer_config.extra_grid_config),
         ...getGridOptions(
@@ -288,7 +298,6 @@ export function DFViewerInfiniteInner({
     }, [styledColumns.length, JSON.stringify(styledColumns), hs, df_viewer_config.extra_grid_config, setActiveCol ]);
 
         const [finalGridOptions, datasource] = useMemo( () => {
-            console.log("gridOptions 287");
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
         return (

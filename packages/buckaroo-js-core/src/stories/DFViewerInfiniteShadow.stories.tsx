@@ -174,14 +174,17 @@ const primaryConfigPrimary:DFViewerConfig = {
       'displayer_args': { 'displayer': 'histogram' }
     }]
   };
-  const IntFloatConfig:DFViewerConfig =  {
+const IntFloatConfig:DFViewerConfig =  {
     column_config: [
     floatColumn('a', 2, 8),
     integerColumn('a', 2, 3),
     objColumn('b'),
   ],
-  pinned_rows:[],
-  component_config: {dfvHeight:200}
+  pinned_rows:[{
+    'primary_key_val': 'histogram',
+    'displayer_args': { 'displayer': 'histogram' }
+  }],
+  //component_config: {dfvHeight:200}
 };
 
 export const Primary: Story = {
