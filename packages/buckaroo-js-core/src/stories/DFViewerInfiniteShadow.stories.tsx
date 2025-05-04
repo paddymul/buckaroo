@@ -32,6 +32,30 @@ const integerColumn = (col_name: string, min_digits: number, max_digits: number)
 });
 
 const DFViewerInfiniteWrap = ({
+  data,
+  df_viewer_config,
+  secondary_df_viewer_config,
+  summary_stats_data,
+  outside_df_params,
+}: {
+  data: any[];
+  df_viewer_config: DFViewerConfig;
+  secondary_df_viewer_config?: DFViewerConfig;
+  summary_stats_data?: any[];
+  outside_df_params?: any;
+}) => {
+
+  return (<ShadowDomWrapper> 
+    <DFViewerInfiniteWrapInner
+              data={data}
+              df_viewer_config={df_viewer_config}
+              secondary_df_viewer_config={secondary_df_viewer_config}
+              summary_stats_data={summary_stats_data}
+              outside_df_params={outside_df_params}
+               />
+  </ShadowDomWrapper>);
+}
+const DFViewerInfiniteWrapInner = ({
     data,
     df_viewer_config,
     secondary_df_viewer_config,
@@ -54,33 +78,32 @@ const DFViewerInfiniteWrap = ({
   const [activeCol, setActiveCol] = useState("b");
 
   return (
-    <ShadowDomWrapper>
-     <div style={{height:500, width:800}}>
-      <div style={{marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-        <button 
-          onClick={() => setUseSecondaryConfig(!useSecondaryConfig)}
-        >
-          Toggle Config
-        </button>
-        <span>Current Config: {useSecondaryConfig ? 'Secondary' : 'Primary'}</span>
-        <button 
-          onClick={() => setShowError(!showError)}
-        >
-          Toggle Error
-        </button>
-        <span>Error State: {showError ? 'Error' : 'No Error'}</span>
-      </div>
-      <DFViewerInfinite
-      data_wrapper={data_wrapper}
-      df_viewer_config={activeConfig}
-      summary_stats_data={summary_stats_data}
-      activeCol={activeCol}
-      setActiveCol={setActiveCol}
-      outside_df_params={outside_df_params}
-      error_info={currentError} />
-     </div>
-     </ShadowDomWrapper>);
+      <div style={{ height: 500, width: 800 }}>
+        <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => setUseSecondaryConfig(!useSecondaryConfig)}
+          >
+            Toggle Config
+          </button>
+          <span>Current Config: {useSecondaryConfig ? 'Secondary' : 'Primary'}</span>
+          <button
+            onClick={() => setShowError(!showError)}
+          >
+            Toggle Error
+          </button>
+          <span>Error State: {showError ? 'Error' : 'No Error'}</span>
+        </div>
+        <DFViewerInfinite
+          data_wrapper={data_wrapper}
+          df_viewer_config={activeConfig}
+          summary_stats_data={summary_stats_data}
+          activeCol={activeCol}
+          setActiveCol={setActiveCol}
+          outside_df_params={outside_df_params}
+          error_info={currentError} />
+      </div>)
 }
+
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {

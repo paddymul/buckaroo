@@ -151,23 +151,21 @@ export function DFViewerInfinite({
 
     return (
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-        <pre>{error_info ? error_info : ""}</pre>
-        <div style={{...hs.applicableStyle,
-        border:"3px solid green"
-        }}
-         className={`theme-hanger ${divClass}`}>
-    <DFViewerInfiniteInner
-                data_wrapper={data_wrapper}
-                df_viewer_config={df_viewer_config}
-                summary_stats_data={summary_stats_data||[]}
-                activeCol={activeCol||""}
-                setActiveCol={setActiveCol}
-                outside_df_params={outside_df_params}
-                renderStartTime={renderStartTime}
-                hs={hs}
+            <pre>{error_info ? error_info : ""}</pre>
+            <div style={{ ...hs.applicableStyle, border: "3px solid green", overflow: "hidden" }}
+                className={`theme-hanger ${divClass}`}>
+                <DFViewerInfiniteInner
+                    data_wrapper={data_wrapper}
+                    df_viewer_config={df_viewer_config}
+                    summary_stats_data={summary_stats_data || []}
+                    activeCol={activeCol || ""}
+                    setActiveCol={setActiveCol}
+                    outside_df_params={outside_df_params}
+                    renderStartTime={renderStartTime}
+                    hs={hs}
                 />
-                </div>
-                </div>)
+            </div>
+        </div>)
 }
 export function DFViewerInfiniteInner({
     data_wrapper,
