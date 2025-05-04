@@ -218,6 +218,30 @@ export const PinnedRows: Story = {
   }
 }
 
+const ColorMapDFViewerConfig:DFViewerConfig = {
+  column_config: [
+    {col_name:'a', 
+      displayer_args: { displayer:'obj' },
+        color_map_config: {
+            color_rule: "color_map",
+            map_name: "BLUE_TO_YELLOW",
+            val_column: "b"
+    }},
+    {col_name:'b', 
+      displayer_args: { displayer:'obj' },
+        color_map_config: {
+            color_rule: "color_map",
+            map_name: "BLUE_TO_YELLOW",
+            val_column: "c"
+    }},
+    floatColumn('c', 1,4)
+  ],
+   pinned_rows: [{
+    'primary_key_val': 'histogram',
+    'displayer_args': { 'displayer': 'histogram' }
+  }]
+}
+
 export const ColorMapExample: Story = {
 
   args: {
@@ -227,30 +251,7 @@ export const ColorMapExample: Story = {
       {a:300, b:3,   c:42},
       {a:200, b:19,  c:20},
     ],
-    df_viewer_config: {
-      column_config: [
-        {col_name:'a', 
-          displayer_args: { displayer:'obj' },
-            color_map_config: {
-                color_rule: "color_map",
-                map_name: "BLUE_TO_YELLOW",
-                val_column: "b"
-        }},
-        {col_name:'b', 
-          displayer_args: { displayer:'obj' },
-            color_map_config: {
-                color_rule: "color_map",
-                map_name: "BLUE_TO_YELLOW",
-                val_column: "c"
-        }},
-        floatColumn('c', 1,4)
-      ],
-      
-      pinned_rows: [{
-        'primary_key_val': 'histogram',
-        'displayer_args': { 'displayer': 'histogram' }
-      }]
-    },
+    df_viewer_config: ColorMapDFViewerConfig,
     secondary_df_viewer_config :IntFloatConfig,
     summary_stats_data: HistogramSummaryStats
 
