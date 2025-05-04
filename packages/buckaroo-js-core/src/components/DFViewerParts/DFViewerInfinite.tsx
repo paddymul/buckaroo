@@ -146,18 +146,28 @@ export function DFViewerInfinite({
             df_viewer_config?.component_config,
             df_viewer_config?.extra_grid_config?.rowHeight]
     );
+    const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
 
-    return <DFViewerInfiniteInner
+
+    return (
+        <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
+        <pre>{error_info ? error_info : ""}</pre>
+        <div style={{...hs.applicableStyle,
+        border:"3px solid green"
+        }}
+         className={`theme-hanger ${divClass}`}>
+    <DFViewerInfiniteInner
                 data_wrapper={data_wrapper}
                 df_viewer_config={df_viewer_config}
                 summary_stats_data={summary_stats_data||[]}
                 activeCol={activeCol||""}
                 setActiveCol={setActiveCol}
                 outside_df_params={outside_df_params}
-                error_info={error_info}
                 renderStartTime={renderStartTime}
                 hs={hs}
                 />
+                </div>
+                </div>)
 }
 export function DFViewerInfiniteInner({
     data_wrapper,
@@ -166,7 +176,6 @@ export function DFViewerInfiniteInner({
     activeCol,
     setActiveCol,
     outside_df_params,
-    error_info,
     renderStartTime,
     hs
 }: {
@@ -179,7 +188,6 @@ export function DFViewerInfiniteInner({
     // dfviewer doesn't need to understand them, but it does need to use
     // them as keys to get updated data
     outside_df_params?: any;
-    error_info?: string;
     renderStartTime:any;
     hs:HeightStyleI
 }) {
@@ -255,7 +263,6 @@ export function DFViewerInfiniteInner({
     const topRowData = extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
 
 
-    const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
     const getRowId = useCallback(
         (params: GetRowIdParams) => {
             const retVal = String(params?.data?.index) + params.context?.outside_df_params;
@@ -287,12 +294,7 @@ export function DFViewerInfiniteInner({
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
         return (
-            <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-                <pre>{error_info ? error_info : ""}</pre>
-                <div style={{...hs.applicableStyle,
-                border:"3px solid green"
-                }}
-                 className={`theme-hanger ${divClass}`}>
+
                 <AgGridReact
                     theme={myTheme}
                     loadThemeGoogleFonts
@@ -302,11 +304,7 @@ export function DFViewerInfiniteInner({
                     pinnedTopRowData={topRowData}
                     columnDefs={styledColumns}
                     context={{ outside_df_params, ...extra_context }}
-
-
                 ></AgGridReact>
-                </div>
-            </div>
         );
 
 }
