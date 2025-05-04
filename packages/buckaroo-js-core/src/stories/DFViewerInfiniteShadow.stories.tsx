@@ -242,12 +242,13 @@ export const ColorMapExample: Story = {
         }},
         floatColumn('c', 1,4)
       ],
-
+      
       pinned_rows: [{
         'primary_key_val': 'histogram',
         'displayer_args': { 'displayer': 'histogram' }
       }]
     },
+    secondary_df_viewer_config :IntFloatConfig,
     summary_stats_data: HistogramSummaryStats
 
   }
