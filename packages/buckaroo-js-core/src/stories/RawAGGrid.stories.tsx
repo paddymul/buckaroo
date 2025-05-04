@@ -6,10 +6,11 @@ import { createDatasourceWrapper, DatasourceWrapper } from "../components/DFView
 import {SelectBox } from './StoryUtils'
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
 import {
-    //GridOptions,
+    GridOptions,
     //IDatasource,
     ModuleRegistry,
-    ColDef
+    ColDef,
+    CellClassParams
 } from "@ag-grid-community/core";
 
 import { themeAlpine} from '@ag-grid-community/theming';
@@ -40,16 +41,44 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
 
 })
 const SubComponent = (
-    { colDefs, data, datasource } :
-    { colDefs:ColDef[], data:DFData, datasource:DatasourceWrapper}
+    { colDefs, data, datasource, extra_context } :
+    { colDefs:ColDef[], data:DFData, datasource:DatasourceWrapper,
+      extra_context:any}
 ) => {
+    const renderStartTime = new Date();
     //@ts-ignore
     console.log("SubComponent, rendered", (new Date())-1)
+    const defaultColDef = {
+    cellStyle: (params:CellClassParams) => {
+      const colDef = params.column.getColDef();
+      const field = colDef.field;
+      const activeCol = params.context?.activeCol;
+      ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
+      if(activeCol  === field) {
+          //return {background:selectBackground}
+          return {background:"green"}
+
+      }
+      return {background:"red"}
+  }}
+
+  const gridOptions: GridOptions ={
+    onFirstDataRendered: (_params) => {
+        //@ts-ignore
+        console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
+        //@ts-ignore
+        console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime}ms`);
+    }};
     return (<div style={{border:"1px solid purple", height:"500px"}}>
         <AgGridReact
             columnDefs={colDefs}
             rowData={data}
             theme={myTheme}
+            datasource={datasource.datasource}
+            rowModelType={"infinite"}
+            defaultColDef={defaultColDef}
+            context={extra_context}
+            gridOptions={gridOptions}
             loadThemeGoogleFonts
         />
     </div>
@@ -69,15 +98,29 @@ const ControlsWrapper = (
     const dataKeys = Object.keys(data);
     const [activeColDefKey, setActiveColDefKey] = useState(colDefKeys[0] || '');
     const [activeDataKey, setActiveDataKey] = useState(dataKeys[0] || '');
+    const [activeCol, setActiveCol] = useState('a');
+
 
     const dataSource = useMemo(()=> {
         console.log("memo call to createDataSourceWrapper")
-        return createDatasourceWrapper(data[activeDataKey], 5_000)},
+        return createDatasourceWrapper(data[activeDataKey], 2_000)},
     [activeDataKey]);
-
+      /*
+    const extra_context = useMemo(() => {
+      return {
+        activeCol
+      }
+    }, [activeCol])
+    */
+    const extra_context= {activeCol}
     return (
         <div style={{ height: 500, width: 800 }}> 
-  
+              <SelectBox
+              label="activeCol"
+              options={['a', 'b', 'c']} 
+              value={activeCol}
+              onChange={setActiveCol}
+            />
             
             <SelectBox
               label="ColDef"
@@ -94,7 +137,7 @@ const ControlsWrapper = (
             />
             
             <SubComponent colDefs={colDefs[activeColDefKey]} data={data[activeDataKey]}
-                          datasource={dataSource}
+                          datasource={dataSource} extra_context={extra_context}
              />
           </div>);
 }

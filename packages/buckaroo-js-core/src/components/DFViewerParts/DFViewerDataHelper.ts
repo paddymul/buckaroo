@@ -29,7 +29,9 @@ export const createDatasourceWrapper = (data: DFData, delay_in_milliseconds: num
     getRows(params: IGetRowsParams) {
       const slicedData = data.slice(params.startRow, params.endRow);
       if (delay_in_milliseconds > 0) {
+        console.log("about to call setTimeout")
         setTimeout(() => {
+          console.log("timeout finishing")
           params.successCallback(slicedData, data.length);
         }, delay_in_milliseconds);
       } else {
