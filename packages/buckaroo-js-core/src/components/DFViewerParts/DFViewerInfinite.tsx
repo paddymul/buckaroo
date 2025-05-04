@@ -300,6 +300,7 @@ export function DFViewerInfiniteInner({
         const [finalGridOptions, datasource] = useMemo( () => {
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
+            console.log(styledColumns)
         return (
 
                 <AgGridReact

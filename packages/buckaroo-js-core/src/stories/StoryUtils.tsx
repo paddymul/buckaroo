@@ -40,3 +40,27 @@ export const ShadowDomWrapper: React.FC<ShadowDomWrapperProps> = ({ children }) 
 
   return <div ref={containerRef}></div>;
 };
+// Reusable SelectBox component
+type SelectBoxProps<T extends string> = {
+  label: string;
+  options: T[];
+  value: T;
+  onChange: (value: T) => void;
+};
+
+export const SelectBox = <T extends string>({ label, options, value, onChange }: SelectBoxProps<T>) => {
+  return (
+    <label style={{ margin: '0 10px' }}>
+      {label}:
+      <select 
+        value={value} 
+        onChange={(e) => onChange(e.target.value as T)}
+        style={{ marginLeft: '5px' }}
+      >
+        {options.map(option => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </label>
+  );
+};
