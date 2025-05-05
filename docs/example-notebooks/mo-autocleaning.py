@@ -6,7 +6,7 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _(ACBuckaroo, pd):
-    extra_rows = 30
+    extra_rows = 3000
     dirty_df = pd.DataFrame(
         {'a':[10,  20,  30,   40,  10, 20.3, None,] * extra_rows,
          'b':["3", "4", "a", "5", "5",  "b9", None ] * extra_rows,
@@ -106,7 +106,7 @@ def _(
     class ACBuckaroo(BuckarooInfiniteWidget):
         autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
         def _handle_payload_args(self, new_payload_args):
-            time.sleep(3)
+            #time.sleep(3)
             super()._handle_payload_args(new_payload_args)
     return (
         ACBuckaroo,
@@ -173,6 +173,7 @@ def _(pd):
             ser = ser.astype('string')
         if not pd.api.types.is_string_dtype(ser):
             return 0
+        ser = ser.sample(500)
         stripped = ser.str.replace(digits_and_period, "", regex=True)
 
         #don't like the string conversion here, should still be vectorized
@@ -304,6 +305,36 @@ def _(HeuristicCleaningGenOps, s):
 @app.cell
 def _():
     return
+
+
+@app.cell
+def _(dirty_df, pd, re):
+    def clean_b(df):
+
+        _digits_and_period = re.compile(r'[^\d\.]')
+        _ser = df['b']
+        _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
+        #very very slow
+        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
+        #_combined = _reg_parse.fillna(_strip_parse)
+        #df['b'] = _combined
+
+    def clean(df):
+        df = df.copy()
+        clean_b(df)
+        df['us_dates'] = pd.to_datetime(df['us_dates'], errors='coerce', format='%m/%d/%Y')
+        TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
+        FALSE_SYNONYMS = ['false', 'no', 'off', '0']
+        _ser = df['mostly_bool']
+        _int_sanitize = _ser.replace(1, True).replace(0, False) 
+        _real_bools = _int_sanitize.isin([True, False])
+        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
+        _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
+        _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+        _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
+        df['mostly_bool'] = _combined
+    clean(dirty_df)
+    return clean, clean_b
 
 
 if __name__ == "__main__":
