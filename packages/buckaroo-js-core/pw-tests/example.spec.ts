@@ -48,7 +48,7 @@ test('DFVIewerInfiniteShadow renders in basic case', async ({ page }) => {
 
     await page.getByRole('button', { name: 'Toggle Config' }).click();
     //await page.waitForTimeout(1000);
-    expect(logCounts[RenderLogMsg]).toBe(2);
+    expect(logCounts[RenderLogMsg]).toBe(1);
     const rc2 = await getRowContents(page, 0);
     expect(rc2).toStrictEqual(["20.00      ", "  20", "foo", ]);
 });
