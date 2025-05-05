@@ -6,46 +6,37 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _(ACBuckaroo, pd):
-    extra_rows = 100
+    extra_rows = 30
     dirty_df = pd.DataFrame(
         {'a':[10,  20,  30,   40,  10, 20.3, None,] * extra_rows,
          'b':["3", "4", "a", "5", "5",  "b9", None ] * extra_rows,
          'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002"] * extra_rows,
          "mostly_bool": [True, "True", "Yes", "On", "false", False, "1"] * extra_rows,
         })
-    bw2 = ACBuckaroo(dirty_df)
+    bw2 = ACBuckaroo(dirty_df, pinned_rows=[{
+      "primary_key_val": "dtype",
+      "displayer_args": {
+        "displayer": "obj"
+      }
+    }])
     bw2
     return bw2, dirty_df, extra_rows
 
 
 @app.cell
-def _(pd, re):
-    def clean(df):
-        _digits_and_period = re.compile(r'[^\d\.]')
-        _ser = df['b']
-        _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
-        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
-        _combined = _reg_parse.fillna(_strip_parse)
-        df['b'] = _combined
-        df['us_dates'] = pd.to_datetime(df['us_dates'], errors='coerce', format='%m/%d/%Y')
-        TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
-        FALSE_SYNONYMS = ['false', 'no', 'off', '0']
-        _ser = df['mostly_bool']
-        _int_sanitize = _ser.replace(1, True).replace(0, False) 
-        _real_bools = _int_sanitize.isin([True, False])
-        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
-        _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
-        _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
-        _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
-        df['mostly_bool'] = _combined
-        return df
-
-    return (clean,)
+def _():
+    def copy_update(dct, **kwargs):
+        new_dct = dct.copy()
+        new_dct.update(kwargs)
+        return new_dct
+    #bw3 = ACBuckaroo(dirty_df)
+    return (copy_update,)
 
 
 @app.cell
-def _(clean, dirty_df):
-    clean(dirty_df)
+def _():
+    #bw3.buckaroo_state = copy_update(bw3.buckaroo_state, cleaning_method="aggressive")
+    #bw3.dataflow.processed_df
     return
 
 
@@ -114,9 +105,8 @@ def _(
 
     class ACBuckaroo(BuckarooInfiniteWidget):
         autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
-
         def _handle_payload_args(self, new_payload_args):
-            #time.sleep(3)
+            time.sleep(3)
             super()._handle_payload_args(new_payload_args)
     return (
         ACBuckaroo,
@@ -179,6 +169,10 @@ def _(pd):
 
     digits_and_period = re.compile(r'[^\d\.]')
     def strip_int_parse_frac(ser):
+        if pd.api.types.is_object_dtype(ser):
+            ser = ser.astype('string')
+        if not pd.api.types.is_string_dtype(ser):
+            return 0
         stripped = ser.str.replace(digits_and_period, "", regex=True)
 
         #don't like the string conversion here, should still be vectorized
@@ -192,6 +186,10 @@ def _(pd):
     BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
 
     def str_bool_frac(ser):
+        if pd.api.types.is_object_dtype(ser):
+            ser = ser.astype('string')
+        if not pd.api.types.is_string_dtype(ser):
+            return 0
         matches = ser.str.lower().isin(BOOL_SYNONYMS)
         return matches.sum() / len(ser)
 
@@ -231,6 +229,11 @@ def _(pd):
         strip_int_parse_frac,
         us_dates_frac,
     )
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell

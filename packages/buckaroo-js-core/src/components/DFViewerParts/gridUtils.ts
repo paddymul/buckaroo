@@ -312,8 +312,8 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     const regularCompHeight = window.innerHeight / (compC?.height_fraction || 2);
     const dfvHeight = compC?.dfvHeight || regularCompHeight;
     console.log("314, ", regularCompHeight, window.innerHeight, (compC?.height_fraction || 2), compC?.dfvHeight, regularCompHeight, dfvHeight);
-    //314,  175.5 351 2 175.5
-    //314,  175.5 351 2 200
+    //314,  175.5 351 2 200 175.5 200
+    //314,  175.5 351 2 undefined 175.5 175.5
     const regularDivStyle = { height: dfvHeight };
     const shortDivStyle = { minHeight: 50, maxHeight: dfvHeight };
 
@@ -336,7 +336,7 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     const belowMinRows = (numRows + pinnedRowLen) < maxRowsWithoutScrolling;
     //console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
-
+    console.log("shortMode", shortMode, compC.shortMode, belowMinRows, rowHeight);
     const inIframeClass = inIframe ? "inIframe" : "";
     //console.log("gridUtils 350 heightstyle", dfvHeight)
     if (isGoogleColab || inVSCcode() ) {
