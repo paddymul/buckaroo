@@ -334,9 +334,10 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
 
 
     const belowMinRows = (numRows + pinnedRowLen) < maxRowsWithoutScrolling;
+    console.log("belowMinRows", belowMinRows, numRows, pinnedRowLen, maxRowsWithoutScrolling)
     //console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
-    console.log("shortMode", shortMode, compC.shortMode, belowMinRows, rowHeight);
+    console.log("shortMode", shortMode, compC?.shortMode, belowMinRows, rowHeight);
     const inIframeClass = inIframe ? "inIframe" : "";
     //console.log("gridUtils 350 heightstyle", dfvHeight)
     if (isGoogleColab || inVSCcode() ) {
