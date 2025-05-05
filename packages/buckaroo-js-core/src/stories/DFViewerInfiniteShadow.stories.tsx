@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { DFViewerConfig, ColumnConfig } from "../components/DFViewerParts/DFWhole";
+
+import {SelectBox } from './StoryUtils'
 //import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
@@ -71,12 +73,15 @@ const DFViewerInfiniteWrapInner = ({
   //console.log("error_info", error_info);
   const [useSecondaryConfig, setUseSecondaryConfig] = useState(false);
   const [showError, setShowError] = useState(false);
-  const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data);
+  const [dsDelay, setDsDelay] = useState("none");
+
+  const dsDelayOptions:Record<string, number|undefined> = {"none":undefined, "500ms": 500, "1.5 s":1_500, "5s":5_000}
+
+  const data_wrapper: DatasourceWrapper = createDatasourceWrapper(data, dsDelayOptions[dsDelay]);
   const activeConfig = useSecondaryConfig ? (secondary_df_viewer_config || df_viewer_config) : df_viewer_config;
   const currentError = showError ? "some error" : undefined;
 
   const [activeCol, setActiveCol] = useState("b");
-
   return (
       <div style={{ height: 500, width: 800 }}>
         <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -85,6 +90,13 @@ const DFViewerInfiniteWrapInner = ({
           >
             Toggle Config
           </button>
+
+                        <SelectBox
+                        label="dsDelay"
+                        options={Object.keys(dsDelayOptions)}
+                        value={dsDelay}
+                        onChange={setDsDelay}
+                      />
           <span>Current Config: {useSecondaryConfig ? 'Secondary' : 'Primary'}</span>
           <button
             onClick={() => setShowError(!showError)}

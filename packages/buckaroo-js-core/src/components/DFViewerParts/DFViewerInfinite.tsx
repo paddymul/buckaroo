@@ -7,11 +7,9 @@ import {
 import _ from "lodash";
 import { DFData, DFDataRow, DFViewerConfig, SDFT } from "./DFWhole";
 
-import { dfToAgrid, extractPinnedRows, extractSDFT } from "./gridUtils";
+import { getCellRendererSelector, dfToAgrid, extractPinnedRows, extractSDFT } from "./gridUtils";
+
 import { AgGridReact } from "@ag-grid-community/react"; // the AG Grid React Component
-
-import { getCellRendererSelector } from "./gridUtils";
-
 import {
     GetRowIdParams,
     GridApi,
@@ -22,6 +20,8 @@ import {
     CellClassParams,
 } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
+import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
+
 import {
     getAutoSize,
     getGridOptions,
@@ -29,7 +29,6 @@ import {
     HeightStyleI,
     SetColumnFunc
 } from "./gridUtils";
-import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
 import { themeAlpine} from '@ag-grid-community/theming';
 import { colorSchemeDark } from '@ag-grid-community/theming';
 
@@ -37,6 +36,7 @@ ModuleRegistry.registerModules([ClientSideRowModelModule]);
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
 
+const AccentColor = "#2196F3"
 const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
     spacing:5,
     browserColorScheme: "dark",
@@ -50,6 +50,7 @@ const myTheme = themeAlpine.withPart(colorSchemeDark).withParams({
     headerFontSize: 14,
     iconSize: 10,
     backgroundColor: "#181D1F",
+
     oddRowBackgroundColor: '#222628',
     headerVerticalPaddingScale: 0.6,
 //    cellHorizontalPadding: 3,
@@ -157,7 +158,7 @@ export function DFViewerInfinite({
     const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
     const finalStyle = useMemo( () => {
         //console.log("final style")
-        return { ...hs.applicableStyle, border: "3px solid green", overflow: "hidden" }
+        return { ...hs.applicableStyle, overflow: "hidden" }
     }, [JSON.stringify(hs.applicableStyle)])
     console.log("151 applicableStyle", hs.applicableStyle);
     return (
@@ -252,10 +253,10 @@ export function DFViewerInfiniteInner({
                 ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
                 if(activeCol  === field) {
                     //return {background:selectBackground}
-                    return {background:"green"}
+                    return {background: AccentColor}
 
                 }
-                return {background:"red"}
+                return {background:"inherit"}
             },
             enableCellChangeFlash: false,
             cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
@@ -301,6 +302,7 @@ export function DFViewerInfiniteInner({
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
             console.log(styledColumns)
+            console.log(gridOptions)
         return (
 
                 <AgGridReact
@@ -369,7 +371,7 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
         cacheOverflowSize: 0,
         maxConcurrentDatasourceRequests: 2,
         maxBlocksInCache: 0,
-        infiniteInitialRowCount: maxRowsWithoutScrolling + 50
+        //infiniteInitialRowCount: maxRowsWithoutScrolling + 50
     };
     return dsGridOptions;
 };export function DFViewer({

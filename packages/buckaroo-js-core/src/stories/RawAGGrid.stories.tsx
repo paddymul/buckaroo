@@ -61,14 +61,27 @@ const SubComponent = (
       }
       return {background:"red"}
   }}
-
+  const maxRowsWithoutScrolling=10;
   const gridOptions: GridOptions ={
     onFirstDataRendered: (_params) => {
         //@ts-ignore
         console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
         //@ts-ignore
         console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime}ms`);
-    }};
+    },
+    domLayout: "normal",
+    autoSizeStrategy: { type: "fitCellContents" },
+
+    rowBuffer: 20,
+    rowModelType: "infinite",
+    cacheBlockSize: maxRowsWithoutScrolling + 50,
+    cacheOverflowSize: 0,
+    maxConcurrentDatasourceRequests: 2,
+    maxBlocksInCache: 0,
+    infiniteInitialRowCount:0
+    //infiniteInitialRowCount: maxRowsWithoutScrolling + 50
+
+  };
     return (<div style={{border:"1px solid purple", height:"500px"}}>
         <AgGridReact
             columnDefs={colDefs}
