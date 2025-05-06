@@ -160,7 +160,13 @@ def _():
 
 
 @app.cell
-def _(pd):
+def _(np):
+    np.max([3,4])
+    return
+
+
+@app.cell
+def _(np, pd):
     import re
     from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
     def int_parse_frac(ser):
@@ -173,7 +179,7 @@ def _(pd):
             ser = ser.astype('string')
         if not pd.api.types.is_string_dtype(ser):
             return 0
-        ser = ser.sample(500)
+        ser = ser.sample(np.min([300, len(ser)]))
         stripped = ser.str.replace(digits_and_period, "", regex=True)
 
         #don't like the string conversion here, should still be vectorized
@@ -187,6 +193,7 @@ def _(pd):
     BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
 
     def str_bool_frac(ser):
+        ser = ser.sample(np.min([300, len(ser)]))
         if pd.api.types.is_object_dtype(ser):
             ser = ser.astype('string')
         if not pd.api.types.is_string_dtype(ser):
