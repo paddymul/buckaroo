@@ -40,3 +40,11 @@ def copy_update(dct, **kwargs):
     new_dct = dct.copy()
     new_dct.update(kwargs)
     return new_dct
+
+def copy_extend(existing_list, *new_additions):
+    """
+    used to extend class lists which comes up frequently in buckaroo
+    """
+    lst = existing_list.copy()
+    lst.extend(new_additions)
+    return lst

@@ -5,7 +5,7 @@ app = marimo.App(width="medium")
 
 
 @app.cell
-def _(ACBuckaroo, float_, obj_, pd):
+def _(ACBuckaroo, pd):
     dirty_df = pd.DataFrame(
         {'a':[10,  20,  30,   40,  10, 20.3,  None,    8,  9, 10, 11, 20, None],
          'b':["3", "4", "a", "5", "5",  "b9", None, " 9",  "9-", 11, "867-5309", "-9", None],
@@ -13,27 +13,8 @@ def _(ACBuckaroo, float_, obj_, pd):
                       "03/04/1982", "", "06/22/2024", "07/4/1776", "07/20/1969"],
          "mostly_bool": [True, "True", "Yes", "On", "false", False, "1", "Off", "0", " 0", "No", 1, None]
         })
-    bw = ACBuckaroo(
-        dirty_df, 
-        pinned_rows=[
-            obj_('dtype'),
-            float_('str_bool_frac'), float_('regular_int_parse_frac'), float_('strip_int_parse_frac'), float_('us_dates_frac'),
-            obj_('cleaning_name')])
-
-    bw
-    return bw, dirty_df
-
-
-@app.cell
-def _(bw):
-    bw.df_data_dict['all_stats']
-    return
-
-
-@app.cell
-def _():
-    from buckaroo.styling_helpers import obj_, float_
-    return float_, obj_
+    ACBuckaroo(dirty_df)
+    return (dirty_df,)
 
 
 @app.cell
@@ -93,17 +74,24 @@ def _():
     from buckaroo import BuckarooInfiniteWidget
     import numpy as np
     from buckaroo.marimo_utils import marimo_monkeypatch, BuckarooDataFrame as DataFrame
-
+    from buckaroo.styling_helpers import obj_, float_, pinned_histogram
+    from buckaroo.extension_utils import copy_extend
+    from buckaroo.customizations.styling import DefaultMainStyling
     # this overrides pd.read_csv and pd.read_parquet to return BuckarooDataFrames which overrides displays as BuckarooWidget, not the default marimo table
     marimo_monkeypatch()
     return (
         BuckarooInfiniteWidget,
         DataFrame,
+        DefaultMainStyling,
         buckaroo,
+        copy_extend,
+        float_,
         marimo_monkeypatch,
         mo,
         np,
+        obj_,
         pd,
+        pinned_histogram,
     )
 
 
@@ -182,7 +170,9 @@ def _(np, pd):
 
 
 @app.cell
-def _(ColAnalysis, get_top_score, sA):
+def _(ColAnalysis):
+    from buckaroo.jlisp.lisp_utils import s, sA
+    from buckaroo.auto_clean.heuristic_lang import get_top_score
     class BaseHeuristicCleaningGenOps(ColAnalysis):
         """
         This class is meant to be extended with different rules passed in
@@ -206,51 +196,8 @@ def _(ColAnalysis, get_top_score, sA):
                 cleaning_name = kls.rules_op_names.get(cleaning_op_name, cleaning_op_name)
                 ops = [sA(cleaning_name, clean_strategy= kls.__name__, clean_col=column_metadata['col_name'] ),
                     {'symbol': 'df'}]
-                return {'cleaning_ops':ops, 'cleaning_name':cleaning_name, 'add_orig': True}        
-
-    return (BaseHeuristicCleaningGenOps,)
-
-
-@app.cell
-def _(ColAnalysis):
-    from buckaroo.jlisp.lisp_utils import s, sA
-    from buckaroo.auto_clean.heuristic_lang import get_top_score
-
-    class HeuristicCleaningGenOps(ColAnalysis):
-        """
-        This class is meant to be extended with different rules passed in
-
-        create other ColAnalysis classes that satisfy requires_summary
-
-        Then put this group of classes into their own AutocleaningConfig
-        """
-        requires_summary = ['str_bool_frac', 'regular_int_parse_frac', 'strip_int_parse_frac', 'us_dates_frac']
-        provides_defaults = {'cleaning_ops': [], 'cleaning_name':""}
-
-        rules = {
-            'str_bool_frac':         [s('m>'), .7],
-            'regular_int_parse_frac':  [s('m>'), .9],
-            'strip_int_parse_frac':    [s('m>'), .7],
-            'none':               [s('none-rule')],
-            'us_dates_frac':         [s('primary'), [s('m>'), .7]]}
-
-        rules_op_names = {
-            'str_bool_frac':           'str_bool',
-            'regular_int_parse_frac':  'regular_int_parse',
-            'strip_int_parse_frac':    'strip_int_parse',
-            'us_dates_frac':           'us_date'}
-
-        @classmethod
-        def computed_summary(kls, column_metadata):
-            cleaning_op_name = get_top_score(kls.rules, column_metadata)
-            if cleaning_op_name == 'none':
-                return {'cleaning_ops': [], 'cleaning_name':'None'}
-            else:
-                cleaning_name = kls.rules_op_names.get(cleaning_op_name, cleaning_op_name)
-                ops = [sA(cleaning_name, clean_strategy= kls.__name__, clean_col=column_metadata['col_name'] ),
-                    {'symbol': 'df'}]
                 return {'cleaning_ops':ops, 'cleaning_name':cleaning_name, 'add_orig': True}
-    return HeuristicCleaningGenOps, get_top_score, s, sA
+    return BaseHeuristicCleaningGenOps, get_top_score, s, sA
 
 
 @app.cell
@@ -295,6 +242,7 @@ def _(
     AutocleaningConfig,
     BuckarooInfiniteWidget,
     ConvservativeCleaningGenops,
+    DefaultMainStyling,
     DropCol,
     FillNA,
     GroupBy,
@@ -306,6 +254,10 @@ def _(
     StrBool,
     StripIntParse,
     USDate,
+    copy_extend,
+    float_,
+    obj_,
+    pinned_histogram,
 ):
     class AggressiveAC(AutocleaningConfig):
         autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
@@ -321,9 +273,26 @@ def _(
         autocleaning_analysis_klasses = [HeuristicFracs, ConvservativeCleaningGenops]
         name="conservative"
 
+    class CleaningDetailStyling(DefaultMainStyling):
+        df_display_name = "cleaning_detail"
+        pinned_rows=[
+            obj_('dtype'), pinned_histogram(),
+            float_('str_bool_frac'), float_('regular_int_parse_frac'),
+            float_('strip_int_parse_frac'),float_('us_dates_frac'),
+            obj_('cleaning_name'),
+            obj_('null_count')
+        ]
+
+
     class ACBuckaroo(BuckarooInfiniteWidget):
         autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
-    return ACBuckaroo, AggressiveAC, ConservativeAC
+        analysis_klasses = copy_extend(BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling)
+    return ACBuckaroo, AggressiveAC, CleaningDetailStyling, ConservativeAC
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
