@@ -13,24 +13,17 @@ def _(ACBuckaroo, pd):
          'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002"] * extra_rows,
          "mostly_bool": [True, "True", "Yes", "On", "false", False, "1"] * extra_rows,
         })
-    bw2 = ACBuckaroo(dirty_df, pinned_rows=[{
-      "primary_key_val": "dtype",
-      "displayer_args": {
-        "displayer": "obj"
-      }
-    }])
+    bw2 = ACBuckaroo(dirty_df, #pinned_rows=[{"primary_key_val": "dtype","displayer_args": {"displayer": "obj" }}])
+                    )
     bw2
     return bw2, dirty_df, extra_rows
 
 
 @app.cell
 def _():
-    def copy_update(dct, **kwargs):
-        new_dct = dct.copy()
-        new_dct.update(kwargs)
-        return new_dct
+
     #bw3 = ACBuckaroo(dirty_df)
-    return (copy_update,)
+    return
 
 
 @app.cell
