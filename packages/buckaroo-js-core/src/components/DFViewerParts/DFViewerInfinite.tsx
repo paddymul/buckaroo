@@ -24,7 +24,6 @@ import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
 
 import {
     getAutoSize,
-    getGridOptions,
     getHeightStyle2,
     HeightStyleI,
     SetColumnFunc
@@ -160,15 +159,10 @@ export function DFViewerInfinite({
         )}, [hsCacheKey]
     );
     const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
-    const finalStyle = useMemo( () => {
-        //console.log("final style")
-        return { ...hs.applicableStyle, overflow: "hidden" }
-    }, [JSON.stringify(hs.applicableStyle)])
-    console.log("151 applicableStyle", hs.applicableStyle);
     return (
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
             <pre>{error_info ? error_info : ""}</pre>
-            <div style={finalStyle}
+            <div style={hs.applicableStyle}
                 className={`theme-hanger ${divClass}`}>
                 <DFViewerInfiniteInner
                     data_wrapper={data_wrapper}
@@ -288,10 +282,8 @@ export function DFViewerInfiniteInner({
     const gridOptions: GridOptions = useMemo( () => {
         return {
         ...outerGridOptions(setActiveCol, df_viewer_config.extra_grid_config),
-        ...getGridOptions(
-            hs.domLayout,
-            getAutoSize(styledColumns.length),
-        ),
+        domLayout:  hs.domLayout,
+        autoSizeStrategy: getAutoSize(styledColumns.length),
         onFirstDataRendered: (_params) => {
             console.log(`[DFViewerInfinite] AG-Grid finished rendering at ${new Date().toISOString()}`);
             console.log(`[DFViewerInfinite] Total render time: ${Date.now() - renderStartTime}ms`);

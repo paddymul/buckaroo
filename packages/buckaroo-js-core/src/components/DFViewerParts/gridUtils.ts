@@ -2,7 +2,6 @@ import {
     CellRendererSelectorResult,
     ColDef,
     DomLayoutType,
-    GridOptions,
     ICellRendererParams,
     IDatasource,
     IGetRowsParams,
@@ -230,18 +229,6 @@ export type SetColumnFunc = (newCol: string) => void;
 export type PossibleAutosizeStrategy = SizeColumnsToFitProvidedWidthStrategy |
     SizeColumnsToContentStrategy;
 
-export const getGridOptions = (
-    domLayout: DomLayoutType,
-    autoSizeStrategy: PossibleAutosizeStrategy
-): GridOptions => {
-    const gridOptions: GridOptions = {
-        // defaultColDef needs to be specifically passed in as a prop to the component, not defined here,
-        // otherwise updates aren't reactive
-        domLayout,
-        autoSizeStrategy,
-    };
-    return gridOptions;
-};
 interface HeightStyleArgs {
     numRows: number;
     pinnedRowLen: number;
@@ -259,16 +246,6 @@ export interface HeightStyleI {
     maxRowsWithoutScrolling: number;
 }
 
-export const getHeightStyle = (df_viewer_config: DFViewerConfig, numRows: number): HeightStyleI => {
-    const hs = heightStyle({
-        numRows: numRows,
-        pinnedRowLen: df_viewer_config.pinned_rows.length,
-        location: window.location,
-        compC: df_viewer_config?.component_config,
-        rowHeight: df_viewer_config?.extra_grid_config?.rowHeight,
-    });
-    return hs;
-};
 
 export const getHeightStyle2 = (
     maxDataPinnedRows:number, // the maximum number of pinned rows across configs with data (not summary_stats which has no data)
@@ -314,8 +291,8 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
     console.log("314, ", regularCompHeight, window.innerHeight, (compC?.height_fraction || 2), compC?.dfvHeight, regularCompHeight, dfvHeight);
     //314,  175.5 351 2 200 175.5 200
     //314,  175.5 351 2 undefined 175.5 175.5
-    const regularDivStyle = { height: dfvHeight };
-    const shortDivStyle = { minHeight: 50, maxHeight: dfvHeight };
+    const regularDivStyle = { height: dfvHeight, overflow:"hidden" };
+    const shortDivStyle = { minHeight: 50, maxHeight: dfvHeight, overflow:"hidden" };
 
     // scrollSlop controls the tolerance for maxRowsWithoutScrolling
     // to enable scrolling anyway. scroll slop includes room for other
@@ -330,11 +307,12 @@ export const heightStyle = (hArgs: HeightStyleArgs): HeightStyleI => {
 
     // figured out default row height of 21.  Want to plumb back in to what is actually rendered.
     const maxRowsWithoutScrolling = Math.floor((dfvHeight / (rowHeight || 21)) - scrollSlop);
-
+    
 
 
     const belowMinRows = (numRows + pinnedRowLen) < maxRowsWithoutScrolling;
     console.log("belowMinRows", belowMinRows, numRows, pinnedRowLen, maxRowsWithoutScrolling)
+    //belowMinRows true 5 2 9
     //console.log("maxRowsWithoutScrolling", maxRowsWithoutScrolling, belowMinRows, numRows, dfvHeight, rowHeight);
     const shortMode = compC?.shortMode || (belowMinRows && rowHeight === undefined);
     console.log("shortMode", shortMode, compC?.shortMode, belowMinRows, rowHeight);

@@ -4,7 +4,7 @@ import {
     extractSDFT,  
     extractPinnedRows,
     dfToAgrid,
-    getHeightStyle,
+    getHeightStyle2,
     getAutoSize,
 
 } from './gridUtils';
@@ -134,7 +134,7 @@ describe("testing utility functions in gridUtils ", () => {
           height_fraction: 2
         }
       };
-      const result = getHeightStyle(config, 100);
+	const result = getHeightStyle2(100, config.pinned_rows.length, config.component_config);
       expect(result.classMode).toBe("regular-mode");
       expect(result.domLayout).toBe("normal");
     });
@@ -147,7 +147,8 @@ describe("testing utility functions in gridUtils ", () => {
           shortMode: true
         }
       };
-      const result = getHeightStyle(config, 5); // Small number of rows
+      // Small number of rows
+      const result = getHeightStyle2(5, config.pinned_rows.length, config.component_config);
       expect(result.classMode).toBe("short-mode");
       expect(result.domLayout).toBe("autoHeight");
     });
