@@ -6,22 +6,21 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _(ACBuckaroo, pd):
-    extra_rows = 3000
     dirty_df = pd.DataFrame(
-        {'a':[10,  20,  30,   40,  10, 20.3, None,] * extra_rows,
-         'b':["3", "4", "a", "5", "5",  "b9", None ] * extra_rows,
-         'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002"] * extra_rows,
-         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1"] * extra_rows,
+        {'a':[10,  20,  30,   40,  10, 20.3,  None,    8,  9, 10, 11, 20, None],
+         'b':["3", "4", "a", "5", "5",  "b9", None, " 9",  "9-", 11, "867-5309", "-9", None],
+
+        'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002", "12/09/1968",
+                      "03/04/1982", "", "06/22/2024", "07/4/1776", "07/20/1969"],
+
+         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1", "Off", "0", " 0", "No", None, None]
         })
-    bw2 = ACBuckaroo(dirty_df, #pinned_rows=[{"primary_key_val": "dtype","displayer_args": {"displayer": "obj" }}])
-                    )
-    bw2
-    return bw2, dirty_df, extra_rows
+    ACBuckaroo(dirty_df)
+    return (dirty_df,)
 
 
 @app.cell
 def _():
-
     #bw3 = ACBuckaroo(dirty_df)
     return
 
@@ -290,7 +289,7 @@ def _(HeuristicCleaningGenOps, s):
         rules = {
             'str_bool_frac':         [s('m>'), .6],
             'regular_int_parse_frac':  [s('m>'), .9],
-            'strip_int_parse_frac':    [s('m>'), .7],
+            'strip_int_parse_frac':    [s('m>'), .75],
             'none':               [s('none-rule')],
             'us_dates_frac':         [s('primary'), [s('m>'), .7]]}
 
