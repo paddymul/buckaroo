@@ -266,7 +266,7 @@ export function DFViewerInfiniteInner({
         histogram_stats,
         pinned_rows_config:df_viewer_config.pinned_rows
     }
-    //const gridRef = useRef<AgGridReact<unknown>>(null);
+
     const pinned_rows = df_viewer_config.pinned_rows;
     const topRowData = extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
 
@@ -367,6 +367,9 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
         cacheOverflowSize: 0,
         maxConcurrentDatasourceRequests: 2,
         maxBlocksInCache: 0,
+        // setting infiniteInitialRowCount causes a bad flash 
+        // for object displaye columns while waiting for data. they show a column of None
+        
         //infiniteInitialRowCount: maxRowsWithoutScrolling + 50
     };
     return dsGridOptions;
