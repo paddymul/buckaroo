@@ -119,6 +119,7 @@ export function DFViewerInfinite({
     setActiveCol,
     outside_df_params,
     error_info,
+    max_rows_in_configs
 }: {
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
@@ -130,6 +131,9 @@ export function DFViewerInfinite({
     // them as keys to get updated data
     outside_df_params?: any;
     error_info?: string;
+    //splicing this in eventually
+    max_rows_in_configs?:number // across all the configs what is the max rows
+
 }) {
     /*
     The idea is to do some pre-setup here for 
@@ -149,8 +153,8 @@ export function DFViewerInfinite({
     //console.log("hsCacheKey", hsCacheKey);
     const hs:HeightStyleI = useMemo(() => {
         return getHeightStyle2(
-            2,
-            totalRows,
+            max_rows_in_configs || data_wrapper.length,
+            df_viewer_config.pinned_rows.length,
             df_viewer_config?.component_config,
             df_viewer_config?.extra_grid_config?.rowHeight
         )}, [hsCacheKey]
@@ -163,7 +167,7 @@ export function DFViewerInfinite({
     console.log("151 applicableStyle", hs.applicableStyle);
     return (
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
-            <pre>{error_info ? error_info : "_"}</pre>
+            <pre>{error_info ? error_info : ""}</pre>
             <div style={finalStyle}
                 className={`theme-hanger ${divClass}`}>
                 <DFViewerInfiniteInner
