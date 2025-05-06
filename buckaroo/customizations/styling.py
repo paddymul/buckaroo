@@ -1,20 +1,12 @@
 from buckaroo.dataflow.dataflow import StylingAnalysis
 from typing import Any
-
-def obj_(pkey):
-    return {'primary_key_val': pkey, 'displayer_args': { 'displayer': 'obj' } }
-
-def float_(pkey, digits=3):
-    return {'primary_key_val': pkey, 
-            'displayer_args': {
-                'displayer': 'float', 'min_fraction_digits':digits, 'max_fraction_digits':digits}}
+from buckaroo.styling_helpers import obj_, float_, pinned_histogram
 
 
 class DefaultMainStyling(StylingAnalysis):
     requires_summary = ["histogram", "is_numeric", "dtype", "_type"]
-    pinned_rows = [
-        obj_('dtype'),
-        {'primary_key_val': 'histogram', 'displayer_args': {'displayer': 'histogram'}}]
+    pinned_rows = [obj_('dtype'), pinned_histogram()]
+
 
     @classmethod
     def style_column(kls, col:str, column_metadata: Any) -> Any:

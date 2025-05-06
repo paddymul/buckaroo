@@ -51,9 +51,10 @@ class StrBool(Command):
         _ser = df[col]
         _int_sanitize = _ser.replace(1, True).replace(0, False) 
         _real_bools = _int_sanitize.isin([True, False])
-        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
-        _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
-        _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')
+        _str_ser = _ser.str.lower().str.strip()
+        _trues = _str_ser.isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
+        _falses =  ~(_str_ser.isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
         _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
         df[col] = _combined
         return df
@@ -66,10 +67,12 @@ class StrBool(Command):
     _int_sanitize = _ser.replace(1, True).replace(0, False) 
     _real_bools = _int_sanitize.isin([True, False])
     _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
-    _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
-    _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+    _str_ser = _ser.str.lower().str.strip()
+    _trues = _str_ser.isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
+    _falses =  ~ (_str_ser().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
     _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
-    df[col] = _combined"""
+
+    df['{col}'] = _combined"""
 
 
 

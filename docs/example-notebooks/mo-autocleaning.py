@@ -5,42 +5,39 @@ app = marimo.App(width="medium")
 
 
 @app.cell
-def _(ACBuckaroo, pd):
+def _(ACBuckaroo, float_, obj_, pd):
     dirty_df = pd.DataFrame(
         {'a':[10,  20,  30,   40,  10, 20.3,  None,    8,  9, 10, 11, 20, None],
          'b':["3", "4", "a", "5", "5",  "b9", None, " 9",  "9-", 11, "867-5309", "-9", None],
-
         'us_dates': ["", "07/10/1982", "07/15/1982", "7/10/1982", "17/10/1982", "03/04/1982", "03/02/2002", "12/09/1968",
                       "03/04/1982", "", "06/22/2024", "07/4/1776", "07/20/1969"],
-
-         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1", "Off", "0", " 0", "No", None, None]
+         "mostly_bool": [True, "True", "Yes", "On", "false", False, "1", "Off", "0", " 0", "No", 1, None]
         })
-    ACBuckaroo(dirty_df)
-    return (dirty_df,)
+    bw = ACBuckaroo(
+        dirty_df, 
+        pinned_rows=[
+            obj_('dtype'),
+            float_('str_bool_frac'), float_('regular_int_parse_frac'), float_('strip_int_parse_frac'), float_('us_dates_frac'),
+            obj_('cleaning_name')])
+
+    bw
+    return bw, dirty_df
 
 
 @app.cell
-def _():
-    #bw3 = ACBuckaroo(dirty_df)
+def _(bw):
+    bw.df_data_dict['all_stats']
     return
 
 
 @app.cell
 def _():
-    #bw3.buckaroo_state = copy_update(bw3.buckaroo_state, cleaning_method="aggressive")
-    #bw3.dataflow.processed_df
-    return
+    from buckaroo.styling_helpers import obj_, float_
+    return float_, obj_
 
 
 @app.cell
-def _(
-    AggresiveCleaningGenOps,
-    BuckarooInfiniteWidget,
-    HeuristicFracs,
-    pd,
-    re,
-    s,
-):
+def _(pd, re, s):
     from buckaroo.customizations.pandas_commands import (
         Command,
         SafeInt, DropCol, FillNA, GroupBy, NoOp, Search)
@@ -71,42 +68,9 @@ def _(
         _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
         _combined = _reg_parse.fillna(_strip_parse)
         df['{col}'] = _combined"""
-
-    class AggressiveAC(AutocleaningConfig):
-        autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
-        command_klasses = [
-            IntParse, StripIntParse, StrBool, USDate,
-            DropCol, FillNA, GroupBy, NoOp,
-            Search]
-
-        quick_command_klasses = [Search]
-        name="aggressive"
-
-    class ConvservativeCleaningGenops(AggresiveCleaningGenOps):
-        rules = {
-            'str_bool_frac':         [s('m>'), .9],
-            'regular_int_parse_frac':  [s('m>'), .9],
-            'strip_int_parse_frac':    [s('m>'), .9],
-            'none':               [s('none-rule')],
-            'us_dates_frac':         [s('primary'), [s('m>'), .8]]}
-
-    class ConservativeAC(AggressiveAC):
-        autocleaning_analysis_klasses = [HeuristicFracs, ConvservativeCleaningGenops]
-        name="conservative"
-    import time
-
-    class ACBuckaroo(BuckarooInfiniteWidget):
-        autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
-        def _handle_payload_args(self, new_payload_args):
-            #time.sleep(3)
-            super()._handle_payload_args(new_payload_args)
     return (
-        ACBuckaroo,
-        AggressiveAC,
         AutocleaningConfig,
         Command,
-        ConservativeAC,
-        ConvservativeCleaningGenops,
         DropCol,
         FillNA,
         GroupBy,
@@ -118,7 +82,6 @@ def _(
         StrBool,
         StripIntParse,
         USDate,
-        time,
     )
 
 
@@ -133,28 +96,15 @@ def _():
 
     # this overrides pd.read_csv and pd.read_parquet to return BuckarooDataFrames which overrides displays as BuckarooWidget, not the default marimo table
     marimo_monkeypatch()
-    citibike_df = pd.read_parquet('./citibike-trips-2016-04.parq')
-    citibike_df
-
-    bw = BuckarooInfiniteWidget(citibike_df)
-    #bw
     return (
         BuckarooInfiniteWidget,
         DataFrame,
         buckaroo,
-        bw,
-        citibike_df,
         marimo_monkeypatch,
         mo,
         np,
         pd,
     )
-
-
-@app.cell
-def _(np):
-    np.max([3,4])
-    return
 
 
 @app.cell
@@ -190,7 +140,7 @@ def _(np, pd):
             ser = ser.astype('string')
         if not pd.api.types.is_string_dtype(ser):
             return 0
-        matches = ser.str.lower().isin(BOOL_SYNONYMS)
+        matches = ser.str.lower().str.strip().isin(BOOL_SYNONYMS)
         return matches.sum() / len(ser)
 
     def us_dates_frac(ser):
@@ -232,8 +182,33 @@ def _(np, pd):
 
 
 @app.cell
-def _():
-    return
+def _(ColAnalysis, get_top_score, sA):
+    class BaseHeuristicCleaningGenOps(ColAnalysis):
+        """
+        This class is meant to be extended with different rules passed in
+
+        create other ColAnalysis classes that satisfy requires_summary
+
+        Then put this group of classes into their own AutocleaningConfig
+        """
+        requires_summary = []
+        provides_defaults = {'cleaning_ops': []}
+
+        rules = {}
+        rules_op_names = {}
+
+        @classmethod
+        def computed_summary(kls, column_metadata):
+            cleaning_op_name = get_top_score(kls.rules, column_metadata)
+            if cleaning_op_name == 'none':
+                return {'cleaning_ops': [], 'cleaning_name':'None'}
+            else:
+                cleaning_name = kls.rules_op_names.get(cleaning_op_name, cleaning_op_name)
+                ops = [sA(cleaning_name, clean_strategy= kls.__name__, clean_col=column_metadata['col_name'] ),
+                    {'symbol': 'df'}]
+                return {'cleaning_ops':ops, 'cleaning_name':cleaning_name, 'add_orig': True}        
+
+    return (BaseHeuristicCleaningGenOps,)
 
 
 @app.cell
@@ -250,7 +225,7 @@ def _(ColAnalysis):
         Then put this group of classes into their own AutocleaningConfig
         """
         requires_summary = ['str_bool_frac', 'regular_int_parse_frac', 'strip_int_parse_frac', 'us_dates_frac']
-        provides_defaults = {'cleaning_ops': []}
+        provides_defaults = {'cleaning_ops': [], 'cleaning_name':""}
 
         rules = {
             'str_bool_frac':         [s('m>'), .7],
@@ -260,80 +235,95 @@ def _(ColAnalysis):
             'us_dates_frac':         [s('primary'), [s('m>'), .7]]}
 
         rules_op_names = {
-            'str_bool_frac': 'str_bool',
-            'regular_int_parse_frac': 'regular_int_parse',
+            'str_bool_frac':           'str_bool',
+            'regular_int_parse_frac':  'regular_int_parse',
             'strip_int_parse_frac':    'strip_int_parse',
-            'us_dates_frac':         'us_date'}
+            'us_dates_frac':           'us_date'}
 
         @classmethod
         def computed_summary(kls, column_metadata):
-            #{'symbol': kls.rules_op_names.get(cleaning_op_name, cleaning_op_name),
-            #         'meta':{ 'auto_clean': True, 'clean_strategy': kls.__name__}},
-
             cleaning_op_name = get_top_score(kls.rules, column_metadata)
             if cleaning_op_name == 'none':
-                return {'cleaning_ops': []}
+                return {'cleaning_ops': [], 'cleaning_name':'None'}
             else:
-                ops = [sA(kls.rules_op_names.get(cleaning_op_name, cleaning_op_name), clean_strategy= kls.__name__, clean_col=column_metadata['col_name'] ),
+                cleaning_name = kls.rules_op_names.get(cleaning_op_name, cleaning_op_name)
+                ops = [sA(cleaning_name, clean_strategy= kls.__name__, clean_col=column_metadata['col_name'] ),
                     {'symbol': 'df'}]
-                return {'cleaning_ops':ops, 'add_orig': True}
+                return {'cleaning_ops':ops, 'cleaning_name':cleaning_name, 'add_orig': True}
     return HeuristicCleaningGenOps, get_top_score, s, sA
 
 
 @app.cell
-def _(HeuristicCleaningGenOps, s):
-    class AggresiveCleaningGenOps(HeuristicCleaningGenOps):
+def _(BaseHeuristicCleaningGenOps, s):
+    frac_name_to_command =  {
+            'str_bool_frac':            'str_bool',
+            'regular_int_parse_frac':   'regular_int_parse',
+            'strip_int_parse_frac':     'strip_int_parse',
+            'us_dates_frac':            'us_date'}
+
+    class ConvservativeCleaningGenops(BaseHeuristicCleaningGenOps):
         requires_summary = ['str_bool_frac', 'regular_int_parse_frac', 'strip_int_parse_frac', 'us_dates_frac']
-        provides_defaults = {'cleaning_ops': []}
 
         rules = {
-            'str_bool_frac':         [s('m>'), .6],
-            'regular_int_parse_frac':  [s('m>'), .9],
-            'strip_int_parse_frac':    [s('m>'), .75],
-            'none':               [s('none-rule')],
-            'us_dates_frac':         [s('primary'), [s('m>'), .7]]}
+            'str_bool_frac':          [s('m>'), .9],
+            'regular_int_parse_frac': [s('m>'), .9],
+            'strip_int_parse_frac':   [s('m>'), .9],
+            'none':                   [s('none-rule')],
+            'us_dates_frac':          [s('primary'), [s('m>'), .8]]}
+        rules_op_names = frac_name_to_command
 
-        rules_op_names = {
-            'str_bool_frac': 'str_bool',
-            'regular_int_parse_frac': 'regular_int_parse',
-            'strip_int_parse_frac':    'strip_int_parse',
-            'us_dates_frac':         'us_date'}
-    return (AggresiveCleaningGenOps,)
+    class AggresiveCleaningGenOps(BaseHeuristicCleaningGenOps):
+        requires_summary = ['str_bool_frac', 'regular_int_parse_frac', 'strip_int_parse_frac', 'us_dates_frac']
+        rules = {
+            'str_bool_frac':          [s('m>'), .6],
+            'regular_int_parse_frac': [s('m>'), .9],
+            'strip_int_parse_frac':   [s('m>'), .75],
+            'none':                   [s('none-rule')],
+            'us_dates_frac':          [s('primary'), [s('m>'), .7]]}
+
+        rules_op_names = frac_name_to_command
+    return (
+        AggresiveCleaningGenOps,
+        ConvservativeCleaningGenops,
+        frac_name_to_command,
+    )
 
 
 @app.cell
-def _():
-    return
+def _(
+    AggresiveCleaningGenOps,
+    AutocleaningConfig,
+    BuckarooInfiniteWidget,
+    ConvservativeCleaningGenops,
+    DropCol,
+    FillNA,
+    GroupBy,
+    HeuristicFracs,
+    IntParse,
+    NoCleaningConf,
+    NoOp,
+    Search,
+    StrBool,
+    StripIntParse,
+    USDate,
+):
+    class AggressiveAC(AutocleaningConfig):
+        autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
+        command_klasses = [
+            IntParse, StripIntParse, StrBool, USDate,
+            DropCol, FillNA, GroupBy, NoOp,
+            Search]
 
+        quick_command_klasses = [Search]
+        name="aggressive"
 
-@app.cell
-def _(dirty_df, pd, re):
-    def clean_b(df):
+    class ConservativeAC(AggressiveAC):
+        autocleaning_analysis_klasses = [HeuristicFracs, ConvservativeCleaningGenops]
+        name="conservative"
 
-        _digits_and_period = re.compile(r'[^\d\.]')
-        _ser = df['b']
-        _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
-        #very very slow
-        _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
-        #_combined = _reg_parse.fillna(_strip_parse)
-        #df['b'] = _combined
-
-    def clean(df):
-        df = df.copy()
-        clean_b(df)
-        df['us_dates'] = pd.to_datetime(df['us_dates'], errors='coerce', format='%m/%d/%Y')
-        TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
-        FALSE_SYNONYMS = ['false', 'no', 'off', '0']
-        _ser = df['mostly_bool']
-        _int_sanitize = _ser.replace(1, True).replace(0, False) 
-        _real_bools = _int_sanitize.isin([True, False])
-        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
-        _trues = _ser.str.lower().isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
-        _falses =  ~ (_ser.str.lower().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
-        _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
-        df['mostly_bool'] = _combined
-    clean(dirty_df)
-    return clean, clean_b
+    class ACBuckaroo(BuckarooInfiniteWidget):
+        autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
+    return ACBuckaroo, AggressiveAC, ConservativeAC
 
 
 if __name__ == "__main__":
