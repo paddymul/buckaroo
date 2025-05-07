@@ -40,8 +40,15 @@ def cache_series_func(f, max_size=256):
             raise Exception(f"Unknown type of {type(ser)}")
     return ret_func
 
+# I don't want to apply these caching functions more generally because
+# I'm worried about putting a large object inot the cache results.
+# Since these return scalars, it's fairly cheap, and these functions
+# are specifically slow , I"m fine with it
+
+# importantly these functions are run interactively
+
 @cache_series_func
-def int_parse_frac(ser):
+def regular_int_parse_frac(ser):
     null_count = (~ser.apply(pd.to_numeric, errors="coerce").isnull()).sum()
     return null_count / len(ser)
 
@@ -105,7 +112,7 @@ class HeuristicFracs(ColAnalysis):
 
         return dict(
             str_bool_frac=str_bool_frac(ser),
-            regular_int_parse_frac=int_parse_frac(ser),
+            regular_int_parse_frac=regular_int_parse_frac(ser),
             strip_int_parse_frac=strip_int_parse_frac(ser),
             us_dates_frac=us_dates_frac(ser),
         )

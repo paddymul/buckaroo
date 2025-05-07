@@ -83,13 +83,8 @@ def _(pd):
 
 
 @app.cell
-def _(ACBuckaroo, dirty_df, pd):
-    ACBuckaroo(pd.concat([dirty_df]*3000))
-    return
-
-
-@app.cell
 def _(ACBuckaroo, dirty_df):
+    #ACBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
     ACBuckaroo(dirty_df)
     return
 
@@ -180,14 +175,17 @@ def _(mo):
 
 
 @app.cell
-def _(int_parse_frac, pd, strip_int_parse_frac):
+def _(pd, strip_int_and_period_frac):
     # we have defined other functions in the buckaroo code
     from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
         ColAnalysis,
     )
     from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
     from buckaroo.jlisp.lisp_utils import s
-    from buckaroo.customizations.pd_fracs import (str_bool_frac, regular_int_parse_frac, us_dates_frac)
+    from buckaroo.customizations.pd_fracs import (str_bool_frac, regular_int_parse_frac, us_dates_frac, cache_series_func)
+
+    cached_strip_int_and_period_frac = cache_series_func(strip_int_and_period_frac)
+
     class HeuristicFracs(ColAnalysis):
         provides_defaults = dict(
             str_bool_frac=0,
@@ -206,8 +204,9 @@ def _(int_parse_frac, pd, strip_int_parse_frac):
 
             return dict(
                 str_bool_frac=str_bool_frac(ser),
-                regular_int_parse_frac=int_parse_frac(ser),
-                strip_int_parse_frac=strip_int_parse_frac(ser),
+                regular_int_parse_frac=regular_int_parse_frac(ser),
+    #            strip_int_parse_frac=strip_int_and_period_frac(ser),
+                strip_int_parse_frac=cached_strip_int_and_period_frac(ser),
                 us_dates_frac=us_dates_frac(ser),
             )
 
@@ -226,7 +225,7 @@ def _(int_parse_frac, pd, strip_int_parse_frac):
             "us_dates_frac"]
 
         rules = {
-            "str_bool_frac":          "(f> 0.9)",        # f> is a special operator that says "if this fraction is greater then"
+            "str_bool_frac":          "(f> 0.75)",        # f> is a special operator that says "if this fraction is greater then"
             "regular_int_parse_frac": "(f> 0.85)",       # you can write scheme here
             "strip_int_parse_frac":   [s("f>"), 0.9],    # or JLisp
             "none":                   [s("none-rule")],  # none is important, we want to have a default rule
@@ -238,6 +237,8 @@ def _(int_parse_frac, pd, strip_int_parse_frac):
         ColAnalysis,
         ConvservativeCleaningGenops,
         HeuristicFracs,
+        cache_series_func,
+        cached_strip_int_and_period_frac,
         frac_name_to_command,
         regular_int_parse_frac,
         s,
