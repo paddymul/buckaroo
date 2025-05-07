@@ -120,11 +120,11 @@ class HeuristicCleaningGenOps(ColAnalysis):
     provides_defaults = {'cleaning_ops': []}
 
     rules = {
-        'str_bool_frac':         [s('m>'), .7],
-        'regular_int_parse_frac':  [s('m>'), .9],
-        'strip_int_parse_frac':    [s('m>'), .7],
-        'none':               [s('none-rule')],
-        'us_dates_frac':         [s('primary'), [s('m>'), .7]]}
+        'str_bool_frac':          [s('f>'), .7],
+        'regular_int_parse_frac': [s('f>'), .9],
+        'strip_int_parse_frac':   [s('f>'), .7],
+        'none':                   [s('none-rule')],
+        'us_dates_frac':          [s('primary'), [s('f>'), .7]]}
 
     rules_op_names = {
         'str_bool_frac': 'str_bool',
