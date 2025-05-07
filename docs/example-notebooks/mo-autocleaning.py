@@ -142,7 +142,6 @@ def _(dirty_df, pd, strip_int_and_period):
       strip_int_and_period_frac(dirty_df['b']),
       strip_int_and_period_frac(dirty_df['mostly_bool'])]
     #so we can see that ['b'] is a good fit, the other two are not
-
     return (strip_int_and_period_frac,)
 
 
@@ -164,8 +163,6 @@ def _(mo):
 
 @app.cell
 def _(
-    BaseHeuristicCleaningGenOps,
-    ColAnalysis,
     int_parse_frac,
     pd,
     s,
@@ -174,7 +171,10 @@ def _(
     us_dates_frac,
 ):
     # we have defined other functions in the buckaroo code
-
+    from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
+        ColAnalysis,
+    )
+    from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
     class HeuristicFracs(ColAnalysis):
         provides_defaults = dict(
             str_bool_frac=0,
@@ -220,7 +220,13 @@ def _(
             "us_dates_frac": [s("primary"), [s("f>"), 0.8]]}  #primary is a special operator that gives this rule a boost if it matches
 
         rules_op_names = frac_name_to_command
-    return ConvservativeCleaningGenops, HeuristicFracs, frac_name_to_command
+    return (
+        BaseHeuristicCleaningGenOps,
+        ColAnalysis,
+        ConvservativeCleaningGenops,
+        HeuristicFracs,
+        frac_name_to_command,
+    )
 
 
 @app.cell
@@ -288,7 +294,7 @@ def _(
     StripIntParse,
     USDate,
 ):
-    class ConservativeAC(AutocleaningConfig):
+    class ConservativeA2(AutocleaningConfig):
         command_klasses = [
             IntParse,
             StripIntParse,
@@ -310,8 +316,7 @@ def _(
         ]
         #name is what shows up in the UI
         name = "conservative"
-
-    return (ConservativeAC,)
+    return (ConservativeA2,)
 
 
 @app.cell
@@ -361,9 +366,6 @@ def _():
     )
     from buckaroo.customizations.pd_autoclean_conf import NoCleaningConf
     from buckaroo.dataflow.autocleaning import AutocleaningConfig
-
-
-
     return (
         AutocleaningConfig,
         Command,
@@ -414,199 +416,12 @@ def _():
 
 
 @app.cell
-def _(np, pd):
-    import re
-    from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
-        ColAnalysis,
-    )
-
-
-    def int_parse_frac(ser):
-        null_count = (~ser.apply(pd.to_numeric, errors="coerce").isnull()).sum()
-        return null_count / len(ser)
-
-
-    digits_and_period = re.compile(r"[^\d\.]")
-
-
-    def strip_int_parse_frac(ser):
-        if pd.api.types.is_object_dtype(ser):
-            ser = ser.astype("string")
-        if not pd.api.types.is_string_dtype(ser):
-            return 0
-        ser = ser.sample(np.min([300, len(ser)]))
-        stripped = ser.str.replace(digits_and_period, "", regex=True)
-
-        # don't like the string conversion here, should still be vectorized
-        int_parsable = ser.astype(str).str.isdigit()
-        parsable = int_parsable | (stripped != "")
-        return parsable.sum() / len(ser)
-
-
-    TRUE_SYNONYMS = ["true", "yes", "on", "1"]
-    FALSE_SYNONYMS = ["false", "no", "off", "0"]
-    BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
-
-
-    def str_bool_frac(ser):
-        ser = ser.sample(np.min([300, len(ser)]))
-        if pd.api.types.is_object_dtype(ser):
-            ser = ser.astype("string")
-        if not pd.api.types.is_string_dtype(ser):
-            return 0
-        matches = ser.str.lower().str.strip().isin(BOOL_SYNONYMS)
-        return matches.sum() / len(ser)
-
-
-    def us_dates_frac(ser):
-        parsed_dates = pd.to_datetime(ser, errors="coerce", format="%m/%d/%Y")
-        return (~parsed_dates.isna()).sum() / len(ser)
-
-
-    def euro_dates_frac(ser):
-        parsed_dates = pd.to_datetime(ser, errors="coerce", format="%d/%m/%Y")
-        return (~parsed_dates.isna()).sum() / len(ser)
-
-    class HeuristicFracs(ColAnalysis):
-        provides_defaults = dict(
-            str_bool_frac=0,
-            regular_int_parse_frac=0,
-            strip_int_parse_frac=0,
-            us_dates_frac=0,
-        )
-
-        @staticmethod
-        def series_summary(sampled_ser, ser):
-            if not (
-                pd.api.types.is_string_dtype(ser)
-                or pd.api.types.is_object_dtype(ser)
-            ):
-                return {}
-
-            return dict(
-                str_bool_frac=str_bool_frac(ser),
-                regular_int_parse_frac=int_parse_frac(ser),
-                strip_int_parse_frac=strip_int_parse_frac(ser),
-                us_dates_frac=us_dates_frac(ser),
-            )
-    return (
-        BOOL_SYNONYMS,
-        ColAnalysis,
-        FALSE_SYNONYMS,
-        HeuristicFracs,
-        TRUE_SYNONYMS,
-        digits_and_period,
-        euro_dates_frac,
-        int_parse_frac,
-        re,
-        str_bool_frac,
-        strip_int_parse_frac,
-        us_dates_frac,
-    )
-
-
-@app.cell
-def _(ColAnalysis):
-    from buckaroo.jlisp.lisp_utils import s, sA
-    from buckaroo.auto_clean.heuristic_lang import get_top_score
-
-
-    class BaseHeuristicCleaningGenOps(ColAnalysis):
-        """
-        This class is meant to be extended with different rules passed in
-
-        create other ColAnalysis classes that satisfy requires_summary
-
-        Then put this group of classes into their own AutocleaningConfig
-        """
-
-        requires_summary = []
-        provides_defaults = {"cleaning_ops": []}
-
-        rules = {}
-        rules_op_names = {}
-
-        @classmethod
-        def computed_summary(kls, column_metadata):
-            cleaning_op_name = get_top_score(kls.rules, column_metadata)
-            if cleaning_op_name == "none":
-                return {"cleaning_ops": [], "cleaning_name": "None"}
-            else:
-                cleaning_name = kls.rules_op_names.get(
-                    cleaning_op_name, cleaning_op_name
-                )
-                ops = [
-                    sA(
-                        cleaning_name,
-                        clean_strategy=kls.__name__,
-                        clean_col=column_metadata["col_name"],
-                    ),
-                    {"symbol": "df"},
-                ]
-                return {
-                    "cleaning_ops": ops,
-                    "cleaning_name": cleaning_name,
-                    "add_orig": True,
-                }
-    return BaseHeuristicCleaningGenOps, get_top_score, s, sA
-
-
-@app.cell
-def _(BaseHeuristicCleaningGenOps, s):
-    frac_name_to_command = {
-        "str_bool_frac": "str_bool",
-        "regular_int_parse_frac": "regular_int_parse",
-        "strip_int_parse_frac": "strip_int_parse",
-        "us_dates_frac": "us_date",
-    }
-
-
-    class ConvservativeCleaningGenops(BaseHeuristicCleaningGenOps):
-        requires_summary = [
-            "str_bool_frac",
-            "regular_int_parse_frac",
-            "strip_int_parse_frac",
-            "us_dates_frac",
-        ]
-
-        rules = {
-            "str_bool_frac": [s("m>"), 0.9],
-            "regular_int_parse_frac": [s("m>"), 0.9],
-            "strip_int_parse_frac": [s("m>"), 0.9],
-            "none": [s("none-rule")],
-            "us_dates_frac": [s("primary"), [s("m>"), 0.8]],
-        }
-        rules_op_names = frac_name_to_command
-
-
-    class AggresiveCleaningGenOps(BaseHeuristicCleaningGenOps):
-        requires_summary = [
-            "str_bool_frac",
-            "regular_int_parse_frac",
-            "strip_int_parse_frac",
-            "us_dates_frac",
-        ]
-        rules = {
-            "str_bool_frac": [s("m>"), 0.6],
-            "regular_int_parse_frac": [s("m>"), 0.9],
-            "strip_int_parse_frac": [s("m>"), 0.75],
-            "none": [s("none-rule")],
-            "us_dates_frac": [s("primary"), [s("m>"), 0.7]],
-        }
-
-        rules_op_names = frac_name_to_command
-    return (
-        AggresiveCleaningGenOps,
-        ConvservativeCleaningGenops,
-        frac_name_to_command,
-    )
-
-
-@app.cell
 def _(
     AggresiveCleaningGenOps,
+    AggressiveAC,
     AutocleaningConfig,
     BuckarooInfiniteWidget,
+    ConservativeAC,
     ConvservativeCleaningGenops,
     DefaultMainStyling,
     DropCol,
@@ -625,7 +440,7 @@ def _(
     obj_,
     pinned_histogram,
 ):
-    class AggressiveAC(AutocleaningConfig):
+    class AggressiveAC3(AutocleaningConfig):
         autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
         command_klasses = [
             IntParse,
@@ -643,7 +458,7 @@ def _(
         name = "aggressive"
 
 
-    class ConservativeAC(AggressiveAC):
+    class ConservativeAC3(AggressiveAC):
         autocleaning_analysis_klasses = [
             HeuristicFracs,
             ConvservativeCleaningGenops,
@@ -670,7 +485,7 @@ def _(
         analysis_klasses = copy_extend(
             BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling
         )
-    return ACBuckaroo, AggressiveAC, CleaningDetailStyling, ConservativeAC
+    return ACBuckaroo, AggressiveAC3, CleaningDetailStyling, ConservativeAC3
 
 
 @app.cell

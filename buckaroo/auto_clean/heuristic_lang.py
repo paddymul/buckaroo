@@ -60,10 +60,11 @@ MACROS = """
                 (* other-cond 100)
                 other-cond)))
 
-    (define-macro m> (lambda operand
+    (define-macro f> (lambda operand
         `(if (> measure ,@operand)
              measure #f)))
 
+    ; always return .1
     (define none-rule (lambda _unused .1))
     (define-macro return-measure (lambda operand
         `(if #t

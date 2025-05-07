@@ -2,7 +2,7 @@ from buckaroo.auto_clean.heuristic_lang import eval_heuristic_rule, eval_heurist
 from buckaroo.jlisp.lisp_utils import s
 
 """
-This isn't heuristic lang but it is auto_celan.
+This isn't heuristic lang but it is auto_clean.
 
 
 So the UI has added a concept of "preserve" where a cleaning operation as denoted by
@@ -29,11 +29,11 @@ The operation detail viewer can show these comments
 
 
 l_rules = {
-    't_str_bool':         [s('m>'), .7],
-    'regular_int_parse':  [s('m>'), .9],
-    'strip_int_parse':    [s('m>'), .7],
+    't_str_bool':         [s('f>'), .7],
+    'regular_int_parse':  [s('f>'), .9],
+    'strip_int_parse':    [s('f>'), .7],
     'none':               [s('none-rule')],
-    't_us_dates':         [s('primary'), [s('m>'), .7]]}
+    't_us_dates':         [s('primary'), [s('f>'), .7]]}
 
 def test_get_top_score():
     probably_bool= {
@@ -64,19 +64,19 @@ def test_eval_heuristics_no_match():
 
 def test_macro_behaviour_rule():
     #verify that macros work from scheme and jlisp
-    assert eval_heuristic_rule([s('m>'), .7], .6) == False
-    assert eval_heuristic_rule('(m> .7)', .6) == False
+    assert eval_heuristic_rule([s('f>'), .7], .6) == False
+    assert eval_heuristic_rule('(f> .7)', .6) == False
 
     
 
     assert eval_heuristic_rule([s('if'), 4, s('measure'), 9], 3) == 3
-    assert eval_heuristic_rule([s('m>'), .7], .8) == .8
+    assert eval_heuristic_rule([s('f>'), .7], .8) == .8
 
 
     
 def test_none_null():
     assert eval_heuristic_rule([s('null?'), s('measure')], []) == True
-    assert eval_heuristic_rule([s('null?'), [s('m>'), .7]], .9) == False
+    assert eval_heuristic_rule([s('null?'), [s('f>'), .7]], .9) == False
     assert eval_heuristic_rule([s('none?'), s('measure')], None) == True
 
 
@@ -85,23 +85,23 @@ def test_heuristic_rule():
                                 [s('display'), s('measure')],
                                 s('measure')],
                                 .7) == .7
-    assert eval_heuristic_rule('(m> .7)', .8)  == .8
-    assert eval_heuristic_rule('(m> .7)', .5)  == False
-    assert eval_heuristic_rule([s('m>'), .7], .8) == .8
-    assert eval_heuristic_rule([s('m>'), .7], .6) == False
-    assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
-    assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
+    assert eval_heuristic_rule('(f> .7)', .8)  == .8
+    assert eval_heuristic_rule('(f> .7)', .5)  == False
+    assert eval_heuristic_rule([s('f>'), .7], .8) == .8
+    assert eval_heuristic_rule([s('f>'), .7], .6) == False
+    assert eval_heuristic_rule([s('primary'), [s('f>'), .7]], .6) == False
+    assert eval_heuristic_rule([s('primary'), [s('f>'), .7]], .8) == 80
 
 
 def test_timing(): # noqa: E712
     import time
     start_time = time.perf_counter()
     for i in range(100):
-        assert eval_heuristic_rule([s('m>'), .7], .6) == False
-        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False
-        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .8) == 80
-        assert eval_heuristic_rule([s('primary'), [s('m>'), .7]], .6) == False  
-        assert eval_heuristic_rule([s('m>'), .7], .6) == False  # noqa: E712
+        assert eval_heuristic_rule([s('f>'), .7], .6) == False
+        assert eval_heuristic_rule([s('primary'), [s('f>'), .7]], .6) == False
+        assert eval_heuristic_rule([s('primary'), [s('f>'), .7]], .8) == 80
+        assert eval_heuristic_rule([s('primary'), [s('f>'), .7]], .6) == False  
+        assert eval_heuristic_rule([s('f>'), .7], .6) == False  # noqa: E712
     end_time = time.perf_counter()
     execution_time = end_time - start_time
     print(f"Function execution time: {execution_time:.4f} seconds")
