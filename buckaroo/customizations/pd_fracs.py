@@ -6,7 +6,41 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 )
 from buckaroo.jlisp.lisp_utils import s
 from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
+from functools import lru_cache
+from pandas.util import hash_pandas_object
 
+
+class SeriesWrapper:
+    def __init__(self, series):
+        self.series = series
+        if not getattr(series, '_hash', False):
+            series._hash = int(hash_pandas_object(series).sum())
+        self._hash = series._hash
+
+    def __eq__(self, other):
+        return isinstance(other, SeriesWrapper) and self.series.equals(other.series)
+
+    def __hash__(self):
+        return self._hash
+def cache_series_func(f, max_size=256):
+    _cache = {}
+
+    def unwrapped_hashable_func(ser):
+        return f(ser.series)
+    cached_func= lru_cache(max_size)(unwrapped_hashable_func)
+
+    def ret_func(ser):
+        if isinstance(ser, SeriesWrapper):
+            return cached_func(ser)
+        elif isinstance(ser, pd.Series):
+            cser = SeriesWrapper(ser)
+            #print("11", cser, hash(cser))
+            return cached_func(cser)
+        else:
+            raise Exception(f"Unknown type of {type(ser)}")
+    return ret_func
+
+@cache_series_func
 def int_parse_frac(ser):
     null_count = (~ser.apply(pd.to_numeric, errors="coerce").isnull()).sum()
     return null_count / len(ser)
@@ -14,7 +48,7 @@ def int_parse_frac(ser):
 
 digits_and_period = re.compile(r"[^\d\.]")
 
-
+@cache_series_func
 def strip_int_parse_frac(ser):
     if pd.api.types.is_object_dtype(ser):
         ser = ser.astype("string")
@@ -33,7 +67,7 @@ TRUE_SYNONYMS = ["true", "yes", "on", "1"]
 FALSE_SYNONYMS = ["false", "no", "off", "0"]
 BOOL_SYNONYMS = TRUE_SYNONYMS + FALSE_SYNONYMS
 
-
+@cache_series_func
 def str_bool_frac(ser):
     ser = ser.sample(np.min([300, len(ser)]))
     if pd.api.types.is_object_dtype(ser):
@@ -43,12 +77,12 @@ def str_bool_frac(ser):
     matches = ser.str.lower().str.strip().isin(BOOL_SYNONYMS)
     return matches.sum() / len(ser)
 
-
+@cache_series_func
 def us_dates_frac(ser):
     parsed_dates = pd.to_datetime(ser, errors="coerce", format="%m/%d/%Y")
     return (~parsed_dates.isna()).sum() / len(ser)
 
-
+@cache_series_func
 def euro_dates_frac(ser):
     parsed_dates = pd.to_datetime(ser, errors="coerce", format="%d/%m/%Y")
     return (~parsed_dates.isna()).sum() / len(ser)

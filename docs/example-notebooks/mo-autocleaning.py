@@ -13,6 +13,7 @@ def _(mo):
         Dealing with dirty data accounts for a large portion of the time in doing data work. We know what good data looks like, and we know the individual pandas commands to clean columns. But we have to type the same commands over and over again.
 
         Buckaroo separates data cleaning for users into four steps
+
         1. look at the original data with your eyes
         2. Cycle through different cleaning approaches
         3. Approve which cleaned columns you like
@@ -82,6 +83,12 @@ def _(pd):
 
 
 @app.cell
+def _(ACBuckaroo, dirty_df, pd):
+    ACBuckaroo(pd.concat([dirty_df]*3000))
+    return
+
+
+@app.cell
 def _(ACBuckaroo, dirty_df):
     ACBuckaroo(dirty_df)
     return
@@ -99,7 +106,7 @@ def _(mo):
 
 
 @app.cell
-def _(pd, re):
+def _(DataFrame, dirty_df, pd, re):
     def strip_int_and_period(orig_ser):
         if pd.api.types.is_object_dtype(orig_ser):
             ser = orig_ser.astype("string")
@@ -115,7 +122,7 @@ def _(pd, re):
         only_numeric_str_ser = ser.str.replace(digits_and_period, "", regex=True)
         numeric_ser = pd.to_numeric(only_numeric_str_ser, errors="coerce") #, dtype_backend="pyarrow")
         return numeric_ser
-    #DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
+    DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
     return (strip_int_and_period,)
 
 
@@ -124,7 +131,7 @@ def _(mo):
     mo.md(
         r"""
         # Writing a fraction function
-        We now have a cleaning function, we'll get back to integrating it into the Buckaroo UI in a little bi
+        We now have a cleaning function, we'll get back to integrating it into the Buckaroo UI in a little bit
 
         Fraction functions return the fraction of a column (0-1) that tells the fraction of values that are succesfully converted with this function.  Buckaroo uses fraction fuctions to integrate with heuristics to choose the correct cleaning function (if any) to apply to a column.
 
@@ -142,7 +149,6 @@ def _():
 
 @app.cell
 def _(dirty_df, pd, strip_int_and_period):
-
     # I thought I could just call isna on the converted series, but for non string/object, that will give an improper result
     def strip_int_and_period_frac(ser):
         if not (pd.api.types.is_object_dtype(ser) or pd.api.types.is_string_dtype(ser)):
@@ -174,13 +180,14 @@ def _(mo):
 
 
 @app.cell
-def _(int_parse_frac, pd, str_bool_frac, strip_int_parse_frac, us_dates_frac):
+def _(int_parse_frac, pd, strip_int_parse_frac):
     # we have defined other functions in the buckaroo code
     from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
         ColAnalysis,
     )
     from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
     from buckaroo.jlisp.lisp_utils import s
+    from buckaroo.customizations.pd_fracs import (str_bool_frac, regular_int_parse_frac, us_dates_frac)
     class HeuristicFracs(ColAnalysis):
         provides_defaults = dict(
             str_bool_frac=0,
@@ -232,7 +239,10 @@ def _(int_parse_frac, pd, str_bool_frac, strip_int_parse_frac, us_dates_frac):
         ConvservativeCleaningGenops,
         HeuristicFracs,
         frac_name_to_command,
+        regular_int_parse_frac,
         s,
+        str_bool_frac,
+        us_dates_frac,
     )
 
 
