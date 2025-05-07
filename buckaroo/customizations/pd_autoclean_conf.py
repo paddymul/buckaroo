@@ -53,3 +53,36 @@ class NoCleaningConf(AutocleaningConfig):
     quick_command_klasses = [Search]
     name=""
 
+
+from buckaroo.customizations.pd_fracs import HeuristicFracs, AggresiveCleaningGenOps, ConvservativeCleaningGenops
+from buckaroo.customizations.pandas_cleaning_commands import (
+    IntParse,
+    StrBool,
+    USDate,
+)
+
+class AggressiveA(AutocleaningConfig):
+    autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
+    command_klasses = [
+        IntParse,
+        StripIntParse,
+        StrBool,
+        USDate,
+        DropCol,
+        FillNA,
+        GroupBy,
+        NoOp,
+        Search,
+    ]
+
+    quick_command_klasses = [Search]
+    name = "aggressive"
+
+
+class ConservativeAC3(AggressiveAC):
+    autocleaning_analysis_klasses = [
+        HeuristicFracs,
+        ConvservativeCleaningGenops,
+    ]
+    name = "conservative"
+

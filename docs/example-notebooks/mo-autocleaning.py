@@ -94,7 +94,7 @@ def _(mo):
 
 
 @app.cell
-def _(DataFrame, dirty_df, pd, re):
+def _(pd, re):
     def strip_int_and_period(orig_ser):
         if pd.api.types.is_object_dtype(orig_ser):
             ser = orig_ser.astype("string")
@@ -110,7 +110,7 @@ def _(DataFrame, dirty_df, pd, re):
         only_numeric_str_ser = ser.str.replace(digits_and_period, "", regex=True)
         numeric_ser = pd.to_numeric(only_numeric_str_ser, errors="coerce") #, dtype_backend="pyarrow")
         return numeric_ser
-    DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
+    #DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
     return (strip_int_and_period,)
 
 
@@ -162,19 +162,13 @@ def _(mo):
 
 
 @app.cell
-def _(
-    int_parse_frac,
-    pd,
-    s,
-    str_bool_frac,
-    strip_int_parse_frac,
-    us_dates_frac,
-):
+def _(int_parse_frac, pd, str_bool_frac, strip_int_parse_frac, us_dates_frac):
     # we have defined other functions in the buckaroo code
     from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
         ColAnalysis,
     )
     from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
+    from buckaroo.jlisp.lisp_utils import s
     class HeuristicFracs(ColAnalysis):
         provides_defaults = dict(
             str_bool_frac=0,
@@ -226,6 +220,7 @@ def _(
         ConvservativeCleaningGenops,
         HeuristicFracs,
         frac_name_to_command,
+        s,
     )
 
 
@@ -417,54 +412,16 @@ def _():
 
 @app.cell
 def _(
-    AggresiveCleaningGenOps,
     AggressiveAC,
-    AutocleaningConfig,
     BuckarooInfiniteWidget,
     ConservativeAC,
-    ConvservativeCleaningGenops,
     DefaultMainStyling,
-    DropCol,
-    FillNA,
-    GroupBy,
-    HeuristicFracs,
-    IntParse,
     NoCleaningConf,
-    NoOp,
-    Search,
-    StrBool,
-    StripIntParse,
-    USDate,
     copy_extend,
     float_,
     obj_,
     pinned_histogram,
 ):
-    class AggressiveAC3(AutocleaningConfig):
-        autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
-        command_klasses = [
-            IntParse,
-            StripIntParse,
-            StrBool,
-            USDate,
-            DropCol,
-            FillNA,
-            GroupBy,
-            NoOp,
-            Search,
-        ]
-
-        quick_command_klasses = [Search]
-        name = "aggressive"
-
-
-    class ConservativeAC3(AggressiveAC):
-        autocleaning_analysis_klasses = [
-            HeuristicFracs,
-            ConvservativeCleaningGenops,
-        ]
-        name = "conservative"
-
 
     class CleaningDetailStyling(DefaultMainStyling):
         df_display_name = "cleaning_detail"
@@ -485,7 +442,7 @@ def _(
         analysis_klasses = copy_extend(
             BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling
         )
-    return ACBuckaroo, AggressiveAC3, CleaningDetailStyling, ConservativeAC3
+    return ACBuckaroo, CleaningDetailStyling
 
 
 @app.cell

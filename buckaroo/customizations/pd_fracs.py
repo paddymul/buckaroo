@@ -91,11 +91,11 @@ class ConvservativeCleaningGenops(BaseHeuristicCleaningGenOps):
     ]
 
     rules = {
-        "str_bool_frac": [s("m>"), 0.9],
-        "regular_int_parse_frac": [s("m>"), 0.9],
-        "strip_int_parse_frac": [s("m>"), 0.9],
+        "str_bool_frac": [s("f>"), 0.9],
+        "regular_int_parse_frac": [s("f>"), 0.9],
+        "strip_int_parse_frac": [s("f>"), 0.9],
         "none": [s("none-rule")],
-        "us_dates_frac": [s("primary"), [s("m>"), 0.8]],
+        "us_dates_frac": [s("primary"), [s("f>"), 0.8]],
     }
     rules_op_names = frac_name_to_command
 
@@ -108,11 +108,11 @@ class AggresiveCleaningGenOps(BaseHeuristicCleaningGenOps):
         "us_dates_frac",
     ]
     rules = {
-        "str_bool_frac": [s("m>"), 0.6],
-        "regular_int_parse_frac": [s("m>"), 0.9],
-        "strip_int_parse_frac": [s("m>"), 0.75],
+        "str_bool_frac": [s("f>"), 0.6],
+        "regular_int_parse_frac": [s("f>"), 0.9],
+        "strip_int_parse_frac": [s("f>"), 0.75],
         "none": [s("none-rule")],
-        "us_dates_frac": [s("primary"), [s("m>"), 0.7]],
+        "us_dates_frac": [s("primary"), [s("f>"), 0.7]],
     }
 
     rules_op_names = frac_name_to_command    
