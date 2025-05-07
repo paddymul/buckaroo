@@ -27,7 +27,7 @@ def _(mo):
 
 
 @app.cell
-def _(ACBuckaroo, pd):
+def _(pd):
     dirty_df = pd.DataFrame(
         {
             "a": [10, 20, 30, 40, 10, 20.3, None, 8, 9, 10, 11, 20, None],
@@ -78,8 +78,13 @@ def _(ACBuckaroo, pd):
             ],
         }
     )
-    ACBuckaroo(dirty_df)
     return (dirty_df,)
+
+
+@app.cell
+def _(ACBuckaroo, dirty_df):
+    ACBuckaroo(dirty_df)
+    return
 
 
 @app.cell
@@ -130,7 +135,14 @@ def _(mo):
 
 
 @app.cell
+def _():
+    import re
+    return (re,)
+
+
+@app.cell
 def _(dirty_df, pd, strip_int_and_period):
+
     # I thought I could just call isna on the converted series, but for non string/object, that will give an improper result
     def strip_int_and_period_frac(ser):
         if not (pd.api.types.is_object_dtype(ser) or pd.api.types.is_string_dtype(ser)):
@@ -289,7 +301,7 @@ def _(
     StripIntParse,
     USDate,
 ):
-    class ConservativeA2(AutocleaningConfig):
+    class ConservativeAC(AutocleaningConfig):
         command_klasses = [
             IntParse,
             StripIntParse,
@@ -311,7 +323,7 @@ def _(
         ]
         #name is what shows up in the UI
         name = "conservative"
-    return (ConservativeA2,)
+    return (ConservativeAC,)
 
 
 @app.cell
@@ -412,7 +424,6 @@ def _():
 
 @app.cell
 def _(
-    AggressiveAC,
     BuckarooInfiniteWidget,
     ConservativeAC,
     DefaultMainStyling,
@@ -422,7 +433,7 @@ def _(
     obj_,
     pinned_histogram,
 ):
-
+    from buckaroo.customizations.pd_autoclean_conf import AggressiveAC
     class CleaningDetailStyling(DefaultMainStyling):
         df_display_name = "cleaning_detail"
         pinned_rows = [
@@ -442,7 +453,7 @@ def _(
         analysis_klasses = copy_extend(
             BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling
         )
-    return ACBuckaroo, CleaningDetailStyling
+    return ACBuckaroo, AggressiveAC, CleaningDetailStyling
 
 
 @app.cell

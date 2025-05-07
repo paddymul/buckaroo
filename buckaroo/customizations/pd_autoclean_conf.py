@@ -7,6 +7,19 @@ from buckaroo.customizations.pandas_commands import (
 
 from buckaroo.customizations.analysis import (
     DefaultSummaryStats, PdCleaningStats)
+from buckaroo.customizations.pd_fracs import HeuristicFracs, AggresiveCleaningGenOps, ConvservativeCleaningGenops
+from buckaroo.customizations.pandas_cleaning_commands import (
+    IntParse,
+    StrBool,
+    USDate,
+    StripIntParse
+)
+
+from buckaroo.customizations.pandas_commands import (
+    NoOp,
+)
+
+
 
 BASE_COMMANDS = [
     #Basic Column operations
@@ -54,14 +67,8 @@ class NoCleaningConf(AutocleaningConfig):
     name=""
 
 
-from buckaroo.customizations.pd_fracs import HeuristicFracs, AggresiveCleaningGenOps, ConvservativeCleaningGenops
-from buckaroo.customizations.pandas_cleaning_commands import (
-    IntParse,
-    StrBool,
-    USDate,
-)
 
-class AggressiveA(AutocleaningConfig):
+class AggressiveAC(AutocleaningConfig):
     autocleaning_analysis_klasses = [HeuristicFracs, AggresiveCleaningGenOps]
     command_klasses = [
         IntParse,
@@ -79,7 +86,7 @@ class AggressiveA(AutocleaningConfig):
     name = "aggressive"
 
 
-class ConservativeAC3(AggressiveAC):
+class ConservativeAC(AggressiveAC):
     autocleaning_analysis_klasses = [
         HeuristicFracs,
         ConvservativeCleaningGenops,

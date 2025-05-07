@@ -1,9 +1,11 @@
 import re
 import pandas as pd
+import numpy as np
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
     ColAnalysis,
 )
-from heuristics import BaseHeuristicCleaningGenOps
+from buckaroo.jlisp.lisp_utils import s
+from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
 
 def int_parse_frac(ser):
     null_count = (~ser.apply(pd.to_numeric, errors="coerce").isnull()).sum()
