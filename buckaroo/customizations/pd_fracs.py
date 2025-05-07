@@ -6,46 +6,16 @@ from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
 )
 from buckaroo.jlisp.lisp_utils import s
 from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
-from functools import lru_cache
-from pandas.util import hash_pandas_object
 
+from buckaroo.pluggable_analysis_framework.utils import cache_series_func
 
-class SeriesWrapper:
-    def __init__(self, series):
-        self.series = series
-        if not getattr(series, '_hash', False):
-            series._hash = int(hash_pandas_object(series).sum())
-        self._hash = series._hash
-
-    def __eq__(self, other):
-        return isinstance(other, SeriesWrapper) and self.series.equals(other.series)
-
-    def __hash__(self):
-        return self._hash
-def cache_series_func(f, max_size=256):
-    _cache = {}
-
-    def unwrapped_hashable_func(ser):
-        return f(ser.series)
-    cached_func= lru_cache(max_size)(unwrapped_hashable_func)
-
-    def ret_func(ser):
-        if isinstance(ser, SeriesWrapper):
-            return cached_func(ser)
-        elif isinstance(ser, pd.Series):
-            cser = SeriesWrapper(ser)
-            #print("11", cser, hash(cser))
-            return cached_func(cser)
-        else:
-            raise Exception(f"Unknown type of {type(ser)}")
-    return ret_func
 
 # I don't want to apply these caching functions more generally because
 # I'm worried about putting a large object inot the cache results.
 # Since these return scalars, it's fairly cheap, and these functions
 # are specifically slow , I"m fine with it
 
-# importantly these functions are run interactively
+# importantly these functions are run interactively, so speed is important
 
 @cache_series_func
 def regular_int_parse_frac(ser):
