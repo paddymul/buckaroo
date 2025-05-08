@@ -142,6 +142,7 @@ class TestCacheSeriesFunc(unittest.TestCase):
         @cache_series_func
         def myfunction2(ser):
             myfunction2.counter += 1
+            print("145", type(ser))
             assert isinstance(ser, pd.Series)
             return ser.sum()
         myfunction2.counter = 0
@@ -163,3 +164,27 @@ class TestCacheSeriesFunc(unittest.TestCase):
         assert myfunction2(ser_d) == 19.5
         assert myfunction2.counter == 4
 
+
+
+    def test_memoize_gc(self):
+        # we set the series to None after it's used, make sure that everything works when the maxsize si reached
+
+        max_size = 256
+        all_sers = []
+        for i in range(max_size+1):
+            all_sers.append(pd.Series([i, i+1]))
+                            
+        @cache_series_func
+        def myfunction3(ser):
+            myfunction3.counter += 1
+            assert isinstance(ser, pd.Series)
+            return ser.sum()
+        myfunction3.counter = 0
+        myfunction3(pd.Series([3]))
+        assert myfunction3.counter == 1
+        [myfunction3(ser) for ser in all_sers[:(max_size - 2)]]
+        assert myfunction3.counter == 255
+        [myfunction3(ser) for ser in all_sers[:(max_size - 2)]]
+        assert myfunction3.counter == 255
+        [myfunction3(ser) for ser in all_sers]
+        assert myfunction3.counter == 258 # we had to re-execute some functions 

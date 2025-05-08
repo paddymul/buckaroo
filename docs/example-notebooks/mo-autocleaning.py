@@ -28,6 +28,14 @@ def _(mo):
 
 
 @app.cell
+def _(AutocleaningBuckaroo, dirty_df):
+
+    #ACBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
+    AutocleaningBuckaroo(dirty_df)
+    return
+
+
+@app.cell
 def _(pd):
     dirty_df = pd.DataFrame(
         {
@@ -83,13 +91,6 @@ def _(pd):
 
 
 @app.cell
-def _(ACBuckaroo, dirty_df):
-    #ACBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
-    ACBuckaroo(dirty_df)
-    return
-
-
-@app.cell
 def _(mo):
     mo.md(
         r"""
@@ -101,7 +102,8 @@ def _(mo):
 
 
 @app.cell
-def _(DataFrame, dirty_df, pd, re):
+def _(DataFrame, dirty_df, pd):
+    import re
     def strip_int_and_period(orig_ser):
         if pd.api.types.is_object_dtype(orig_ser):
             ser = orig_ser.astype("string")
@@ -118,7 +120,7 @@ def _(DataFrame, dirty_df, pd, re):
         numeric_ser = pd.to_numeric(only_numeric_str_ser, errors="coerce") #, dtype_backend="pyarrow")
         return numeric_ser
     DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
-    return (strip_int_and_period,)
+    return re, strip_int_and_period
 
 
 @app.cell
@@ -137,13 +139,7 @@ def _(mo):
 
 
 @app.cell
-def _():
-    import re
-    return (re,)
-
-
-@app.cell
-def _(dirty_df, pd, strip_int_and_period):
+def _(pd, strip_int_and_period):
     # I thought I could just call isna on the converted series, but for non string/object, that will give an improper result
     def strip_int_and_period_frac(ser):
         if not (pd.api.types.is_object_dtype(ser) or pd.api.types.is_string_dtype(ser)):
@@ -151,11 +147,17 @@ def _(dirty_df, pd, strip_int_and_period):
         converted = strip_int_and_period(ser)
         non_na_count = (~(converted.isna())).sum()
         return non_na_count / len(ser)
-    [ strip_int_and_period_frac(dirty_df['a']),
-      strip_int_and_period_frac(dirty_df['b']),
-      strip_int_and_period_frac(dirty_df['mostly_bool'])]
-    #so we can see that ['b'] is a good fit, the other two are not
     return (strip_int_and_period_frac,)
+
+
+@app.cell
+def _(dirty_df, strip_int_and_period_frac):
+    #Try it out on dirty_df
+    {'a':           strip_int_and_period_frac(dirty_df['a']),
+     'b':           strip_int_and_period_frac(dirty_df['b']),
+     'mostly_bool': strip_int_and_period_frac(dirty_df['mostly_bool'])}
+    #so we can see that ['b'] is a good fit, the other two are not
+    return
 
 
 @app.cell
@@ -298,20 +300,22 @@ def _(mo):
 
 
 @app.cell
-def _(
-    AutocleaningConfig,
-    ConvservativeCleaningGenops,
-    DropCol,
-    FillNA,
-    GroupBy,
-    HeuristicFracs,
-    IntParse,
-    NoOp,
-    Search,
-    StrBool,
-    StripIntParse,
-    USDate,
-):
+def _(ConvservativeCleaningGenops, HeuristicFracs, StripIntParse):
+    from buckaroo.customizations.pandas_commands import (
+        SafeInt,
+        DropCol,
+        FillNA,
+        GroupBy,
+        NoOp,
+        Search,
+    )
+    from buckaroo.customizations.pandas_cleaning_commands import (
+        IntParse,
+        StrBool,
+        USDate,
+    )
+    from buckaroo.dataflow.autocleaning import AutocleaningConfig
+    # We import a bunch of other command classes
     class ConservativeAC(AutocleaningConfig):
         command_klasses = [
             IntParse,
@@ -334,7 +338,19 @@ def _(
         ]
         #name is what shows up in the UI
         name = "conservative"
-    return (ConservativeAC,)
+    return (
+        AutocleaningConfig,
+        ConservativeAC,
+        DropCol,
+        FillNA,
+        GroupBy,
+        IntParse,
+        NoOp,
+        SafeInt,
+        Search,
+        StrBool,
+        USDate,
+    )
 
 
 @app.cell
@@ -347,57 +363,6 @@ def _(mo):
         """
     )
     return
-
-
-@app.cell
-def _(
-    AggressiveAC,
-    BuckarooInfiniteWidget,
-    CleaningDetailStyling,
-    ConservativeAC,
-    NoCleaningConf,
-    copy_extend,
-):
-    class AutocleaningBuckaroo(BuckarooInfiniteWidget):
-        autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
-        analysis_klasses = copy_extend(
-            BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling
-        )
-    return (AutocleaningBuckaroo,)
-
-
-@app.cell
-def _():
-    from buckaroo.customizations.pandas_commands import (
-        Command,
-        SafeInt,
-        DropCol,
-        FillNA,
-        GroupBy,
-        NoOp,
-        Search,
-    )
-    from buckaroo.customizations.pandas_cleaning_commands import (
-        IntParse,
-        StrBool,
-        USDate,
-    )
-    from buckaroo.customizations.pd_autoclean_conf import NoCleaningConf
-    from buckaroo.dataflow.autocleaning import AutocleaningConfig
-    return (
-        AutocleaningConfig,
-        Command,
-        DropCol,
-        FillNA,
-        GroupBy,
-        IntParse,
-        NoCleaningConf,
-        NoOp,
-        SafeInt,
-        Search,
-        StrBool,
-        USDate,
-    )
 
 
 @app.cell
@@ -434,17 +399,23 @@ def _():
 
 
 @app.cell
+def _():
+    from buckaroo.customizations.pd_autoclean_conf import AggressiveAC
+    from buckaroo.customizations.pandas_commands import Command
+    return AggressiveAC, Command
+
+
+@app.cell
 def _(
+    AggressiveAC,
     BuckarooInfiniteWidget,
     ConservativeAC,
     DefaultMainStyling,
-    NoCleaningConf,
     copy_extend,
     float_,
     obj_,
     pinned_histogram,
 ):
-    from buckaroo.customizations.pd_autoclean_conf import AggressiveAC
     class CleaningDetailStyling(DefaultMainStyling):
         df_display_name = "cleaning_detail"
         pinned_rows = [
@@ -458,13 +429,14 @@ def _(
             obj_("null_count"),
         ]
 
+    from buckaroo.customizations.pd_autoclean_conf import NoCleaningConf
 
-    class ACBuckaroo(BuckarooInfiniteWidget):
+    class AutocleaningBuckaroo(BuckarooInfiniteWidget):
         autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
         analysis_klasses = copy_extend(
             BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling
         )
-    return ACBuckaroo, AggressiveAC, CleaningDetailStyling
+    return AutocleaningBuckaroo, CleaningDetailStyling, NoCleaningConf
 
 
 @app.cell

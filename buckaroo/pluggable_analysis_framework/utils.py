@@ -112,7 +112,13 @@ def cache_series_func(f, max_size=256):
 
     def unwrapped_hashable_func(ser):
         #we need to take the series out of the wrapper call the original function
-        return f(ser.series)
+        ret_val = f(ser.series)
+        ser.series = None # we don't need to keep a reference to the series around
+        # this behaviour should be explicitly checked by
+        # tests/unit/pluggable_analysis_framework_test.py::TestCacheSeriesFunc::test_memoize_gc 
+
+        
+        return ret_val
     cached_func= lru_cache(max_size)(unwrapped_hashable_func)
 
     def ret_func(ser):
