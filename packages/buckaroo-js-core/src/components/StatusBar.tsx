@@ -256,6 +256,7 @@ export function StatusBar({
     }, []);
 
     const defaultColDef = {
+        sortable:false,
         cellStyle: { textAlign: "left" },
     };
 
