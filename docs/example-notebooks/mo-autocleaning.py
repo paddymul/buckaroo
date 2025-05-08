@@ -28,44 +28,11 @@ def _(mo):
 
 
 @app.cell
-def _():
-    #from buckaroo.buckaroo_widget import AutocleaningBuckaroo as ACB
-    #ACB(dirty_df)
-    return
-
-
-@app.cell
-def _(AutocleaningBuckaroo, dirty_df):
+def _(dirty_df):
+    from buckaroo.buckaroo_widget import AutocleaningBuckaroo
     #ACBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
-    bw = AutocleaningBuckaroo(dirty_df)
-    bw
-    return (bw,)
-
-
-@app.cell
-def _(bw):
-    bw.operations
-    return
-
-
-@app.cell
-def _(bw):
-    bw.buckaroo_state
-    return
-
-
-@app.cell
-def _(bw):
-    bw.buckaroo_state = {
-      "cleaning_method": "conservative",
-      "post_processing": "",
-      "sampled": False,
-      "show_commands": "1",
-      "df_display": "main",
-      "search_string": "",
-      "quick_command_args": {}
-    }
-    return
+    AutocleaningBuckaroo(dirty_df)
+    return (AutocleaningBuckaroo,)
 
 
 @app.cell
@@ -446,6 +413,7 @@ def _(
     ConservativeAC,
     DefaultMainStyling,
     copy_extend,
+    dirty_df,
     float_,
     obj_,
     pinned_histogram,
@@ -465,12 +433,13 @@ def _(
 
     from buckaroo.customizations.pd_autoclean_conf import NoCleaningConf
 
-    class AutocleaningBuckaroo(BuckarooInfiniteWidget):
+    class MyAutocleaningBuckaroo(BuckarooInfiniteWidget):
         autoclean_conf = tuple([NoCleaningConf, AggressiveAC, ConservativeAC])
         analysis_klasses = copy_extend(
             BuckarooInfiniteWidget.analysis_klasses, CleaningDetailStyling
         )
-    return AutocleaningBuckaroo, CleaningDetailStyling, NoCleaningConf
+    MyAutocleaningBuckaroo(dirty_df)
+    return CleaningDetailStyling, MyAutocleaningBuckaroo, NoCleaningConf
 
 
 @app.cell
