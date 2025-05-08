@@ -27,7 +27,7 @@ class StripIntParse(Command):
         _reg_parse = _ser.apply(pd.to_numeric, errors='coerce')
         _strip_parse = _ser.str.replace(_digits_and_period, "", regex=True).apply(pd.to_numeric, errors='coerce', dtype_backend='pyarrow')
         _combined = _reg_parse.fillna(_strip_parse)
-        df[col] = _combined
+        df[col] = _combined.astype('Int64')
         return df
 
     @staticmethod 

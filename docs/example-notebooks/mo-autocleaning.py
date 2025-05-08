@@ -8,13 +8,13 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-        ****# Autocleaning with Buckaroo
+        # Autocleaning with Buckaroo
 
         Dealing with dirty data accounts for a large portion of the time in doing data work. We know what good data looks like, and we know the individual pandas commands to clean columns. But we have to type the same commands over and over again.
 
         Buckaroo separates data cleaning for users into four steps
 
-        1. look at the original data with your eyes
+        1. Look at the original data with your eyes
         2. Cycle through different cleaning approaches
         3. Approve which cleaned columns you like
         4. Optionally take the generated code and use it as a function
@@ -118,7 +118,7 @@ def _(DataFrame, dirty_df, pd):
         #replace everything that's not a digit or a period with the empty stirng
         only_numeric_str_ser = ser.str.replace(digits_and_period, "", regex=True)
         numeric_ser = pd.to_numeric(only_numeric_str_ser, errors="coerce") #, dtype_backend="pyarrow")
-        return numeric_ser
+        return numeric_ser.astype('Int64')
     DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
     return re, strip_int_and_period
 
@@ -272,6 +272,7 @@ def _(Command, re, s, strip_int_and_period):
         @staticmethod
         def transform(df, col):
             _digits_and_period = re.compile(r"[^\d\.]")
+            print("my strip_int_and_period")
             df[col] = strip_int_and_period(df[col])
             return df
 
