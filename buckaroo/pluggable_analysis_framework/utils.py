@@ -103,7 +103,7 @@ class SeriesWrapper:
         self._hash = series._hash
 
     def __eq__(self, other):
-        return isinstance(other, SeriesWrapper) and self.series.equals(other.series)
+        return isinstance(other, SeriesWrapper) and self._hash == other._hash
 
     def __hash__(self):
         return self._hash
