@@ -51,6 +51,31 @@ const dfDisplayCell = function (params: any) {
     );
 };
 
+const cleaningMethodCell = function (params: any) {
+    const value = params.value;
+    const options = params.context.buckarooOptions.cleaning_method;
+    
+    const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newState = _.clone(params.context.buckarooState);
+        newState.cleaning_method = event.target.value;
+        params.context.setBuckarooState(newState);
+    };
+
+    return (
+        <select 
+            value={value} 
+            onChange={handleChange}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit' }}
+        >
+            {options.map((option: string) => (
+                <option key={option} value={option}>
+                    {option}
+                </option>
+            ))}
+        </select>
+    );
+};
+
 export const fakeSearchCell = function (_params: any) {
     const value = _params.value;
 
@@ -234,8 +259,13 @@ export function StatusBar({
             headerTooltip: "Show Commands",
             width: 30,
         },
-        { field: "cleaning_method", headerName: "cleaning", 
-            headerTooltip: "Auto cleaning method", width: 80 },
+        { 
+            field: "cleaning_method", 
+            headerName: "cleaning", 
+            headerTooltip: "Auto cleaning method", 
+            width: 80,
+            cellRenderer: cleaningMethodCell,
+        },
         {
             field: "help",
             headerName: "?",
