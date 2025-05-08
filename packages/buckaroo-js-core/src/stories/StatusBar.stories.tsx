@@ -101,3 +101,18 @@ export const Primary: Story = {
     buckarooOptions:bo,
   }
 }
+
+
+export const NoCleaningNoPostProcessing: Story = {
+  args: {
+    dfMeta:dfm,
+    buckarooState:bs,
+    buckarooOptions:{
+      sampled: ["sample_strat1", "sample_strat2", ""],
+      cleaning_method: [],
+      post_processing: [],
+      df_display: ["main", "summary"],
+      show_commands: ["on", "off"]
+    }
+  }
+}

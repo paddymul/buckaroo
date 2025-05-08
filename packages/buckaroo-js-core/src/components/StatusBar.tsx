@@ -76,6 +76,31 @@ const cleaningMethodCell = function (params: any) {
     );
 };
 
+const postProcessingCell = function (params: any) {
+    const value = params.value;
+    const options = params.context.buckarooOptions.post_processing;
+    
+    const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newState = _.clone(params.context.buckarooState);
+        newState.post_processing = event.target.value;
+        params.context.setBuckarooState(newState);
+    };
+
+    return (
+        <select 
+            value={value} 
+            onChange={handleChange}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit' }}
+        >
+            {options.map((option: string) => (
+                <option key={option} value={option}>
+                    {option}
+                </option>
+            ))}
+        </select>
+    );
+};
+
 export const fakeSearchCell = function (_params: any) {
     const value = _params.value;
 
@@ -252,6 +277,7 @@ export function StatusBar({
             headerName: "post processing",
             headerTooltip: "post process method",
             width: 100,
+            cellRenderer: postProcessingCell,
         },
         {
             field: "show_commands",
