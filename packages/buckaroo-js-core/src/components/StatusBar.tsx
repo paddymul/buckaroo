@@ -145,6 +145,7 @@ export function StatusBar({
 
     const excludeKeys = ["quick_command_args", "search", "show_displayed_rows"];
     const updateDict = (event: any) => {
+        console.log("event.column", event.column, event.column.getColId());
         const colName = event.column.getColId();
         if (_.includes(excludeKeys, colName)) {
             return;
@@ -273,7 +274,7 @@ export function StatusBar({
                     theme={statusTheme}
                     loadThemeGoogleFonts
                     onCellEditingStopped={onGridReady}
-                    onCellClicked={updateDict}
+                    onColumnHeaderClicked={updateDict}
                     onGridReady={onGridReady}
                     gridOptions={gridOptions}
                     defaultColDef={defaultColDef}
