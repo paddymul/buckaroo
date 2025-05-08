@@ -608,7 +608,6 @@ export class KeyAwareSmartRowCache {
 
     public addPayloadResponse(resp: PayloadResponse) {
         const seg: Segment = [resp.key.start, resp.key.end];
-
         if(resp.key.request_time !== undefined ) {
             //@ts-ignore
             //const now = (new Date()) - 1 as number
@@ -628,10 +627,7 @@ export class KeyAwareSmartRowCache {
 	} else {
             src.addRows(seg, resp.data)
 	}
-	    
-
         //console.log(`response before ${[resp.key.start, resp.key.origEnd, resp.key.end]} before add, preExtents ${preExtents}, post extents ${src.safeGetExtents()}`)
-
         src.sentLength = resp.length;
         if (_.has(this.waitingCallbacks, cbKey)) {
             const [success, fail] = this.waitingCallbacks[cbKey];
@@ -640,6 +636,16 @@ export class KeyAwareSmartRowCache {
             } else {
                 fail()
             }
+            delete this.waitingCallbacks[cbKey]
+        }
+    }
+
+    public addErrorResponse(resp: PayloadResponse) {
+        const cbKey = getPayloadKey(resp.key)
+
+        if (_.has(this.waitingCallbacks, cbKey)) {
+            const [_success, fail] = this.waitingCallbacks[cbKey];
+            fail()
             delete this.waitingCallbacks[cbKey]
         }
     }

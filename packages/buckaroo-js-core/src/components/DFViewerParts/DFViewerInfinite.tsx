@@ -365,7 +365,7 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
         rowModelType: "infinite",
         cacheBlockSize: maxRowsWithoutScrolling + 50,
         cacheOverflowSize: 0,
-        maxConcurrentDatasourceRequests: 2,
+        maxConcurrentDatasourceRequests: 3,
         maxBlocksInCache: 0,
         // setting infiniteInitialRowCount causes a bad flash 
         // for object displaye columns while waiting for data. they show a column of None
