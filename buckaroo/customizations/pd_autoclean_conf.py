@@ -20,13 +20,16 @@ from buckaroo.customizations.pandas_commands import (
 )
 
 
-
+#all commands used need to be in base_commands for the configuration of the lowcode UI
 BASE_COMMANDS = [
     #Basic Column operations
     DropCol, FillNA, MakeCategory,
 
     #Cleaning Operations
-    DropDuplicates, SafeInt, 
+    DropDuplicates,
+    IntParse, StripIntParse,
+    StrBool, USDate,
+    
 
     #Column modifications
     Rank,
