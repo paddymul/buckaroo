@@ -28,9 +28,43 @@ def _(mo):
 
 
 @app.cell
+def _():
+    #from buckaroo.buckaroo_widget import AutocleaningBuckaroo as ACB
+    #ACB(dirty_df)
+    return
+
+
+@app.cell
 def _(AutocleaningBuckaroo, dirty_df):
     #ACBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
-    AutocleaningBuckaroo(dirty_df)
+    bw = AutocleaningBuckaroo(dirty_df)
+    bw
+    return (bw,)
+
+
+@app.cell
+def _(bw):
+    bw.operations
+    return
+
+
+@app.cell
+def _(bw):
+    bw.buckaroo_state
+    return
+
+
+@app.cell
+def _(bw):
+    bw.buckaroo_state = {
+      "cleaning_method": "conservative",
+      "post_processing": "",
+      "sampled": False,
+      "show_commands": "1",
+      "df_display": "main",
+      "search_string": "",
+      "quick_command_args": {}
+    }
     return
 
 
@@ -272,6 +306,7 @@ def _(Command, re, s, strip_int_and_period):
         def transform(df, col):
             _digits_and_period = re.compile(r"[^\d\.]")
             df[col] = strip_int_and_period(df[col])
+            return df
 
         #transform to py is a function that returns equivalent python code. This is used for codegen
         @staticmethod

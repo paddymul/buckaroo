@@ -62,3 +62,16 @@ class DefaultSummaryStatsStyling(StylingAnalysis):
     df_display_name = "summary"
     data_key = "empty"
     summary_stats_key= 'all_stats'
+
+class CleaningDetailStyling(DefaultMainStyling):
+    df_display_name = "cleaning_detail"
+    pinned_rows = [
+        obj_("dtype"),
+        pinned_histogram(),
+        float_("str_bool_frac"),
+        float_("regular_int_parse_frac"),
+        float_("strip_int_parse_frac"),
+        float_("us_dates_frac"),
+        obj_("cleaning_name"),
+        obj_("null_count"),
+    ]
