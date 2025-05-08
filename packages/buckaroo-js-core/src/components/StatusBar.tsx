@@ -101,6 +101,25 @@ const postProcessingCell = function (params: any) {
     );
 };
 
+const showCommandsCell = function (params: any) {
+    const value = params.value === "1";
+    
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newState = _.clone(params.context.buckarooState);
+        newState.show_commands = event.target.checked ? "1" : "0";
+        params.context.setBuckarooState(newState);
+    };
+
+    return (
+        <input
+            type="checkbox"
+            checked={value}
+            onChange={handleChange}
+            style={{ margin: '0 auto', display: 'block' }}
+        />
+    );
+};
+
 export const fakeSearchCell = function (_params: any) {
     const value = _params.value;
 
@@ -284,6 +303,7 @@ export function StatusBar({
             headerName: "λ",
             headerTooltip: "Show Commands",
             width: 30,
+            cellRenderer: showCommandsCell,
         },
         { 
             field: "cleaning_method", 
