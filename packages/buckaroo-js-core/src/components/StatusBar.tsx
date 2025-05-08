@@ -26,6 +26,31 @@ const helpCell = function (_params: any) {
     );
 };
 
+const dfDisplayCell = function (params: any) {
+    const value = params.value;
+    const options = params.context.buckarooOptions.df_display;
+    
+    const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const newState = _.clone(params.context.buckarooState);
+        newState.df_display = event.target.value;
+        params.context.setBuckarooState(newState);
+    };
+
+    return (
+        <select 
+            value={value} 
+            onChange={handleChange}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: 'inherit' }}
+        >
+            {options.map((option: string) => (
+                <option key={option} value={option}>
+                    {option}
+                </option>
+            ))}
+        </select>
+    );
+};
+
 export const fakeSearchCell = function (_params: any) {
     const value = _params.value;
 
@@ -186,6 +211,7 @@ export function StatusBar({
             headerName: "Σ", //note the greek symbols instead of icons which require buildchain work
             headerTooltip: "Summary Stats",
             width: 120,
+            cellRenderer: dfDisplayCell,
         },
         /*
     {
@@ -281,6 +307,11 @@ export function StatusBar({
                     rowData={rowData}
                     domLayout={"autoHeight"}
                     columnDefs={columnDefs}
+                    context={{
+                        buckarooState,
+                        setBuckarooState,
+                        buckarooOptions
+                    }}
                 ></AgGridReact>
             </div>
         </div>
