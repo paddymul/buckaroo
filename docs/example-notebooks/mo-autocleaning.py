@@ -4,11 +4,11 @@ __generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-        # Autocleaning with Buckaroo
+        ****# Autocleaning with Buckaroo
 
         Dealing with dirty data accounts for a large portion of the time in doing data work. We know what good data looks like, and we know the individual pandas commands to clean columns. But we have to type the same commands over and over again.
 
@@ -29,7 +29,6 @@ def _(mo):
 
 @app.cell
 def _(AutocleaningBuckaroo, dirty_df):
-
     #ACBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
     AutocleaningBuckaroo(dirty_df)
     return
