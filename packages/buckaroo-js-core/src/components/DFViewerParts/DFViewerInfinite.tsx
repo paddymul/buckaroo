@@ -105,7 +105,13 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
                 return;
             } else {
                 console.log("calling setActiveCol with", colName);
+                //const oldActiveCol = event.context.activeCol;
                 setActiveCol(colName);
+
+                event.context.activeCol = colName;
+                // this should force the selected column 
+                //event.api.refreshCells({columns:[colName, oldActiveCol]})
+                event.api.refreshCells({force:true})
             }
         },
     }
@@ -248,6 +254,7 @@ export function DFViewerInfiniteInner({
                 const colDef = params.column.getColDef();
                 const field = colDef.field;
                 const activeCol = params.context?.activeCol;
+                console.log("cellStyle, activeCol", activeCol, field)
                 ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
                 if(activeCol  === field) {
                     //return {background:selectBackground}
@@ -297,8 +304,8 @@ export function DFViewerInfiniteInner({
         const [finalGridOptions, datasource] = useMemo( () => {
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
-            console.log(styledColumns)
-            console.log(gridOptions)
+            //console.log(styledColumns)
+            //console.log(gridOptions)
         return (
 
                 <AgGridReact
