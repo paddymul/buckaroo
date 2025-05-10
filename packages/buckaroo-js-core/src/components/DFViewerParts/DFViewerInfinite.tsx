@@ -101,10 +101,10 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
         onCellClicked: (event) => {
             const colName = event.column.getColId();
             if (setActiveCol === undefined || colName === undefined) {
-                console.log("returning because setActiveCol is undefined");
+                //console.log("returning because setActiveCol is undefined");
                 return;
             } else {
-                console.log("calling setActiveCol with", colName);
+                //console.log("calling setActiveCol with", colName);
                 //const oldActiveCol = event.context.activeCol;
                 setActiveCol(colName);
 
@@ -254,7 +254,6 @@ export function DFViewerInfiniteInner({
                 const colDef = params.column.getColDef();
                 const field = colDef.field;
                 const activeCol = params.context?.activeCol;
-                console.log("cellStyle, activeCol", activeCol, field)
                 ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
                 if(activeCol  === field) {
                     //return {background:selectBackground}
