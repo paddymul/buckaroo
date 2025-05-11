@@ -68,7 +68,7 @@ def debug_packages():
 
 try:
     if is_in_marimo():
-        print("Buckaroo has been enabled as the default DataFrame viewer.  To return to default dataframe visualization use `from buckaroo.marimo_utils.marimo_unmonkeypatch; marimo_unmonkeypatch()`")
+        print("Buckaroo has been enabled as the default DataFrame viewer.  To return to default dataframe visualization use `from buckaroo.marimo_utils import marimo_unmonkeypatch; marimo_unmonkeypatch()`")
         from buckaroo.marimo_utils import marimo_monkeypatch
         marimo_monkeypatch()
 
