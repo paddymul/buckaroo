@@ -16,17 +16,24 @@ def _(mo):
 
 
 @app.cell
-def _(marimo_monkeypatch, mo):
-    #!pip install buckaroo
-    #uv add buckaroo
+def _(mo):
     import buckaroo  # for most notebook environments
 
-    # For marimo, so that DataFrames display with Buckaroo
-    from buckaroo.marimo_utils import BuckarooDataFrame as DataFrame
-    marimo_monkeypatch() # this patches pd.DataFrame._display_ so dataframes default to displaying with Buckaroo
+    mo.md("""## Running buckaroo
 
-    mo.md("""## import buckaroo """)
-    return DataFrame, buckaroo
+    Buckaroo runs in many python notebook environments including Jupyter Notebook, Jupyter Lab, [Marimo](https://marimo.io/), VS Code, and Google Colab.
+
+    to get started install buckaroo in your python environment with pip or uv
+    ```bash
+    pip install buckaroo
+    uv add buckaroo
+    ```
+    then run 
+    ```python
+    import buckaroo```
+    in the notebook.  Buckaroo will become the default way of displaying dataframes in that environment.
+    """)
+    return (buckaroo,)
 
 
 @app.cell(hide_code=True)
@@ -261,20 +268,8 @@ async def _():
         import micropip
 
         await micropip.install("buckaroo")
-    from buckaroo.marimo_utils import marimo_monkeypatch
-
-    # marimo_monkeypatch overrides _display_ on pd.DataFrame making dataframes display with Buckaroo
-    marimo_monkeypatch()
     from buckaroo import BuckarooInfiniteWidget
-    return (
-        BuckarooInfiniteWidget,
-        marimo_monkeypatch,
-        micropip,
-        mo,
-        np,
-        pd,
-        sys,
-    )
+    return BuckarooInfiniteWidget, micropip, mo, np, pd, sys
 
 
 @app.cell(hide_code=True)
@@ -323,6 +318,11 @@ def _(np, pd):
         except:
             return pd.Series(all_arr, dtype=pd.StringDtype())
     return bimodal, rand_cat, random_categorical
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
