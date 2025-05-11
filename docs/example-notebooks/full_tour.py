@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.5-dev6"
+__generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
@@ -8,33 +8,34 @@ app = marimo.App(width="medium")
 def _(mo):
     mo.md(
         r"""
-    # Tour of Buckaroo
-    Buckaroo expedites the core task of data work by showing histograms and summary stats with every DataFrame.
-    """
+        # Tour of Buckaroo
+        Buckaroo expedites the core task of data work by showing histograms and summary stats with every DataFrame.
+        """
     )
     return
 
 
 @app.cell
-def _(mo):
+def _(marimo_monkeypatch, mo):
     import buckaroo  # for most notebook environments
 
     # For marimo, so that DataFrames display with Buckaroo
     from buckaroo.marimo_utils import BuckarooDataFrame as DataFrame
+    marimo_monkeypatch() # this patches pd.DataFrame._display_ so dataframes default to displaying with Buckaroo
 
     mo.md("""## import buckaroo """)
-    return (DataFrame,)
+    return DataFrame, buckaroo
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-    ## Demonstrating Buckaroo on Citibike data.
-    Click `main` below Σ to toggle the summary stats view.
+        ## Demonstrating Buckaroo on Citibike data.
+        Click `main` below Σ to toggle the summary stats view.
 
-    You can click on column headers like "tripduration" to cycle through sort.
-    """
+        You can click on column headers like "tripduration" to cycle through sort.
+        """
     )
     return
 
@@ -50,32 +51,43 @@ def _(pd):
 def _(mo):
     mo.md(
         r"""
-    ## Histograms
+        ## Histograms
 
-    Histograms are built into Buckaroo. They enable users to quickly identify distributions of data in columns
-    ### Common histogram shapes
+        Histograms are built into Buckaroo. They enable users to quickly identify distributions of data in columns
+        ### Common histogram shapes
 
-    The following shows the most common shapes you will see in histograms, allowing you to quickly identify patterns
+        The following shows the most common shapes you will see in histograms, allowing you to quickly identify patterns
 
-    Notice the three columns on the right. Those are categorical histograms as opposed to numerical histograms
-    """
+        Notice the three columns on the right. Those are categorical histograms as opposed to numerical histograms
+        ## Categorical histograms
+
+        Categorical histograms have special colors and patterns for NA/NaN, longtail (values that occur at least twice) and unique Categorical histograms are always arranged from most frequent on the left to least frequent on the right.
+
+        When a column is numerical, but has less than 5 distinct values it is displayed with a categorical histogram, because the numbers were probably flags
+        """
     )
     return
 
 
 @app.cell(hide_code=True)
-def _(DataFrame, bimodal, np, random_categorical):
+def _(bimodal, np, pd, random_categorical):
     N = 4000
+
     # random_categorical and bimodal are defined in a hidden code block at the top of this notebook
-    histogram_df = DataFrame(
+    histogram_df = pd.DataFrame(
         {
             "normal": np.random.normal(25, 0.3, N),
-            "exponential": np.random.exponential(1.0, N) * 10,
-            "increasing": [i for i in range(N)],
-            "one": [1] * N,
-            "dominant_categories": random_categorical({"foo": 0.6, "bar": 0.25, "baz": 0.15}, unique_per=0, na_per=0, longtail_per=0, N=N),
-            "all_unique_cat": random_categorical({}, unique_per=1, na_per=0, longtail_per=0, N=N),
+            "3_vals": random_categorical({"foo": 0.6, "bar": 0.25, "baz": 0.15}, unique_per=0, na_per=0, longtail_per=0, N=N),
+            "all_unique": random_categorical({}, unique_per=1, na_per=0, longtail_per=0, N=N),
             "bimodal": bimodal(20, 40, N),
+            "longtail_unique": random_categorical({1:.3, 2:.1}, unique_per=.1, na_per=.3, longtail_per=.2, N=N),
+            "one": [1] * N,
+            "increasing": [i for i in range(N)],
+
+            "all_NA": pd.Series([pd.NA] * N, dtype="UInt8"),
+            "half_NA": random_categorical({1: 0.55}, unique_per=0, na_per=0.45, longtail_per=0.0, N=N),
+
+            "longtail": random_categorical({}, unique_per=0, na_per=0.2, longtail_per=0.8, N=N),
         }
     )
     histogram_df
@@ -86,27 +98,19 @@ def _(DataFrame, bimodal, np, random_categorical):
 def _(mo):
     mo.md(
         r"""
-    ## Categorical histograms
+        ## Styling Buckaroo
 
-    Categorical histograms have special colors and patterns for NA/NaN, longtail (values that occur at least twice) and unique Categorical histograms are always arranged from most frequent on the left to least frequent on the right.
+        Buckaroo offers many ways to style tables.  Here is an example of applying a heatmap to a column. This colors the `bimodal` column based on the value of the `normal` column.
 
-    When a column is numerical, but has less than 5 distinct values it is displayed with a categorical histogram, because the numbers were probably flags
-    """
+        You can see more styles in the [Buckaroo Styling Gallery](https://marimo.io/p/@paddy-mullen/buckaroo-styling-gallery).
+        """
     )
     return
 
 
 @app.cell
-def _(DataFrame, N, pd, random_categorical):
-    DataFrame(
-        {
-            "all_NA": pd.Series([pd.NA] * N, dtype="UInt8"),
-            "half_NA": random_categorical({1: 0.55}, unique_per=0, na_per=0.45, longtail_per=0.0, N=N),
-            "dominant_categories": random_categorical({"foo": 0.45, "bar": 0.2, "baz": 0.15}, unique_per=0.2, na_per=0, longtail_per=0, N=N),
-            "longtail": random_categorical({}, unique_per=0, na_per=0.2, longtail_per=0.8, N=N),
-            "longtail_unique": random_categorical({}, unique_per=0.5, na_per=0.0, longtail_per=0.5, N=N),
-        }
-    )
+def _(BuckarooInfiniteWidget, histogram_df):
+    BuckarooInfiniteWidget(histogram_df, column_config_overrides={"bimodal": {"color_map_config": {"color_rule": "color_map", "map_name": "DIVERGING_RED_WHITE_BLUE", "val_column": "normal"}}})
     return
 
 
@@ -114,12 +118,12 @@ def _(DataFrame, N, pd, random_categorical):
 def _(mo):
     mo.md(
         r"""
-    ## Extending Buckaroo
-    Buckaroo is very extensible.  Let's start with a post processing function. Post processing functions let you modify the displayed dataframe with a simple function.  In this case we will make a "only_outliers" function which only shows the 1st and 99th quintile of each numeric row
+        ## Extending Buckaroo
+        Buckaroo is very extensible.  Let's start with a post processing function. Post processing functions let you modify the displayed dataframe with a simple function.  In this case we will make a "only_outliers" function which only shows the 1st and 99th quintile of each numeric row
 
-    the `.add_processing` decorator adds the post processing function to the BuckarooWidget and enables it
-    to cycle between post processing functions click below `post_processing`  Note how total_rows stays constant and filtered changes
-    """
+        the `.add_processing` decorator adds the post processing function to the BuckarooWidget and enables it
+        to cycle between post processing functions click below `post_processing`  Note how total_rows stays constant and filtered changes
+        """
     )
     return
 
@@ -140,41 +144,21 @@ def _(BuckarooInfiniteWidget, citibike_df, pd):
 
 
     bw
-    return
+    return bw, outliers
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-    ## Styling Buckaroo
+        ## Try Buckaroo
+        Give buckaroo a try.  It works in Marimo, Jupyter, VSCode, and Google Colab
+        ```
+        pip install buckaroo
+        ```
 
-    Buckaroo offers many ways to style tables.  Here is an example of applying a heatmap to a column. This colors the `exponential` column based on the value of the `normal` column.
-
-    You can see more styles in the [Buckaroo Styling Gallery](https://marimo.io/p/@paddy-mullen/buckaroo-styling-gallery).
-    """
-    )
-    return
-
-
-@app.cell
-def _(BuckarooInfiniteWidget, histogram_df):
-    BuckarooInfiniteWidget(histogram_df, column_config_overrides={"exponential": {"color_map_config": {"color_rule": "color_map", "map_name": "DIVERGING_RED_WHITE_BLUE", "val_column": "normal"}}})
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(
-        r"""
-    ## Try Buckaroo
-    Give buckaroo a try.  It works in Marimo, Jupyter, VSCode, and Google Colab
-    ```
-    pip install buckaroo
-    ```
-
-    Give us a star on [github](https://github.com/paddymul/buckaroo)
-    """
+        Give us a star on [github](https://github.com/paddymul/buckaroo)
+        """
     )
     return
 
@@ -190,18 +174,25 @@ async def _():
         import micropip
 
         await micropip.install("buckaroo")
-    from buckaroo import BuckarooInfiniteWidget
-    return BuckarooInfiniteWidget, mo, np, pd
-
-
-@app.cell(hide_code=True)
-def _(np, pd):
-    # because this doesn't import numpy and the first block does, this will run afte
     from buckaroo.marimo_utils import marimo_monkeypatch
 
-
-    # this overrides pd.read_csv and pd.read_parquet to return BuckarooDataFrames which overrides displays as BuckarooWidget, not the default marimo table
+    # marimo_monkeypatch overrides _display_ on pd.DataFrame making dataframes display with Buckaroo
     marimo_monkeypatch()
+    from buckaroo import BuckarooInfiniteWidget
+    return (
+        BuckarooInfiniteWidget,
+        marimo_monkeypatch,
+        micropip,
+        mo,
+        np,
+        pd,
+        sys,
+    )
+
+
+@app.cell
+def _(np, pd):
+    # because this doesn't import numpy and the first block does, this will run after
 
 
     def bimodal(mean_1, mean_2, N, sigma=5):
@@ -244,7 +235,12 @@ def _(np, pd):
             return pd.Series(all_arr, dtype="UInt64")
         except:
             return pd.Series(all_arr, dtype=pd.StringDtype())
-    return bimodal, random_categorical
+    return bimodal, rand_cat, random_categorical
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
