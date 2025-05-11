@@ -9,7 +9,7 @@ def _(mo):
     mo.md(
         r"""
         # Tour of Buckaroo
-        Buckaroo expedites the core task of data work by showing histograms and summary stats with every DataFrame.
+        Buckaroo expedites the core task of data work - looking at the data - by showing histograms and summary stats with every DataFrame.
         """
     )
     return
@@ -17,6 +17,8 @@ def _(mo):
 
 @app.cell
 def _(marimo_monkeypatch, mo):
+    #!pip install buckaroo
+    #uv add buckaroo
     import buckaroo  # for most notebook environments
 
     # For marimo, so that DataFrames display with Buckaroo
@@ -95,6 +97,89 @@ def _(bimodal, np, pd, random_categorical):
 
 
 @app.cell(hide_code=True)
+def _(pd):
+    dirty_df = pd.DataFrame(
+        {
+            "a": [10, 20, 30, 40, 10, 20.3, None, 8, 9, 10, 11, 20, None],
+            "b": [
+                "3",
+                "4",
+                "a",
+                "5",
+                "5",
+                "b9",
+                None,
+                " 9",
+                "9-",
+                11,
+                "867-5309",
+                "-9",
+                None,
+            ],
+            "us_dates": [
+                "",
+                "07/10/1982",
+                "07/15/1982",
+                "7/10/1982",
+                "17/10/1982",
+                "03/04/1982",
+                "03/02/2002",
+                "12/09/1968",
+                "03/04/1982",
+                "",
+                "06/22/2024",
+                "07/4/1776",
+                "07/20/1969",
+            ],
+            "mostly_bool": [
+                True,
+                "True",
+                "Yes",
+                "On",
+                "false",
+                False,
+                "1",
+                "Off",
+                "0",
+                " 0",
+                "No",
+                1,
+                None,
+            ],
+        }
+    )
+    return (dirty_df,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+        ## Auto cleaning and the lowcode UI
+        Dealing with dirty data accounts for a large portion of the time in doing data work. We know what good data looks like, and we know the individual pandas commands to clean columns. But we have to type the same commands over and over again.
+
+        This also shows the Lowcode UI, which is revealed by clicking the checkbox below λ (lambda).  The lowcode UI has a series of commands that can be executed on columns. Commands are added to the operations timeline (similar to CAD timelines).
+
+        Additonal resources
+
+        * [Autocleaning notebook](https://marimo.io/p/@paddy-mullen/buckaroo-auto-cleaning)
+        * [Autocleaning in depth](https://www.youtube.com/watch?v=A-GKVsqTLMI) Video explaining how to write your own autocleaning methods and heuristic strategies
+        * [JLisp explanation](https://youtu.be/3Tf3lnuZcj8) The lowcode UI is backed by a small lisp interpreter, this video explains how it works. Don't worry, you will never have to touch lisp to use buckaroo.
+        * [JLisp notebook](https://marimo.io/p/@paddy-mullen/jlisp-in-buckaroo)
+        """
+    )
+    return
+
+
+@app.cell
+def _(dirty_df, sys):
+    from buckaroo.buckaroo_widget import AutocleaningBuckaroo
+    sys #necessary so this runs after the main important block at the bottom
+    AutocleaningBuckaroo(dirty_df)
+    return (AutocleaningBuckaroo,)
+
+
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
@@ -119,10 +204,14 @@ def _(mo):
     mo.md(
         r"""
         ## Extending Buckaroo
-        Buckaroo is very extensible.  Let's start with a post processing function. Post processing functions let you modify the displayed dataframe with a simple function.  In this case we will make a "only_outliers" function which only shows the 1st and 99th quintile of each numeric row
+        Buckaroo is very extensible. I think of Buckaroo as a framework for building table applications, and an exploratory data analysis tool built with that framework.
+
+        Let's start with a post processing function. Post processing functions let you modify the displayed dataframe with a simple function.  In this case we will make a "only_outliers" function which only shows the 1st and 99th quintile of each numeric row
 
         the `.add_processing` decorator adds the post processing function to the BuckarooWidget and enables it
-        to cycle between post processing functions click below `post_processing`  Note how total_rows stays constant and filtered changes
+        to cycle between post processing functions click below `post_processing`  Note how total_rows stays constant and filtered changes.
+
+        Custom summary stats and styling configurations can also be added. The [Extending Buckaroo](https://www.youtube.com/watch?v=GPl6_9n31NE) video explains how.
         """
     )
     return
@@ -132,7 +221,6 @@ def _(mo):
 def _(BuckarooInfiniteWidget, citibike_df, pd):
     bw = BuckarooInfiniteWidget(citibike_df)
 
-
     @bw.add_processing
     def outliers(df):
         mask = pd.Series(False, index=df.index)
@@ -141,7 +229,6 @@ def _(BuckarooInfiniteWidget, citibike_df, pd):
             p1, p99 = ser.quantile(0.01), ser.quantile(0.99)
             mask |= (ser <= p1) | (ser >= p99)
         return df[mask]
-
 
     bw
     return bw, outliers
@@ -190,7 +277,7 @@ async def _():
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(np, pd):
     # because this doesn't import numpy and the first block does, this will run after
 
@@ -236,11 +323,6 @@ def _(np, pd):
         except:
             return pd.Series(all_arr, dtype=pd.StringDtype())
     return bimodal, rand_cat, random_categorical
-
-
-@app.cell
-def _():
-    return
 
 
 if __name__ == "__main__":
