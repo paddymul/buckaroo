@@ -10,6 +10,8 @@ def _(mo):
         r"""
         # Tour of Buckaroo
         Buckaroo expedites the core task of data work - looking at the data - by showing histograms and summary stats with every DataFrame.
+
+        This notebook gives a tour of Buckaroo features.
         """
     )
     return
@@ -18,6 +20,7 @@ def _(mo):
 @app.cell
 def _(mo):
     import buckaroo  # for most notebook environments
+
 
     mo.md("""## Running buckaroo
 
@@ -236,7 +239,6 @@ def _(BuckarooInfiniteWidget, citibike_df, pd):
             p1, p99 = ser.quantile(0.01), ser.quantile(0.99)
             mask |= (ser <= p1) | (ser >= p99)
         return df[mask]
-
     bw
     return bw, outliers
 
@@ -249,6 +251,8 @@ def _(mo):
         Give buckaroo a try.  It works in Marimo, Jupyter, VSCode, and Google Colab
         ```
         pip install buckaroo
+        # or 
+        uv add buckaroo
         ```
 
         Give us a star on [github](https://github.com/paddymul/buckaroo)
