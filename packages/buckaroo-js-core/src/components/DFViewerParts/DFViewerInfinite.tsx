@@ -59,6 +59,7 @@ const staticGridOptions:GridOptions = {
     rowSelection: "single",
     enableCellTextSelection: true,
     tooltipShowDelay: 0,
+
     onRowClicked: (event) => {
         const sel = document.getSelection();
         if (sel === null) {
@@ -85,97 +86,24 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
         onCellClicked: (event) => {
             const colName = event.column.getColId();
             if (setActiveCol === undefined || colName === undefined) {
-                //console.log("returning because setActiveCol is undefined");
                 return;
             } else {
-                //console.log("calling setActiveCol with", colName);
                 const oldActiveCol = event.context.activeCol;
                 setActiveCol(colName);
-
-                console.log("colName", colName, "oldActiveCol", oldActiveCol);
                 event.context.activeCol = colName;
-                // this should force the selected column 
-                //event.api.refreshCells({columns:[colName, oldActiveCol]})
-
+                // this section is very performance sensitive.
                 const args:RefreshCellsParams = {
                     rowNodes: event.api.getRenderedNodes(),
                     //@ts-ignore
                     columns: [event.api.getColumn(colName), event.api.getColumn(oldActiveCol)],
                     force:true
                 }
-                //event.api.getColumn("stoptime") 
-                console.log("refreshArgs", args);
                 event.api.refreshCells(args)
-
-                /*
-                const oldActiveColDef = event.api.getColumnDef(oldActiveCol);
-                const curColDef = event.column.getColDef()
-                //console.log("curColDef", curColDef);
-                if(oldActiveColDef !== null) {
-                    if(oldActiveColDef.cellStyle) {
-                        //@ts-ignore
-                        if(oldActiveColDef.cellStyle?._styleFuncName === "default") {
-                            //@ts-ignore
-                            console.log("oldColDef counter", oldActiveColDef.cellStyle.counter)
-                            oldActiveColDef.cellStyle = getCellStyle();
-                        }
-                        else {
-                            console.log("old was probably colormapped")
-                        }
-                    }
-                }
-                if(curColDef.cellStyle) {
-                    //@ts-ignore
-                    if(curColDef.cellStyle?._styleFuncName === "default") {
-                        curColDef.cellStyle = getCellStyle();
-                    } else {
-                        console.log("current was probably colormapped")
-
-                    }
-                }
-                */
-                /*
-                if(oldActiveColDef !== null) {
-                    console.log("oldActiveColDef", oldActiveColDef)
-                    oldActiveColDef.cellStyle = {background:'inherit'};
-                }
-
-                event.api.getColumnDef(colName)
-                curColDef.cellStyle = {background:AccentColor}
-                */
             }
         },
     }
 };
-let counter = 0
-const getCounter = () => {
-    const curCounter = counter;
-    counter+=1;
-    return curCounter;
-}
-const getCellStyle = () => {
-    const locCounter = getCounter();
-    const retFunc = (params: CellClassParams) => {
-        const colDef = params.column.getColDef();
-        const field = colDef.field;
-        const activeCol = params.context?.activeCol;
-        ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
-        console.log("getCellStyleFunc", locCounter)
-        if (activeCol === field) {
-            //return {background:selectBackground}
-            return { background: AccentColor }
 
-        }
-        return { background: "inherit" }
-    }
-    // colormaps also return a style func
-    // we need to reapply getCellStyle when active Column changes
-    // but we need to make sure we are only overriding a default column
-    // you can visibly select a colormapped column
-    retFunc._styleFuncName = "default"
-    retFunc.counter = locCounter;
-    return retFunc;
-}
 export function DFViewerInfinite({
     data_wrapper,
     df_viewer_config,
@@ -311,7 +239,22 @@ export function DFViewerInfiniteInner({
         return {
             sortable: true,
             type: "rightAligned",
-            cellStyle: getCellStyle(),
+            cellStyle: (params: CellClassParams) => {
+                const colDef = params.column.getColDef();
+                const field = colDef.field;
+                const activeCol = params.context?.activeCol;
+                ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
+                //console.log("getCellStyleFunc", locCounter)
+                if (params.node.isRowPinned()) {
+                    return;
+                }
+                if (activeCol === field) {
+                    //return {background:selectBackground}
+                    return { background: AccentColor }
+
+                }
+                return { background: "inherit" }
+            },
             enableCellChangeFlash: false,
             cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
     }, [df_viewer_config.pinned_rows]);
