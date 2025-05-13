@@ -18,6 +18,8 @@ import {
     ModuleRegistry,
     SortChangedEvent,
     CellClassParams,
+    RefreshCellsParams,
+    //ColDef,
 } from "@ag-grid-community/core";
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import { InfiniteRowModelModule } from "@ag-grid-community/infinite-row-model";
@@ -87,17 +89,91 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
                 return;
             } else {
                 //console.log("calling setActiveCol with", colName);
-                //const oldActiveCol = event.context.activeCol;
+                const oldActiveCol = event.context.activeCol;
                 setActiveCol(colName);
 
+                console.log("colName", colName, "oldActiveCol", oldActiveCol);
                 event.context.activeCol = colName;
                 // this should force the selected column 
                 //event.api.refreshCells({columns:[colName, oldActiveCol]})
-                event.api.refreshCells({force:true})
+
+                const args:RefreshCellsParams = {
+                    rowNodes: event.api.getRenderedNodes(),
+                    force:true
+                }
+                //event.api.getColumn("stoptime") 
+                console.log("refreshArgs", args);
+                event.api.refreshCells(args)
+
+                /*
+                const oldActiveColDef = event.api.getColumnDef(oldActiveCol);
+                const curColDef = event.column.getColDef()
+                //console.log("curColDef", curColDef);
+                if(oldActiveColDef !== null) {
+                    if(oldActiveColDef.cellStyle) {
+                        //@ts-ignore
+                        if(oldActiveColDef.cellStyle?._styleFuncName === "default") {
+                            //@ts-ignore
+                            console.log("oldColDef counter", oldActiveColDef.cellStyle.counter)
+                            oldActiveColDef.cellStyle = getCellStyle();
+                        }
+                        else {
+                            console.log("old was probably colormapped")
+                        }
+                    }
+                }
+                if(curColDef.cellStyle) {
+                    //@ts-ignore
+                    if(curColDef.cellStyle?._styleFuncName === "default") {
+                        curColDef.cellStyle = getCellStyle();
+                    } else {
+                        console.log("current was probably colormapped")
+
+                    }
+                }
+                */
+                /*
+                if(oldActiveColDef !== null) {
+                    console.log("oldActiveColDef", oldActiveColDef)
+                    oldActiveColDef.cellStyle = {background:'inherit'};
+                }
+
+                event.api.getColumnDef(colName)
+                curColDef.cellStyle = {background:AccentColor}
+                */
             }
         },
     }
 };
+let counter = 0
+const getCounter = () => {
+    const curCounter = counter;
+    counter+=1;
+    return curCounter;
+}
+const getCellStyle = () => {
+    const locCounter = getCounter();
+    const retFunc = (params: CellClassParams) => {
+        const colDef = params.column.getColDef();
+        const field = colDef.field;
+        const activeCol = params.context?.activeCol;
+        ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
+        console.log("getCellStyleFunc", locCounter)
+        if (activeCol === field) {
+            //return {background:selectBackground}
+            return { background: AccentColor }
+
+        }
+        return { background: "inherit" }
+    }
+    // colormaps also return a style func
+    // we need to reapply getCellStyle when active Column changes
+    // but we need to make sure we are only overriding a default column
+    // you can visibly select a colormapped column
+    retFunc._styleFuncName = "default"
+    retFunc.counter = locCounter;
+    return retFunc;
+}
 export function DFViewerInfinite({
     data_wrapper,
     df_viewer_config,
@@ -228,22 +304,12 @@ export function DFViewerInfiniteInner({
         return dfToAgrid(df_viewer_config);
     }, [df_viewer_config]);
 
+
     const defaultColDef = useMemo( () => {
         return {
             sortable: true,
             type: "rightAligned",
-            cellStyle: (params:CellClassParams) => {
-                const colDef = params.column.getColDef();
-                const field = colDef.field;
-                const activeCol = params.context?.activeCol;
-                ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
-                if(activeCol  === field) {
-                    //return {background:selectBackground}
-                    return {background: AccentColor}
-
-                }
-                return {background:"inherit"}
-            },
+            cellStyle: getCellStyle(),
             enableCellChangeFlash: false,
             cellRendererSelector: getCellRendererSelector(df_viewer_config.pinned_rows)};
     }, [df_viewer_config.pinned_rows]);
