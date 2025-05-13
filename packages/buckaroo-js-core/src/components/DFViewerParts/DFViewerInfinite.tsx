@@ -99,6 +99,8 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
 
                 const args:RefreshCellsParams = {
                     rowNodes: event.api.getRenderedNodes(),
+                    //@ts-ignore
+                    columns: [event.api.getColumn(colName), event.api.getColumn(oldActiveCol)],
                     force:true
                 }
                 //event.api.getColumn("stoptime") 
