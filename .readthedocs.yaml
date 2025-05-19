@@ -19,3 +19,7 @@ build:
       - pwd
       - ls
       - cp -r docs/build/html/examples "$READTHEDOCS_OUTPUT/html"
+
+sphinx:
+  # Path to your Sphinx configuration file.
+  configuration: docs/source/conf.py
