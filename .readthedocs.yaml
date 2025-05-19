@@ -20,6 +20,10 @@ build:
       - ls
       - cp -r docs/build/html/examples "$READTHEDOCS_OUTPUT/html"
 
+python:
+   install:
+     - requirements: docs/requirements.txt
+
 sphinx:
   # Path to your Sphinx configuration file.
   configuration: docs/source/conf.py
