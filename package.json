@@ -1,5 +1,5 @@
 {
-    version:"0.10.4",
+    "version":"0.10.4",
 	"scripts": {
 		"dev": "npm run build -- --sourcemap=inline --watch",
 		"build": "pwd && ls packages/buckaroo-js-core && ls packages/buckaroo-js-core/node_modules/ && esbuild js/widget.tsx --format=esm --bundle --outdir=buckaroo/static/",
