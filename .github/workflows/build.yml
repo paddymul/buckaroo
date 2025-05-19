@@ -37,7 +37,7 @@ jobs:
         working-directory: docs
         run: |
           sudo apt install -y pandoc graphviz
-          pip install sphinx==7.1.2 pytest-check-links graphviz==0.20.1
+          pip install toml sphinx==7.1.2 pytest-check-links graphviz==0.20.1
           make html
           python -m pytest --check-links
 
