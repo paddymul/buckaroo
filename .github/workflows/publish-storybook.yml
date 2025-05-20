@@ -31,9 +31,11 @@ jobs:
         run: |
           pnpm build-storybook
 
-      - name: 'upload'
-          uses: actions/upload-pages-artifact@v3
-          path: packages/buckaroo-js-core/dist/storybook
+  Upload:
+    name: Upload2
+      steps:
+        - uses: actions/upload-pages-artifact@v3
+        - path: packages/buckaroo-js-core/dist/storybook
       # - id: deploy
       #   name: Deploy to GitHub Pages
       #   uses: actions/deploy-pages@v4
