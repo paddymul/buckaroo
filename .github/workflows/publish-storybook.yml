@@ -38,4 +38,4 @@ jobs:
           install_command: cd packages/buckaroo-js-core; pnpm install # default: npm ci
           build_command: cd packages/buckaroo-js-core; pnpm build-storybook # default: npm run build-storybook
           path: packages/buckaroo-js-core/dist/storybook # default: dist/storybook
-          checkout: false # default: true
+          checkout: true # default: true
