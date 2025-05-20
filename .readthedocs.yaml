@@ -19,6 +19,7 @@ build:
 #     - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --all-extras --group docs
     install:
       - uv sync
+      - uv tree
     build:
       html:
         - uv run sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
