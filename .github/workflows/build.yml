@@ -41,7 +41,7 @@ jobs:
         working-directory: docs
         run: |
           sudo apt install -y pandoc graphviz
-          mkdir buckaroo/static || true
+          mkdir -p buckaroo/static || true
           touch buckaroo/static/compiled.css
           touch buckaroo/static/widget.js
           touch buckaroo/static/widget.css
