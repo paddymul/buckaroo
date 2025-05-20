@@ -2,12 +2,13 @@
 name: Build and Publish Storybook to GitHub Pages
  
 on:
-  # Event for the workflow to run on
   push:
     branches:
-      - 'main'
+      - main
+
   pull_request:
     branches: "*"
+
 
 permissions:
   contents: read
@@ -26,6 +27,7 @@ jobs:
           run_install: true
       - uses: astral-sh/setup-uv@v6
       - name: Run tests
+        working-directory: ./packages/buckaroo-js-core
         run: |
           pnpm build-storybook
 
