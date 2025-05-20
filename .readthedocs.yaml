@@ -24,4 +24,5 @@ build:
          - mkdir -p $READTHEDOCS_OUTPUT/html/         
          - ls docs/source
          - ls $READTHEDOCS_OUTPUT
+         - uv run sphinx-build --version
          - uv run sphinx-build -v -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
