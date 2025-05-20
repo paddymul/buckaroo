@@ -38,7 +38,7 @@ jobs:
 
       - name: Check docs can be build + links
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        working-directory: docs
+#        working-directory: docs
         run: |
           sudo apt install -y pandoc graphviz
           mkdir -p buckaroo/static || true
@@ -46,11 +46,12 @@ jobs:
           touch buckaroo/static/widget.js
           touch buckaroo/static/widget.css
           uv sync  --all-extras --group dev
+          echo "about to ls"
+          ls -alhstr
           mkdir -p docs/build/html
-          #uv run sphinx-build -T -b html docs/source  docs/build
           uv run pytest --check-links docs/source/*.rst
           uv run pytest --check-links docs/example-notebooks/*.ipynb
-
+          uv run sphinx-build -T -b html docs/source  docs/build
 
       - name: Test the extension
         run: |
