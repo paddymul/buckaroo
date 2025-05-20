@@ -16,7 +16,7 @@ build:
       - asdf global uv latest
       - uv venv
     install:
-      - uv pip install -r requirements.txt
+      - uv pip install -r docs/requirements.txt
     build:
        html:
          - uv run sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
