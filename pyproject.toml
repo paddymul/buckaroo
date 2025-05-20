@@ -86,12 +86,6 @@ jupyterlab = ["jupyterlab>=3.6.0"]
 notebook = ["notebook>=7.0.0"]
 
 
-docs = [
-    "sphinx>=1.5",
-    "graphviz>=0.20.1",
-    "pytest-check-links",
-    "toml"
-]
 
     
 [project.urls]
@@ -220,3 +214,24 @@ line-ending = "auto"
 datacompy = [
     "datacompy>=0.15.0",
 ]
+
+docs = [
+    "sphinx>=1.5",
+    "graphviz>=0.20.1",
+    "pytest-check-links",
+    "toml"
+]
+
+# docs = [
+#   "Faker>=25.3.0",
+#   "WebTest>=3.0.0",
+#   "mypy>=1.10.0",
+#   "pyramid-debugtoolbar>=4.12.1",
+#   "pytest-asyncio>=0.23.7",
+#   "pytest-cov>=5.0.0",
+#   "pytest-mock>=3.14.0",
+#   "pytest>=8.2.1",
+#   "ruff>=0.4.6",
+#   "sphinx-rtd-theme>=2.0.0",
+#   "sphinx>=7.3.7",
+# ]
