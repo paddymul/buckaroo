@@ -14,8 +14,8 @@ build:
       - asdf plugin add uv
       - asdf install uv latest
       - asdf global uv latest
-      - uv venv
-      - uv tree
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv venv
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv tree
     # install:
     #   - uv pip install -r docs/requirements.txt
     build:
@@ -24,5 +24,5 @@ build:
          - mkdir -p $READTHEDOCS_OUTPUT/html/         
          - ls docs/source
          - ls $READTHEDOCS_OUTPUT
-         - uv run sphinx-build --version
-         - uv run sphinx-build -v -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
+         - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv run sphinx-build --version
+         - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv run sphinx-build -v -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
