@@ -31,11 +31,23 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
+        working-directory: packages/buckaroo-js-core
+        run: pnpm build-storybook
 
-      #👇 Add Storybook build and deploy to GitHub Pages as a step in the workflow
-      - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
+      - name: 'upload'
+          uses: actions/upload-pages-artifact@v3
+          with: 
+          path: packages/buckaroo-js-core/dist/storybook
+      - id: deploy
+        name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
         with:
-          install_command: cd packages/buckaroo-js-core; pnpm install # default: npm ci
-          build_command: cd packages/buckaroo-js-core; pnpm build-storybook # default: npm run build-storybook
-          path: packages/buckaroo-js-core/dist/storybook # default: dist/storybook
-          checkout: true # default: true
+          token: ${{ github.token }}
+
+      # #👇 Add Storybook build and deploy to GitHub Pages as a step in the workflow
+      # - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
+      #   with:
+      #     install_command: cd packages/buckaroo-js-core; pnpm install # default: npm ci
+      #     build_command: cd packages/buckaroo-js-core; pnpm build-storybook # default: npm run build-storybook
+      #     path: packages/buckaroo-js-core/dist/storybook # default: dist/storybook
+      #     checkout: true # default: true
