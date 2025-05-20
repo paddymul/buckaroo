@@ -41,6 +41,10 @@ jobs:
         working-directory: docs
         run: |
           sudo apt install -y pandoc graphviz
+          mkdir buckaroo/static || true
+          touch buckaroo/static/compiled.css
+          touch buckaroo/static/widget.js
+          touch buckaroo/static/widget.css
           uv sync  --all-extras --group dev
           mkdir -p docs/build/html
           uv run sphinx-build -T -b html docs/source  docs/build
