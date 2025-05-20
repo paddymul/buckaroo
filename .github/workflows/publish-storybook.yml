@@ -22,8 +22,6 @@ jobs:
     steps:
       # Manual Checkout
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       # Set up Node
       - uses: actions/setup-node@v4
         with:
@@ -32,7 +30,9 @@ jobs:
         with:
           run_install: true
         working-directory: packages/buckaroo-js-core
-        run: pnpm build-storybook
+      - name: "foo"
+        run: |
+          pnpm build-storybook
 
       # - name: 'upload'
       #     uses: actions/upload-pages-artifact@v3
