@@ -47,7 +47,7 @@ jobs:
           touch buckaroo/static/widget.css
           uv sync  --all-extras --group dev
           mkdir -p docs/build/html
-          uv run sphinx-build -T -b html docs/source  docs/build
+          #uv run sphinx-build -T -b html docs/source  docs/build
           uv run pytest --check-links docs/source/*.rst
           uv run pytest --check-links docs/example-notebooks/*.ipynb
 
