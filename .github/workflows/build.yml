@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m pip install -U codecov
           pnpm install -g codecov
+          pnpm -C packages/buckaroo-js-core install
 
       - name: Check docs can be build + links
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -45,7 +46,7 @@ jobs:
         run: |
           python -m pip install --upgrade -v -e ".[test, examples, docs]"
           python -m pytest tests/unit
-          pnpm run test
+          pnpm -C packages/buckaroo-js-core  run test
 
       - name: Linting
         if: ${{ matrix.os == 'ubuntu-latest' }}
