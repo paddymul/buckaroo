@@ -48,6 +48,9 @@ jobs:
           cd packages/buckaroo-js-core
           pnpm install && pnpm run build
           cd ../..
+          ls -alshtr packages/buckaroo-js-core/dist/ || true
+          ls -alshtr buckaroo/static/ || true
+          mkdir buckaroo/static || true
           cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
           python -m pip install build
           python -m build .
