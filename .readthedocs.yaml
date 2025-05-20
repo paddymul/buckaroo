@@ -21,7 +21,3 @@ build:
     build:
        html:
          - uv run sphinx-build -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
-
-sphinx:
-  # Path to your Sphinx configuration file.
-  configuration: docs/source/conf.py
