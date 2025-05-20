@@ -59,7 +59,7 @@ jobs:
         working-directory: docs
         run: |
           sudo apt install -y pandoc graphviz
-          uv add toml sphinx==7.1.2 sphinx-build pytest-check-links graphviz==0.20.1
+          pip install toml sphinx==7.1.2 sphinx-build pytest-check-links graphviz==0.20.1
           make html
           python -m pytest --check-links
         env:
@@ -80,8 +80,7 @@ jobs:
           cd ../..
           mkdir buckaroo/static || true
           cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
-          python -m pip install build
-          python -m build .
+          uv build
 
       - name: Upload builds
         uses: actions/upload-artifact@v4
