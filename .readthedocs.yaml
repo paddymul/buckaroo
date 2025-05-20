@@ -14,9 +14,10 @@ build:
     - asdf global uv latest
     - uv venv $READTHEDOCS_VIRTUALENV_PATH
     - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv --preview pip install .[docs,pandas,flask,fastapi,rdflib]
-    - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv --preview pip install toml
-    - python -m sphinx -T -b html -d docs/_build/doctrees -D language=en docs/source $READTHEDOCS_OUTPUT/html
-
+    - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv --preview pip install docs/requirements.txt
+  build:
+    html:
+      - uv run sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
 
 # python:
 #    install:
