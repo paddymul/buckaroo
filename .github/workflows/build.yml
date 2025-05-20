@@ -44,6 +44,9 @@ jobs:
           uv add toml sphinx==7.1.2 sphinx-build pytest-check-links graphviz==0.20.1
           make html
           python -m pytest --check-links
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
+
 
       - name: Test the extension
         run: |
@@ -59,6 +62,8 @@ jobs:
           python -m build .
           #python -m pytest tests/unit
           pnpm -C packages/buckaroo-js-core run test
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
 
       - name: Linting
         if: ${{ matrix.os == 'ubuntu-latest' }}
