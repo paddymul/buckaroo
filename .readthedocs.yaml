@@ -20,4 +20,7 @@ build:
     #   - uv pip install -r docs/requirements.txt
     build:
        html:
+         - echo $READTHEDOCS_OUTPUT
+         - ls docs/source
+         - ls $READTHEDOCS_OUTPUT
          - uv run sphinx-build -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
