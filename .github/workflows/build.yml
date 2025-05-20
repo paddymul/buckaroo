@@ -57,6 +57,10 @@ jobs:
 
       - name: Package
         run: |
+          cd packages/buckaroo-js-core
+          pnpm install && pnpm run build
+          cd ../..
+          cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
           python -m pip install build
           python -m build .
 
