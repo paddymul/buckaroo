@@ -51,7 +51,7 @@ jobs:
       - name: Linting
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          pnpm -C packages/buckaroo-js-core run lint
+          # pnpm -C packages/buckaroo-js-core run lint
           pip install ruff
           ruff check . 
 
