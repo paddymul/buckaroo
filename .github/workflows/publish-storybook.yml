@@ -16,25 +16,39 @@ permissions:
  
 # List of jobs
 jobs:
-  deploy:
+  TestPython:
+    name: Python / Test
     runs-on: ubuntu-latest
-    # Job steps
     steps:
-      # Manual Checkout
       - uses: actions/checkout@v4
-      # Set up Node
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
-        working-directory: packages/buckaroo-js-core
-      - name: "foo"
+      - uses: astral-sh/setup-uv@v6
+      - name: Run tests
         run: |
           pnpm build-storybook
 
-      # - name: 'upload'
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   # Job steps
+  #   steps:
+  #     # Manual Checkout
+  #     - uses: actions/checkout@v4
+  #     # Set up Node
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #     - uses: pnpm/action-setup@v4
+  #       with:
+  #         run_install: true
+  #       working-directory: packages/buckaroo-js-core
+  #     - name: "foo"
+  #       run: |
+  #         pnpm build-storybook
+
+  #     # - name: 'upload'
       #     uses: actions/upload-pages-artifact@v3
       #     with: 
       #     path: packages/buckaroo-js-core/dist/storybook
