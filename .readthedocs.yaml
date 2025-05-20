@@ -21,6 +21,7 @@ build:
     build:
        html:
          - echo $READTHEDOCS_OUTPUT
+         - mkdir -p $READTHEDOCS_OUTPUT/html/         
          - ls docs/source
          - ls $READTHEDOCS_OUTPUT
          - uv run sphinx-build -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
