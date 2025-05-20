@@ -10,20 +10,21 @@ build:
     - npm
 
   jobs:
-    create_environment:
+    pre_create_environment:
       - asdf plugin add uv
-      - asdf install uv latest
-      - asdf global uv latest
+      - asdf install uv 0.6.12
+      - asdf global uv 0.6.12
+    create_environment:
       - uv venv
-      - uv tree
-    # install:
-    #   - uv pip install -r docs/requirements.txt
+#     - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --all-extras --group docs
+    install:
+      - uv sync
     build:
-       html:
-         - echo $READTHEDOCS_OUTPUT
-         - mkdir -p $READTHEDOCS_OUTPUT/html/         
-         - ls docs/source
-         - ls $READTHEDOCS_OUTPUT
-         - uv venv
-         - uv run sphinx-build --version
-         - uv run sphinx-build -v -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
+      html:
+        - uv run sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
+#       - uv run sphinx-build -v -T -b html -c docs/source/ docs/source $READTHEDOCS_OUTPUT/html
+# Build documentation in the docs/ directory with Sphinx
+sphinx:
+   configuration: docs/source/conf.py
+   
+ 
