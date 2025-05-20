@@ -18,7 +18,7 @@ export default defineConfig({
         },
         sourcemap: true, // Generates source maps for debugging.
         emptyOutDir: true, // Clears the output directory before building.
-        minify: false
+        minify: true
     },
 
     transform: {
