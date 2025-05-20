@@ -5,8 +5,8 @@ on:
   # Event for the workflow to run on
   push:
     branches:
-      - 'your-branch-name' # Replace with the branch you want to deploy from
-   pull_request:
+      - 'feat/publish-storybook-to-gh-pages'
+  pull_request:
     branches: "*"
 
 permissions:
