@@ -34,15 +34,15 @@ jobs:
         working-directory: packages/buckaroo-js-core
         run: pnpm build-storybook
 
-      - name: 'upload'
-          uses: actions/upload-pages-artifact@v3
-          with: 
-          path: packages/buckaroo-js-core/dist/storybook
-      - id: deploy
-        name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          token: ${{ github.token }}
+      # - name: 'upload'
+      #     uses: actions/upload-pages-artifact@v3
+      #     with: 
+      #     path: packages/buckaroo-js-core/dist/storybook
+      # - id: deploy
+      #   name: Deploy to GitHub Pages
+      #   uses: actions/deploy-pages@v4
+      #   with:
+      #     token: ${{ github.token }}
 
       # #👇 Add Storybook build and deploy to GitHub Pages as a step in the workflow
       # - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
