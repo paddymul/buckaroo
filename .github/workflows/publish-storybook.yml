@@ -30,8 +30,6 @@ jobs:
         working-directory: ./packages/buckaroo-js-core
         run: |
           pnpm build-storybook
-
-  Upload:
     name: Upload2
       steps:
         - uses: actions/upload-pages-artifact@v3
