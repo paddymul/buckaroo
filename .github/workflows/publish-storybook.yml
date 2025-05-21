@@ -30,14 +30,19 @@ jobs:
         working-directory: ./packages/buckaroo-js-core
         run: |
           pnpm build-storybook
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      - name: Upload Artifact
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v1
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          # location of the coverage artifacts
-          path: "./coverage"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./packages/buckaroo-js-core/dist/storybook
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v3
+      # - name: Upload Artifact
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: actions/upload-pages-artifact@v1
+      #   with:
+      #     # location of the coverage artifacts
+      #     path: "./coverage"
   # Upload:
   #   name: Upload2
   #   runs-on: ubuntu-latest
