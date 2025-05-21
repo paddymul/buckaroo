@@ -30,6 +30,8 @@ jobs:
         working-directory: ./packages/buckaroo-js-core
         run: |
           pnpm build-storybook
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
   Upload:
     name: Upload2
     runs-on: ubuntu-latest
