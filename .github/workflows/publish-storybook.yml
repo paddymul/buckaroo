@@ -19,6 +19,8 @@ permissions:
 jobs:
   TestPython:
     name: Python / Test
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
