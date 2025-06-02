@@ -42,12 +42,34 @@ def _(BuckarooPandera, Check, Column, fruits, pa):
     #val_result = schema.validate(fruits)
     #schema.
     BuckarooPandera(fruits, schema)
+    return (schema,)
+
+
+@app.cell
+def _(BuckarooPandera, pd, schema):
+    fruits2 = pd.DataFrame(
+        {
+            "name": ["apple", "banana", "apple", "orange"],
+            "store": ["Aldi", "Walmart", "Walmart", "Aldi"],
+            "price": [2, 1, 3, 2],
+        }
+    )
+    BuckarooPandera(fruits2, schema)
+    return (fruits2,)
+
+
+@app.cell
+def _(fruits2, get_fails, schema):
+    error_df2 = get_fails(fruits2, schema)
+    #column_errors = error_df2[error_df2['check_number'].isna()]
+    #full_df_checks = pd.crosstab(column_errors['check'], [column_errors['column']]).to_dict()
+    error_df2.to_dict()
     return
 
 
 @app.cell
 def _(Check, Column, pa, pd):
-    def is_odd(val):
+    def is_even(val):
         return val %2 == 1
     schema2 = pa.DataFrameSchema(
         {
@@ -55,7 +77,7 @@ def _(Check, Column, pa, pd):
                 dtype="int64",  # Use int64 for consistency
                 checks=[
                     Check(lambda x: x > 0, element_wise=True), # IDs must be positive
-                    Check(is_odd, element_wise=True),
+                    Check(is_even, element_wise=True),
                     Check.isin(range(-50, 1000)), 
                     Check.isin(range(0, 1000))
                 ],  # IDs between 1 and 999
@@ -107,14 +129,14 @@ def _(kd_df):
 
 @app.cell
 def _(get_fails, kd_df, schema2):
-    error_df = get_fails(kd_df, schema2)
-    error_df
-    return (error_df,)
+    kd_error_df = get_fails(kd_df, schema2)
+    kd_error_df
+    return (kd_error_df,)
 
 
 @app.cell
-def _(error_df, pd):
-    cross_df1 = pd.crosstab(error_df['error_index'], [error_df['column'], error_df['check']])
+def _(kd_error_df, pd):
+    cross_df1 = pd.crosstab(kd_error_df['error_index'], [kd_error_df['column'], kd_error_df['check']])
     cross_df1 = cross_df1.astype('Int64').replace(0, pd.NA).dropna(axis=1, how='all')
     #cross_df1.columns = cross_df1.columns.get_level_values(1)
     cross_df1
@@ -200,15 +222,15 @@ def _(cross_df1, get_column_reason_series, pd):
 
 
 @app.cell
-def _(calculate_error_color_num, cross_df1, get_reason_df):
-    color_df = calculate_error_color_num(cross_df1)
-    reason_df = get_reason_df(cross_df1)
-    return color_df, reason_df
+def _(calculate_error_color_num, cross_df1, get_reason_df, kd_df):
+    _color_df = calculate_error_color_num(cross_df1)
+    _reason_df = get_reason_df(cross_df1)
+    kd_df.join(_color_df, how='outer').join(_reason_df, how='outer')
+    return
 
 
 @app.cell
-def _(color_df, kd_df, reason_df):
-    kd_df.join(color_df, how='outer').join(reason_df, how='outer')
+def _():
     return
 
 
@@ -224,6 +246,9 @@ def _(
     from buckaroo.styling_helpers import obj_, float_, pinned_histogram
     def BuckarooPandera(df, schema):
         error_df = get_fails(df, schema)
+        if error_df is None:
+            print("all checks pass")
+            return BuckarooInfiniteWidget(df)
         cross_df1 = pd.crosstab(error_df['error_index'], [error_df['column'], error_df['check']])
         cross_df1 = cross_df1.astype('Int64').replace(0, pd.NA).dropna(axis=1, how='all')
         color_df = calculate_error_color_num(cross_df1)
@@ -237,15 +262,15 @@ def _(
 
         #pandera does something special with checks that aren't related to a particular cell
         column_errors = error_df[error_df['check_number'].isna()]
-
         full_df_checks = pd.crosstab(column_errors['check'], [column_errors['column']]).to_dict()
         init_sd.update(full_df_checks)
         base_pinned_rows = [
             obj_('dtype'), #{'primary_key_val': 'dtype',           'displayer_args': {'displayer': 'obj'}},
             pinned_histogram()]
-        first_col = list(full_df_checks.keys())[0]
-        for prop_name in full_df_checks[first_col].keys():
-            base_pinned_rows.append(obj_(prop_name))
+        if len(full_df_checks) > 0:
+            first_col = list(full_df_checks.keys())[0]
+            for prop_name in full_df_checks[first_col].keys():
+                base_pinned_rows.append(obj_(prop_name))
         bw = BuckarooInfiniteWidget(
             complete_df, column_config_overrides=cco,
             init_sd = init_sd,
@@ -281,10 +306,10 @@ def _():
 
 
 @app.cell
-def _(kd_df, pa):
+def _(pa):
     def get_fails(df, schema):
         try:
-            validated_df = schema.validate(kd_df, lazy=True)
+            validated_df = schema.validate(df, lazy=True)
             return None
         except pa.errors.SchemaErrors as e:
             err_df = e.failure_cases
