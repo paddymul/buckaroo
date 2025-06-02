@@ -25,11 +25,11 @@ def _(pd):
     )
 
     fruits
-    return
+    return (fruits,)
 
 
 @app.cell
-def _(Check, Column, pa):
+def _(BuckarooPandera, Check, Column, fruits, pa):
     available_fruits = ["apple", "banana", "orange"]
     nearby_stores = ["Aldi", "Walmart"]
 
@@ -41,6 +41,7 @@ def _(Check, Column, pa):
     )
     #val_result = schema.validate(fruits)
     #schema.
+    BuckarooPandera(fruits, schema)
     return
 
 
@@ -220,6 +221,7 @@ def _(
     make_col_config_overrides,
     pd,
 ):
+    from buckaroo.styling_helpers import obj_, float_, pinned_histogram
     def BuckarooPandera(df, schema):
         error_df = get_fails(df, schema)
         cross_df1 = pd.crosstab(error_df['error_index'], [error_df['column'], error_df['check']])
@@ -228,8 +230,27 @@ def _(
         reason_df = get_reason_df(cross_df1)
         complete_df = df.join(color_df, how='outer').join(reason_df, how='outer')
         cco = make_col_config_overrides(df)
+
+        # it's important that 'index' is the first key in init_sd, othewise display is messed up. 
+        # this is a bug in buckaroo
+        init_sd = {'index':{}} 
+
+        #pandera does something special with checks that aren't related to a particular cell
+        column_errors = error_df[error_df['check_number'].isna()]
+
+        full_df_checks = pd.crosstab(column_errors['check'], [column_errors['column']]).to_dict()
+        init_sd.update(full_df_checks)
+        base_pinned_rows = [
+            obj_('dtype'), #{'primary_key_val': 'dtype',           'displayer_args': {'displayer': 'obj'}},
+            pinned_histogram()]
+        first_col = list(full_df_checks.keys())[0]
+        for prop_name in full_df_checks[first_col].keys():
+            base_pinned_rows.append(obj_(prop_name))
         bw = BuckarooInfiniteWidget(
-            complete_df, column_config_overrides=cco)
+            complete_df, column_config_overrides=cco,
+            init_sd = init_sd,
+            pinned_rows = base_pinned_rows)
+
         return bw
 
     return (BuckarooPandera,)
@@ -243,7 +264,7 @@ def _(BuckarooPandera, kd_df, schema2):
 
 @app.cell
 def _():
-    eq_map = ["transparent", "pink", "#73ae80", "#90b2b3", "#6c83b5"];
+    eq_map = ["transparent", "pink", "#73ae80", "#90b2b3", "#6c83b5", "brown"];
     def make_col_config_overrides(df):
         column_config_overrides = {}
         for column in df:
@@ -253,45 +274,10 @@ def _():
                     'color_rule': 'color_categorical',
                     'map_name': eq_map,
                     'val_column': column + "_color"}}
+            column_config_overrides[column +"_reason"] = {'merge_rule': 'hidden'}
+            column_config_overrides[column +"_color"] = {'merge_rule': 'hidden'}
         return column_config_overrides
     return (make_col_config_overrides,)
-
-
-app._unparsable_cell(
-    r"""
-    def make_col_config_overrides2(df):
-            column_config_overrides['membership'] = {'merge_rule': 'hidden'}
-        both_columns = [c for c in m_df.columns if df2_suffix in c] #columns that occur in both
-        for b_col in both_columns:
-            a_col = b_col.removesuffix(df2_suffix)
-            col_neq = (m_df[a_col] == m_df[b_col]).astype('Int8') * 4 
-
-            eq_col = a_col + \"|eq\"
-            #by adding 2 and 4 to the boolean columns we get unique values
-            #for combinations of is_null and value equal
-            # this is then colored on the column
-        
-            m_df[eq_col] = col_neq + m_df['membership']
-
-            column_config_overrides[b_col] = {'merge_rule': 'hidden'}
-            column_config_overrides[eq_col] = {'merge_rule': 'hidden'}
-            column_config_overrides[a_col] = {
-                'tooltip_config': { 'tooltip_type':'simple', 'val_column': b_col},
-                'color_map_config': {
-                    'color_rule': 'color_categorical',
-                    'map_name': eq_map,
-                    'val_column': eq_col }}
-        
-        #where did the row come from 
-        column_config_overrides[join_columns] =  {'color_map_config': {
-              'color_rule': 'color_categorical',
-              'map_name': eq_map,
-              'val_column': 'membership'
-            }}
-
-    """,
-    name="_"
-)
 
 
 @app.cell
@@ -299,12 +285,8 @@ def _(kd_df, pa):
     def get_fails(df, schema):
         try:
             validated_df = schema.validate(kd_df, lazy=True)
-            print("Data is valid!")
-            print(validated_df)
             return None
         except pa.errors.SchemaErrors as e:
-            print("Validation failed with these problems:")
-            #print(e.failure_cases[['column', 'check', 'failure_case', 'index']])
             err_df = e.failure_cases
             err_df['error_index'] = err_df['index']
             return err_df
