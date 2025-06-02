@@ -11,7 +11,7 @@ def _():
     from pandera import Column, Check
     from buckaroo.buckaroo_widget import BuckarooInfiniteWidget
     from collections import defaultdict
-    return Check, Column, defaultdict, pa, pd
+    return BuckarooInfiniteWidget, Check, Column, defaultdict, pa, pd
 
 
 @app.cell
@@ -82,9 +82,9 @@ def _(Check, Column, pa, pd):
     kd_df = pd.DataFrame(
         {
             #"customer_id": [None, -20, 3, 4, "invalid", 2000],  # "invalid" is not an integer
-            "customer_id": pd.Series([pd.NA, -20, 3, 4, -5, 2000, 2001], dtype='Int64'),  # "invalid" is not an integer
-            "name": ["Maryam", "Jane", "", "Alice", "Bobby", "k", "v"],  # Empty name
-            "age": [25, -5, 30, 45, 35, 150, 7],  # Negative age is invalid
+            "customer_id": pd.Series([pd.NA, -20, 3, 4, -5, 2000, 2001, 9], dtype='Int64'),  # "invalid" is not an integer
+            "name": ["Maryam", "Jane", "", "Alice", "Bobby", "k", "v", "normal"],  # Empty name
+            "age": [25, -5, 30, 45, 35, 150, 7, 25],  # Negative age is invalid
             "email": [
                 "mrym@gmail.com",
                 "jane.s@yahoo.com",
@@ -92,7 +92,8 @@ def _(Check, Column, pa, pd):
                 "alice@google.com",
                 None,
                 "asdasdf",
-                None
+                None,
+                'good@email.com'
             ]})
     return kd_df, schema2
 
@@ -149,15 +150,16 @@ def _(defaultdict, pd):
 
 
 @app.cell
-def _(cross_df1):
-    cross_df1
-    return
-
-
-@app.cell
 def _(cross_df1, pd):
     def get_column_reason_series(col_errors_df):
-        #multi_errors = cust_errors.sum(axis=1) > 1
+        """
+        This function is about as far as possible from a vectorized operation.
+
+        I couldn't figure it out.  Converting NA to '', means everything gets joined then you have to pull them out
+        This would probably be cleaner as a tuple of non NA elements and a special displayer to make those work
+
+        Open to suggestions
+        """
 
         str_cust_error_data = {}
         for col in col_errors_df:
@@ -193,144 +195,103 @@ def _(cross_df1, get_column_reason_series, pd):
             reason_data[first_level+"_reason"] = get_column_reason_series(col_df)
         return pd.DataFrame(reason_data)    
     get_reason_df(cross_df1)
+    return (get_reason_df,)
+
+
+@app.cell
+def _(calculate_error_color_num, cross_df1, get_reason_df):
+    color_df = calculate_error_color_num(cross_df1)
+    reason_df = get_reason_df(cross_df1)
+    return color_df, reason_df
+
+
+@app.cell
+def _(color_df, kd_df, reason_df):
+    kd_df.join(color_df, how='outer').join(reason_df, how='outer')
     return
 
 
 @app.cell
-def _(cross_df1):
-    # the dropna is so don't want to do anything on rows with no errors
-    cust_errors = cross_df1.xs('customer_id', axis=1, level=0).dropna(how='all', axis=0)
-    cust_errors
-    return (cust_errors,)
+def _(
+    BuckarooInfiniteWidget,
+    calculate_error_color_num,
+    get_fails,
+    get_reason_df,
+    make_col_config_overrides,
+    pd,
+):
+    def BuckarooPandera(df, schema):
+        error_df = get_fails(df, schema)
+        cross_df1 = pd.crosstab(error_df['error_index'], [error_df['column'], error_df['check']])
+        cross_df1 = cross_df1.astype('Int64').replace(0, pd.NA).dropna(axis=1, how='all')
+        color_df = calculate_error_color_num(cross_df1)
+        reason_df = get_reason_df(cross_df1)
+        complete_df = df.join(color_df, how='outer').join(reason_df, how='outer')
+        cco = make_col_config_overrides(df)
+        bw = BuckarooInfiniteWidget(
+            complete_df, column_config_overrides=cco)
+        return bw
+
+    return (BuckarooPandera,)
 
 
 @app.cell
-def _(cust_errors, pd):
-    base_ser2 = pd.Series([pd.NA] * len(cust_errors), dtype='string', index=cust_errors.index)
-    cust_errors['<lambda>']
-    base_ser2.loc[cust_errors['<lambda>']==1] = '<lambda>'
-    base_ser2
-    return
-
-
-@app.cell
-def _(cust_errors, pd):
-    multi_errors = cust_errors.sum(axis=1) > 1
-    cust_errors[multi_errors]
-    str_cust_error_data = {}
-    for col in cust_errors:
-        base_ser = pd.Series([pd.NA] * len(cust_errors), dtype='string', index=cust_errors.index)
-        base_ser.loc[cust_errors[col]==1] = col
-        str_cust_error_data[col] = base_ser
-    str_err_df = pd.DataFrame(str_cust_error_data)
-    str_err_df 
-    return multi_errors, str_err_df
-
-
-@app.cell
-def _(pd, str_err_df):
-    ret_ser = []
-    for idx, row in str_err_df.iterrows():
-        dna = row.dropna()
-        if len(dna) > 0:
-            ret_ser.append('|'.join(dna.tolist()))
-        else:
-            ret_ser.append(dna.values[0])
-    pd.Series(ret_ser, index=str_err_df.index)
-    return
-
-
-@app.cell
-def _(str_err_df):
-    str_err_df.iloc[0].dropna()
-    return
-
-
-@app.cell
-def _(str_err_df):
-    str_err_df.iloc[0].dropna().values[0]
-    return
-
-
-@app.cell
-def _(str_err_df):
-    str_err_df.iloc[1].dropna()
-    return
-
-
-@app.cell
-def _(str_err_df):
-    '\\n'.join(str_err_df.iloc[1].dropna().tolist())
-    return
-
-
-@app.cell
-def _(cust_errors, multi_errors):
-    cust_errors[~multi_errors].loc[3]
+def _(BuckarooPandera, kd_df, schema2):
+    BuckarooPandera(kd_df, schema2)
     return
 
 
 @app.cell
 def _():
-    return
+    eq_map = ["transparent", "pink", "#73ae80", "#90b2b3", "#6c83b5"];
+    def make_col_config_overrides(df):
+        column_config_overrides = {}
+        for column in df:
+            column_config_overrides[column] = {
+                'tooltip_config': { 'tooltip_type':'simple', 'val_column': column+'_reason'},
+                'color_map_config': {
+                    'color_rule': 'color_categorical',
+                    'map_name': eq_map,
+                    'val_column': column + "_color"}}
+        return column_config_overrides
+    return (make_col_config_overrides,)
 
 
 app._unparsable_cell(
     r"""
-    def create_error_reason_df(error_cross_df):
-    
-    cross_df1
+    def make_col_config_overrides2(df):
+            column_config_overrides['membership'] = {'merge_rule': 'hidden'}
+        both_columns = [c for c in m_df.columns if df2_suffix in c] #columns that occur in both
+        for b_col in both_columns:
+            a_col = b_col.removesuffix(df2_suffix)
+            col_neq = (m_df[a_col] == m_df[b_col]).astype('Int8') * 4 
+
+            eq_col = a_col + \"|eq\"
+            #by adding 2 and 4 to the boolean columns we get unique values
+            #for combinations of is_null and value equal
+            # this is then colored on the column
+        
+            m_df[eq_col] = col_neq + m_df['membership']
+
+            column_config_overrides[b_col] = {'merge_rule': 'hidden'}
+            column_config_overrides[eq_col] = {'merge_rule': 'hidden'}
+            column_config_overrides[a_col] = {
+                'tooltip_config': { 'tooltip_type':'simple', 'val_column': b_col},
+                'color_map_config': {
+                    'color_rule': 'color_categorical',
+                    'map_name': eq_map,
+                    'val_column': eq_col }}
+        
+        #where did the row come from 
+        column_config_overrides[join_columns] =  {'color_map_config': {
+              'color_rule': 'color_categorical',
+              'map_name': eq_map,
+              'val_column': 'membership'
+            }}
+
     """,
     name="_"
 )
-
-
-@app.cell
-def _(pd):
-    unjoined_df = pd.DataFrame({'a': pd.Series(['foo', pd.NA, 'baz', pd.NA], dtype=pd.StringDtype), 
-                                'b':pd.Series([pd.NA, '2', '3', pd.NA], dtype=pd.StringDtype)})
-    unjoined_df.fillna('').agg('\\n'.join, axis=1).astype('string').replace('',pd.NA)
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _(cross_df1):
-    cross_df1.xs('name', axis=1, level=0)
-    return
-
-
-@app.cell
-def _(cross_df1):
-    cross_df1['customer_id']
-    return
-
-
-@app.cell
-def _(cross_df1):
-    cross_df1['customer_id'].sum(axis=1)
-    return
-
-
-@app.cell
-def _(cross_df1, pd):
-    #cross_df1['customer_id'].astype('boolean').replace(False, pd.NA)
-    cross_df1.astype('Int64').replace(0, pd.NA)
-    return
-
-
-@app.cell
-def _(pd):
-    def prepare_error_df_columns(error_df):
-        cross_df = pd.crosstab(error_df['error_index'], [error_df['column'], error_df['check']])
-
-
-
-    return
 
 
 @app.cell
@@ -348,27 +309,6 @@ def _(kd_df, pa):
             err_df['error_index'] = err_df['index']
             return err_df
     return (get_fails,)
-
-
-@app.cell
-def _(input_df, pd):
-    def transform_to_boolean_matrix(input_df):
-        # Create a cross-tabulation of column and reason for each fake_index
-        pivot = pd.crosstab(
-            input_df['fake_index'],
-            [input_df['column'], input_df['reason']],
-            dropna=False
-        )
-
-        # Flatten the multi-level columns
-        pivot.columns = [f"{col[0]}_reason_{col[1]}" for col in pivot.columns]
-
-        # Convert to boolean with NA values
-        result = pivot.astype(pd.BooleanDtype())
-
-        return result
-    transform_to_boolean_matrix(input_df).replace(False, pd.NA)
-    return
 
 
 @app.cell
