@@ -165,7 +165,7 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
   }
   const childLevel = level + 1;
 
-  if (childLevel == rootDepth) {
+  if (childLevel == (rootDepth -1)) {
     const colDef: ColGroupDef = {
       headerName: rootHeader,
       children: _.map(f, (x) => childColDef(x, childLevel))
@@ -208,6 +208,8 @@ export function dfToAgrid(
   const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
 
   const retMultiColumns:(ColDef|ColGroupDef)[] = groupedColumnConfigs.map(switchToColDef)
+  console.log("retMultiColumns");
+  console.log(retMultiColumns)
   return retMultiColumns
 }
 

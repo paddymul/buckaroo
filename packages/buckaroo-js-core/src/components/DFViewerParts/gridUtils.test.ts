@@ -345,6 +345,27 @@ describe("testing multi index organiztion  ", () => {
     ];
 
 
+  it("multiIndexColumnConfig should return for 2 levels", () => {
+    // first assume regular groups... Every element in a grouping will
+    // have the same col_path depth.  I might want to break this later
+    const groupedCC = [
+      SUPER__SUB_A,
+      SUPER__SUB_A2,
+    ];
+
+    const MIColGroupDef = multiIndexColToColDef(groupedCC);
+
+    //@ts-ignore
+    const children = MIColGroupDef.children;  
+    expect(children.length).toBe(2);
+
+    const child1 = children[0];
+    expect(child1.children).toBe(undefined);  // there should only be one level of nesting
+    const child2 = children[1];
+    expect(child2.children).toBe(undefined);  // there should only be one level of nesting
+  });
+
+
   it("multiIndexColumnConfig should return proper nested", () => {
     // first assume regular groups... Every element in a grouping will
     // have the same col_path depth.  I might want to break this later

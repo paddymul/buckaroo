@@ -310,6 +310,34 @@ const MultiIndexDFViewerConfig:DFViewerConfig = {
   pinned_rows: []
 }
 
+const ThreeLevelIndex:DFViewerConfig = {
+  column_config: [
+    { col_path:['super', 'foo', 'a'],
+      'field': 'a',
+      displayer_args: { displayer:'obj' },
+    },
+    {col_name:'a',
+      col_path:['super', 'foo', 'b'],
+      'field': 'a',
+      displayer_args: { displayer:'obj' },
+    },
+    { col_path:['super', 'bar', 'a'],
+      'field': 'a',
+      displayer_args: { displayer:'obj' },
+    },
+    {col_path:['super', 'bar', 'b'],
+      'field': 'c',
+      displayer_args: { displayer:'obj' },
+    },
+    {col_name:'b',
+      col_path:['super 2', 'b'],
+      field:'b',
+      displayer_args: { displayer:'obj' },
+    },
+  ],
+  pinned_rows: []
+}
+
   /*
 const examples:ColGroupDef[] = [
   {
@@ -330,6 +358,7 @@ const examples:ColGroupDef[] = [
   }
 ]
    */
+
 export const MultiIndex: Story = {
 
   args: {
@@ -340,6 +369,22 @@ export const MultiIndex: Story = {
       {a:200, b:19,  c: "exile on main"},
     ],
     df_viewer_config: MultiIndexDFViewerConfig,
+    secondary_df_viewer_config :IntFloatConfig,
+    summary_stats_data: HistogramSummaryStats
+
+  }
+}
+
+export const ThreeLevelColumnIndex: Story = {
+
+  args: {
+    data: [
+      {a:50,  b:5,   c: "asdfasdf"},
+      {a:70,  b:10,  c: "foo bar ba"},
+      {a:300, b:3,   c: "stop breaking down"},
+      {a:200, b:19,  c: "exile on main"},
+    ],
+    df_viewer_config: ThreeLevelIndex,
     secondary_df_viewer_config :IntFloatConfig,
     summary_stats_data: HistogramSummaryStats
 
