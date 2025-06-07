@@ -1,5 +1,6 @@
 import logging
 from typing import TypedDict, Union, List, Dict, Any, Optional, Literal
+from typing_extensions import NotRequired
 
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
@@ -169,18 +170,24 @@ ComponentConfig = TypedDict('ComponentConfig', {
     'className': Optional[str]
 })
 
+
 DFViewerConfig = TypedDict('DFViewerConfig', {
     'pinned_rows': List[PinnedRowConfig],
     'column_config': List[ColumnConfig],
-    'extra_grid_config': Optional[Dict[str, Any]],  # GridOptions
-    'component_config': Optional[ComponentConfig]
+    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
+    'component_config': NotRequired[ComponentConfig]
 })
 
+DisplayArgs = TypedDict('DisplayArgs', {
+    'data_key':str,
+    'df_viewer_config':DFViewerConfig,
+    'summary_stats_key': str})
 
 
-EMPTY_DFVIEWER_CONFIG = {
+EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
     'pinned_rows': [],
-    'column_config': []}
+    'column_config': []
+}
 
 
 EMPTY_DF_DISPLAY_ARG = {'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
