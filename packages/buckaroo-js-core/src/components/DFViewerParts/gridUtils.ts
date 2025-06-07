@@ -109,7 +109,7 @@ export function normalColToColDef (f:NormalColumnConfig) : ColDef {
   return colDef
 }
 
-export function getSubChildren (f:ColumnConfig[], level:number): ColumnConfig[][] {
+export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[][] => {
   const keyFunc = (x:ColumnConfig) => {
     if(_.has(x, 'col_path')) {
       const xMICC: MultiIndexColumnConfig = x as MultiIndexColumnConfig
@@ -118,8 +118,37 @@ export function getSubChildren (f:ColumnConfig[], level:number): ColumnConfig[][
     const xNCC: NormalColumnConfig = x as NormalColumnConfig;
     return xNCC.col_name + "!&single"; // bad magic value
   }
-  return _.values(_.groupBy(f, keyFunc));
-}
+  return arr.reduce((acc: ColumnConfig[][], curr:ColumnConfig) => {
+    
+    const firstKey = keyFunc(curr)
+    const lastGroup = acc[acc.length - 1];
+    
+    if (!lastGroup || keyFunc(lastGroup[0]) !== firstKey) {
+      acc.push([curr]);
+    } else {
+      lastGroup.push(curr);
+    }
+    
+    return acc;
+  }, []);
+};
+
+export const groupByCommonProperties = (arr: any[]) => {
+  return arr.reduce((acc: any[][], curr) => {
+    const firstKey = Object.keys(curr)[0];
+    const lastGroup = acc[acc.length - 1];
+    
+    // If no groups exist yet, or if the first key changed, create a new group
+    if (!lastGroup || Object.keys(lastGroup[0])[0] !== firstKey) {
+      acc.push([curr]);
+    } else {
+      lastGroup.push(curr);
+    }
+    
+    return acc;
+  }, []);
+};
+
 
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
   // const color_map_config = f.color_map_config
