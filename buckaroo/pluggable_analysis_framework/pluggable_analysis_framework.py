@@ -1,6 +1,14 @@
+from typing_extensions import TypeAlias
 import graphlib
 from collections import OrderedDict
-from typing import List, Union, Any, Mapping, Tuple, Callable
+from typing import List, Union, Any, Mapping, Tuple, Callable, Dict
+
+
+SDVals: TypeAlias = Union[str, int, float, bool] #pd.series too, but don't know how
+ColMeta: TypeAlias = Dict[str, SDVals]
+#col_name, measure_name, measure_val
+SDType: TypeAlias = Dict[str, ColMeta]
+
 
 class ColAnalysis:
     """
@@ -12,7 +20,8 @@ class ColAnalysis:
     requires_summary:List[str] = [] # What summary stats does this analysis provide
 
     provides_series_stats:List[str] = [] # what does this provide at a series level
-    provides_defaults:Mapping[str, any] = {}
+    provides_defaults: ColMeta = {}
+
 
 
     @classmethod

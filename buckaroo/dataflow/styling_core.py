@@ -3,7 +3,7 @@ from typing import TypedDict, Union, List, Dict, Any, Optional, Literal
 from typing_extensions import NotRequired
 
 import pandas as pd
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis, ColMeta, SDType)
 
 logger = logging.getLogger()
 
@@ -27,7 +27,7 @@ CellRendererArgs = Union[
 # Formatter Types
 ObjDisplayerA = TypedDict('ObjDisplayerA', {
     'displayer': Literal["obj"],
-    'max_length': Optional[int]
+    'max_length': NotRequired[int]
 })
 
 BooleanDisplayerA = TypedDict('BooleanDisplayerA', {
@@ -36,7 +36,7 @@ BooleanDisplayerA = TypedDict('BooleanDisplayerA', {
 
 StringDisplayerA = TypedDict('StringDisplayerA', {
     'displayer': Literal["string"],
-    'max_length': Optional[int]
+    'max_length': NotRequired[int]
 })
 
 FloatDisplayerA = TypedDict('FloatDisplayerA', {
@@ -80,13 +80,13 @@ ColorMap = Union[Literal["BLUE_TO_YELLOW", "DIVERGING_RED_WHITE_BLUE"], List[str
 ColorMapRules = TypedDict('ColorMapRules', {
     'color_rule': Literal["color_map"],
     'map_name': ColorMap,
-    'val_column': Optional[str]
+    'val_column': NotRequired[str]
 })
 
 ColorCategoricalRules = TypedDict('ColorCategoricalRules', {
     'color_rule': Literal["color_categorical"],
     'map_name': ColorMap,
-    'val_column': Optional[str]
+    'val_column': NotRequired[str]
 })
 
 ColorWhenNotNullRules = TypedDict('ColorWhenNotNullRules', {
@@ -122,26 +122,26 @@ TooltipConfig = Union[SimpleTooltip, SummarySeriesTooltip]
 # Column config types
 BaseColumnConfig = TypedDict('BaseColumnConfig', {
     'displayer_args': DisplayerArgs,
-    'color_map_config': Optional[ColorMappingConfig],
-    'tooltip_config': Optional[TooltipConfig],
-    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+    'color_map_config': NotRequired[ColorMappingConfig],
+    'tooltip_config': NotRequired[TooltipConfig],
+    'ag_grid_specs': NotRequired[Dict[str, Any]]  # AGGrid_ColDef
 })
 
 NormalColumnConfig = TypedDict('NormalColumnConfig', {
     'col_name': str,
     'displayer_args': DisplayerArgs,
-    'color_map_config': Optional[ColorMappingConfig],
-    'tooltip_config': Optional[TooltipConfig],
-    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+    'color_map_config': NotRequired[ColorMappingConfig],
+    'tooltip_config': NotRequired[TooltipConfig],
+    'ag_grid_specs': NotRequired[Dict[str, Any]]  # AGGrid_ColDef
 })
 
 MultiIndexColumnConfig = TypedDict('MultiIndexColumnConfig', {
     'col_path': List[str],
     'field': str,
     'displayer_args': DisplayerArgs,
-    'color_map_config': Optional[ColorMappingConfig],
-    'tooltip_config': Optional[TooltipConfig],
-    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+    'color_map_config': NotRequired[ColorMappingConfig],
+    'tooltip_config': NotRequired[TooltipConfig],
+    'ag_grid_specs': NotRequired[Dict[str, Any]]  # AGGrid_ColDef
 })
 ColumnConfig = Union[NormalColumnConfig, MultiIndexColumnConfig]
 
@@ -149,56 +149,26 @@ DFDisplayArgs = TypedDict('DFDisplayArgs', {
     'col_path': List[str],
     'field': str,
     'displayer_args': DisplayerArgs,
-    'color_map_config': Optional[ColorMappingConfig],
-    'tooltip_config': Optional[TooltipConfig],
-    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+    'color_map_config': NotRequired[ColorMappingConfig],
+    'tooltip_config': NotRequired[TooltipConfig],
+    'ag_grid_specs': NotRequired[Dict[str, Any]]  # AGGrid_ColDef
 })
 
 
 PinnedRowConfig = TypedDict('PinnedRowConfig', {
     'primary_key_val': str,
     'displayer_args': DisplayerArgs,
-    'default_renderer_columns': Optional[List[str]]  # used to render index column values with string not the specified displayer
+    'default_renderer_columns': NotRequired[List[str]]  # used to render index column values with string not the specified displayer
 })
 
 ComponentConfig = TypedDict('ComponentConfig', {
-    'height_fraction': Optional[float],
-    'dfvHeight': Optional[int],  # temporary debugging prop
-    'layoutType': Optional[Literal["autoHeight", "normal"]],
-    'shortMode': Optional[bool],
-    'selectionBackground': Optional[str],
-    'className': Optional[str]
+    'height_fraction': NotRequired[float],
+    'dfvHeight': NotRequired[int],  # temporary debugging prop
+    'layoutType': NotRequired[Literal["autoHeight", "normal"]],
+    'shortMode': NotRequired[bool],
+    'selectionBackground': NotRequired[str],
+    'className': NotRequired[str]
 })
-
-
-DFViewerConfig = TypedDict('DFViewerConfig', {
-    'pinned_rows': List[PinnedRowConfig],
-    'column_config': List[ColumnConfig],
-    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
-    'component_config': NotRequired[ComponentConfig]
-})
-
-DisplayArgs = TypedDict('DisplayArgs', {
-    'data_key':str,
-    'df_viewer_config':DFViewerConfig,
-    'summary_stats_key': str})
-
-
-EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
-    'pinned_rows': [],
-    'column_config': []
-}
-
-
-EMPTY_DF_DISPLAY_ARG = {'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
-                           'summary_stats_key': 'empty'}
-
-
-SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
-SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
-
-SENTINEL_COLUMN_CONFIG_1 = "ASDF"
-SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
 
 
 def merge_sds(*sds):
@@ -241,81 +211,118 @@ def merge_column_config(styled_column_config, overide_column_configs):
         ret_column_config.append(row)
     return ret_column_config
 
-def style_columns(style_method:str, sd):
+
+DFViewerConfig = TypedDict('DFViewerConfig', {
+    'pinned_rows': List[PinnedRowConfig],
+    'column_config': List[ColumnConfig],
+    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
+    'component_config': NotRequired[ComponentConfig]
+})
+
+DisplayArgs = TypedDict('DisplayArgs', {
+    'data_key':str,
+    'df_viewer_config':DFViewerConfig,
+    'summary_stats_key': str})
+
+EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
+    'pinned_rows': [],
+    'column_config': []
+}
+
+
+EMPTY_DF_DISPLAY_ARG: DisplayArgs = {
+  'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
+  'summary_stats_key': 'empty'}
+
+
+SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
+SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
+
+SENTINEL_COLUMN_CONFIG_1 = "ASDF"
+SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
+
+
+def style_columns(style_method:str, sd:SDType) ->DFViewerConfig:
     if style_method == "foo":
-        return SENTINEL_COLUMN_CONFIG_2
+        # this is a dumn sentinel
+        return SENTINEL_COLUMN_CONFIG_2 # type: ignore:
     else:
-        ret_col_config = []
+        ret_col_config: List[ColumnConfig] = [] 
         for col in sd.keys():
-            ret_col_config.append(
-                {'col_name':col, 'displayer_args': {'displayer': 'obj'}})
+            ret_col_config.append({'col_name':col, 'displayer_args': {'displayer': 'obj'}})
+
         return {
-            'pinned_rows': [
-            #    {'primary_key_val': 'dtype', 'displayer_args': {'displayer': 'obj'}}
-            ],
+            'pinned_rows': [],
             'column_config': ret_col_config}
 
 
-class StylingAnalysis(ColAnalysis):
-    provides_defaults = {}
-    pinned_rows = []
+DFViewerConfig = TypedDict('DFViewerConfig', {
+    'pinned_rows': List[PinnedRowConfig],
+    'column_config': List[ColumnConfig],
+    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
+    'component_config': NotRequired[ComponentConfig]
+})
 
-    extra_grid_config = {}
-    component_config = {}
+
+
+class StylingAnalysis(ColAnalysis):
+    provides_defaults: ColMeta = {}
+    pinned_rows:  List[PinnedRowConfig] = []
+    extra_grid_config: NotRequired[Dict[str, Any]] = {}
+    component_config: NotRequired[ComponentConfig] = {}
     
-    #the type should be
-    #def style_column(col:str, column_metadata: SingleColumnMetadata) -> ColumnConfig:
     @classmethod
-    def style_column(kls, col, column_metadata):
+    def style_column(cls, col:str, _column_metadata: ColMeta) -> ColumnConfig:
         return {'col_name':str(col), 'displayer_args': {'displayer': 'obj'}}
 
     #what is the key for this in the df_display_args_dictionary
-    df_display_name = "main"
-    data_key = "main"
-    summary_stats_key= 'all_stats'
+    df_display_name: str = "main"
+    data_key: str = "main"
+    summary_stats_key: str = 'all_stats'
 
     @classmethod
-    def default_styling(kls, col_name):
+    def default_styling(cls, col_name:str, /) -> ColumnConfig:
         return {'col_name': col_name, 'displayer_args': {'displayer': 'obj'}}
 
     @classmethod
-    def style_columns(kls, sd):
-        ret_col_config = []
+    def style_columns(cls, sd:SDType) -> DFViewerConfig:
+        ret_col_config: List[ColumnConfig] = []
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
         if 'index' not in sd:
-            ret_col_config.append(kls.default_styling('index'))
+            ret_col_config.append(cls.default_styling('index'))
             
-        for col in sd.keys():
-            col_meta = sd[col]
-            if col_meta.get('merge_rule') == 'hidden':
+        for col, col_meta in sd.items():
+            if col_meta.get('merge_rule', None) == 'hidden':
                 continue
             try:
-                base_style = kls.style_column(col, col_meta)
+                base_style: ColumnConfig = cls.style_column(col, col_meta)
             except Exception as exc:
-                if len(col_meta) == 0 and len(kls.requires_summary) > 0:
+                if len(col_meta) == 0 and len(cls.requires_summary) > 0:
                     # this is called in instantiation without col_meta, and that can cause failures
                     # we want to just swallow these errors and not warn
                     pass
                 else:
                     # something unexpected happened here, warn so that the develoepr is notified
-                    logger.warn(f"Warning, styling failed from {kls} on column {col} with col_meta {col_meta} using default_styling instead")
+                    logger.warn(f"Warning, styling failed from {cls} on column {col} with col_meta {col_meta} using default_styling instead")
                     logger.warn(exc)
                 # Always provide a style, not providing a style
                 # results in no display which is a very bad user
                 # experience
-                base_style = kls.default_styling(col)
+                base_style = cls.default_styling(col)
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
-                base_style.update(col_meta['column_config_override'])
+
+                cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
+                base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
             if base_style.get('merge_rule') == 'hidden':
                 continue
             ret_col_config.append(base_style)
             
         return {
-            'pinned_rows': kls.pinned_rows,
+            'pinned_rows': cls.pinned_rows,
             'column_config': ret_col_config,
-            'extra_grid_config': kls.extra_grid_config,
-            'component_config': kls.component_config
+            'extra_grid_config': cls.extra_grid_config,
+            'component_config': cls.component_config
         }
 

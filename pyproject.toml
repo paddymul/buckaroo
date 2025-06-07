@@ -110,6 +110,7 @@ installer = "uv"
 
 [tool.basedpyright]
 # include = ["src"]
+
 exclude = ["**/node_modules",
      "**/__pycache__"]
 #     "src/experimental",
@@ -122,8 +123,10 @@ exclude = ["**/node_modules",
 reportMissingImports = "error"
 reportMissingTypeStubs = false
 
-pythonVersion = "3.6"
+pythonVersion = "3.8"
 
+[tool.basedpyright.analysis.inlayHints]
+callArgumentNames = false
 
 [tool.isort]
 profile = "black"
