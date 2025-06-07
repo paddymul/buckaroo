@@ -1,7 +1,7 @@
 from io import BytesIO
 import json
 import pandas as pd
-from typing import Union, Any
+from typing import Dict, Union, Any
 from pandas._libs.tslibs import timezones
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 from fastparquet import json as fp_json
@@ -47,15 +47,6 @@ def check_and_fix_df(df):
         print("your dataframe has a column or index with a datetime series without atimezone.  Setting a default UTC timezone to proceed with display. https://github.com/paddymul/buckaroo/issues/277")
         return fix_df_dates(df)
     return df
-
-def get_outlier_idxs(ser):
-    if not pd.api.types.is_numeric_dtype(ser.dtype):
-        return []
-    outlier_idxs = []
-    outlier_idxs.extend(ser.nlargest(5).index)
-    outlier_idxs.extend(ser.nsmallest(5).index)
-    return outlier_idxs
-
 
 
 
@@ -116,38 +107,32 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
     else:
         raise Exception("unexpected type for dataframe, got %r" % (type(df_pd_or_pl)))
 
-#def generate_column_config(df:pd.DataFrame, summary_dict) -> List[ColumnConfig]:
-def generate_column_config(df:pd.DataFrame, summary_dict):
-    ret_conf = []
-    index_name = df.index.name or "index"
-    ret_conf.append({'col_name':index_name, 'displayer_args' : { 'displayer':'obj'}})
-    for col in df.columns:
-        ret_conf.append({'col_name': str(col), 'displayer_args' : { 'displayer':'obj'} })
-    return ret_conf
-        
 
-#def df_to_obj(unknown_df:Union[pd.DataFrame, Any], summary_dict:Any) -> DFWhole:
-def df_to_obj(unknown_df:Union[pd.DataFrame, Any], summary_dict:Any):
-    df = force_to_pandas(unknown_df)
-    data = pd_to_obj(df)
-    #dfviewer_config:DFViewerConfig = {
-    dfviewer_config = {
-        'pinned_rows'   : [],
-        'column_config' : generate_column_config(df, summary_dict)
-    }
-    return {'data':data, 'dfviewer_config': dfviewer_config}
 
-def pd_to_obj(df:pd.DataFrame):
-    obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+    
+def pd_to_obj(df:pd.DataFrame) -> Dict[str, Any]:
 
-    if isinstance(df.index, pd.MultiIndex):
+    multi_main_idx = isinstance(df.index, pd.MultiIndex)
+    multi_col_idx = isinstance(df.columns, pd.MultiIndex)
+
+    if multi_main_idx:
         old_index = df.index
         temp_index = pd.Index(df.index.to_list(), tupleize_cols=False)
         df.index = temp_index
-        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+
+    if multi_col_idx:
+        old_col_index = df.columns
+        temp_col_index = pd.Index(df.columns.to_list(), tupleize_cols=False)
+        df.columns = temp_col_index
+        
+    obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+        
+
+    if multi_main_idx:
         df.index = old_index
-    else:
-        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+    if multi_col_idx:
+        df.columns = old_col_index
+
     return obj['data']
 
 

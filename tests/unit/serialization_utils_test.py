@@ -2,16 +2,9 @@ from datetime import date
 import pytest
 import pandas as pd
 from buckaroo.serialization_utils import (
-    df_to_obj, is_col_dt_safe, is_dataframe_datetime_safe, check_and_fix_df,
+    is_col_dt_safe, is_dataframe_datetime_safe, check_and_fix_df, pd_to_obj,
     to_parquet, DuplicateColumnsException)
-
-def test_df_to_obj():
-    named_index_df = pd.DataFrame(
-        dict(names=['one', 'two', 'three'],
-             values=[1, 2, 3])).set_index('names')
-
-    serialized_df = df_to_obj(named_index_df, {})
-    assert serialized_df['data'][0]['names'] == 'one'
+from tests.unit.ddd_library import get_multi_index_cols
 
 
 dt_strs = ['2024-06-24 09:32:00-04:00', '2024-06-24 09:33:00-04:00', '2024-06-24 09:34:00-04:00']
@@ -89,6 +82,15 @@ def test_check_and_fix_df4():
 def test_check_and_fix_df5():
     df = pd.DataFrame({'value': [10, 20, 30], 'strs': ['a', 'b', 'c']})
     recheck(df)
+
+def test_serialize_multiindex_json():
+    df = get_multi_index_cols()
+    pd_to_obj(df)
+    assert isinstance(df.columns, pd.MultiIndex)
+
+def test_serialize_multiindex_parquet():
+    df = get_multi_index_cols()
+    to_parquet(df)
 
 def test_serialize_naive_json():
     d = date(year=1999, month=10, day=3)
