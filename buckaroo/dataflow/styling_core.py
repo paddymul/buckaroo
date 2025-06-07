@@ -73,9 +73,116 @@ FormatterArgs = Union[
 # Combined displayer types
 DisplayerArgs = Union[FormatterArgs, CellRendererArgs]
 
+# Color mapping types
+ColorMap = Union[Literal["BLUE_TO_YELLOW", "DIVERGING_RED_WHITE_BLUE"], List[str]]
+
+ColorMapRules = TypedDict('ColorMapRules', {
+    'color_rule': Literal["color_map"],
+    'map_name': ColorMap,
+    'val_column': Optional[str]
+})
+
+ColorCategoricalRules = TypedDict('ColorCategoricalRules', {
+    'color_rule': Literal["color_categorical"],
+    'map_name': ColorMap,
+    'val_column': Optional[str]
+})
+
+ColorWhenNotNullRules = TypedDict('ColorWhenNotNullRules', {
+    'color_rule': Literal["color_not_null"],
+    'conditional_color': Union[str, Literal["red"]],
+    'exist_column': str
+})
+
+ColorFromColumn = TypedDict('ColorFromColumn', {
+    'color_rule': Literal["color_from_column"],
+    'val_column': str
+})
+
+ColorMappingConfig = Union[
+    ColorMapRules,
+    ColorWhenNotNullRules,
+    ColorFromColumn,
+    ColorCategoricalRules
+]
+
+# Tooltip types
+SimpleTooltip = TypedDict('SimpleTooltip', {
+    'tooltip_type': Literal["simple"],
+    'val_column': str
+})
+
+SummarySeriesTooltip = TypedDict('SummarySeriesTooltip', {
+    'tooltip_type': Literal["summary_series"]
+})
+
+TooltipConfig = Union[SimpleTooltip, SummarySeriesTooltip]
+
+# Column config types
+BaseColumnConfig = TypedDict('BaseColumnConfig', {
+    'displayer_args': DisplayerArgs,
+    'color_map_config': Optional[ColorMappingConfig],
+    'tooltip_config': Optional[TooltipConfig],
+    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+})
+
+NormalColumnConfig = TypedDict('NormalColumnConfig', {
+    'col_name': str,
+    'displayer_args': DisplayerArgs,
+    'color_map_config': Optional[ColorMappingConfig],
+    'tooltip_config': Optional[TooltipConfig],
+    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+})
+
+MultiIndexColumnConfig = TypedDict('MultiIndexColumnConfig', {
+    'col_path': List[str],
+    'field': str,
+    'displayer_args': DisplayerArgs,
+    'color_map_config': Optional[ColorMappingConfig],
+    'tooltip_config': Optional[TooltipConfig],
+    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+})
+ColumnConfig = Union[NormalColumnConfig, MultiIndexColumnConfig]
+
+DFDisplayArgs = TypedDict('DFDisplayArgs', {
+    'col_path': List[str],
+    'field': str,
+    'displayer_args': DisplayerArgs,
+    'color_map_config': Optional[ColorMappingConfig],
+    'tooltip_config': Optional[TooltipConfig],
+    'ag_grid_specs': Optional[Dict[str, Any]]  # AGGrid_ColDef
+})
+
+
+PinnedRowConfig = TypedDict('PinnedRowConfig', {
+    'primary_key_val': str,
+    'displayer_args': DisplayerArgs,
+    'default_renderer_columns': Optional[List[str]]  # used to render index column values with string not the specified displayer
+})
+
+ComponentConfig = TypedDict('ComponentConfig', {
+    'height_fraction': Optional[float],
+    'dfvHeight': Optional[int],  # temporary debugging prop
+    'layoutType': Optional[Literal["autoHeight", "normal"]],
+    'shortMode': Optional[bool],
+    'selectionBackground': Optional[str],
+    'className': Optional[str]
+})
+
+DFViewerConfig = TypedDict('DFViewerConfig', {
+    'pinned_rows': List[PinnedRowConfig],
+    'column_config': List[ColumnConfig],
+    'extra_grid_config': Optional[Dict[str, Any]],  # GridOptions
+    'component_config': Optional[ComponentConfig]
+})
+
+
+
 EMPTY_DFVIEWER_CONFIG = {
     'pinned_rows': [],
     'column_config': []}
+
+
 EMPTY_DF_DISPLAY_ARG = {'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
                            'summary_stats_key': 'empty'}
 
