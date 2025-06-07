@@ -24,8 +24,9 @@ from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalys
 from buckaroo.extension_utils import copy_extend
 
 from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj, to_parquet
-from .dataflow.dataflow import CustomizableDataflow, StylingAnalysis
-from .dataflow.dataflow_extras import (Sampling, exception_protect, merge_column_config)
+from .dataflow.dataflow import CustomizableDataflow
+from .dataflow.dataflow_extras import (Sampling, exception_protect)
+from .dataflow.styling_core import (StylingAnalysis, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
 from pathlib import Path
 

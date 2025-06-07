@@ -3,9 +3,10 @@ import pandas as pd
 from IPython.display import display
 from buckaroo.buckaroo_widget import BuckarooWidget
 from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF
+from buckaroo.ddd_library import get_multi_index_cols
 from .fixtures import (word_only_df)
 from buckaroo.serialization_utils import (DuplicateColumnsException)
-from buckaroo.dataflow.dataflow_extras import StylingAnalysis
+from buckaroo.dataflow.styling_core import StylingAnalysis
 
 from buckaroo.customizations.analysis import (TypingStats, ComputedDefaultSummaryStats, DefaultSummaryStats)
 from buckaroo.customizations.histogram import (Histogram)
@@ -188,7 +189,12 @@ def test_quick_commands_run():
     #assert bw.operations == [[sQ('search'), s('df'), "col", "aa"]]
 
 
+def test_multi_index_cols() -> None:
+    df = get_multi_index_cols()
+    bw = BuckarooWidget(df)
+    col_config = bw.df_display_args['main']['df_viewer_config']['column_config']
 
+    assert col_config[0]['col_path'] == ['foo', 'a']
     
 def atest_symbol_meta():    
     """verifies that a symbol with a meta key can be added and

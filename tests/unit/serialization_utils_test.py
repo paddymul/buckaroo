@@ -4,7 +4,7 @@ import pandas as pd
 from buckaroo.serialization_utils import (
     is_col_dt_safe, is_dataframe_datetime_safe, check_and_fix_df, pd_to_obj,
     to_parquet, DuplicateColumnsException)
-from tests.unit.ddd_library import get_multi_index_cols
+from buckaroo.ddd_library import get_multi_index_cols
 
 
 dt_strs = ['2024-06-24 09:32:00-04:00', '2024-06-24 09:33:00-04:00', '2024-06-24 09:34:00-04:00']

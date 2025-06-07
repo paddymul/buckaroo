@@ -7,10 +7,11 @@ from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from .autocleaning import SentinelAutocleaning
 from .dataflow_extras import (
-    EMPTY_DF_DISPLAY_ARG, merge_sds, merge_column_config,
-    style_columns, exception_protect, StylingAnalysis,
-    Sampling)
-
+    exception_protect, Sampling)
+from .styling_core import (
+    EMPTY_DF_DISPLAY_ARG,
+    merge_sds, merge_column_config,
+    style_columns, StylingAnalysis)
 
 
 
@@ -92,12 +93,12 @@ class DataFlow(HasTraits):
 
     @observe('raw_df', 'sample_method')
     @exception_protect('sampled_df-protector')
-    def _sampled_df(self, change):
+    def _sampled_df(self, _change:Any) -> None:
         self.sampled_df = self._compute_sampled_df(self.raw_df, self.sample_method)
 
     @observe('sampled_df', 'cleaning_method', 'quick_command_args', 'operations')
     @exception_protect('operation_result-protector')
-    def _operation_result(self, change):
+    def _operation_result(self, _change:Any) -> None:
         """This function is really complex
 
         three main pieces with operations interact here.
