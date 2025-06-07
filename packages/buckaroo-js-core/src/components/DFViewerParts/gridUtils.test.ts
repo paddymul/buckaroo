@@ -6,10 +6,11 @@ import {
     dfToAgrid,
     getHeightStyle2,
     getAutoSize,
+    getSubChildren,
 
 } from './gridUtils';
 import * as _ from "lodash";
-import { DFData, DFViewerConfig, PinnedRowConfig } from "./DFWhole";
+import { DFData, DFViewerConfig, NormalColumnConfig, MultiIndexColumnConfig, PinnedRowConfig, ColumnConfig } from "./DFWhole";
 import { getFloatFormatter } from './Displayer';
 import { ValueFormatterParams } from '@ag-grid-community/core';
 
@@ -186,3 +187,65 @@ describe("testing utility functions in gridUtils ", () => {
   });
 });
 
+
+
+fdescribe("testing multi index organiztion  ", () => {
+  // mostly sanity checks to help develop gridUtils
+
+  const [
+    SUPER__SUB_A,
+    SUPER__SUB_A2,
+    SUPER__SUB_C,
+    SUPER2__SUB_B]:MultiIndexColumnConfig[] = [
+      {
+	col_path:['super', 'sub_a'],
+	'field': 'a',
+	displayer_args: { displayer:'obj'}},
+      { col_path:['super', 'sub_a2'],
+	'field': 'a',
+	displayer_args: { displayer:'obj'}},
+      {col_path:['super', 'sub_c'],
+	'field': 'c',
+	displayer_args: { displayer:'obj'}},
+      {
+	col_path:['super2', 'b'],
+	field:'b',
+	displayer_args: { displayer:'obj'}},
+    ];
+  const REGULAR_C :NormalColumnConfig = {
+    col_name:'c', 
+    displayer_args: { displayer:'obj' }};
+  it("should group simple multi indexes properly", () => {
+    const allMultiIndex: MultiIndexColumnConfig[] = [
+      SUPER__SUB_A,
+      SUPER__SUB_A2,
+      SUPER__SUB_C,
+      SUPER2__SUB_B];
+
+    const grouped: MultiIndexColumnConfig[][] = [
+      [SUPER__SUB_A,
+	SUPER__SUB_A2,
+	SUPER__SUB_C],
+      [SUPER2__SUB_B]];
+    
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  })
+
+  it("should group mixed multi indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      SUPER__SUB_A,
+      REGULAR_C,
+      SUPER__SUB_A2,
+      SUPER__SUB_C,
+      SUPER2__SUB_B];
+
+    const grouped:  ColumnConfig[][] = [
+      [SUPER__SUB_A],
+      [REGULAR_C],
+      [SUPER__SUB_A2,
+	SUPER__SUB_C],
+      [SUPER2__SUB_B]];
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+  
+});
