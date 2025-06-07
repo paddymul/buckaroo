@@ -7,12 +7,13 @@ import {
     getHeightStyle2,
     getAutoSize,
     getSubChildren,
+    childColDef,
 
 } from './gridUtils';
 import * as _ from "lodash";
 import { DFData, DFViewerConfig, NormalColumnConfig, MultiIndexColumnConfig, PinnedRowConfig, ColumnConfig } from "./DFWhole";
 import { getFloatFormatter } from './Displayer';
-import { ValueFormatterParams } from '@ag-grid-community/core';
+import { ColDef, ValueFormatterParams } from '@ag-grid-community/core';
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
@@ -113,6 +114,7 @@ describe("testing utility functions in gridUtils ", () => {
         column_config: [
           {
             col_name: "test",
+	    field:"test",
             displayer_args: { displayer: "float", min_fraction_digits: 2, max_fraction_digits: 4 }
           }
         ],
@@ -121,7 +123,7 @@ describe("testing utility functions in gridUtils ", () => {
 
       const result = dfToAgrid(config);
       expect(result).toHaveLength(1);
-      expect(result[0].field).toBe("test");
+      expect((result[0] as ColDef).field).toBe("test");
       expect(result[0].headerName).toBe("test");
     });
   });
@@ -294,6 +296,24 @@ describe("testing multi index organiztion  ", () => {
       [REGULAR_D]];
 
     expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+
+
+  it("childColDef should return proper subset", () => {
+    expect(_.omit(childColDef(SUPER__SUB_A, 1), "valueFormatter")).toStrictEqual({
+      "cellDataType": false,
+      "cellStyle": undefined,
+      "field": "a",
+      "headerName": "sub_a",
+    });
+
+    expect(_.omit(childColDef(SUPER__SUB_A2, 1), "valueFormatter")).toStrictEqual({
+      "cellDataType": false,
+      "cellStyle": undefined,
+      "field": "a",
+      "headerName": "sub_a2",
+    });
+
   });
 
   

@@ -1,20 +1,23 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
-import { DFViewerConfig, ColumnConfig } from "../components/DFViewerParts/DFWhole";
+import { DFViewerConfig, ColumnConfig, NormalColumnConfig } from "../components/DFViewerParts/DFWhole";
 
 import {SelectBox } from './StoryUtils'
 //import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 import { useState } from "react";
-import { ColDef, ColGroupDef } from "@ag-grid-community/core";
 
-const objColumn = (col_name: string): ColumnConfig => ({
-  col_name,
-  displayer_args: {
-    displayer: 'obj' as const,
-  },
-});
+
+const objColumn = (col_name: string): ColumnConfig => {
+  const foo: NormalColumnConfig = {
+    col_name,
+    displayer_args: {
+      displayer: 'obj' as const,
+    }
+  }
+  return foo;
+};
 
 const floatColumn = (col_name: string, min_fraction_digits: number, max_fraction_digits: number): ColumnConfig => ({
   col_name,
@@ -160,6 +163,7 @@ const primaryConfigPrimary:DFViewerConfig = {
         objColumn('b'),
         {
           col_name: 'b',
+	  field: 'b',
           displayer_args: {
             displayer: 'string',
           },
@@ -233,14 +237,17 @@ export const PinnedRows: Story = {
 
 const ColorMapDFViewerConfig:DFViewerConfig = {
   column_config: [
-    {col_name:'a', 
+    {col_name:'a',
+      field:'a',
       displayer_args: { displayer:'obj' },
         color_map_config: {
             color_rule: "color_map",
             map_name: "BLUE_TO_YELLOW",
             val_column: "b"
     }},
-    {col_name:'b', 
+    {col_name:'b',
+      field:'b',
+      
       displayer_args: { displayer:'obj' },
         color_map_config: {
             color_rule: "color_map",
@@ -274,6 +281,7 @@ export const ColorMapExample: Story = {
 }
 
 
+
 const MultiIndexDFViewerConfig:DFViewerConfig = {
   column_config: [
     { col_path:['super', 'sub_a2'],
@@ -302,7 +310,8 @@ const MultiIndexDFViewerConfig:DFViewerConfig = {
   pinned_rows: []
 }
 
-export const examples:ColGroupDef[] = [
+  /*
+const examples:ColGroupDef[] = [
   {
     headerName: 'Name & Country',
     children: [
@@ -320,15 +329,15 @@ export const examples:ColGroupDef[] = [
     ],
   }
 ]
-
+   */
 export const MultiIndex: Story = {
 
   args: {
     data: [
-      {a:50,  b:5,   c: 8},
-      {a:70,  b:10,  c: 3},
-      {a:300, b:3,   c:42},
-      {a:200, b:19,  c:20},
+      {a:50,  b:5,   c: "asdfasdf"},
+      {a:70,  b:10,  c: "foo bar ba"},
+      {a:300, b:3,   c: "stop breaking down"},
+      {a:200, b:19,  c: "exile on main"},
     ],
     df_viewer_config: MultiIndexDFViewerConfig,
     secondary_df_viewer_config :IntFloatConfig,

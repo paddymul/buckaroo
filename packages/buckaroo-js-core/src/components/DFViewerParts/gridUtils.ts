@@ -20,7 +20,7 @@ import {
     ComponentConfig,
     NormalColumnConfig,
     MultiIndexColumnConfig,
-    BaseColumnConfig,
+    ColDefOrGroup,
 } from "./DFWhole";
 
 import * as _ from "lodash";
@@ -72,8 +72,8 @@ export function extractSingleSeriesSummary(
     return {
         dfviewer_config: {
             column_config: [
-                { col_name: "index", displayer_args: { displayer: "obj" } },
-                { col_name: col_name, displayer_args: { displayer: "obj" } },
+              { col_name: "index", field:"index",  displayer_args: { displayer: "obj" } },
+              { col_name: col_name, field:col_name, displayer_args: { displayer: "obj" } },
             ],
             pinned_rows: [],
         },
@@ -84,14 +84,19 @@ export function extractSingleSeriesSummary(
     };
 }
 
+export const getFieldVal = (f:ColumnConfig) : string => {
+  if(_.has(f, 'col_path')){
+    return (f as MultiIndexColumnConfig).field;
+  }
+  return (f as NormalColumnConfig).col_name;
+}
 
-
-export function baseColToColDef (f:BaseColumnConfig) : ColDef {
+export function baseColToColDef (f:ColumnConfig) : ColDef {
   const color_map_config = f.color_map_config
     ? getStyler(f.color_map_config) : {};
 
   const colDef: ColDef = {
-    field: f.col_name,
+    field: getFieldVal(f),
     cellDataType: false,
     cellStyle: undefined, // necessary for colormapped columns to have a default
     ...getCellRendererorFormatter(f.displayer_args),
@@ -134,6 +139,12 @@ export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[]
 };
 
 
+export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGroup {
+  return {
+    headerName:f.col_path[level],
+    ...baseColToColDef(f),
+  }
+}
 
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
   if (f.length == 0) {
@@ -143,7 +154,7 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef
 
   const colDef: ColGroupDef = {
     headerName: f[0].col_path[0],
-    children: _.map(f, baseColToColDef),
+    children: _.map(f, (x) => childColDef(x, 1))
   };
   return colDef
 }
@@ -155,7 +166,7 @@ export function dfToAgrid(
 
   const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
     if (x.length == 0) {
-      //never
+      //neverp
       throw new Error("x shouldn't be empty");
     }
     if(_.has(x[0], 'col_path')) {

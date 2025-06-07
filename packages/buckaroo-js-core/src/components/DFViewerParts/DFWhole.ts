@@ -1,9 +1,10 @@
 // I'm not sure about adding underlying types too
 
-import { ColDef, GridOptions } from "@ag-grid-community/core";
+import { ColDef, ColGroupDef, GridOptions } from "@ag-grid-community/core";
 import _ from "lodash";
 
 type AGGrid_ColDef = ColDef;
+export type ColDefOrGroup = ColDef|ColGroupDef
 
 export interface ObjDisplayerA {
     displayer: "obj";
@@ -139,17 +140,17 @@ export interface SummarySeriesTooltip {
 export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
 
 export type BaseColumnConfig = {
-    displayer_args: DisplayerArgs;
-    color_map_config?: ColorMappingConfig;
-    tooltip_config?: TooltipConfig;
-    ag_grid_specs?: AGGrid_ColDef;
+  displayer_args: DisplayerArgs;
+  color_map_config?: ColorMappingConfig;
+  tooltip_config?: TooltipConfig;
+  ag_grid_specs?: AGGrid_ColDef;
 };
 export type NormalColumnConfig = BaseColumnConfig & {
   col_name:string;
 }
 export type MultiIndexColumnConfig = BaseColumnConfig & {
-  col_path:string[],
-  field:string
+  col_path:string[];
+  field:string;
 }
 
 export type ColumnConfig = NormalColumnConfig | MultiIndexColumnConfig;
