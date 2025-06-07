@@ -175,7 +175,7 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
     const groupedColumnConfigs = getSubChildren(f, childLevel);
     const colDef: ColGroupDef = {
       headerName: rootHeader,
-      children: _.map(groupedColumnConfigs, (x) => multiIndexColToColDef(x, childLevel))
+      children: _.map(groupedColumnConfigs, (x) => multiIndexColToColDef(x as MultiIndexColumnConfig[], childLevel))
     };
     return colDef
   }

@@ -358,10 +358,12 @@ describe("testing multi index organiztion  ", () => {
     //@ts-ignore
     const children = MIColGroupDef.children;  
     expect(children.length).toBe(2);
-
+    //@ts-ignore
     const child1 = children[0];
+    //@ts-ignore
     expect(child1.children).toBe(undefined);  // there should only be one level of nesting
     const child2 = children[1];
+    //@ts-ignore
     expect(child2.children).toBe(undefined);  // there should only be one level of nesting
   });
 
@@ -383,10 +385,10 @@ describe("testing multi index organiztion  ", () => {
     expect(children.length).toBe(2);
 
     const child1 = children[0];
+    //@ts-ignore
     const subChildren1 = child1.children;
+    //@ts-ignore
     expect(child1.children.length).toBe(2)
-
   });
-
   
 });
