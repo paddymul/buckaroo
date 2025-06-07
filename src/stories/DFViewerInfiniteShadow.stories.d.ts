@@ -21,4 +21,6 @@ export declare const Primary: Story;
 export declare const Large: Story;
 export declare const PinnedRows: Story;
 export declare const ColorMapExample: Story;
+export declare const MultiIndex: Story;
+export declare const ThreeLevelColumnIndex: Story;
 export declare const MedDFVHeight: Story;

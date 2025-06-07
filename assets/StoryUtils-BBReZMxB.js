@@ -1,4 +1,4 @@
-import{j as r}from"./jsx-runtime-DiklIkkE.js";import{r as d,R as s}from"./index-DRjF_FHU.js";import{a as p}from"./client-DTWAFNtf.js";const c=`.columns-editor {
+import{j as r}from"./jsx-runtime-DiklIkkE.js";import{r as d,R as s}from"./index-DRjF_FHU.js";import{a as p}from"./client-DQginrwT.js";const c=`.columns-editor {
 
   padding: 2px 2px;
   margin: 0;

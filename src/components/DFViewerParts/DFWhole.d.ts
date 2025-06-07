@@ -1,5 +1,6 @@
-import { ColDef, GridOptions } from '@ag-grid-community/core';
+import { ColDef, ColGroupDef, GridOptions } from '@ag-grid-community/core';
 type AGGrid_ColDef = ColDef;
+export type ColDefOrGroup = ColDef | ColGroupDef;
 export interface ObjDisplayerA {
     displayer: "obj";
     max_length?: number;
@@ -85,13 +86,20 @@ export interface SummarySeriesTooltip {
     tooltip_type: "summary_series";
 }
 export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip;
-export type ColumnConfig = {
-    col_name: string;
+export type BaseColumnConfig = {
     displayer_args: DisplayerArgs;
     color_map_config?: ColorMappingConfig;
     tooltip_config?: TooltipConfig;
     ag_grid_specs?: AGGrid_ColDef;
 };
+export type NormalColumnConfig = BaseColumnConfig & {
+    col_name: string;
+};
+export type MultiIndexColumnConfig = BaseColumnConfig & {
+    col_path: string[];
+    field: string;
+};
+export type ColumnConfig = NormalColumnConfig | MultiIndexColumnConfig;
 export type PinnedRowConfig = {
     primary_key_val: string;
     displayer_args: DisplayerArgs;
