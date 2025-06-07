@@ -116,7 +116,7 @@ export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[]
       return xMICC.col_path[level]
     }
     const xNCC: NormalColumnConfig = x as NormalColumnConfig;
-    return xNCC.col_name + "!&single"; // bad magic value
+    return xNCC.col_name + "!&single" + _.indexOf(arr, x).toString(); // bad magic value
   }
   return arr.reduce((acc: ColumnConfig[][], curr:ColumnConfig) => {
     
@@ -136,8 +136,6 @@ export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[]
 
 
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
-  // const color_map_config = f.color_map_config
-  //   ? getStyler(f.color_map_config) : {};
   if (f.length == 0) {
     // this will never happen
     return {

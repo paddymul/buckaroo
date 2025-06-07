@@ -215,6 +215,10 @@ describe("testing multi index organiztion  ", () => {
   const REGULAR_C :NormalColumnConfig = {
     col_name:'c', 
     displayer_args: { displayer:'obj' }};
+  const REGULAR_C__DIFFERENT_OBJECT :NormalColumnConfig = {
+    col_name:'c', 
+    displayer_args: { displayer:'obj' }};
+
   const REGULAR_D :NormalColumnConfig = {
     col_name:'d', 
     displayer_args: { displayer:'obj' }};
@@ -273,6 +277,19 @@ describe("testing multi index organiztion  ", () => {
       REGULAR_C,
       REGULAR_D];
     const grouped:  ColumnConfig[][] = [
+      [REGULAR_C],
+      [REGULAR_D]];
+
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+
+  it("should handle repeated regular columns indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      REGULAR_C,
+      REGULAR_C__DIFFERENT_OBJECT,
+      REGULAR_D];
+    const grouped:  ColumnConfig[][] = [
+      [REGULAR_C],
       [REGULAR_C],
       [REGULAR_D]];
 
