@@ -133,21 +133,6 @@ export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[]
   }, []);
 };
 
-export const groupByCommonProperties = (arr: any[]) => {
-  return arr.reduce((acc: any[][], curr) => {
-    const firstKey = Object.keys(curr)[0];
-    const lastGroup = acc[acc.length - 1];
-    
-    // If no groups exist yet, or if the first key changed, create a new group
-    if (!lastGroup || Object.keys(lastGroup[0])[0] !== firstKey) {
-      acc.push([curr]);
-    } else {
-      lastGroup.push(curr);
-    }
-    
-    return acc;
-  }, []);
-};
 
 
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
@@ -171,10 +156,26 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
 ): (ColDef|ColGroupDef)[] {
-  const multi_col_items = _.filter(dfviewer_config.column_config, (x) => _.has(x, 'col_path')) as MultiIndexColumnConfig[];
-  const multiPaths = _.filter(getSubChildren(multi_col_items, 0), (x) => x.length > 0)
+   // const multi_col_items = _.filter(dfviewer_config.column_config, (x) => _.has(x, 'col_path')) as MultiIndexColumnConfig[];
+  const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
 
-  const retMultiColumns:ColGroupDef[] = multiPaths.map(multiIndexColToColDef);
+  const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
+    if (x.length == 0) {
+      //never
+      throw new Error("x shouldn't be empty");
+    }
+    if(_.has(x[0], 'col_path')) {
+      return multiIndexColToColDef(x as MultiIndexColumnConfig[])
+    } else {
+      if (x.length > 1) {
+	throw new Error(`for NormalColumnConfig, length should be 1, improperly grouped ${x}`);
+      }
+      return normalColToColDef(x[0] as NormalColumnConfig)
+    }
+  }
+  const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
+
+  const retMultiColumns:(ColDef|ColGroupDef)[] = groupedColumnConfigs.map(switchToColDef)
   return retMultiColumns
 }
 

@@ -189,7 +189,7 @@ describe("testing utility functions in gridUtils ", () => {
 
 
 
-fdescribe("testing multi index organiztion  ", () => {
+describe("testing multi index organiztion  ", () => {
   // mostly sanity checks to help develop gridUtils
 
   const [
@@ -214,6 +214,9 @@ fdescribe("testing multi index organiztion  ", () => {
     ];
   const REGULAR_C :NormalColumnConfig = {
     col_name:'c', 
+    displayer_args: { displayer:'obj' }};
+  const REGULAR_D :NormalColumnConfig = {
+    col_name:'d', 
     displayer_args: { displayer:'obj' }};
   it("should group simple multi indexes properly", () => {
     const allMultiIndex: MultiIndexColumnConfig[] = [
@@ -246,8 +249,35 @@ fdescribe("testing multi index organiztion  ", () => {
 	SUPER__SUB_C],
       [SUPER2__SUB_B]];
 
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+  it("should group mixed multi indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      SUPER__SUB_A,
+      REGULAR_C,
+      SUPER__SUB_A2,
+      SUPER__SUB_C,
+      SUPER2__SUB_B];
+
+    const grouped:  ColumnConfig[][] = [
+      [SUPER__SUB_A],
+      [REGULAR_C],
+      [SUPER__SUB_A2,
+	SUPER__SUB_C],
+      [SUPER2__SUB_B]];
 
     expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
   });
+  it("should handle regular columns indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      REGULAR_C,
+      REGULAR_D];
+    const grouped:  ColumnConfig[][] = [
+      [REGULAR_C],
+      [REGULAR_D]];
+
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+
   
 });
