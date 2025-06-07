@@ -245,6 +245,8 @@ fdescribe("testing multi index organiztion  ", () => {
       [SUPER__SUB_A2,
 	SUPER__SUB_C],
       [SUPER2__SUB_B]];
+
+
     expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
   });
   

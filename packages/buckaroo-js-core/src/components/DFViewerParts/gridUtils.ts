@@ -109,8 +109,16 @@ export function normalColToColDef (f:NormalColumnConfig) : ColDef {
   return colDef
 }
 
-export function getSubChildren (f:MultiIndexColumnConfig[], level:number): MultiIndexColumnConfig[][] {
-  return _.values(_.groupBy(f, (a) => a.col_path[level]));
+export function getSubChildren (f:ColumnConfig[], level:number): ColumnConfig[][] {
+  const keyFunc = (x:ColumnConfig) => {
+    if(_.has(x, 'col_path')) {
+      const xMICC: MultiIndexColumnConfig = x as MultiIndexColumnConfig
+      return xMICC.col_path[level]
+    }
+    const xNCC: NormalColumnConfig = x as NormalColumnConfig;
+    return xNCC.col_name + "!&single"; // bad magic value
+  }
+  return _.values(_.groupBy(f, keyFunc));
 }
 
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
@@ -134,28 +142,11 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
 ): (ColDef|ColGroupDef)[] {
-    //more convienient df format for some formatters
-    //const hdf = extractSDFT(full_summary_stats_df || []);
-  // _.filter([{'a':5}, {'a':10}, {'b':30}], (x) => _.has(x, 'a')) 
-  // _.groupBy(objs, (a) => a.col_path[0])
   const multi_col_items = _.filter(dfviewer_config.column_config, (x) => _.has(x, 'col_path')) as MultiIndexColumnConfig[];
-  //const multiPaths =   _.groupBy(multi_col_items, (a) => a.col_path[0])
   const multiPaths = _.filter(getSubChildren(multi_col_items, 0), (x) => x.length > 0)
 
   const retMultiColumns:ColGroupDef[] = multiPaths.map(multiIndexColToColDef);
-  /*
-  const retColumns: ColDef[] = dfviewer_config.column_config.map((f: ColumnConfig) => {
-        // const single_series_summary_df = extractSingleSeriesSummary(
-        //     full_summary_stats_df,
-        //     f.col_name,
-        // );
-
- 
-        return colDef;
-	});
-   */
   return retMultiColumns
-  
 }
 
 // this is very similar to the colDef parts of dfToAgrid
