@@ -140,6 +140,9 @@ export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[]
 
 
 export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGroup {
+  /*
+  returns the proper colDef at level
+   */
   return {
     headerName:f.col_path[level],
     ...baseColToColDef(f),
@@ -147,6 +150,7 @@ export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGr
 }
 
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
+  // this will return the nested groups of ColGroupDef with children
   if (f.length == 0) {
     // this will never happen
     throw new Error("f shouldn't be empty");
@@ -162,6 +166,9 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
 ): (ColDef|ColGroupDef)[] {
+  /*
+  gets the aggrid column config given the buckaroo inputs
+   */
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
 
   const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {

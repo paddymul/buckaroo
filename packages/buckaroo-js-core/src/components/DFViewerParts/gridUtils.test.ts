@@ -8,6 +8,7 @@ import {
     getAutoSize,
     getSubChildren,
     childColDef,
+    multiIndexColToColDef,
 
 } from './gridUtils';
 import * as _ from "lodash";
@@ -313,6 +314,55 @@ describe("testing multi index organiztion  ", () => {
       "field": "a",
       "headerName": "sub_a2",
     });
+
+  });
+
+  const [
+    SUPER__SUB_FOO__SUB_B,
+    SUPER__SUB_FOO__SUB_C,
+
+    SUPER__SUB_BAR__SUB_B,
+    SUPER__SUB_BAR__SUB_C,
+  ]:MultiIndexColumnConfig[] = [
+      {
+	col_path:['super', 'sub_foo', 'sub_b'],
+	'field': 'super__sub_foo__sub_b',
+	displayer_args: { displayer:'obj'}},
+      {
+	col_path:['super', 'sub_foo', 'sub_c'],
+	'field': 'super__sub_foo__sub_c',
+	displayer_args: { displayer:'obj'}},
+
+
+      {
+	col_path:['super', 'sub_bar', 'sub_b'],
+	'field': 'super__sub_bar__sub_b',
+	displayer_args: { displayer:'obj'}},
+      {
+	col_path:['super', 'sub_bar', 'sub_c'],
+	'field': 'super__sub_bar__sub_c',
+	displayer_args: { displayer:'obj'}},
+    ];
+
+
+  it("multiIndexColumnConfig should return proper nested", () => {
+
+    const groupedCC = [
+      SUPER__SUB_FOO__SUB_B,
+      SUPER__SUB_FOO__SUB_C,
+      SUPER__SUB_BAR__SUB_B,
+      SUPER__SUB_BAR__SUB_C
+    ];
+
+    const MIColGroupDef = multiIndexColToColDef(groupedCC);
+
+    //@ts-ignore
+    const children = MIColGroupDef.children;  
+    expect(children.length).toBe(2);
+
+    const child1 = children[0];
+    const subChildren1 = child1.children;
+    expect(child1.children.length).toBe(2)
 
   });
 
