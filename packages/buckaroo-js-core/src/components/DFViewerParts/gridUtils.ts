@@ -138,10 +138,7 @@ export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[]
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
   if (f.length == 0) {
     // this will never happen
-    return {
-      headerName: 'Never',
-      children: []
-    };
+    throw new Error("f shouldn't be empty");
   }
 
   const colDef: ColGroupDef = {
@@ -154,7 +151,6 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
 ): (ColDef|ColGroupDef)[] {
-   // const multi_col_items = _.filter(dfviewer_config.column_config, (x) => _.has(x, 'col_path')) as MultiIndexColumnConfig[];
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
 
   const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
