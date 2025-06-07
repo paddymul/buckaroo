@@ -1,10 +1,77 @@
 import logging
-
+from typing import TypedDict, Union, List, Dict, Any, Optional, Literal
 
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 
 logger = logging.getLogger()
+
+# Cell Renderer Types
+HistogramDisplayerA = TypedDict('HistogramDisplayerA', {'displayer': Literal["histogram"]})
+ChartDisplayerA = TypedDict('ChartDisplayerA', {'displayer': Literal["chart"]})
+LinkifyDisplayerA = TypedDict('LinkifyDisplayerA', {'displayer': Literal["linkify"]})
+BooleanCheckboxDisplayerA = TypedDict('BooleanCheckboxDisplayerA', {'displayer': Literal["boolean_checkbox"]})
+Base64PNGImageDisplayerA = TypedDict('Base64PNGImageDisplayerA', {'displayer': Literal["Base64PNGImageDisplayer"]})
+SVGDisplayerA = TypedDict('SVGDisplayerA', {'displayer': Literal["SVGDisplayer"]})
+
+CellRendererArgs = Union[
+    HistogramDisplayerA,
+    ChartDisplayerA,
+    LinkifyDisplayerA,
+    BooleanCheckboxDisplayerA,
+    Base64PNGImageDisplayerA,
+    SVGDisplayerA
+]
+
+# Formatter Types
+ObjDisplayerA = TypedDict('ObjDisplayerA', {
+    'displayer': Literal["obj"],
+    'max_length': Optional[int]
+})
+
+BooleanDisplayerA = TypedDict('BooleanDisplayerA', {
+    'displayer': Literal["boolean"]
+})
+
+StringDisplayerA = TypedDict('StringDisplayerA', {
+    'displayer': Literal["string"],
+    'max_length': Optional[int]
+})
+
+FloatDisplayerA = TypedDict('FloatDisplayerA', {
+    'displayer': Literal["float"],
+    'min_fraction_digits': int,
+    'max_fraction_digits': int
+})
+
+DatetimeDefaultDisplayerA = TypedDict('DatetimeDefaultDisplayerA', {
+    'displayer': Literal["datetimeDefault"]
+})
+
+DatetimeLocaleDisplayerA = TypedDict('DatetimeLocaleDisplayerA', {
+    'displayer': Literal["datetimeLocaleString"],
+    'locale': Literal["en-US", "en-GB", "en-CA", "fr-FR", "es-ES", "de-DE", "ja-JP"],
+    'args': Dict[str, Any]
+})
+
+IntegerDisplayerA = TypedDict('IntegerDisplayerA', {
+    'displayer': Literal["integer"],
+    'min_digits': int,
+    'max_digits': int
+})
+
+FormatterArgs = Union[
+    ObjDisplayerA,
+    BooleanDisplayerA,
+    StringDisplayerA,
+    FloatDisplayerA,
+    DatetimeDefaultDisplayerA,
+    DatetimeLocaleDisplayerA,
+    IntegerDisplayerA
+]
+
+# Combined displayer types
+DisplayerArgs = Union[FormatterArgs, CellRendererArgs]
 
 EMPTY_DFVIEWER_CONFIG = {
     'pinned_rows': [],
