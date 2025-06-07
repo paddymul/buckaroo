@@ -7,6 +7,7 @@ import {SelectBox } from './StoryUtils'
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DatasourceWrapper, createDatasourceWrapper, dictOfArraystoDFData, arange, NRandom, HistogramSummaryStats } from "../components/DFViewerParts/DFViewerDataHelper";
 import { useState } from "react";
+import { ColDef, ColGroupDef } from "@ag-grid-community/core";
 
 const objColumn = (col_name: string): ColumnConfig => ({
   col_name,
@@ -266,6 +267,70 @@ export const ColorMapExample: Story = {
       {a:200, b:19,  c:20},
     ],
     df_viewer_config: ColorMapDFViewerConfig,
+    secondary_df_viewer_config :IntFloatConfig,
+    summary_stats_data: HistogramSummaryStats
+
+  }
+}
+
+
+const MultiIndexDFViewerConfig:DFViewerConfig = {
+  column_config: [
+    { col_path:['super', 'sub_a2'],
+      'field': 'a',
+      displayer_args: { displayer:'obj' },
+    },
+    {col_name:'a',
+      col_path:['super', 'sub_a'],
+      'field': 'a',
+      displayer_args: { displayer:'obj' },
+    },
+    { col_path:['super', 'sub_a2'],
+      'field': 'a',
+      displayer_args: { displayer:'obj' },
+    },
+    {col_path:['super', 'sub_c'],
+      'field': 'c',
+      displayer_args: { displayer:'obj' },
+    },
+    {col_name:'b',
+      col_path:['super 2', 'b'],
+      field:'b',
+      displayer_args: { displayer:'obj' },
+    },
+  ],
+  pinned_rows: []
+}
+
+export const examples:ColGroupDef[] = [
+  {
+    headerName: 'Name & Country',
+    children: [
+      { field: 'athlete' },
+      { field: 'country' }
+    ]
+  },
+  {
+    headerName: 'Sports Results',
+    children: [
+      { columnGroupShow: 'closed', field: 'total' },
+      { columnGroupShow: 'open', field: 'gold' },
+      { columnGroupShow: 'open', field: 'silver' },
+      { columnGroupShow: 'open', field: 'bronze' },
+    ],
+  }
+]
+
+export const MultiIndex: Story = {
+
+  args: {
+    data: [
+      {a:50,  b:5,   c: 8},
+      {a:70,  b:10,  c: 3},
+      {a:300, b:3,   c:42},
+      {a:200, b:19,  c:20},
+    ],
+    df_viewer_config: MultiIndexDFViewerConfig,
     secondary_df_viewer_config :IntFloatConfig,
     summary_stats_data: HistogramSummaryStats
 

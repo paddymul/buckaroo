@@ -1,6 +1,7 @@
 import {
     CellRendererSelectorResult,
     ColDef,
+    ColGroupDef,
     DomLayoutType,
     ICellRendererParams,
     IDatasource,
@@ -17,6 +18,9 @@ import {
 
     DFViewerConfig,
     ComponentConfig,
+    NormalColumnConfig,
+    MultiIndexColumnConfig,
+    BaseColumnConfig,
 } from "./DFWhole";
 
 import * as _ from "lodash";
@@ -80,34 +84,78 @@ export function extractSingleSeriesSummary(
     };
 }
 
+
+
+export function baseColToColDef (f:BaseColumnConfig) : ColDef {
+  const color_map_config = f.color_map_config
+    ? getStyler(f.color_map_config) : {};
+
+  const colDef: ColDef = {
+    field: f.col_name,
+    cellDataType: false,
+    cellStyle: undefined, // necessary for colormapped columns to have a default
+    ...getCellRendererorFormatter(f.displayer_args),
+    ...color_map_config,
+    ...getTooltipParams(f.tooltip_config),
+    ...f.ag_grid_specs,
+  };
+  return colDef
+}
+
+export function normalColToColDef (f:NormalColumnConfig) : ColDef {
+  const colDef: ColDef = {
+    headerName: f.col_name,
+    ...baseColToColDef(f)};
+  return colDef
+}
+
+export function getSubChildren (f:MultiIndexColumnConfig[], level:number): MultiIndexColumnConfig[][] {
+  return _.values(_.groupBy(f, (a) => a.col_path[level]));
+}
+
+export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
+  // const color_map_config = f.color_map_config
+  //   ? getStyler(f.color_map_config) : {};
+  if (f.length == 0) {
+    // this will never happen
+    return {
+      headerName: 'Never',
+      children: []
+    };
+  }
+
+  const colDef: ColGroupDef = {
+    headerName: f[0].col_path[0],
+    children: _.map(f, baseColToColDef),
+  };
+  return colDef
+}
+
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
-): ColDef[] {
+): (ColDef|ColGroupDef)[] {
     //more convienient df format for some formatters
     //const hdf = extractSDFT(full_summary_stats_df || []);
+  // _.filter([{'a':5}, {'a':10}, {'b':30}], (x) => _.has(x, 'a')) 
+  // _.groupBy(objs, (a) => a.col_path[0])
+  const multi_col_items = _.filter(dfviewer_config.column_config, (x) => _.has(x, 'col_path')) as MultiIndexColumnConfig[];
+  //const multiPaths =   _.groupBy(multi_col_items, (a) => a.col_path[0])
+  const multiPaths = _.filter(getSubChildren(multi_col_items, 0), (x) => x.length > 0)
 
-    const retColumns: ColDef[] = dfviewer_config.column_config.map((f: ColumnConfig) => {
+  const retMultiColumns:ColGroupDef[] = multiPaths.map(multiIndexColToColDef);
+  /*
+  const retColumns: ColDef[] = dfviewer_config.column_config.map((f: ColumnConfig) => {
         // const single_series_summary_df = extractSingleSeriesSummary(
         //     full_summary_stats_df,
         //     f.col_name,
         // );
 
-        const color_map_config = f.color_map_config
-            ? getStyler(f.color_map_config) : {};
-
-        const colDef: ColDef = {
-            field: f.col_name,
-            headerName: f.col_name,
-            cellDataType: false,
-            cellStyle: undefined, // necessary for colormapped columns to have a default
-            ...getCellRendererorFormatter(f.displayer_args),
-            ...color_map_config,
-            ...getTooltipParams(f.tooltip_config),
-            ...f.ag_grid_specs,
-        };
+ 
         return colDef;
-    });
-    return retColumns;
+	});
+   */
+  return retMultiColumns
+  
 }
 
 // this is very similar to the colDef parts of dfToAgrid

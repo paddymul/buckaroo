@@ -138,13 +138,22 @@ export interface SummarySeriesTooltip {
 
 export type TooltipConfig = SimpleTooltip | SummarySeriesTooltip; //more to be added
 
-export type ColumnConfig = {
-    col_name: string;
+export type BaseColumnConfig = {
     displayer_args: DisplayerArgs;
     color_map_config?: ColorMappingConfig;
     tooltip_config?: TooltipConfig;
     ag_grid_specs?: AGGrid_ColDef;
 };
+export type NormalColumnConfig = BaseColumnConfig & {
+  col_name:string;
+}
+export type MultiIndexColumnConfig = BaseColumnConfig & {
+  col_path:string[],
+  field:string
+}
+
+export type ColumnConfig = NormalColumnConfig | MultiIndexColumnConfig;
+
 
 export type PinnedRowConfig = {
     primary_key_val: string;
