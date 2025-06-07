@@ -149,18 +149,52 @@ export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGr
   }
 }
 
-export function multiIndexColToColDef (f:MultiIndexColumnConfig[]) : ColGroupDef {
+export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=0) : ColGroupDef {
   // this will return the nested groups of ColGroupDef with children
   if (f.length == 0) {
     // this will never happen
     throw new Error("f shouldn't be empty");
   }
 
-  const colDef: ColGroupDef = {
-    headerName: f[0].col_path[0],
-    children: _.map(f, (x) => childColDef(x, 1))
-  };
-  return colDef
+  const rootColPath = f[0].col_path;
+  const rootHeader = rootColPath[level]
+
+  const rootDepth = rootColPath.length;
+  if (level == rootDepth) {
+    throw new Error("something went wrong, level is too deep");
+  }
+  const childLevel = level + 1;
+
+  if (childLevel == rootDepth) {
+    const colDef: ColGroupDef = {
+      headerName: rootHeader,
+      children: _.map(f, (x) => childColDef(x, childLevel))
+    };
+    return colDef
+  } else {
+    const groupedColumnConfigs = getSubChildren(f, childLevel);
+    const colDef: ColGroupDef = {
+      headerName: rootHeader,
+      children: _.map(groupedColumnConfigs, (x) => multiIndexColToColDef(x, childLevel))
+    };
+    return colDef
+  }
+}
+
+
+const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
+  if (x.length == 0) {
+    //neverp
+    throw new Error("x shouldn't be empty");
+  }
+  if(_.has(x[0], 'col_path')) {
+    return multiIndexColToColDef(x as MultiIndexColumnConfig[])
+  } else {
+    if (x.length > 1) {
+      throw new Error(`for NormalColumnConfig, length should be 1, improperly grouped ${x}`);
+    }
+    return normalColToColDef(x[0] as NormalColumnConfig)
+  }
 }
 
 export function dfToAgrid(
@@ -171,20 +205,6 @@ export function dfToAgrid(
    */
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
 
-  const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
-    if (x.length == 0) {
-      //neverp
-      throw new Error("x shouldn't be empty");
-    }
-    if(_.has(x[0], 'col_path')) {
-      return multiIndexColToColDef(x as MultiIndexColumnConfig[])
-    } else {
-      if (x.length > 1) {
-	throw new Error(`for NormalColumnConfig, length should be 1, improperly grouped ${x}`);
-      }
-      return normalColToColDef(x[0] as NormalColumnConfig)
-    }
-  }
   const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
 
   const retMultiColumns:(ColDef|ColGroupDef)[] = groupedColumnConfigs.map(switchToColDef)

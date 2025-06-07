@@ -346,7 +346,8 @@ describe("testing multi index organiztion  ", () => {
 
 
   it("multiIndexColumnConfig should return proper nested", () => {
-
+    // first assume regular groups... Every element in a grouping will
+    // have the same col_path depth.  I might want to break this later
     const groupedCC = [
       SUPER__SUB_FOO__SUB_B,
       SUPER__SUB_FOO__SUB_C,
