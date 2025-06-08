@@ -242,24 +242,6 @@ def merge_column_config(styled_column_config, overide_column_configs):
         ret_column_config.append(row)
     return ret_column_config
 
-
-def style_columns_sentinel(style_method:str, sd:SDType) ->str:
-    if style_method == "foo":
-        # this is a dumn sentinel
-        return SENTINEL_COLUMN_CONFIG_2 # type: ignore:
-    return "basecase"
-
-def style_columns_simple(style_method:str, sd:SDType) -> DFViewerConfig:
-
-    ret_col_config: List[ColumnConfig] = [] 
-    for col in sd.keys():
-        ret_col_config.append({'col_name':col, 'displayer_args': {'displayer': 'obj'}})
-
-    return {
-        'pinned_rows': [],
-        'column_config': ret_col_config}
-
-
 DFViewerConfig = TypedDict('DFViewerConfig', {
     'pinned_rows': List[PinnedRowConfig],
     'column_config': List[ColumnConfig],
