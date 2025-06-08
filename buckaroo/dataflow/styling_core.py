@@ -271,12 +271,8 @@ class StylingAnalysis(ColAnalysis):
     @classmethod
     def style_column(cls, col:str, _column_metadata: ColMeta) -> BaseColumnConfig:
         """
-          This is the method that should be overridden.
-
-          I really only want users to override for for displayer_args.
-          I want this class to handle col_name/col_path... so I made it return BaseColumnConfig
+          This is the method that should be overridden. by subclasses
         """
-        #return {'col_name': col, 'displayer_args': {'displayer': 'obj'}}
         return {'displayer_args': {'displayer': 'obj'}}
 
     @classmethod
@@ -291,17 +287,6 @@ class StylingAnalysis(ColAnalysis):
             base_cc['col_name'] = str(col) # sometimes numbers still creep in here
         return base_cc
     
-    @classmethod
-    def style_column_desired(cls, col:str, _column_metadata: ColMeta) -> BaseColumnConfig:
-        """
-          This is the method that should be overridden.
-
-          I really only want users to override for for displayer_args.
-          I want this class to handle col_name/col_path... so I made it return BaseColumnConfig
-        """
-        return {'displayer_args': {'displayer': 'obj'}}
-
-
     #what is the key for this in the df_display_args_dictionary
     df_display_name: str = "main"
     data_key: str = "main"
@@ -324,9 +309,6 @@ class StylingAnalysis(ColAnalysis):
                 continue
             try:
 
-                # print("!"*80)
-                # print("col", col, type(col))
-                # print("!"*80)
                 #it actually gets tuples here
                 base_style: ColumnConfig = cls.fix_column_config(col, cls.style_column(col, col_meta))
             except Exception as exc:
