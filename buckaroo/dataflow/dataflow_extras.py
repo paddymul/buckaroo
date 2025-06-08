@@ -3,7 +3,6 @@ import logging
 
 
 import pandas as pd
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
 
 logger = logging.getLogger()
 

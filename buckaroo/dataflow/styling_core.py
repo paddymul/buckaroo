@@ -1,5 +1,5 @@
 import logging
-from typing import TypedDict, Union, List, Dict, Any, Optional, Literal
+from typing import TypedDict, Union, List, Dict, Any, Literal
 from typing_extensions import NotRequired
 
 import pandas as pd

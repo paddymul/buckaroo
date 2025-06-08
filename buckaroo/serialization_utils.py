@@ -1,7 +1,7 @@
 from io import BytesIO
 import json
 import pandas as pd
-from typing import Dict, Union, Any
+from typing import Dict, Any
 from pandas._libs.tslibs import timezones
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 from fastparquet import json as fp_json
