@@ -30,7 +30,7 @@ def test_multi_index_styling() -> None:
 
     col_config: List[ColumnConfig] = dfvc['column_config']
     assert len(col_config) == 4
+    assert col_config[0]['col_path'] == ('index', '')
     assert col_config[1]['col_path'] == ('foo', 'a')
     assert col_config[2]['col_path'] == ('foo', 'b')
     assert col_config[3]['col_path'] == ('bar', 'a')
-    1/0
