@@ -285,7 +285,7 @@ class StylingAnalysis(ColAnalysis):
         return {'col_name': col_name, 'displayer_args': {'displayer': 'obj'}}
 
     @classmethod
-    def style_columns(cls, sd:SDType) -> DFViewerConfig:
+    def style_columns(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
         ret_col_config: List[ColumnConfig] = []
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
