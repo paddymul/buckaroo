@@ -198,8 +198,13 @@ EMPTY_DF_DISPLAY_ARG: DisplayArgs = {
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
 
-SENTINEL_COLUMN_CONFIG_1 = "ASDF"
-SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
+
+DFViewerConfig = TypedDict('DFViewerConfig', {
+    'pinned_rows': List[PinnedRowConfig],
+    'column_config': List[ColumnConfig],
+    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
+    'component_config': NotRequired[ComponentConfig]
+})
 
 
 def merge_sds(*sds):
@@ -241,14 +246,6 @@ def merge_column_config(styled_column_config, overide_column_configs):
             continue
         ret_column_config.append(row)
     return ret_column_config
-
-DFViewerConfig = TypedDict('DFViewerConfig', {
-    'pinned_rows': List[PinnedRowConfig],
-    'column_config': List[ColumnConfig],
-    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
-    'component_config': NotRequired[ComponentConfig]
-})
-
 
 
 class StylingAnalysis(ColAnalysis):
