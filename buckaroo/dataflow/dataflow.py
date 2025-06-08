@@ -1,7 +1,11 @@
+from typing import List, Tuple, Type, TypedDict, Dict as TDict, Any as TAny
+from typing_extensions import override
 import six
 import warnings
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
+
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis, SDType
 from ..serialization_utils import pd_to_obj    
 from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
@@ -214,16 +218,40 @@ class DataFlow(HasTraits):
         # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
         self.widget_args_tuple = (id(self.processed_df), self.processed_df, self.merged_sd)
 
+    # buckaroo_options = Dict({
+    #     'sampled': ['random'],
+    #     'auto_clean': ['aggressive', 'conservative'],
+    #     'post_processing': [],
+    #     'df_display': ['main', 'summary'],
+    #     'show_commands': ['on'],
+    #     'summary_stats': ['all'],
+    # }).tag(sync=True)
 
+
+BuckarooOptions = TypedDict('BuckarooOptions', {
+    'sampled': List[str],
+    'auto_clean': List[str],
+    'post_processing': List[str],
+    'df_display': List[str],
+    # this is a weird one I think it's a List of Literals, I forget.
+    # It's odd in the frontend too
+    'show_commands': List[str],  
+    'summary_stats': List[str],
+    'col_path': List[str],
+    })
+
+    
 class CustomizableDataflow(DataFlow):
     """
     This allows targetd extension and customization of DataFlow
     """
-    analysis_klasses = [StylingAnalysis]
+    #analysis_klasses = [StylingAnalysis]
+    analysis_klasses: List[Type[ColAnalysis]] = [StylingAnalysis]
     command_config = Dict({}).tag(sync=True)
     DFStatsClass = DfStats
     sampling_klass = Sampling
-    df_display_klasses = {}
+
+    df_display_klasses: TDict[str, Type[StylingAnalysis]]  = {}
     operations = Any([{'meta':'no-op'}]).tag(sync=True)
 
     def __init__(self, orig_df, debug=False,
@@ -264,7 +292,8 @@ class CustomizableDataflow(DataFlow):
         new_buckaroo_options['cleaning_method'] = list(self.ac_obj.config_dict.keys())
         self.buckaroo_options = new_buckaroo_options
 
-    def populate_df_meta(self):
+    @override
+    def populate_df_meta(self) -> None:
         if self.processed_df is None:
             self.df_meta = {
                 'columns': 0,
@@ -281,6 +310,7 @@ class CustomizableDataflow(DataFlow):
             'rows_shown': min(len(self.processed_df), self.sampling_klass.serialize_limit),  
             'total_rows': len(self.orig_df)}
 
+    #BuckarooOptions
     buckaroo_options = Dict({
         'sampled': ['random'],
         'auto_clean': ['aggressive', 'conservative'],
@@ -344,9 +374,10 @@ class CustomizableDataflow(DataFlow):
         self.ac_obj.run_code_generator(operations)
     ### end code interpeter block
 
-    def _compute_processed_result(self, cleaned_df, post_processing_method):
+    @override
+    def _compute_processed_result(self, cleaned_df:pd.DataFrame, post_processing_method:str) -> Tuple[pd.DataFrame, SDType]:
         if post_processing_method == '':
-            return [cleaned_df, {}]
+            return (cleaned_df, {})
         else:
             post_analysis = self.post_processing_klasses[post_processing_method]
             try:
@@ -360,8 +391,9 @@ class CustomizableDataflow(DataFlow):
 
 
     ### start summary stats block
-
-    def _get_summary_sd(self, processed_df):
+    #TAny closer to some error type
+    @override
+    def _get_summary_sd(self, processed_df:pd.DataFrame) -> Tuple[SDType, TDict[str, TAny]]:
         stats = self.DFStatsClass(
             processed_df,
             self.analysis_klasses,
@@ -378,7 +410,7 @@ class CustomizableDataflow(DataFlow):
 
     # ### end summary stats block        
 
-    def _sd_to_jsondf(self, sd):
+    def _sd_to_jsondf(self, sd:SDType):
         """exists so this can be overriden for polars  """
         temp_sd = sd.copy()
         #FIXME add actual test around weird index behavior
@@ -386,10 +418,10 @@ class CustomizableDataflow(DataFlow):
             del temp_sd['index']
         return self._df_to_obj(pd.DataFrame(temp_sd))
 
-    def _df_to_obj(self, df:pd.DataFrame):
+    def _df_to_obj(self, df:pd.DataFrame) -> TDict[str, TAny]:
         return pd_to_obj(self.sampling_klass.serialize_sample(df))
     
-    def add_analysis(self, analysis_klass):
+    def add_analysis(self, analysis_klass:Type[ColAnalysis]) -> None:
         """
         same as get_summary_sd, call whatever to set summary_sd and trigger further comps
         """
@@ -413,6 +445,7 @@ class CustomizableDataflow(DataFlow):
         """
        put together df_dict for consumption by the frontend
         """
+       # Tuple[TAny, pd.DataFrame, SDType]
         _unused, processed_df, merged_sd = self.widget_args_tuple
         if processed_df is None:
             return
