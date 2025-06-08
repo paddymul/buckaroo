@@ -275,6 +275,19 @@ class StylingAnalysis(ColAnalysis):
         """
         return {'displayer_args': {'displayer': 'obj'}}
 
+    parquet_style_index: bool = True
+
+    @classmethod
+    def get_index_name(cls, df:pd.DataFrame) -> str :
+        if cls.parquet_style_index:
+            #"('index', '')"
+            if isinstance(df.columns, pd.MultiIndex):
+                extra_len = df.columns.nlevels - 1
+                new_index = ['index'] + [''] * extra_len
+                return str(tuple(new_index))
+        return 'index'
+
+    
     @classmethod
     def fix_column_config(cls, col: Union[Iterable[str], str], base_cc:BaseColumnConfig) -> ColumnConfig:
         safedel(base_cc, 'col_name')
@@ -302,7 +315,7 @@ class StylingAnalysis(ColAnalysis):
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
         if 'index' not in sd:
-            ret_col_config.append(cls.default_styling('index'))
+            ret_col_config.append(cls.default_styling(cls.get_index_name(df)))
             
         for col, col_meta in sd.items():
             if col_meta.get('merge_rule', None) == 'hidden':
