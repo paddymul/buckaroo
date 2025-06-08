@@ -1,4 +1,4 @@
-from typing import List, Tuple, Type, TypedDict, Dict as TDict, Any as TAny
+from typing import List, Literal, Tuple, Type, TypedDict, Dict as TDict, Any as TAny, Union
 from typing_extensions import override
 import six
 import warnings
@@ -10,10 +10,12 @@ from ..serialization_utils import pd_to_obj
 from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats
 from .autocleaning import SentinelAutocleaning
-from .dataflow_extras import (
-    exception_protect, Sampling)
+from .dataflow_extras import (exception_protect, Sampling)
 from .styling_core import (
     EMPTY_DF_DISPLAY_ARG,
+    ComponentConfig,
+    OverrideColumnConfig,
+    PinnedRowConfig,
     merge_sds, merge_column_config, StylingAnalysis)
 
 
@@ -133,8 +135,7 @@ class DataFlow(HasTraits):
             self.cleaned = result
             self.operations = result[3]
         self.operation_results = {'transformed_df':None,
-                                  'generated_py_code': self.generated_code,
-                                  }
+                                  'generated_py_code': self.generated_code}
 
     @property
     def cleaned_df(self):
@@ -218,16 +219,6 @@ class DataFlow(HasTraits):
         # self.widget_args_tuple = [self.processed_df, self.merged_sd, dfviewer_config]
         self.widget_args_tuple = (id(self.processed_df), self.processed_df, self.merged_sd)
 
-    # buckaroo_options = Dict({
-    #     'sampled': ['random'],
-    #     'auto_clean': ['aggressive', 'conservative'],
-    #     'post_processing': [],
-    #     'df_display': ['main', 'summary'],
-    #     'show_commands': ['on'],
-    #     'summary_stats': ['all'],
-    # }).tag(sync=True)
-
-
 BuckarooOptions = TypedDict('BuckarooOptions', {
     'sampled': List[str],
     'auto_clean': List[str],
@@ -237,7 +228,6 @@ BuckarooOptions = TypedDict('BuckarooOptions', {
     # It's odd in the frontend too
     'show_commands': List[str],  
     'summary_stats': List[str],
-    'col_path': List[str],
     })
 
     
@@ -255,9 +245,9 @@ class CustomizableDataflow(DataFlow):
     operations = Any([{'meta':'no-op'}]).tag(sync=True)
 
     def __init__(self, orig_df, debug=False,
-                 column_config_overrides=None,
-                 pinned_rows=None, extra_grid_config=None,
-                 component_config=None, init_sd=None, skip_main_serial=False):
+                 column_config_overrides:Union[Literal[None], OverrideColumnConfig]=None,
+                 pinned_rows:Union[Literal[None], PinnedRowConfig]=None, extra_grid_config=None,
+                 component_config:Union[Literal[None], ComponentConfig]=None, init_sd=None, skip_main_serial=False):
         if init_sd is None:
             self.init_sd = {}
         else:
@@ -310,8 +300,9 @@ class CustomizableDataflow(DataFlow):
             'rows_shown': min(len(self.processed_df), self.sampling_klass.serialize_limit),  
             'total_rows': len(self.orig_df)}
 
-    #BuckarooOptions
-    buckaroo_options = Dict({
+    #typing compalins about this, but so far as this class is concerned, buckaroo_options follows theBuckarooOptions type
+    # typing doesn't get along well with traitlets
+    buckaroo_options:BuckarooOptions = Dict({
         'sampled': ['random'],
         'auto_clean': ['aggressive', 'conservative'],
         'post_processing': [],
@@ -473,7 +464,6 @@ class CustomizableDataflow(DataFlow):
             df_viewer_config['column_config'] =  merge_column_config(
                 base_column_config, self.column_config_overrides)
             disp_arg = {'data_key': A_Klass.data_key,
-                        #'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
                         'df_viewer_config': df_viewer_config,
                         'summary_stats_key': A_Klass.summary_stats_key}
             temp_display_args[display_name] = disp_arg

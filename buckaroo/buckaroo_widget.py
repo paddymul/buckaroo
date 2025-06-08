@@ -8,6 +8,7 @@
 TODO: Add module docstring
 """
 import traceback
+from typing import Literal, Union
 import pandas as pd
 import logging
 
@@ -26,7 +27,7 @@ from buckaroo.extension_utils import copy_extend
 from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj, to_parquet
 from .dataflow.dataflow import CustomizableDataflow
 from .dataflow.dataflow_extras import (Sampling, exception_protect)
-from .dataflow.styling_core import (StylingAnalysis, merge_column_config)
+from .dataflow.styling_core import (ComponentConfig, OverrideColumnConfig, PinnedRowConfig, StylingAnalysis, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
 from pathlib import Path
 
@@ -84,10 +85,10 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
 
 
     def __init__(self, orig_df, debug=False,
-                 column_config_overrides=None,
-                 pinned_rows=None, extra_grid_config=None,
-                 component_config=None, init_sd=None,
-                 skip_main_serial=False):
+        column_config_overrides:Union[Literal[None], OverrideColumnConfig]=None,
+        pinned_rows:Union[Literal[None], PinnedRowConfig]=None, extra_grid_config=None,
+        component_config:Union[Literal[None], ComponentConfig]=None,
+        init_sd=None, skip_main_serial=False):
         """
         BuckarooWidget was originally designed to extend CustomizableDataFlow
 
@@ -331,9 +332,10 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
 
     def __init__(self, orig_df, debug=False,
-                 column_config_overrides=None,
-                 pinned_rows=None, extra_grid_config=None,
-                 component_config=None, init_sd=None):
+        column_config_overrides:Union[Literal[None], OverrideColumnConfig]=None,
+        pinned_rows:Union[Literal[None], PinnedRowConfig]=None, extra_grid_config=None,
+        component_config:Union[Literal[None], ComponentConfig]=None,
+        init_sd=None):
         super().__init__(orig_df, debug, column_config_overrides, pinned_rows,
                          extra_grid_config, component_config, init_sd,
                          skip_main_serial=True)
@@ -394,9 +396,10 @@ class DFViewerInfinite(BuckarooInfiniteWidget):
     df_id = Unicode("unknown").tag(sync=True)
 
     def __init__(self, orig_df, debug=False,
-                 column_config_overrides=None,
-                 pinned_rows=None, extra_grid_config=None,
-                 component_config=None, init_sd=None):
+        column_config_overrides:Union[Literal[None], OverrideColumnConfig]=None,
+        pinned_rows:Union[Literal[None], PinnedRowConfig]=None, extra_grid_config=None,
+        component_config:Union[Literal[None], ComponentConfig]=None,
+        init_sd=None):
         super().__init__(orig_df, debug, column_config_overrides, pinned_rows,
                          extra_grid_config, component_config, init_sd)
         self.df_id = str(id(orig_df))
