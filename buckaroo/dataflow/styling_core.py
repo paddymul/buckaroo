@@ -1,6 +1,6 @@
 import logging
-from typing import TypedDict, Union, List, Dict, Any, Literal
-from typing_extensions import NotRequired
+from typing import Iterable, TypedDict, Union, List, Dict, Any, Literal
+from typing_extensions import NotRequired, TypeAlias, override
 
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis, ColMeta, SDType)
@@ -235,11 +235,19 @@ def merge_column(base, new):
     return ret
 
 
-def merge_column_config(styled_column_config, overide_column_configs):
-    existing_column_config = styled_column_config.copy()
-    ret_column_config = []
+ColIdentifier:TypeAlias = Union[Iterable[str], str]
+OverrideColumnConfig:TypeAlias = Dict[ColIdentifier, BaseColumnConfig]
+
+def merge_column_config(styled_column_config:List[ColumnConfig], overide_column_configs:OverrideColumnConfig) -> List[ColumnConfig]:
+    existing_column_config: List[ColumnConfig] = styled_column_config.copy()
+    ret_column_config: List[ColumnConfig] = []
     for row in existing_column_config:
-        col = row['col_name']
+        if 'col_name' in row:
+            # str necessary because sometimes numbers still come through
+            col: ColIdentifier = str(row['col_name']) # typing: ignore  
+        else:
+            col: ColIdentifier = row['col_path']
+            
         if col in overide_column_configs:
             row.update(overide_column_configs[col])
         if row.get('merge_rule', 'blank') == 'hidden':
@@ -248,6 +256,12 @@ def merge_column_config(styled_column_config, overide_column_configs):
     return ret_column_config
 
 
+def safedel(dct:Dict[str, Any], key:str) -> Dict[str, Any]:
+    if key in dct:
+        del dct[key]
+    return dct
+        
+
 class StylingAnalysis(ColAnalysis):
     provides_defaults: ColMeta = {}
     pinned_rows:  List[PinnedRowConfig] = []
@@ -255,15 +269,28 @@ class StylingAnalysis(ColAnalysis):
     component_config: NotRequired[ComponentConfig] = {}
     
     @classmethod
-    def style_column(cls, col:str, _column_metadata: ColMeta) -> ColumnConfig:
+    def style_column(cls, col:str, _column_metadata: ColMeta) -> BaseColumnConfig:
         """
           This is the method that should be overridden.
 
           I really only want users to override for for displayer_args.
           I want this class to handle col_name/col_path... so I made it return BaseColumnConfig
         """
-        return {'col_name': col, 'displayer_args': {'displayer': 'obj'}}
+        #return {'col_name': col, 'displayer_args': {'displayer': 'obj'}}
+        return {'displayer_args': {'displayer': 'obj'}}
 
+    @classmethod
+    def fix_column_config(cls, col: Union[Iterable[str], str], base_cc:BaseColumnConfig) -> ColumnConfig:
+        safedel(base_cc, 'col_name')
+        safedel(base_cc, 'col_path')
+        safedel(base_cc, 'field')
+        if isinstance(col, tuple):
+            base_cc['col_path'] = col
+            base_cc['field'] = str(col)
+        else:
+            base_cc['col_name'] = str(col) # sometimes numbers still creep in here
+        return base_cc
+    
     @classmethod
     def style_column_desired(cls, col:str, _column_metadata: ColMeta) -> BaseColumnConfig:
         """
@@ -281,8 +308,8 @@ class StylingAnalysis(ColAnalysis):
     summary_stats_key: str = 'all_stats'
 
     @classmethod
-    def default_styling(cls, col_name:str, /) -> ColumnConfig:
-        return {'col_name': col_name, 'displayer_args': {'displayer': 'obj'}}
+    def default_styling(cls, col_name:Union[Iterable[str], str], /) -> ColumnConfig:
+        return cls.fix_column_config(col_name, {'displayer_args': {'displayer': 'obj'}})
 
     @classmethod
     def style_columns(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
@@ -292,6 +319,63 @@ class StylingAnalysis(ColAnalysis):
         if 'index' not in sd:
             ret_col_config.append(cls.default_styling('index'))
             
+        for col, col_meta in sd.items():
+            if col_meta.get('merge_rule', None) == 'hidden':
+                continue
+            try:
+
+                # print("!"*80)
+                # print("col", col, type(col))
+                # print("!"*80)
+                #it actually gets tuples here
+                base_style: ColumnConfig = cls.fix_column_config(col, cls.style_column(col, col_meta))
+            except Exception as exc:
+                if len(col_meta) == 0 and len(cls.requires_summary) > 0:
+                    # this is called in instantiation without col_meta, and that can cause failures
+                    # we want to just swallow these errors and not warn
+                    pass
+                else:
+                    # something unexpected happened here, warn so that the develoepr is notified
+                    logger.warn(f"Warning, styling failed from {cls} on column {col} with col_meta {col_meta} using default_styling instead")
+                    logger.warn(exc)
+                # Always provide a style, not providing a style
+                # results in no display which is a very bad user
+                # experience
+                base_style = cls.default_styling(col)
+            if 'column_config_override' in col_meta:
+                #column_config_override, sent by the instantiation, gets set later
+
+                cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
+                base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
+            if base_style.get('merge_rule') == 'hidden':
+                continue
+            ret_col_config.append(base_style)
+            
+        return {
+            'pinned_rows': cls.pinned_rows,
+            'column_config': ret_col_config,
+            'extra_grid_config': cls.extra_grid_config,
+            'component_config': cls.component_config
+        }
+
+class MultiIndexColStylingAnalysis(StylingAnalysis):
+
+    def fill_style(cls, columns:pd.MultiIndex, base_style:BaseColumnConfig) -> ColumnConfig:
+
+        
+        pass
+        
+    
+    @override
+    @classmethod
+    def style_columns(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
+        ret_col_config: List[ColumnConfig] = []
+        #this is necessary for polars to add an index column, which is
+        #required so that summary_stats makes sense
+        if 'index' not in sd:
+            ret_col_config.append(cls.default_styling('index'))
+
+        assert isinstance(df.columns, pd.MultiIndex)
         for col, col_meta in sd.items():
             if col_meta.get('merge_rule', None) == 'hidden':
                 continue
@@ -325,4 +409,3 @@ class StylingAnalysis(ColAnalysis):
             'extra_grid_config': cls.extra_grid_config,
             'component_config': cls.component_config
         }
-

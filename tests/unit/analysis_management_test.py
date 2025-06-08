@@ -12,7 +12,7 @@ from buckaroo.pluggable_analysis_framework.safe_summary_df import (output_full_r
 
 
 from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
-from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, word_only_df,
+from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, test_multi_index_df, word_only_df,
                        empty_df, empty_df_with_columns)
 
 class DumbTableHints(ColAnalysis):
@@ -69,7 +69,7 @@ class TestAnalysisPipeline(unittest.TestCase):
     def test_produce_series_df(self):
         """just make sure this doesn't fail"""
 
-        sdf, errs = produce_series_df(
+        sdf, _errs = produce_series_df(
             test_df, [Len], 'test_df', debug=True)
         #dict(**sdf) makes the types equal and leads to better error messages if there is a problem
         assert dict(**sdf) ==     {
@@ -91,7 +91,7 @@ class TestAnalysisPipeline(unittest.TestCase):
         },
     }
 
-        sdf2, errs = produce_series_df(
+        sdf2, _errs = produce_series_df(
             test_df, [DistinctCount], 'test_df', debug=True)
         assert dict(**sdf2) == {
             'normal_int_series': {'distinct_count': 4, 'col_name':'normal_int_series'},
@@ -99,7 +99,7 @@ class TestAnalysisPipeline(unittest.TestCase):
             'empty_na_ser': {'distinct_count':0,  'col_name':'empty_na_ser'},
             'float_nan_ser': {'distinct_count':2,  'col_name':'float_nan_ser'}}
 
-        sdf3, errs = produce_series_df(
+        sdf3, _errs = produce_series_df(
             test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
         assert dict(**sdf3) == {
             'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'col_name':'normal_int_series'},
@@ -107,6 +107,51 @@ class TestAnalysisPipeline(unittest.TestCase):
             'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'col_name':'empty_na_ser'},
             'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'col_name':'float_nan_ser'}}
 
+    def test_produce_series_multiindex_cols_df(self):
+        """just make sure this doesn't fail"""
+
+        sdf, _errs = produce_series_df(
+            test_multi_index_df, [Len], 'test_df', debug=True)
+
+        print(list(sdf.keys()))
+        1/0
+        
+        assert dict(**sdf) ==     {
+        'empty_na_ser': {
+          'col_name': 'empty_na_ser',
+            'len': 4,
+        },
+        'float_nan_ser': {
+           'col_name': 'float_nan_ser',
+            'len': 4,
+        },
+        'index': {
+           'col_name': 'index',
+            'len': 4,
+        },
+        'normal_int_series': {
+           'col_name': 'normal_int_series',
+            'len': 4,
+        },
+    }
+
+        sdf2, _errs = produce_series_df(
+            test_df, [DistinctCount], 'test_df', debug=True)
+        assert dict(**sdf2) == {
+            'normal_int_series': {'distinct_count': 4, 'col_name':'normal_int_series'},
+            'index':  {'distinct_count': 4,  'col_name':'index'},
+            'empty_na_ser': {'distinct_count':0,  'col_name':'empty_na_ser'},
+            'float_nan_ser': {'distinct_count':2,  'col_name':'float_nan_ser'}}
+
+        sdf3, _errs = produce_series_df(
+            test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+        assert dict(**sdf3) == {
+            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'col_name':'normal_int_series'},
+            'index':             {'distinct_count': 4, 'distinct_per':0, 'col_name':'index'},
+            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'col_name':'empty_na_ser'},
+            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'col_name':'float_nan_ser'}}
+
+        
     def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
         sdf, errs = AnalysisPipeline.full_produce_summary_df(

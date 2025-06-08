@@ -1,10 +1,11 @@
 from datetime import date
 import pytest
 import pandas as pd
+from buckaroo.ddd_library import get_multi_index_cols_df
 from buckaroo.serialization_utils import (
     is_col_dt_safe, is_dataframe_datetime_safe, check_and_fix_df, pd_to_obj,
     to_parquet, DuplicateColumnsException)
-from buckaroo.ddd_library import get_multi_index_cols
+
 
 
 dt_strs = ['2024-06-24 09:32:00-04:00', '2024-06-24 09:33:00-04:00', '2024-06-24 09:34:00-04:00']
@@ -84,12 +85,12 @@ def test_check_and_fix_df5():
     recheck(df)
 
 def test_serialize_multiindex_json():
-    df = get_multi_index_cols()
+    df = get_multi_index_cols_df()
     pd_to_obj(df)
     assert isinstance(df.columns, pd.MultiIndex)
 
 def test_serialize_multiindex_parquet():
-    df = get_multi_index_cols()
+    df = get_multi_index_cols_df()
     to_parquet(df)
 
 def test_serialize_naive_json():

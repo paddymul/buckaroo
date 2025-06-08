@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 from IPython.display import display
 from buckaroo.buckaroo_widget import BuckarooWidget
+from buckaroo.ddd_library import get_multi_index_cols_df
 from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF
-from buckaroo.ddd_library import get_multi_index_cols
 from .fixtures import (word_only_df)
 from buckaroo.serialization_utils import (DuplicateColumnsException)
 from buckaroo.dataflow.styling_core import StylingAnalysis
@@ -190,11 +190,11 @@ def test_quick_commands_run():
 
 
 def test_multi_index_cols() -> None:
-    df = get_multi_index_cols()
+    df = get_multi_index_cols_df()
     bw = BuckarooWidget(df)
     col_config = bw.df_display_args['main']['df_viewer_config']['column_config']
 
-    assert col_config[0]['col_path'] == ['foo', 'a']
+    assert col_config[1]['col_path'] == ('foo', 'a')
     
 def atest_symbol_meta():    
     """verifies that a symbol with a meta key can be added and
