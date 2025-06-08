@@ -1,6 +1,6 @@
 import logging
 from typing import Iterable, TypedDict, Union, List, Dict, Any, Literal
-from typing_extensions import NotRequired, TypeAlias, override
+from typing_extensions import NotRequired, TypeAlias
 
 import pandas as pd
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis, ColMeta, SDType)
@@ -329,58 +329,6 @@ class StylingAnalysis(ColAnalysis):
                 # print("!"*80)
                 #it actually gets tuples here
                 base_style: ColumnConfig = cls.fix_column_config(col, cls.style_column(col, col_meta))
-            except Exception as exc:
-                if len(col_meta) == 0 and len(cls.requires_summary) > 0:
-                    # this is called in instantiation without col_meta, and that can cause failures
-                    # we want to just swallow these errors and not warn
-                    pass
-                else:
-                    # something unexpected happened here, warn so that the develoepr is notified
-                    logger.warn(f"Warning, styling failed from {cls} on column {col} with col_meta {col_meta} using default_styling instead")
-                    logger.warn(exc)
-                # Always provide a style, not providing a style
-                # results in no display which is a very bad user
-                # experience
-                base_style = cls.default_styling(col)
-            if 'column_config_override' in col_meta:
-                #column_config_override, sent by the instantiation, gets set later
-
-                cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
-                base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
-            if base_style.get('merge_rule') == 'hidden':
-                continue
-            ret_col_config.append(base_style)
-            
-        return {
-            'pinned_rows': cls.pinned_rows,
-            'column_config': ret_col_config,
-            'extra_grid_config': cls.extra_grid_config,
-            'component_config': cls.component_config
-        }
-
-class MultiIndexColStylingAnalysis(StylingAnalysis):
-
-    def fill_style(cls, columns:pd.MultiIndex, base_style:BaseColumnConfig) -> ColumnConfig:
-
-        
-        pass
-        
-    
-    @override
-    @classmethod
-    def style_columns(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
-        ret_col_config: List[ColumnConfig] = []
-        #this is necessary for polars to add an index column, which is
-        #required so that summary_stats makes sense
-        if 'index' not in sd:
-            ret_col_config.append(cls.default_styling('index'))
-
-        assert isinstance(df.columns, pd.MultiIndex)
-        for col, col_meta in sd.items():
-            if col_meta.get('merge_rule', None) == 'hidden':
-                continue
-            try:
-                base_style: ColumnConfig = cls.style_column(col, col_meta)
             except Exception as exc:
                 if len(col_meta) == 0 and len(cls.requires_summary) > 0:
                     # this is called in instantiation without col_meta, and that can cause failures
