@@ -1,6 +1,7 @@
 import {
     CellRendererSelectorResult,
     ColDef,
+    ColGroupDef,
     DomLayoutType,
     ICellRendererParams,
     IDatasource,
@@ -17,6 +18,9 @@ import {
 
     DFViewerConfig,
     ComponentConfig,
+    NormalColumnConfig,
+    MultiIndexColumnConfig,
+    ColDefOrGroup,
 } from "./DFWhole";
 
 import * as _ from "lodash";
@@ -68,8 +72,8 @@ export function extractSingleSeriesSummary(
     return {
         dfviewer_config: {
             column_config: [
-                { col_name: "index", displayer_args: { displayer: "obj" } },
-                { col_name: col_name, displayer_args: { displayer: "obj" } },
+              { col_name: "index", field:"index",  displayer_args: { displayer: "obj" } },
+              { col_name: col_name, field:col_name, displayer_args: { displayer: "obj" } },
             ],
             pinned_rows: [],
         },
@@ -80,34 +84,133 @@ export function extractSingleSeriesSummary(
     };
 }
 
+export const getFieldVal = (f:ColumnConfig) : string => {
+  if(_.has(f, 'col_path')){
+    return (f as MultiIndexColumnConfig).field;
+  }
+  return (f as NormalColumnConfig).col_name;
+}
+
+export function baseColToColDef (f:ColumnConfig) : ColDef {
+  const color_map_config = f.color_map_config
+    ? getStyler(f.color_map_config) : {};
+
+  const colDef: ColDef = {
+    field: getFieldVal(f),
+    cellDataType: false,
+    cellStyle: undefined, // necessary for colormapped columns to have a default
+    ...getCellRendererorFormatter(f.displayer_args),
+    ...color_map_config,
+    ...getTooltipParams(f.tooltip_config),
+    ...f.ag_grid_specs,
+  };
+  return colDef
+}
+
+export function normalColToColDef (f:NormalColumnConfig) : ColDef {
+  const colDef: ColDef = {
+    headerName: f.col_name,
+    ...baseColToColDef(f)};
+  return colDef
+}
+
+export const getSubChildren = (arr:ColumnConfig[], level:number): ColumnConfig[][] => {
+  const keyFunc = (x:ColumnConfig) => {
+    if(_.has(x, 'col_path')) {
+      const xMICC: MultiIndexColumnConfig = x as MultiIndexColumnConfig
+      return xMICC.col_path[level]
+    }
+    const xNCC: NormalColumnConfig = x as NormalColumnConfig;
+    return xNCC.col_name + "!&single" + _.indexOf(arr, x).toString(); // bad magic value
+  }
+  return arr.reduce((acc: ColumnConfig[][], curr:ColumnConfig) => {
+    
+    const firstKey = keyFunc(curr)
+    const lastGroup = acc[acc.length - 1];
+    
+    if (!lastGroup || keyFunc(lastGroup[0]) !== firstKey) {
+      acc.push([curr]);
+    } else {
+      lastGroup.push(curr);
+    }
+    
+    return acc;
+  }, []);
+};
+
+
+export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGroup {
+  /*
+  returns the proper colDef at level
+   */
+  return {
+    headerName:f.col_path[level],
+    ...baseColToColDef(f),
+  }
+}
+
+export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=0) : ColGroupDef {
+  // this will return the nested groups of ColGroupDef with children
+  if (f.length == 0) {
+    // this will never happen
+    throw new Error("f shouldn't be empty");
+  }
+
+  const rootColPath = f[0].col_path;
+  const rootHeader = rootColPath[level]
+
+  const rootDepth = rootColPath.length;
+  if (level == rootDepth) {
+    throw new Error("something went wrong, level is too deep");
+  }
+  const childLevel = level + 1;
+
+  if (childLevel == (rootDepth -1)) {
+    const colDef: ColGroupDef = {
+      headerName: rootHeader,
+      children: _.map(f, (x) => childColDef(x, childLevel))
+    };
+    return colDef
+  } else {
+    const groupedColumnConfigs = getSubChildren(f, childLevel);
+    const colDef: ColGroupDef = {
+      headerName: rootHeader,
+      children: _.map(groupedColumnConfigs, (x) => multiIndexColToColDef(x as MultiIndexColumnConfig[], childLevel))
+    };
+    return colDef
+  }
+}
+
+
+const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
+  if (x.length == 0) {
+    //neverp
+    throw new Error("x shouldn't be empty");
+  }
+  if(_.has(x[0], 'col_path')) {
+    return multiIndexColToColDef(x as MultiIndexColumnConfig[])
+  } else {
+    if (x.length > 1) {
+      throw new Error(`for NormalColumnConfig, length should be 1, improperly grouped ${x}`);
+    }
+    return normalColToColDef(x[0] as NormalColumnConfig)
+  }
+}
+
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
-): ColDef[] {
-    //more convienient df format for some formatters
-    //const hdf = extractSDFT(full_summary_stats_df || []);
+): (ColDef|ColGroupDef)[] {
+  /*
+  gets the aggrid column config given the buckaroo inputs
+   */
+  const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
 
-    const retColumns: ColDef[] = dfviewer_config.column_config.map((f: ColumnConfig) => {
-        // const single_series_summary_df = extractSingleSeriesSummary(
-        //     full_summary_stats_df,
-        //     f.col_name,
-        // );
+  const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
 
-        const color_map_config = f.color_map_config
-            ? getStyler(f.color_map_config) : {};
-
-        const colDef: ColDef = {
-            field: f.col_name,
-            headerName: f.col_name,
-            cellDataType: false,
-            cellStyle: undefined, // necessary for colormapped columns to have a default
-            ...getCellRendererorFormatter(f.displayer_args),
-            ...color_map_config,
-            ...getTooltipParams(f.tooltip_config),
-            ...f.ag_grid_specs,
-        };
-        return colDef;
-    });
-    return retColumns;
+  const retMultiColumns:(ColDef|ColGroupDef)[] = groupedColumnConfigs.map(switchToColDef)
+  console.log("retMultiColumns");
+  console.log(retMultiColumns)
+  return retMultiColumns
 }
 
 // this is very similar to the colDef parts of dfToAgrid

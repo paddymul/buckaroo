@@ -6,12 +6,15 @@ import {
     dfToAgrid,
     getHeightStyle2,
     getAutoSize,
+    getSubChildren,
+    childColDef,
+    multiIndexColToColDef,
 
 } from './gridUtils';
 import * as _ from "lodash";
-import { DFData, DFViewerConfig, PinnedRowConfig } from "./DFWhole";
+import { DFData, DFViewerConfig, NormalColumnConfig, MultiIndexColumnConfig, PinnedRowConfig, ColumnConfig } from "./DFWhole";
 import { getFloatFormatter } from './Displayer';
-import { ValueFormatterParams } from '@ag-grid-community/core';
+import { ColDef, ValueFormatterParams } from '@ag-grid-community/core';
 
 describe("testing utility functions in gridUtils ", () => {
   // mostly sanity checks to help develop gridUtils
@@ -112,6 +115,7 @@ describe("testing utility functions in gridUtils ", () => {
         column_config: [
           {
             col_name: "test",
+	    field:"test",
             displayer_args: { displayer: "float", min_fraction_digits: 2, max_fraction_digits: 4 }
           }
         ],
@@ -120,7 +124,7 @@ describe("testing utility functions in gridUtils ", () => {
 
       const result = dfToAgrid(config);
       expect(result).toHaveLength(1);
-      expect(result[0].field).toBe("test");
+      expect((result[0] as ColDef).field).toBe("test");
       expect(result[0].headerName).toBe("test");
     });
   });
@@ -186,3 +190,205 @@ describe("testing utility functions in gridUtils ", () => {
   });
 });
 
+
+
+describe("testing multi index organiztion  ", () => {
+  // mostly sanity checks to help develop gridUtils
+
+  const [
+    SUPER__SUB_A,
+    SUPER__SUB_A2,
+    SUPER__SUB_C,
+    SUPER2__SUB_B]:MultiIndexColumnConfig[] = [
+      {
+	col_path:['super', 'sub_a'],
+	'field': 'a',
+	displayer_args: { displayer:'obj'}},
+      { col_path:['super', 'sub_a2'],
+	'field': 'a',
+	displayer_args: { displayer:'obj'}},
+      {col_path:['super', 'sub_c'],
+	'field': 'c',
+	displayer_args: { displayer:'obj'}},
+      {
+	col_path:['super2', 'b'],
+	field:'b',
+	displayer_args: { displayer:'obj'}},
+    ];
+  const REGULAR_C :NormalColumnConfig = {
+    col_name:'c', 
+    displayer_args: { displayer:'obj' }};
+  const REGULAR_C__DIFFERENT_OBJECT :NormalColumnConfig = {
+    col_name:'c', 
+    displayer_args: { displayer:'obj' }};
+
+  const REGULAR_D :NormalColumnConfig = {
+    col_name:'d', 
+    displayer_args: { displayer:'obj' }};
+  it("should group simple multi indexes properly", () => {
+    const allMultiIndex: MultiIndexColumnConfig[] = [
+      SUPER__SUB_A,
+      SUPER__SUB_A2,
+      SUPER__SUB_C,
+      SUPER2__SUB_B];
+
+    const grouped: MultiIndexColumnConfig[][] = [
+      [SUPER__SUB_A,
+	SUPER__SUB_A2,
+	SUPER__SUB_C],
+      [SUPER2__SUB_B]];
+    
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  })
+
+  it("should group mixed multi indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      SUPER__SUB_A,
+      REGULAR_C,
+      SUPER__SUB_A2,
+      SUPER__SUB_C,
+      SUPER2__SUB_B];
+
+    const grouped:  ColumnConfig[][] = [
+      [SUPER__SUB_A],
+      [REGULAR_C],
+      [SUPER__SUB_A2,
+	SUPER__SUB_C],
+      [SUPER2__SUB_B]];
+
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+  it("should group mixed multi indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      SUPER__SUB_A,
+      REGULAR_C,
+      SUPER__SUB_A2,
+      SUPER__SUB_C,
+      SUPER2__SUB_B];
+
+    const grouped:  ColumnConfig[][] = [
+      [SUPER__SUB_A],
+      [REGULAR_C],
+      [SUPER__SUB_A2,
+	SUPER__SUB_C],
+      [SUPER2__SUB_B]];
+
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+  it("should handle regular columns indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      REGULAR_C,
+      REGULAR_D];
+    const grouped:  ColumnConfig[][] = [
+      [REGULAR_C],
+      [REGULAR_D]];
+
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+
+  it("should handle repeated regular columns indexes properly", () => {
+    const allMultiIndex: ColumnConfig[] = [
+      REGULAR_C,
+      REGULAR_C__DIFFERENT_OBJECT,
+      REGULAR_D];
+    const grouped:  ColumnConfig[][] = [
+      [REGULAR_C],
+      [REGULAR_C],
+      [REGULAR_D]];
+
+    expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
+  });
+
+
+  it("childColDef should return proper subset", () => {
+    expect(_.omit(childColDef(SUPER__SUB_A, 1), "valueFormatter")).toStrictEqual({
+      "cellDataType": false,
+      "cellStyle": undefined,
+      "field": "a",
+      "headerName": "sub_a",
+    });
+
+    expect(_.omit(childColDef(SUPER__SUB_A2, 1), "valueFormatter")).toStrictEqual({
+      "cellDataType": false,
+      "cellStyle": undefined,
+      "field": "a",
+      "headerName": "sub_a2",
+    });
+
+  });
+
+  const [
+    SUPER__SUB_FOO__SUB_B,
+    SUPER__SUB_FOO__SUB_C,
+
+    SUPER__SUB_BAR__SUB_B,
+    SUPER__SUB_BAR__SUB_C,
+  ]:MultiIndexColumnConfig[] = [
+      {
+	col_path:['super', 'sub_foo', 'sub_b'],
+	'field': 'super__sub_foo__sub_b',
+	displayer_args: { displayer:'obj'}},
+      {
+	col_path:['super', 'sub_foo', 'sub_c'],
+	'field': 'super__sub_foo__sub_c',
+	displayer_args: { displayer:'obj'}},
+
+
+      {
+	col_path:['super', 'sub_bar', 'sub_b'],
+	'field': 'super__sub_bar__sub_b',
+	displayer_args: { displayer:'obj'}},
+      {
+	col_path:['super', 'sub_bar', 'sub_c'],
+	'field': 'super__sub_bar__sub_c',
+	displayer_args: { displayer:'obj'}},
+    ];
+
+
+  it("multiIndexColumnConfig should return for 2 levels", () => {
+    // first assume regular groups... Every element in a grouping will
+    // have the same col_path depth.  I might want to break this later
+    const groupedCC = [
+      SUPER__SUB_A,
+      SUPER__SUB_A2,
+    ];
+
+    const MIColGroupDef = multiIndexColToColDef(groupedCC);
+
+    //@ts-ignore
+    const children = MIColGroupDef.children;  
+    expect(children.length).toBe(2);
+    //@ts-ignore
+    const child1 = children[0];
+    //@ts-ignore
+    expect(child1.children).toBe(undefined);  // there should only be one level of nesting
+    const child2 = children[1];
+    //@ts-ignore
+    expect(child2.children).toBe(undefined);  // there should only be one level of nesting
+  });
+
+
+  it("multiIndexColumnConfig should return proper nested", () => {
+    // first assume regular groups... Every element in a grouping will
+    // have the same col_path depth.  I might want to break this later
+    const groupedCC = [
+      SUPER__SUB_FOO__SUB_B,
+      SUPER__SUB_FOO__SUB_C,
+      SUPER__SUB_BAR__SUB_B,
+      SUPER__SUB_BAR__SUB_C
+    ];
+
+    const MIColGroupDef = multiIndexColToColDef(groupedCC);
+
+    //@ts-ignore
+    const children = MIColGroupDef.children;  
+    expect(children.length).toBe(2);
+
+    const child1 = children[0];
+    //@ts-ignore
+    const subChildren1 = child1.children;
+    //@ts-ignore
+    expect(child1.children.length).toBe(2)
+  });
+  
+});
