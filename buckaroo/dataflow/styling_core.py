@@ -171,6 +171,37 @@ ComponentConfig = TypedDict('ComponentConfig', {
 })
 
 
+
+DFViewerConfig = TypedDict('DFViewerConfig', {
+    'pinned_rows': List[PinnedRowConfig],
+    'column_config': List[ColumnConfig],
+    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
+    'component_config': NotRequired[ComponentConfig]
+})
+
+DisplayArgs = TypedDict('DisplayArgs', {
+    'data_key':str,
+    'df_viewer_config':DFViewerConfig,
+    'summary_stats_key': str})
+
+EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
+    'pinned_rows': [],
+    'column_config': []
+}
+
+
+EMPTY_DF_DISPLAY_ARG: DisplayArgs = {
+  'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
+  'summary_stats_key': 'empty'}
+
+
+SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
+SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
+
+SENTINEL_COLUMN_CONFIG_1 = "ASDF"
+SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
+
+
 def merge_sds(*sds):
     """merge sds with later args taking precedence
 
@@ -212,48 +243,21 @@ def merge_column_config(styled_column_config, overide_column_configs):
     return ret_column_config
 
 
-DFViewerConfig = TypedDict('DFViewerConfig', {
-    'pinned_rows': List[PinnedRowConfig],
-    'column_config': List[ColumnConfig],
-    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
-    'component_config': NotRequired[ComponentConfig]
-})
-
-DisplayArgs = TypedDict('DisplayArgs', {
-    'data_key':str,
-    'df_viewer_config':DFViewerConfig,
-    'summary_stats_key': str})
-
-EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
-    'pinned_rows': [],
-    'column_config': []
-}
-
-
-EMPTY_DF_DISPLAY_ARG: DisplayArgs = {
-  'data_key': 'empty', 'df_viewer_config': EMPTY_DFVIEWER_CONFIG,
-  'summary_stats_key': 'empty'}
-
-
-SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
-SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
-
-SENTINEL_COLUMN_CONFIG_1 = "ASDF"
-SENTINEL_COLUMN_CONFIG_2 = "FOO-BAR"
-
-
-def style_columns(style_method:str, sd:SDType) ->DFViewerConfig:
+def style_columns_sentinel(style_method:str, sd:SDType) ->str:
     if style_method == "foo":
         # this is a dumn sentinel
         return SENTINEL_COLUMN_CONFIG_2 # type: ignore:
-    else:
-        ret_col_config: List[ColumnConfig] = [] 
-        for col in sd.keys():
-            ret_col_config.append({'col_name':col, 'displayer_args': {'displayer': 'obj'}})
+    return "basecase"
 
-        return {
-            'pinned_rows': [],
-            'column_config': ret_col_config}
+def style_columns_simple(style_method:str, sd:SDType) -> DFViewerConfig:
+
+    ret_col_config: List[ColumnConfig] = [] 
+    for col in sd.keys():
+        ret_col_config.append({'col_name':col, 'displayer_args': {'displayer': 'obj'}})
+
+    return {
+        'pinned_rows': [],
+        'column_config': ret_col_config}
 
 
 DFViewerConfig = TypedDict('DFViewerConfig', {
@@ -273,7 +277,24 @@ class StylingAnalysis(ColAnalysis):
     
     @classmethod
     def style_column(cls, col:str, _column_metadata: ColMeta) -> ColumnConfig:
-        return {'col_name':str(col), 'displayer_args': {'displayer': 'obj'}}
+        """
+          This is the method that should be overridden.
+
+          I really only want users to override for for displayer_args.
+          I want this class to handle col_name/col_path... so I made it return BaseColumnConfig
+        """
+        return {'col_name': col, 'displayer_args': {'displayer': 'obj'}}
+
+    @classmethod
+    def style_column_desired(cls, col:str, _column_metadata: ColMeta) -> BaseColumnConfig:
+        """
+          This is the method that should be overridden.
+
+          I really only want users to override for for displayer_args.
+          I want this class to handle col_name/col_path... so I made it return BaseColumnConfig
+        """
+        return {'displayer_args': {'displayer': 'obj'}}
+
 
     #what is the key for this in the df_display_args_dictionary
     df_display_name: str = "main"

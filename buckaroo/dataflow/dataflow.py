@@ -11,7 +11,7 @@ from .dataflow_extras import (
 from .styling_core import (
     EMPTY_DF_DISPLAY_ARG,
     merge_sds, merge_column_config,
-    style_columns, StylingAnalysis)
+    style_columns_sentinel, StylingAnalysis)
 
 
 
@@ -85,7 +85,7 @@ class DataFlow(HasTraits):
 
 
     
-    def _compute_sampled_df(self, raw_df, sample_method):
+    def _compute_sampled_df(self, raw_df:pd.DataFrame, sample_method:str):
         if sample_method == "first":
             return raw_df[:1]
         return raw_df
@@ -208,7 +208,7 @@ class DataFlow(HasTraits):
         self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
 
     def _get_dfviewer_config(self, sd, style_method):
-        dfviewer_config = style_columns(style_method, sd)
+        dfviewer_config = style_columns_sentinel(style_method, sd)
         base_column_config = dfviewer_config['column_config']
         dfviewer_config['column_config'] =  merge_column_config(
             base_column_config, self.column_config_overrides)
