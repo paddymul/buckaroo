@@ -19,6 +19,8 @@ DFVIEWER_CONFIG_DEFAULT = {
                        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}],
+                   'first_col_config': {'col_name': 'index',
+                       'displayer_args': {'displayer': 'obj'}},
                    'component_config' : {},
                    'extra_grid_config': {},
 }
@@ -71,6 +73,8 @@ def test_custom_dataflow():
                        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}],
+                   'first_col_config': {'col_name': 'index',
+                       'displayer_args': {'displayer': 'obj'}},
                    'component_config' : {},
                    'extra_grid_config': {},
     }

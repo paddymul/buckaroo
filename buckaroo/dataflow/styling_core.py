@@ -145,15 +145,6 @@ MultiIndexColumnConfig = TypedDict('MultiIndexColumnConfig', {
 })
 ColumnConfig = Union[NormalColumnConfig, MultiIndexColumnConfig]
 
-DFDisplayArgs = TypedDict('DFDisplayArgs', {
-    'col_path': List[str],
-    'field': str,
-    'displayer_args': DisplayerArgs,
-    'color_map_config': NotRequired[ColorMappingConfig],
-    'tooltip_config': NotRequired[TooltipConfig],
-    'ag_grid_specs': NotRequired[Dict[str, Any]]  # AGGrid_ColDef
-})
-
 
 PinnedRowConfig = TypedDict('PinnedRowConfig', {
     'primary_key_val': str,
@@ -170,11 +161,10 @@ ComponentConfig = TypedDict('ComponentConfig', {
     'className': NotRequired[str]
 })
 
-
-
 DFViewerConfig = TypedDict('DFViewerConfig', {
     'pinned_rows': List[PinnedRowConfig],
     'column_config': List[ColumnConfig],
+    'first_col_config': ColumnConfig,  # basically for the pandas index
     'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
     'component_config': NotRequired[ComponentConfig]
 })
@@ -197,14 +187,6 @@ EMPTY_DF_DISPLAY_ARG: DisplayArgs = {
 
 SENTINEL_DF_1 = pd.DataFrame({'foo'  :[10, 20], 'bar' : ["asdf", "iii"]})
 SENTINEL_DF_2 = pd.DataFrame({'col1' :[55, 55], 'col2': ["pppp", "333"]})
-
-
-DFViewerConfig = TypedDict('DFViewerConfig', {
-    'pinned_rows': List[PinnedRowConfig],
-    'column_config': List[ColumnConfig],
-    'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
-    'component_config': NotRequired[ComponentConfig]
-})
 
 
 def merge_sds(*sds):
@@ -310,7 +292,19 @@ class StylingAnalysis(ColAnalysis):
         return cls.fix_column_config(col_name, {'displayer_args': {'displayer': 'obj'}})
 
     @classmethod
-    def style_columns(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
+    def get_dfviewer_config(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
+        index_config : ColumnConfig = cls.default_styling('index')
+        return {
+            'pinned_rows': cls.pinned_rows,
+            'column_config': cls.style_columns(sd, df),
+            'first_col_config':  index_config,
+            'extra_grid_config': cls.extra_grid_config,
+            'component_config': cls.component_config
+        }
+
+    
+    @classmethod
+    def style_columns(cls, sd:SDType, df:pd.DataFrame) -> List[ColumnConfig]:
         ret_col_config: List[ColumnConfig] = []
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
@@ -345,10 +339,5 @@ class StylingAnalysis(ColAnalysis):
             if base_style.get('merge_rule') == 'hidden':
                 continue
             ret_col_config.append(base_style)
-            
-        return {
-            'pinned_rows': cls.pinned_rows,
-            'column_config': ret_col_config,
-            'extra_grid_config': cls.extra_grid_config,
-            'component_config': cls.component_config
-        }
+        return ret_col_config
+    
