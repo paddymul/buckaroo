@@ -1,3 +1,4 @@
+
 import polars as pl
 from polars import functions as F
 import numpy as np
@@ -5,6 +6,7 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_produce_series_df)
 from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
+
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget, PolarsBuckarooInfiniteWidget
 from buckaroo.dataflow.dataflow import StylingAnalysis
@@ -18,7 +20,6 @@ def test_basic_instantiation():
 EXPECTED_DF_VIEWER_CONFIG = {
     'pinned_rows': [],
     'column_config': [
-        {'col_name': 'index', 'displayer_args': {'displayer': 'obj'}},
         {'col_name': 'normal_int_series', 'displayer_args': {'displayer': 'obj'}}],
     'first_col_config': {'col_name': 'index',
                          'displayer_args': {'displayer': 'obj'}},
@@ -88,7 +89,7 @@ def test_pandas_all_stats():
 
     just make sure this doesn't fail"""
     from buckaroo.buckaroo_widget import BuckarooWidget
-    from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
+
     import pandas as pd
 
     pd_test_df = pd.DataFrame({
@@ -115,8 +116,7 @@ def test_pandas_all_stats():
 
     sbw = SimpleBuckaroo(pd_test_df)
     assert sbw.dataflow.merged_sd == {
-        'index': {'mean': 2.5, 'null_count': 0, 'quin99': 4.0, 'col_name':'index'},
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'col_name':'normal_int_series'}}
+        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
 
