@@ -3,7 +3,7 @@ from polars import functions as F
 import numpy as np
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_produce_series_df)
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget, PolarsBuckarooInfiniteWidget

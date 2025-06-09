@@ -1,5 +1,5 @@
 from buckaroo.dataflow.dataflow import StylingAnalysis
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
+from buckaroo.pluggable_analysis_framework.col_analysis import (ColAnalysis)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 import polars as pl 
 from polars.testing import assert_frame_equal

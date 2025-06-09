@@ -21,7 +21,7 @@ from .customizations.histogram import (Histogram)
 from .customizations.pd_autoclean_conf import (CleaningConf, NoCleaningConf, AggressiveAC, ConservativeAC)
 from .customizations.styling import (DefaultSummaryStatsStyling, DefaultMainStyling, CleaningDetailStyling)
 from .pluggable_analysis_framework.analysis_management import DfStats
-from .pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis
+from .pluggable_analysis_framework.col_analysis import ColAnalysis
 from buckaroo.extension_utils import copy_extend
 
 from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj, to_parquet

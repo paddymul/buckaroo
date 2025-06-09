@@ -3,7 +3,7 @@ import pytest
 import pandas as pd
 from buckaroo.ddd_library import get_multi_index_cols_df
 from buckaroo.serialization_utils import (
-    is_col_dt_safe, is_dataframe_datetime_safe, check_and_fix_df, pd_to_obj,
+    is_ser_dt_safe, is_dataframe_datetime_safe, check_and_fix_df, pd_to_obj,
     to_parquet, DuplicateColumnsException)
 
 
@@ -20,16 +20,16 @@ dt_index_with_tz = pd.DatetimeIndex(pd.to_datetime(dt_strs).tz_convert('UTC'))
 
 def test_is_col_dt_safe():
     # it works for non dt series
-    assert is_col_dt_safe(pd.Series(dt_strs)) is True
-    assert is_col_dt_safe(pd.Index(dt_strs)) is True
-    assert is_col_dt_safe(pd.RangeIndex(0, 3)) is True
+    assert is_ser_dt_safe(pd.Series(dt_strs)) is True
+    assert is_ser_dt_safe(pd.Index(dt_strs)) is True
+    assert is_ser_dt_safe(pd.RangeIndex(0, 3)) is True
     #no tz
-    assert is_col_dt_safe(dt_series) is True
-    assert is_col_dt_safe(dt_index_series) is False
-    assert is_col_dt_safe(dt_index_series_with_tz) is True
-    assert is_col_dt_safe(dt_series_with_tz) is True
-    assert is_col_dt_safe(dt_index) is False
-    assert is_col_dt_safe(dt_index_with_tz) is True
+    assert is_ser_dt_safe(dt_series) is True
+    assert is_ser_dt_safe(dt_index_series) is False
+    assert is_ser_dt_safe(dt_index_series_with_tz) is True
+    assert is_ser_dt_safe(dt_series_with_tz) is True
+    assert is_ser_dt_safe(dt_index) is False
+    assert is_ser_dt_safe(dt_index_with_tz) is True
 
 def test_is_dataframe_datetime_safe():
     assert is_dataframe_datetime_safe(pd.DataFrame({'a':dt_strs})) is True

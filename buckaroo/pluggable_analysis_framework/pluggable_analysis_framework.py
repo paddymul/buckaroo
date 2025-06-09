@@ -1,6 +1,6 @@
 import graphlib
 from collections import OrderedDict
-from .col_analysis import AObjs, ColAnalysis
+from .col_analysis import AObjs
 
     
 class NotProvidedException(Exception):

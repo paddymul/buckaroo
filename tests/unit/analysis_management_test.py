@@ -1,6 +1,6 @@
 import unittest
 
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
 
 from buckaroo.pluggable_analysis_framework.analysis_management import (

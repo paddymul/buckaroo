@@ -1,4 +1,4 @@
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
+from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
 from buckaroo.jlisp.lisp_utils import sA
 from buckaroo.auto_clean.heuristic_lang import get_top_score

@@ -1,11 +1,12 @@
-import pandas as pd
-
 """
 THe dastardly dataframe dataset.
 
 The weirdest dataframes that cause trouble frquently
 
 """
+
+import pandas as pd
+import numpy as np
 
 def get_basic_df():
     return pd.DataFrame({'a':[10,20,30]})
