@@ -179,7 +179,7 @@ class AnalysisPipeline(object):
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
         return output_df, errs
 
-    def add_analysis(self, new_aobj):
+    def add_analysis(self, new_aobj:Type[ColAnalysis]):
         new_cname = new_aobj.cname()
         new_aobj_set = []
         for aobj in self.ordered_a_objs:
@@ -202,7 +202,7 @@ class DfStats(object):
     ap_class = AnalysisPipeline
 
     @classmethod
-    def verify_analysis_objects(kls, col_analysis_objs):
+    def verify_analysis_objects(kls, col_analysis_objs:AObjs):
         kls.ap_class(col_analysis_objs)
 
     def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
@@ -230,7 +230,7 @@ class DfStats(object):
     def presentation_sdf(self):
         raise Exception("deprecated")
 
-    def add_analysis(self, a_obj):
+    def add_analysis(self, a_obj:Type[ColAnalysis]):
         passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
         #if you're adding analysis interactively, of course you want debug info... I think
         self.sdf, errs = self.ap.process_df(self.df, debug=True)

@@ -1,7 +1,5 @@
-from typing_extensions import TypeAlias
 import graphlib
 from collections import OrderedDict
-from typing import List, Union, Any, Mapping, Tuple, Callable, Dict
 from .col_analysis import AObjs, ColAnalysis
 
     
