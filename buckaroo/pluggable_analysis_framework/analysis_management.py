@@ -15,11 +15,11 @@ from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATE
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
  order_analysis, check_solvable)
 from buckaroo.pluggable_analysis_framework.col_analysis import (
-    ColAnalysis, ErrDict, SDType)
+    AObjs, ColAnalysis, ErrDict, SDType)
 
 
 def produce_series_df(
-    df:pd.DataFrame, ordered_objs:List[Type[ColAnalysis]],
+        df:pd.DataFrame, ordered_objs:AObjs,
     df_name:str='test_df', debug:bool=False)-> Tuple[SDType, ErrDict]:
     """ just executes the series methods
 
@@ -60,7 +60,9 @@ def produce_series_df(
 
 
 
-def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=False):
+def produce_summary_df(
+    df:pd.DataFrame, series_stats:SDType,
+    ordered_objs:AObjs, df_name='test_df', debug=False):
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
     then it produces a summary dataframe
@@ -107,7 +109,8 @@ class AnalysisPipeline(object):
     #full_produce_func: List[Callable[[DFT, List[AT], str, bool], Any]] =
 
     @staticmethod
-    def full_produce_summary_df(df, ordered_objs, df_name='test_df', debug=False):
+    def full_produce_summary_df(
+        df:pd.DataFrame, ordered_objs:AObjs, df_name='test_df', debug=False):
         if len(df) == 0:
             return {}, {}
 
@@ -132,25 +135,27 @@ class AnalysisPipeline(object):
         return summary_df, series_errs
 
     style_method = None
-    
-    def __init__(self, analysis_objects, unit_test_objs=True):
+    ordered_a_objs: AObjs
+    def __init__(self, analysis_objects:AObjs, unit_test_objs=True):
 
         self.summary_stats_display = "all"
         self.unit_test_objs = unit_test_objs
         self.verify_analysis_objects(analysis_objects)
 
-    def process_summary_facts_set(self):
+    def process_summary_facts_set(self) -> bool:
         all_provided = []
         for a_obj in self.ordered_a_objs:
             all_provided.extend(list(a_obj.provides_defaults.keys()))
 
         self.provided_summary_facts_set = set(all_provided)
+        return True
 
 
-    def verify_analysis_objects(self, analysis_objects):
+    def verify_analysis_objects(self, analysis_objects:AObjs) -> bool:
         self.ordered_a_objs = order_analysis(analysis_objects)
         check_solvable(self.ordered_a_objs)
         self.process_summary_facts_set()
+        return True
 
     def unit_test(self):
         """test a single, or each col_analysis object with a set of commonly difficult series.

@@ -2,13 +2,13 @@ from typing_extensions import TypeAlias
 import graphlib
 from collections import OrderedDict
 from typing import List, Union, Any, Mapping, Tuple, Callable, Dict
-from .col_analysis import ColAnalysis
+from .col_analysis import AObjs, ColAnalysis
 
     
 class NotProvidedException(Exception):
     pass
 
-def check_solvable(a_objs:List[ColAnalysis]) -> None:
+def check_solvable(a_objs:AObjs) -> None:
     """
     checks that all of the required  inputs are provided by another analysis object.
     """
@@ -42,7 +42,7 @@ def clean_list(full_class_list):
 class SelfCycle(Exception):
     pass
 
-def order_analysis(a_objs):
+def order_analysis(a_objs:AObjs) -> AObjs:
     """order a set of col analysis objects such that the dag of their
     provides_summary and requires_summary is ordered for computation
     """
