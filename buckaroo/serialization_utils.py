@@ -1,16 +1,17 @@
 from io import BytesIO
 import json
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from pandas._libs.tslibs import timezones
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 from fastparquet import json as fp_json
 import logging
 logger = logging.getLogger()
 
-def is_col_dt_safe(col_or_index):
-    if isinstance(col_or_index.dtype, DatetimeTZDtype):
-        dt = col_or_index.dtype
+#realy pd.Series
+def is_ser_dt_safe(ser:Any) -> bool:
+    if isinstance(ser.dtype, DatetimeTZDtype):
+        dt = ser.dtype
         if timezones.is_utc(dt.tz):
             return True
         elif hasattr(dt.tz, 'zone'):
@@ -18,20 +19,20 @@ def is_col_dt_safe(col_or_index):
         return False
     return True
 
-def is_dataframe_datetime_safe(df):
-    for col in df:
-        if not is_col_dt_safe(df[col]):
+def is_dataframe_datetime_safe(df:pd.DataFrame) -> bool:
+    for col in df.columns:
+        if not is_ser_dt_safe(df[col]):
             return False
-    if not is_col_dt_safe(df.index):
+    if not is_ser_dt_safe(df.index):
         return False
     return True
 
-def fix_df_dates(df):
-    for col in df:
-        if not is_col_dt_safe(df[col]):
+def fix_df_dates(df:pd.DataFrame) -> pd.DataFrame:
+    for col in df.columns:
+        if not is_ser_dt_safe(df[col]):
             print("col", col)
             df[col] = pd.to_datetime(df[col], utc=True)
-    if not is_col_dt_safe(df.index):
+    if not is_ser_dt_safe(df.index):
         df.index = df.index.tz_convert('UTC')
     return df
 
@@ -39,7 +40,7 @@ class DuplicateColumnsException(Exception):
     pass
 
 
-def check_and_fix_df(df):
+def check_and_fix_df(df:pd.DataFrame) -> pd.DataFrame:
     if not df.columns.is_unique:
         print("Your dataframe has duplicate columns. Buckaroo requires distinct column names")
         raise DuplicateColumnsException("Your dataframe has duplicate columns. Buckaroo requires distinct column names")
@@ -123,6 +124,7 @@ def pd_to_obj(df:pd.DataFrame) -> Dict[str, Any]:
     if multi_col_idx:
         old_col_index = df.columns
         temp_col_index = pd.Index(df.columns.to_list(), tupleize_cols=False)
+        
         df.columns = temp_col_index
         
     obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))

@@ -3,7 +3,8 @@ from typing import Iterable, TypedDict, Union, List, Dict, Any, Literal
 from typing_extensions import NotRequired, TypeAlias
 
 import pandas as pd
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis, ColMeta, SDType)
+from buckaroo.df_util import ColIdentifier
+from buckaroo.pluggable_analysis_framework.col_analysis import (ColAnalysis, ColMeta, SDType)
 
 logger = logging.getLogger()
 
@@ -217,7 +218,6 @@ def merge_column(base, new):
     return ret
 
 
-ColIdentifier:TypeAlias = Union[Iterable[str], str]
 OverrideColumnConfig:TypeAlias = Dict[ColIdentifier, BaseColumnConfig]
 
 def merge_column_config(styled_column_config:List[ColumnConfig], overide_column_configs:OverrideColumnConfig) -> List[ColumnConfig]:

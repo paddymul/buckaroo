@@ -2,93 +2,13 @@ from typing_extensions import TypeAlias
 import graphlib
 from collections import OrderedDict
 from typing import List, Union, Any, Mapping, Tuple, Callable, Dict
-
-
-SDVals: TypeAlias = Union[str, int, float, bool] #pd.series too, but don't know how
-ColMeta: TypeAlias = Dict[str, SDVals]
-#col_name, measure_name, measure_val
-SDType: TypeAlias = Dict[str, ColMeta]
-
-
-def to_digits(n, b):
-    """Convert a positive number n to its digit representation in base b."""
-    if n == 0:
-        return [0]
-    digits = []
-    while n > 0:
-        digits.insert(0, n % b)
-        n  = n // b
-    
-    return digits
-
-def to_chars(n:int):
-    digits = to_digits(n, 26)
-    return "".join(map(lambda x: chr(x+97), digits))
-
-
-class ColAnalysis:
-    """
-    Col Analysis runs on a single column
-
-    this is the pandas based implementation
-    """
-    requires_raw = False
-    requires_summary:List[str] = [] # What summary stats does this analysis provide
-
-    provides_series_stats:List[str] = [] # what does this provide at a series level
-    provides_defaults: ColMeta = {}
-
-
-
-    @classmethod
-    def full_provides(kls):
-        if not isinstance(kls.provides_defaults, dict):
-            raise Exception("no provides Defaults for %r" %kls)
-        a = kls.provides_series_stats.copy()
-        #I can't figure out why the property won't work here
-        a.extend(list(kls.provides_defaults.keys()))
-        return a
-
-    @classmethod
-    def verify_no_cycle(kls):
-        requires = set(kls.requires_summary)
-        provides = set(kls.provides_defaults.keys())
-        if len(requires.intersection(provides)) == 0:
-            return True
-        return False
-
-    summary_stats_display:Union[List[str], None] = None
-    quiet = False
-    quiet_warnings = False
-    
-    @staticmethod
-    def series_summary(sampled_ser, ser):
-        return {}
-
-    @staticmethod
-    def computed_summary(summary_dict):
-        return {}
-
-    @staticmethod
-    def column_order(sampled_ser, summary_ser):
-        pass
-
-    @staticmethod
-    def column_config(summary_dict): # -> ColumnConfig partial without col_name
-        pass
-
-    @classmethod
-    def cname(kls):
-        return kls.__qualname__
-
-    select_clauses:List[Any] = []
-    column_ops: Mapping[str, Tuple[List[Any], Callable[[Any], Any]]] = {}
+from .col_analysis import ColAnalysis
 
     
 class NotProvidedException(Exception):
     pass
 
-def check_solvable(a_objs):
+def check_solvable(a_objs:List[ColAnalysis]) -> None:
     """
     checks that all of the required  inputs are provided by another analysis object.
     """

@@ -5,7 +5,7 @@ import warnings
 import pandas as pd
 from traitlets import Unicode, Any, observe, HasTraits, Dict
 
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import ColAnalysis, SDType
+from buckaroo.pluggable_analysis_framework.col_analysis import ColAnalysis, SDType
 from ..serialization_utils import pd_to_obj    
 from buckaroo.pluggable_analysis_framework.utils import (filter_analysis)
 from buckaroo.pluggable_analysis_framework.analysis_management import DfStats

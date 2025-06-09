@@ -1,35 +1,43 @@
 from collections import defaultdict 
 import traceback
+from typing import Dict, Tuple, Type, List
+from typing_extensions import TypeAlias
 import warnings
 
 import pandas as pd
 import numpy as np
 
 
+from buckaroo.df_util import old_col_new_col
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
 from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
-    order_analysis, check_solvable)
+ order_analysis, check_solvable)
+from buckaroo.pluggable_analysis_framework.col_analysis import (
+    ColAnalysis, ErrDict, SDType)
 
-def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
+
+def produce_series_df(
+    df:pd.DataFrame, ordered_objs:List[Type[ColAnalysis]],
+    df_name:str='test_df', debug:bool=False)-> Tuple[SDType, ErrDict]:
     """ just executes the series methods
 
     """
-    errs = {}
-    series_stats = defaultdict(lambda: {})
+    errs: ErrDict = {}
+    series_stats: SDType = defaultdict(lambda: {})
 
-    cols = df.columns.copy()
-    for ser_name in cols:
-        ser = df[ser_name]
-        #FIXME: actually sample the series.  waiting until I have time
-        #to proeprly benchmark
+    for orig_ser_name, rewritten_col_name in old_col_new_col(df):
+        ser = df[orig_ser_name]
         sampled_ser = ser
-        series_stats[ser_name]['col_name'] = ser_name
+        #series_stats[rewritten_col_name]['col_name'] = orig_ser_name
+        #series_stats[orig_ser_name]['col_name'] = orig_ser_name
+        series_stats[rewritten_col_name]['orig_col_name'] = orig_ser_name
+        series_stats[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
         for a_kls in ordered_objs:
 
 
-            col_stat_dict = a_kls.provides_defaults.copy()
+            col_stat_dict: SDType = a_kls.provides_defaults.copy()
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
@@ -40,10 +48,11 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
                 else:
                     col_stat_dict.update(a_kls.series_summary(sampled_ser, ser))
 
-                series_stats[ser_name].update(col_stat_dict)
+                series_stats[orig_ser_name].update(col_stat_dict)
+                #series_stats[rewritten_col_name].update(col_stat_dict)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[(ser_name, "series_summary")] = e, a_kls
+                    errs[(orig_ser_name, "series_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
