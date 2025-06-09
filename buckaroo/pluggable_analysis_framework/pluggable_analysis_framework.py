@@ -41,12 +41,6 @@ class ColAnalysis:
 
 
     @classmethod
-    @property
-    def provides_summary(kls):
-        return list(kls.provides_defaults.keys())
-
-
-    @classmethod
     def full_provides(kls):
         if not isinstance(kls.provides_defaults, dict):
             raise Exception("no provides Defaults for %r" %kls)
