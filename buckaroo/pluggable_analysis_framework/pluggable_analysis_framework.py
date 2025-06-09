@@ -10,6 +10,22 @@ ColMeta: TypeAlias = Dict[str, SDVals]
 SDType: TypeAlias = Dict[str, ColMeta]
 
 
+def to_digits(n, b):
+    """Convert a positive number n to its digit representation in base b."""
+    if n == 0:
+        return [0]
+    digits = []
+    while n > 0:
+        digits.insert(0, n % b)
+        n  = n // b
+    
+    return digits
+
+def to_chars(n:int):
+    digits = to_digits(n, 26)
+    return "".join(map(lambda x: chr(x+97), digits))
+
+
 class ColAnalysis:
     """
     Col Analysis runs on a single column
