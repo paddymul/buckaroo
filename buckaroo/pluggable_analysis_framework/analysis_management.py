@@ -19,18 +19,9 @@ def produce_series_df(df, ordered_objs, df_name='test_df', debug=False):
     errs = {}
     series_stats = defaultdict(lambda: {})
 
-    cols = []
-    if hasattr(df, "index"):
-        #hack around polars not having indexes"
-        cols.append("index")
-    cols.extend(df.columns)
-    for possib_ser_name in cols:
-        if possib_ser_name == "index":
-            ser_name = df.index.name or "index"
-            ser = df.index.to_series()
-        else:
-            ser_name = possib_ser_name
-            ser = df[ser_name]
+    cols = df.columns.copy()
+    for ser_name in cols:
+        ser = df[ser_name]
         #FIXME: actually sample the series.  waiting until I have time
         #to proeprly benchmark
         sampled_ser = ser
@@ -68,18 +59,8 @@ def produce_summary_df(df, series_stats, ordered_objs, df_name='test_df', debug=
     errs = {}
     summary_col_dict = {}
     cols = []
-    if hasattr(df, "index"):
-        #hack around polars not having indexes"
-        cols.append("index")
     cols.extend(df.columns)
-    for possib_ser_name in cols:
-        if possib_ser_name == "index":
-            ser_name = df.index.name or "index"
-        else:
-            ser_name = possib_ser_name
-    #figure out how to add in "index"... but just for table_hints
-    #for ser_name in df.columns:
-        #base_summary_dict = series_stats[ser_name]
+    for ser_name in cols:
         base_summary_dict = series_stats.get(ser_name, {})
         for a_kls in ordered_objs:
             try:

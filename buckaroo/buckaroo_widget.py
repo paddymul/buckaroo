@@ -219,9 +219,6 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
     def _sd_to_jsondf(self, sd):
         """exists so this can be overriden for polars  """
         temp_sd = sd.copy()
-        #FIXME add actual test around weird index behavior
-        if 'index' in temp_sd:
-            del temp_sd['index']
         return self._df_to_obj(pd.DataFrame(temp_sd))
 
 

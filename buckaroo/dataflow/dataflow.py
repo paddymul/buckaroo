@@ -183,14 +183,13 @@ class DataFlow(HasTraits):
             return self.processed_result[1]
         return {}
 
-    def _get_summary_sd(self, df):
+    def _get_summary_sd(self, df:pd.DataFrame) -> Tuple[SDType, TAny]:
         analysis_klasses = self.analysis_klasses
         if analysis_klasses == "foo":
             return {'some-col': {'foo':8}}, {}
         if analysis_klasses == "bar":
             return {'other-col': {'bar':10}}, {}
-        index_name = df.index.name or "index"
-        ret_summary = {index_name: {}}
+        ret_summary = {}
         for col in df.columns:
             ret_summary[col] = {}
         return ret_summary, {}
@@ -404,9 +403,6 @@ class CustomizableDataflow(DataFlow):
     def _sd_to_jsondf(self, sd:SDType):
         """exists so this can be overriden for polars  """
         temp_sd = sd.copy()
-        #FIXME add actual test around weird index behavior
-        if 'index' in temp_sd:
-            del temp_sd['index']
         return self._df_to_obj(pd.DataFrame(temp_sd))
 
     def _df_to_obj(self, df:pd.DataFrame) -> TDict[str, TAny]:

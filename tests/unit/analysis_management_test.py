@@ -72,30 +72,25 @@ class TestAnalysisPipeline(unittest.TestCase):
         sdf, _errs = produce_series_df(
             test_df, [Len], 'test_df', debug=True)
         #dict(**sdf) makes the types equal and leads to better error messages if there is a problem
-        assert dict(**sdf) ==     {
-        'empty_na_ser': {
-          'col_name': 'empty_na_ser',
-            'len': 4,
-        },
-        'float_nan_ser': {
-           'col_name': 'float_nan_ser',
-            'len': 4,
-        },
-        'index': {
-           'col_name': 'index',
-            'len': 4,
-        },
-        'normal_int_series': {
-           'col_name': 'normal_int_series',
-            'len': 4,
-        },
-    }
+        assert dict(**sdf) == {
+            'empty_na_ser': {
+                'col_name': 'empty_na_ser',
+                'len': 4,
+            },
+            'float_nan_ser': {
+                'col_name': 'float_nan_ser',
+                'len': 4,
+            },
+            'normal_int_series': {
+                'col_name': 'normal_int_series',
+                'len': 4,
+            }
+        }
 
         sdf2, _errs = produce_series_df(
             test_df, [DistinctCount], 'test_df', debug=True)
         assert dict(**sdf2) == {
             'normal_int_series': {'distinct_count': 4, 'col_name':'normal_int_series'},
-            'index':  {'distinct_count': 4,  'col_name':'index'},
             'empty_na_ser': {'distinct_count':0,  'col_name':'empty_na_ser'},
             'float_nan_ser': {'distinct_count':2,  'col_name':'float_nan_ser'}}
 
@@ -103,7 +98,6 @@ class TestAnalysisPipeline(unittest.TestCase):
             test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
         assert dict(**sdf3) == {
             'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'col_name':'normal_int_series'},
-            'index':             {'distinct_count': 4, 'distinct_per':0, 'col_name':'index'},
             'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'col_name':'empty_na_ser'},
             'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'col_name':'float_nan_ser'}}
 
@@ -143,7 +137,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         err_key = list(errs.keys())[0]
         err_val = list(errs.values())[0]
-        assert err_key == ('index', 'computed_summary')
+        assert err_key == ('empty_na_ser', 'computed_summary')
         assert err_val[1] ==  AlwaysErr
         #can't compare instances of Exception classes
         # assert errs == {

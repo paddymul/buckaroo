@@ -24,6 +24,18 @@ def get_tuple_cols_df(rows=15) -> pd.DataFrame:
 def df_with_infinity() -> pd.DataFrame:
     return pd.DataFrame({'a': [np.nan, np.inf, np.inf * -1]})
 
+def df_with_col_named_index() -> pd.DataFrame:
+    return pd.DataFrame({'a':      ["asdf", "foo_b", "bar_a", "bar_b", "bar_c"],
+                         'index':  ["7777", "ooooo", "--- -", "33333", "assdf"]})
+
+def df_with_named_index() -> pd.DataFrame:
+    """
+      someone put the effort into naming the index, you'd probably want to display that
+    """
+    return pd.DataFrame({'a':      ["asdf", "foo_b", "bar_a", "bar_b", "bar_c"]},
+                        index=pd.Index([10,20,30,40,50], name='foo'))
+df_with_named_index()
+
 """
 Mkae a duplicate column dataframe
 

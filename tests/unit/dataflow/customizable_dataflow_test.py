@@ -24,7 +24,6 @@ BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}],
                    'first_col_config': {'col_name': 'index',
@@ -35,7 +34,6 @@ DFVIEWER_CONFIG_DEFAULT = {
 DFVIEWER_CONFIG_WITHOUT_B = {
     'pinned_rows': [],
     'column_config':  [
-        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
         ## note that col_name:'b' isn't present because of the merge rule
         {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
     ],
@@ -97,7 +95,6 @@ def test_custom_dataflow():
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'displayer_args': {'displayer': 'int'}}],
                    'first_col_config': {'col_name': 'index',
@@ -132,7 +129,7 @@ def test_custom_summary_stats():
     summary_sd = dc_dfc.widget_args_tuple[2]
     print(summary_sd)
     print("^"*80)
-    assert summary_sd == {'index': {'distinct_count': 3, 'col_name':'index'}, 
+    assert summary_sd == {
                           'a': {'distinct_count':2, 'col_name':'a'},
                           'b': {'distinct_count':3, 'col_name':'b'}}
     assert list(summary_sd.keys()) == ['index', 'a', 'b']
@@ -147,7 +144,6 @@ def test_init_sd():
     print(summary_sd)
     print("^"*80)
     assert dc_dfc.merged_sd == {
-        'index': {'distinct_count': 3, 'col_name':'index'}, 
         'a': {'distinct_count':2, 'foo':8, 'col_name':'a'},
         'b': {'distinct_count':3, 'col_name':'b'}}
 
@@ -210,7 +206,6 @@ class HidePostProcessingAnalysis(ColAnalysis):
 SENTINEL_CONFIG_WITHOUT_INT = {
     'pinned_rows': [],
     'column_config':  [
-        {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
         {'col_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'}},
     ],
     'first_col_config': {'col_name': 'index',

@@ -308,8 +308,6 @@ class StylingAnalysis(ColAnalysis):
         ret_col_config: List[ColumnConfig] = []
         #this is necessary for polars to add an index column, which is
         #required so that summary_stats makes sense
-        if 'index' not in sd:
-            ret_col_config.append(cls.default_styling(cls.get_index_name(df)))
             
         for col, col_meta in sd.items():
             if col_meta.get('merge_rule', None) == 'hidden':
