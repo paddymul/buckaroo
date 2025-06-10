@@ -127,7 +127,7 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         sdf, _errs = produce_series_df(
             test_multi_index_df, [Len], 'test_df', debug=True)
-        assert sdf[('foo', 'normal_int_series')] == {'orig_col_name': ('foo', 'normal_int_series'), 'len': 4}
+        assert sdf['a'] == {'orig_col_name': ('foo', 'normal_int_series'), 'len': 4, 'rewritten_col_name':'a'}
 
         
     def test_full_produce_summary_df(self):
@@ -160,7 +160,8 @@ class TestAnalysisPipeline(unittest.TestCase):
 
         err_key = list(errs.keys())[0]
         err_val = list(errs.values())[0]
-        assert err_key == ('empty_na_ser', 'computed_summary')
+        #assert err_key == ('empty_na_ser', 'computed_summary')
+        assert err_key == ('a', 'computed_summary')
         assert err_val[1] ==  AlwaysErr
         #can't compare instances of Exception classes
         # assert errs == {
@@ -187,7 +188,8 @@ class TestAnalysisPipeline(unittest.TestCase):
                 return dict(foo=8)
         assert ap.add_analysis(Foo) == (True, []) #verify no errors thrown
         sdf, _unused_errs = ap.process_df(df)
-        self.assertEqual(sdf['tripduration']['foo'], 8)
+        #self.assertEqual(sdf['tripduration']['foo'], 8)
+        self.assertEqual(sdf['a']['foo'], 8)
 
     def test_add_buggy_aobj(self):
         ap = AnalysisPipeline([TypingStats, DefaultSummaryStats])
@@ -214,7 +216,7 @@ class TestAnalysisPipeline(unittest.TestCase):
                 return dict(foo=8)
         ap.add_analysis(Foo)
         sdf, _unused_errs = ap.process_df(df)
-        self.assertEqual(sdf['tripduration']['foo'], 8)
+        self.assertEqual(sdf['a']['foo'], 8)
         #18 facts returned about tripduration
         #FIXME
         #self.assertEqual(len(sdf['tripduration']), 18)
@@ -228,7 +230,7 @@ class TestAnalysisPipeline(unittest.TestCase):
                 return dict(foo=9)
         ap.add_analysis(Foo)
         sdf2, _unused_errs = ap.process_df(df)
-        self.assertEqual(sdf2['tripduration']['foo'], 9)
+        self.assertEqual(sdf2['a']['foo'], 9)
         #still 18 facts returned about tripduration
         #self.assertEqual(len(sdf2['tripduration']), 18)
         #Create an updated Foo that returns 9
