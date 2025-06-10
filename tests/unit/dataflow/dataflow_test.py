@@ -118,19 +118,17 @@ def test_merge_column_config():
 	                               'col_name': 'Volume_colors'}}}
 
     computed_column_config =     [
-            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'foo', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'bar', 'displayer_args': {'displayer': 'obj'}}]
+            {'header_name':'foo', 'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+            {'header_name':'bar', 'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
 
     merged = dft.merge_column_config(
         computed_column_config, overrides)
 
     expected = [
-            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'foo', 'displayer_args': {'displayer': 'obj'},
+            {'header_name':'foo', 'col_name': 'a', 'displayer_args': {'displayer': 'obj'},
              'color_map_config' : {'color_rule': 'color_from_column',
 	                               'col_name': 'Volume_colors'}},
-            {'col_name':'bar', 'displayer_args': {'displayer': 'int'}}]
+            {'header_name':'bar', 'col_name': 'b', 'displayer_args': {'displayer': 'int'}}]
     assert expected == merged
         
 
@@ -138,17 +136,14 @@ def test_merge_column_config_hide():
     overrides = {
         'bar' : {'merge_rule':'hidden'}}
     computed_column_config =     [
-
-            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'foo', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'bar', 'displayer_args': {'displayer': 'obj'}}]
+            {'header_name':'foo', 'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+            {'header_name':'bar', 'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
 
     merged = dft.merge_column_config(
         computed_column_config, overrides)
 
     expected = [
-            {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-            {'col_name':'foo',   'displayer_args': {'displayer': 'obj'}}]
+            {'header_name':'foo', 'col_name':'a', 'displayer_args': {'displayer': 'obj'}}]
         
     assert expected == merged
 

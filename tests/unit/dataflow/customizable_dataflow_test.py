@@ -17,7 +17,7 @@ EMPTY_DF_JSON = {
                 'column_config': []},
             'data': []}
 
-BASIC_DF = pd.DataFrame({'a': [10, 20, 20], 'b':['foo', 'bar', 'baz']})
+BASIC_DF = pd.DataFrame({'foo_col': [10, 20, 20], 'bar_col':['foo', 'bar', 'baz']})
 BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
                         {'index':1, 'a':20, 'b':'bar'},
                         {'index':2, 'a':20, 'b':'baz'}]
@@ -130,9 +130,9 @@ def test_custom_summary_stats():
     print(summary_sd)
     print("^"*80)
     assert summary_sd == {
-                          'a': {'distinct_count':2, 'col_name':'a'},
-                          'b': {'distinct_count':3, 'col_name':'b'}}
-    assert list(summary_sd.keys()) == ['index', 'a', 'b']
+                          'a': {'distinct_count':2, 'rewritten_col_name':'a', 'orig_col_name':'foo_col', },
+                          'b': {'distinct_count':3, 'rewritten_col_name':'b', 'orig_col_name':'bar_col', }}
+    assert list(summary_sd.keys()) == ['a', 'b']
 
 def test_init_sd():
     class DCDFC(ACDFC):
@@ -348,8 +348,9 @@ def test_column_config_override_widget():
         column_config_overrides={
             'float_col':
             {'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}})
+        
     float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][2]
-    assert float_col_config == {'col_name': 'float_col', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}
+    assert float_col_config == {'col_name': 'c', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }, 'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'c'} }
     
 
 

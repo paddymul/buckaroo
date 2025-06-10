@@ -223,17 +223,19 @@ def merge_column(base, new):
 OverrideColumnConfig:TypeAlias = Dict[ColIdentifier, BaseColumnConfig]
 
 def merge_column_config(styled_column_config:List[ColumnConfig], overide_column_configs:OverrideColumnConfig) -> List[ColumnConfig]:
+
+    """
+      merge_rule works on orignal column names
+
+      merge_rule_rewritten works on rewritten_column names, it will be rarely used
+      """
     existing_column_config: List[ColumnConfig] = styled_column_config.copy()
     ret_column_config: List[ColumnConfig] = []
     for row in existing_column_config:
-        if 'col_name' in row:
-            # str necessary because sometimes numbers still come through
-            col: ColIdentifier = str(row['col_name']) # typing: ignore  
-        else:
-            col: ColIdentifier = row['col_path']
-            
-        if col in overide_column_configs:
-            row.update(overide_column_configs[col])
+        orig_col: ColIdentifier = row.get('header_name', None) or row.get('col_path', None)
+
+        if orig_col in overide_column_configs:
+            row.update(overide_column_configs[orig_col])
         if row.get('merge_rule', 'blank') == 'hidden':
             continue
         ret_column_config.append(row)
