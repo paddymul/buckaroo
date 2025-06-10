@@ -6,6 +6,8 @@ from pandas._libs.tslibs import timezones
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 from fastparquet import json as fp_json
 import logging
+
+from buckaroo.df_util import old_col_new_col
 logger = logging.getLogger()
 
 #realy pd.Series
@@ -116,27 +118,14 @@ def pd_to_obj(df:pd.DataFrame) -> Dict[str, Any]:
     multi_main_idx = isinstance(df.index, pd.MultiIndex)
     multi_col_idx = isinstance(df.columns, pd.MultiIndex)
 
-    if multi_main_idx:
-        old_index = df.index
-        temp_index = pd.Index(df.index.to_list(), tupleize_cols=False)
-        df.index = temp_index
-
-    if multi_col_idx:
-        old_col_index = df.columns
-        temp_col_index = pd.Index(df.columns.to_list(), tupleize_cols=False)
-        
-        df.columns = temp_col_index
-        
-    obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
-        
-
-    if multi_main_idx:
-        df.index = old_index
-    if multi_col_idx:
-        df.columns = old_col_index
-
-    return obj['data']
-
+    orig_cols = df.columns
+    new_cols = [rewritten_col_name for orig_ser_name, rewritten_col_name in old_col_new_col(df)]
+    df.columns = new_cols
+    try:
+        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+        return obj['data']
+    finally:
+        df.columns = orig_cols
 
 
 class MyJsonImpl(fp_json.BaseImpl):

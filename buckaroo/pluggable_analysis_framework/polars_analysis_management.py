@@ -2,6 +2,7 @@ import traceback
 
 import polars as pl
 
+from buckaroo.df_util import old_col_new_col
 from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 
@@ -37,10 +38,24 @@ def polars_produce_series_df(df:pl.DataFrame,
         return dict([[k, str(e)] for k in df.columns]), {}
 
     summary_dict = {}
-    for col in df.columns:
-        summary_dict[col] = {}
+    for orig_ser_name, rewritten_col_name in old_col_new_col(df):
+        ser = df[orig_ser_name]
+        sampled_ser = ser
+        #series_stats[rewritten_col_name]['col_name'] = orig_ser_name
+        #series_stats[orig_ser_name]['col_name'] = orig_ser_name
+
+        #right now I'm not doing column name rewriting for polars
+        #because I don't know that it is necessary
+        summary_dict[orig_ser_name] = {}
+        summary_dict[orig_ser_name]['orig_col_name'] = orig_ser_name
+        #summary_dict[orig_ser_name]['rewritten_col_name'] = rewritten_col_name
+        summary_dict[orig_ser_name]['rewritten_col_name'] = orig_ser_name
+
+
+
+
         for a_klass in unordered_objs:
-            summary_dict[col].update(a_klass.provides_defaults)
+            summary_dict[rewritten_col_name].update(a_klass.provides_defaults)
     first_run_dict = split_to_dicts(result_df)
 
     for col, measures in first_run_dict.items():
