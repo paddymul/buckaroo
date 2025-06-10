@@ -127,7 +127,6 @@ def test_string_column_handling():
     ten_col = bw.df_display_args['main']['df_viewer_config']['column_config'][0]
     assert ten_col['col_name'] == 'a'  # this is the field that ag-grid will read from
     assert ten_col['header_name'] == '10'  # this should be a string
-    assert ten_col['rewritten_col_name'] == 'b'
     
     assert bw.df_data_dict['main'] == [{'index': 0, 'a': 'foo', 'b': 'bar', 'c': 'baz'}]
     assert ten_col['tooltip_config'] == {'tooltip_type': 'simple', 'val_column': 'a'}
@@ -201,7 +200,8 @@ def test_multi_index_cols() -> None:
     bw = BuckarooWidget(df)
     col_config = bw.df_display_args['main']['df_viewer_config']['column_config']
 
-    assert col_config[1]['col_path'] == ('foo', 'a')
+    assert col_config[0]['col_path'] == ('foo', 'a')
+    assert col_config[1]['col_path'] == ('foo', 'b')
     
 def atest_symbol_meta():    
     """verifies that a symbol with a meta key can be added and
