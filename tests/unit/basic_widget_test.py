@@ -117,14 +117,21 @@ def test_string_column_handling():
     If the front end is passed numeric column names, nothing works, and no error is thrown
     """
     
-    df = pd.DataFrame([["a","b","c"]], columns=[10,20,30])
+    df = pd.DataFrame([["foo","bar","baz"]], columns=[10,20,30])
     bw = BuckarooWidget(df)
-    # print(bw.df_data_dict['main'])
+    print(bw.df_data_dict['main'])
     # print(bw.df_display_args['main']['df_viewer_config']['column_config'])
     #we want the column to be named the string '10' not the number t10
-    assert bw.df_display_args['main']['df_viewer_config']['column_config'][1]['col_name'] == '10'
-    assert bw.df_data_dict['main'] == [{'index': 0, '10': 'a', '20': 'b', '30': 'c'}]
-    assert bw.df_display_args['main']['df_viewer_config']['column_config'][1]['tooltip_config']['val_column'] == '10'
+
+    bw.df_display_args['main']['df_viewer_config']['column_config'][0]
+    ten_col = bw.df_display_args['main']['df_viewer_config']['column_config'][0]
+    assert ten_col['col_name'] == 'a'  # this is the field that ag-grid will read from
+    assert ten_col['header_name'] == '10'  # this should be a string
+    assert ten_col['rewritten_col_name'] == 'b'
+    
+    assert bw.df_data_dict['main'] == [{'index': 0, 'a': 'foo', 'b': 'bar', 'c': 'baz'}]
+    assert ten_col['tooltip_config'] == {'tooltip_type': 'simple', 'val_column': 'a'}
+
 
 
 def test_non_unique_column_names():

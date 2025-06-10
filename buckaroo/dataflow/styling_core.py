@@ -177,7 +177,9 @@ DisplayArgs = TypedDict('DisplayArgs', {
 
 EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
     'pinned_rows': [],
-    'column_config': []
+    'column_config': [],
+    'first_col_config': {'col_name': 'index',
+                       'displayer_args': {'displayer': 'obj'}}
 }
 
 

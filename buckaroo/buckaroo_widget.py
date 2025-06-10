@@ -27,7 +27,7 @@ from buckaroo.extension_utils import copy_extend
 from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj, to_parquet
 from .dataflow.dataflow import CustomizableDataflow
 from .dataflow.dataflow_extras import (Sampling, exception_protect)
-from .dataflow.styling_core import (ComponentConfig, OverrideColumnConfig, PinnedRowConfig, StylingAnalysis, merge_column_config)
+from .dataflow.styling_core import (ComponentConfig, DFViewerConfig, DisplayArgs, OverrideColumnConfig, PinnedRowConfig, StylingAnalysis, merge_column_config)
 from .dataflow.autocleaning import PandasAutocleaning
 from pathlib import Path
 
@@ -51,9 +51,6 @@ class PdSampling(Sampling):
         return df
     pre_limit = 1_000_000
 
-
-def sym(name):
-    return {'symbol':name}
 
 symDf = SymbolDf = {'symbol': 'df'}
 
@@ -148,7 +145,7 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
 
 
     df_data_dict = Dict({}).tag(sync=True)
-    df_display_args = Dict({}).tag(sync=True)
+    df_display_args: DisplayArgs = Dict({}).tag(sync=True)
     #information about the dataframe
     df_meta = Dict({
         'columns': 5, # dummy data
@@ -239,7 +236,7 @@ class RawDFViewerWidget(BuckarooWidgetBase):
         {'a':  5  , 'b':20, 'c': 'Paddy'},
         {'a': 58.2, 'b': 9, 'c': 'Margaret'}]).tag(sync=True)
 
-    df_viewer_config = Dict({
+    df_viewer_config: DFViewerConfig = Dict({
         'column_config': [
             { 'col_name': 'a',
               'displayer_args': { 'displayer': 'float',   'min_fraction_digits': 2, 'max_fraction_digits': 8 }},
@@ -249,7 +246,10 @@ class RawDFViewerWidget(BuckarooWidgetBase):
               'displayer_args': { 'displayer': 'string',  'min_digits': 3, 'max_digits': 5 }}],
         'pinned_rows': [
             { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' }},
-            { 'primary_key_val': 'mean', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}]}
+            { 'primary_key_val': 'mean', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}],
+        'first_col_config': {'col_name': 'index',
+                        'displayer_args': {'displayer': 'obj'}}
+        }
                             ).tag(sync=True)
 
     summary_stats_data = List([
