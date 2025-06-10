@@ -16,10 +16,9 @@ BASIC_DF = pl.DataFrame({'a': [10, 20, 20], 'b':['foo', 'bar', 'baz']})
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}],
-                   'first_col_config': {'col_name': 'index',
+                       {'col_name':'a', 'header_name':'int_col', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'b', 'header_name':'str_col', 'displayer_args': {'displayer': 'obj'}}],
+                   'first_col_config': {'col_name': 'index', 'header_name':'index',
                        'displayer_args': {'displayer': 'obj'}},
                    'component_config' : {},
                    'extra_grid_config': {},
@@ -66,6 +65,7 @@ def test_custom_dataflow():
         
     cdfc = TwoStyleDFC(BASIC_DF)
     assert_frame_equal(cdfc.dataflow.widget_args_tuple[1], BASIC_DF)
+    print(cdfc.df_display_args['main']['df_viewer_config'])
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],

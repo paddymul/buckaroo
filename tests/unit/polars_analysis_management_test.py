@@ -42,11 +42,11 @@ def test_non_full_analysis():
             F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
             cs.numeric().sum().name.map(json_postfix('sum'))]
 
-    df = pl.DataFrame({'a': [10, 20], 'b': ['', 'bar']})
+    df = pl.DataFrame({'foo_col': [10, 20], 'bar_col': ['', 'bar']})
         
     pdf = PlDfStats(df, [MixedAnalysis])
-    assert pdf.sdf == {'a': dict(empty_count=0, sum=30),
-                       'b': dict(empty_count=1, sum=0)}
+    assert pdf.sdf == {'a': dict(empty_count=0, sum=30, orig_col_name='foo_col', rewritten_col_name='a'),
+                       'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
     
 
 def test_produce_series_df():

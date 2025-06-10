@@ -37,8 +37,10 @@ def polars_produce_series_df(df:pl.DataFrame,
         traceback.print_exc()
         return dict([[k, str(e)] for k in df.columns]), {}
 
+    orig_col_to_rewritten = {}
     summary_dict = {}
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
+        orig_col_to_rewritten[orig_ser_name] = rewritten_col_name
         ser = df[orig_ser_name]
         sampled_ser = ser
         #series_stats[rewritten_col_name]['col_name'] = orig_ser_name
@@ -46,10 +48,15 @@ def polars_produce_series_df(df:pl.DataFrame,
 
         #right now I'm not doing column name rewriting for polars
         #because I don't know that it is necessary
-        summary_dict[orig_ser_name] = {}
-        summary_dict[orig_ser_name]['orig_col_name'] = orig_ser_name
-        #summary_dict[orig_ser_name]['rewritten_col_name'] = rewritten_col_name
-        summary_dict[orig_ser_name]['rewritten_col_name'] = orig_ser_name
+        # summary_dict[orig_ser_name] = {}
+        # summary_dict[orig_ser_name]['orig_col_name'] = orig_ser_name
+        # summary_dict[orig_ser_name]['rewritten_col_name'] = rewritten_col_name
+        # summary_dict[orig_ser_name]['rewritten_col_name'] = orig_ser_name
+
+        summary_dict[rewritten_col_name] = {}
+        summary_dict[rewritten_col_name]['orig_col_name'] = orig_ser_name
+        summary_dict[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
+
 
 
 
@@ -59,7 +66,8 @@ def polars_produce_series_df(df:pl.DataFrame,
     first_run_dict = split_to_dicts(result_df)
 
     for col, measures in first_run_dict.items():
-        summary_dict[col].update(measures)
+        rw_col = orig_col_to_rewritten[col]
+        summary_dict[rw_col].update(measures)
 
     for pa in unordered_objs:
         for measure_name, action_tuple in pa.column_ops.items():
