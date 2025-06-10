@@ -15,6 +15,11 @@ test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
         #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
         'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])})
+test_df = pl.DataFrame({
+        'normal_int_series' : pl.Series([1,2,3,4]),
+        #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
+        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])
+})
 
 word_only_df = pl.DataFrame({'letters': 'h o r s e'.split(' ')})
 
@@ -55,8 +60,9 @@ def test_produce_series_df():
     sdf, errs = polars_produce_series_df(
         test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
     expected = {
-        'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None},
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
+    'b': {'mean': None, 'null_count':  0, 'quin99': None, 'orig_col_name':'float_nan_ser', 'rewritten_col_name':'b'},
+    'a' :{'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'}
+}
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
 
@@ -70,8 +76,11 @@ def test_produce_series_combine_df():
     sdf, errs = polars_produce_series_df(
         test_df, [SelectOnlyAnalysis, MaxAnalysis], 'test_df', debug=True)
     expected = {
-        'float_nan_ser':      {'mean': None, 'null_count':  0, 'quin99': None, 'max': 4.8},
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'max': 4.0},
+        
+    'b': {'mean': None, 'null_count':  0, 'quin99': None,
+          'orig_col_name':'float_nan_ser', 'rewritten_col_name':'b', 'max': 4.8},
+    'a' :{'mean': 2.5,  'null_count':  0, 'quin99':  4.0,
+          'orig_col_name':'normal_int_series', 'rewritten_col_name':'a', 'max':4.0}
         }
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
@@ -113,7 +122,8 @@ def test_errors_analysis():
     key = list(errs.keys())[0]
     err = list(errs.values())[0]
 
-    assert key == ('bools', 'computed_summary')
+    #assert key == ('bools', 'computed_summary')
+    assert key == ('a', 'computed_summary')
     assert isinstance(err[0], ZeroDivisionError)
 
 def test_histogram_analysis():
@@ -125,11 +135,11 @@ def test_histogram_analysis():
 
     summary_df, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, HA_CLASSES, debug=True)
 
-    actual_cats = summary_df["categories"]["categorical_histogram"]
+    actual_cats = summary_df["a"]["categorical_histogram"]
     expected_cats = {'bar': 0.5, 'foo': 0.3, 'longtail': 0.1, 'unique': 0.1}
     assert actual_cats == expected_cats
 
-    actual_numcats = summary_df["numerical_categories"]["categorical_histogram"]
+    actual_numcats = summary_df["b"]["categorical_histogram"]
     rounded_actual_numcats = dict([(k, np.round(v,2)) for k,v in actual_numcats.items()])
     expected_categorical_histogram = {3:.3, 7:.7, 'longtail': 0.0, 'unique': 0.0}
     assert rounded_actual_numcats == expected_categorical_histogram

@@ -77,7 +77,8 @@ def polars_produce_series_df(df:pl.DataFrame,
             else:
                 sub_df = df.select(pl.col(col_selector))
             for col in sub_df.columns:
-                summary_dict[col][measure_name] = func(df[col])
+                rw_col = orig_col_to_rewritten[col]
+                summary_dict[rw_col][measure_name] = func(df[col])
                 pass
     return summary_dict, errs
 
