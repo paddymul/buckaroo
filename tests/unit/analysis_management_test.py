@@ -1,5 +1,6 @@
+import json
 import unittest
-
+from unittest import TestCase
 from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
 
@@ -45,6 +46,15 @@ class DependsA(ColAnalysis):
             raise Exception("DependsA expected 'a' in summary_dict, it wasn't there")
         return { 'b':'bar'}
 
+
+def assert_dict_eq(expected, actual):
+    expected_keys = sorted(expected.keys())
+    actual_keys = sorted(actual.keys())
+    assert expected_keys == actual_keys
+    for k in actual_keys:
+        if not json.dumps(actual[k]) == json.dumps(expected[k]):
+            assert (k, expected[k]) == (k, actual[k])
+            
 class ProvidesAComputed(ColAnalysis):
 
     provides_defaults = { 'a':'asdf'}
@@ -70,47 +80,60 @@ class TestAnalysisPipeline(unittest.TestCase):
         """just make sure this doesn't fail"""
 
         sdf, _errs = produce_series_df(
-            test_df, [Len], 'test_df', debug=True)
+            test_df, [Len, Len], 'test_df', debug=True)
         #dict(**sdf) makes the types equal and leads to better error messages if there is a problem
-        assert dict(**sdf) == {
-            'empty_na_ser': {
-                'col_name': 'empty_na_ser',
-                'len': 4,
+        assert_dict_eq({
+            'a': {
+                'orig_col_name': 'normal_int_series',
+                'len': 4, 'rewritten_col_name':'a'
             },
-            'float_nan_ser': {
-                'col_name': 'float_nan_ser',
-                'len': 4,
+            'b': {
+                'orig_col_name': 'empty_na_ser',
+                'len': 4,  'rewritten_col_name':'b'
             },
-            'normal_int_series': {
-                'col_name': 'normal_int_series',
-                'len': 4,
-            }
-        }
+            'c': {
+                'orig_col_name': 'float_nan_ser',
+                'len': 4, 'rewritten_col_name':'c'
+            },
+        },
+                       sdf)
+
+
+    maxDiff = None
+    def test_produce_series_df2(self):
+        """just make sure this doesn't fail"""
+
 
         sdf2, _errs = produce_series_df(
             test_df, [DistinctCount], 'test_df', debug=True)
-        assert dict(**sdf2) == {
-            'normal_int_series': {'distinct_count': 4, 'col_name':'normal_int_series'},
-            'empty_na_ser': {'distinct_count':0,  'col_name':'empty_na_ser'},
-            'float_nan_ser': {'distinct_count':2,  'col_name':'float_nan_ser'}}
+        assert_dict_eq({
+            'a': {'distinct_count': 4, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
+            'b': {'distinct_count':0,  'orig_col_name':'empty_na_ser', 'rewritten_col_name':'b'},
+            'c': {'distinct_count':2,  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'c'}},
+        sdf2)
+
+
+    def test_produce_series_df3(self):
+        """just make sure this doesn't fail"""
 
         sdf3, _errs = produce_series_df(
             test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-        assert dict(**sdf3) == {
-            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'col_name':'normal_int_series'},
-            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'col_name':'empty_na_ser'},
-            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'col_name':'float_nan_ser'}}
-
+        sdf3.items() == {
+            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series'},
+            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser'},
+            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser'}}.items()
     def test_produce_series_multiindex_cols_df(self):
         """just make sure this doesn't fail"""
 
         sdf, _errs = produce_series_df(
             test_multi_index_df, [Len], 'test_df', debug=True)
-        assert sdf[('foo', 'normal_int_series')] == {'col_name': ('foo', 'normal_int_series'), 'len': 4}
+        assert sdf[('foo', 'normal_int_series')] == {'orig_col_name': ('foo', 'normal_int_series'), 'len': 4}
 
         
     def test_full_produce_summary_df(self):
         """just make sure this doesn't fail"""
+        res = DistinctCount.series_summary(test_df['normal_int_series'], test_df['normal_int_series'])
+        assert res == {'distinct_count':4}
         sdf, errs = AnalysisPipeline.full_produce_summary_df(
             test_df, [DistinctCount, Len, DistinctPer], 'test_df', debug=True)
         assert errs == {}

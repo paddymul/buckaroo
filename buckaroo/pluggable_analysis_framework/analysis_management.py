@@ -48,8 +48,8 @@ def produce_series_df(
                 else:
                     col_stat_dict.update(a_kls.series_summary(sampled_ser, ser))
 
-                series_stats[orig_ser_name].update(col_stat_dict)
-                #series_stats[rewritten_col_name].update(col_stat_dict)
+                #series_stats[orig_ser_name].update(col_stat_dict)
+                series_stats[rewritten_col_name].update(col_stat_dict)
             except Exception as e:
                 if not a_kls.quiet:
                     errs[(orig_ser_name, "series_summary")] = e, a_kls
@@ -71,8 +71,8 @@ def produce_summary_df(
     summary_col_dict = {}
     cols = []
     cols.extend(df.columns)
-    for ser_name in cols:
-        base_summary_dict = series_stats.get(ser_name, {})
+    for orig_ser_name, rewritten_col_name in old_col_new_col(df):
+        base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
         for a_kls in ordered_objs:
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
@@ -86,11 +86,11 @@ def produce_summary_df(
                     base_summary_dict.update(summary_res)
             except Exception as e:
                 if not a_kls.quiet:
-                    errs[(ser_name, "computed_summary")] = e, a_kls
+                    errs[(rewritten_col_name, "computed_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
-        summary_col_dict[ser_name] = base_summary_dict
+        summary_col_dict[rewritten_col_name] = base_summary_dict
     return summary_col_dict, errs
 
 
