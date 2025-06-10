@@ -454,7 +454,10 @@ class CustomizableDataflow(DataFlow):
                                  'empty': []}
 
         temp_display_args = {}
+
         for display_name, A_Klass in self.df_display_klasses.items():
+            print("merged_sd")
+            print(merged_sd)
             df_viewer_config = A_Klass.get_dfviewer_config(merged_sd, processed_df)
             base_column_config = df_viewer_config['column_config']
             df_viewer_config['column_config'] =  merge_column_config(

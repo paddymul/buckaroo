@@ -11,6 +11,11 @@ import numpy as np
 def get_basic_df():
     return pd.DataFrame({'a':[10,20,30]})
 
+#from testing
+def get_basic_df2() -> pd.DataFrame:
+    return pd.DataFrame({'foo_col': [10, 20, 20], 'bar_col':['foo', 'bar', 'baz']})
+
+
 def get_multi_index_cols_df(rows=15) -> pd.DataFrame:
     cols = pd.MultiIndex.from_tuples(
     [('foo', 'a'), ('foo', 'b'),  ('bar', 'a'), ('bar', 'b'), ('bar', 'c')])
@@ -35,7 +40,7 @@ def df_with_named_index() -> pd.DataFrame:
     """
     return pd.DataFrame({'a':      ["asdf", "foo_b", "bar_a", "bar_b", "bar_c"]},
                         index=pd.Index([10,20,30,40,50], name='foo'))
-df_with_named_index()
+
 
 """
 Mkae a duplicate column dataframe

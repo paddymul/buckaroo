@@ -130,6 +130,7 @@ BaseColumnConfig = TypedDict('BaseColumnConfig', {
 
 NormalColumnConfig = TypedDict('NormalColumnConfig', {
     'col_name': str,
+    'header_name': str, #field
     'displayer_args': DisplayerArgs,
     'color_map_config': NotRequired[ColorMappingConfig],
     'tooltip_config': NotRequired[TooltipConfig],
@@ -178,7 +179,7 @@ DisplayArgs = TypedDict('DisplayArgs', {
 EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
     'pinned_rows': [],
     'column_config': [],
-    'first_col_config': {'col_name': 'index',
+    'first_col_config': {'col_name': 'index', 'header_name':'index',
                        'displayer_args': {'displayer': 'obj'}}
 }
 
@@ -237,6 +238,7 @@ def merge_column_config(styled_column_config:List[ColumnConfig], overide_column_
         if orig_col in overide_column_configs:
             row.update(overide_column_configs[orig_col])
         if row.get('merge_rule', 'blank') == 'hidden':
+
             continue
         ret_column_config.append(row)
     return ret_column_config
@@ -275,15 +277,18 @@ class StylingAnalysis(ColAnalysis):
 
     
     @classmethod
-    def fix_column_config(cls, col: Union[Iterable[str], str], base_cc:BaseColumnConfig) -> ColumnConfig:
+    def fix_column_config(cls, col: ColIdentifier, orig_col_name: ColIdentifier, base_cc:BaseColumnConfig) -> ColumnConfig:
         safedel(base_cc, 'col_name')
         safedel(base_cc, 'col_path')
         safedel(base_cc, 'field')
-        if isinstance(col, tuple):
-            base_cc['col_path'] = col
-            base_cc['field'] = str(col)
+        safedel(base_cc, 'header_name')
+
+        if isinstance(orig_col_name, tuple):
+            base_cc['col_path'] = orig_col_name
+            base_cc['field'] = str(col)  # sometimes numbers still creep in here
         else:
-            base_cc['col_name'] = str(col) # sometimes numbers still creep in here
+            base_cc['col_name'] = col
+            base_cc['header_name'] = str(orig_col_name)  # sometimes numbers still creep in here
         return base_cc
     
     #what is the key for this in the df_display_args_dictionary
@@ -293,7 +298,7 @@ class StylingAnalysis(ColAnalysis):
 
     @classmethod
     def default_styling(cls, col_name:Union[Iterable[str], str], /) -> ColumnConfig:
-        return cls.fix_column_config(col_name, {'displayer_args': {'displayer': 'obj'}})
+        return cls.fix_column_config(col_name, col_name, {'displayer_args': {'displayer': 'obj'}})
 
     @classmethod
     def get_dfviewer_config(cls, sd:SDType, df:pd.DataFrame) -> DFViewerConfig:
@@ -310,16 +315,20 @@ class StylingAnalysis(ColAnalysis):
     @classmethod
     def style_columns(cls, sd:SDType, df:pd.DataFrame) -> List[ColumnConfig]:
         ret_col_config: List[ColumnConfig] = []
-        #this is necessary for polars to add an index column, which is
-        #required so that summary_stats makes sense
-            
+        skip_orig_cols = []
         for col, col_meta in sd.items():
+            #FIXME: why does this come up here too
             if col_meta.get('merge_rule', None) == 'hidden':
-                continue
-            try:
+                skip_orig_cols.append(col)
 
+        for col, col_meta in sd.items():
+            try:
+                orig_col_name = col_meta.get('orig_col_name')
+                if orig_col_name in skip_orig_cols or col_meta.get('merge_rule', None) == 'hidden':
+
+                    continue
                 #it actually gets tuples here
-                base_style: ColumnConfig = cls.fix_column_config(col, cls.style_column(col, col_meta))
+                base_style: ColumnConfig = cls.fix_column_config(col, orig_col_name,  cls.style_column(col, col_meta))
             except Exception as exc:
                 if len(col_meta) == 0 and len(cls.requires_summary) > 0:
                     # this is called in instantiation without col_meta, and that can cause failures

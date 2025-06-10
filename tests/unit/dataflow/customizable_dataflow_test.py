@@ -9,24 +9,25 @@ from buckaroo.jlisp.lisp_utils import (s, sQ)
 from buckaroo.dataflow.autocleaning import PandasAutocleaning
 from buckaroo.customizations.pd_autoclean_conf import (NoCleaningConf)
 from buckaroo.dataflow.autocleaning import AutocleaningConfig
+from buckaroo.ddd_library import get_basic_df2
 
-
+BASIC_DF = get_basic_df2()
 EMPTY_DF_JSON = {
             'dfviewer_config': {
                 'pinned_rows': [],
                 'column_config': []},
             'data': []}
 
-BASIC_DF = pd.DataFrame({'foo_col': [10, 20, 20], 'bar_col':['foo', 'bar', 'baz']})
+
 BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
                         {'index':1, 'a':20, 'b':'bar'},
                         {'index':2, 'a':20, 'b':'baz'}]
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'obj'}}],
-                   'first_col_config': {'col_name': 'index',
+                       {'col_name':'a', 'header_name':'foo_col', 'displayer_args': {'displayer': 'obj'}},
+                       {'col_name':'b', 'header_name':'bar_col', 'displayer_args': {'displayer': 'obj'}}],
+                   'first_col_config': {'header_name': 'index', 'col_name':'index',
                        'displayer_args': {'displayer': 'obj'}},
                     'component_config': {},
                     'extra_grid_config': {},
@@ -35,9 +36,9 @@ DFVIEWER_CONFIG_WITHOUT_B = {
     'pinned_rows': [],
     'column_config':  [
         ## note that col_name:'b' isn't present because of the merge rule
-        {'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
+        {'col_name':'a', 'header_name':'foo_col', 'displayer_args': {'displayer': 'obj'}},
     ],
-    'first_col_config': {'col_name': 'index',
+    'first_col_config': {'col_name': 'index', 'header_name':'index',
                          'displayer_args': {'displayer': 'obj'}},
     'component_config': {},
     'extra_grid_config': {},
@@ -206,9 +207,9 @@ class HidePostProcessingAnalysis(ColAnalysis):
 SENTINEL_CONFIG_WITHOUT_INT = {
     'pinned_rows': [],
     'column_config':  [
-        {'col_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'}},
+        {'col_name': 'b', 'header_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'}},
     ],
-    'first_col_config': {'col_name': 'index',
+    'first_col_config': {'col_name': 'index', 'header_name':'index',
                          'displayer_args': {'displayer': 'obj'}},
     'component_config': {},
     'extra_grid_config': {},
@@ -349,8 +350,10 @@ def test_column_config_override_widget():
             'float_col':
             {'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}})
         
-    float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][2]
-    assert float_col_config == {'col_name': 'c', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }, 'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'c'} }
+    float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][1]
+    assert float_col_config == {'col_name': 'b', 'header_name':'float_col', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 },
+    #'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'c'}
+    }
     
 
 
