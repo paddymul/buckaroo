@@ -19,9 +19,10 @@ EMPTY_DF_JSON = {
             'data': []}
 
 
-BASIC_DF_JSON_DATA = [{'index':0, 'foo_col':10, 'bar_col':'foo'},
-                        {'index':1, 'foo_col':20, 'bar_col':'bar'},
-                        {'index':2, 'foo_col':20, 'bar_col':'baz'}]
+BASIC_DF_JSON_DATA = [
+                        {'index':0, 'a':10, 'b':'foo'},
+                        {'index':1, 'a':20, 'b':'bar'},
+                        {'index':2, 'a':20, 'b':'baz'}]
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
