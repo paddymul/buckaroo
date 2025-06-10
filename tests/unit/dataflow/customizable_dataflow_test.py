@@ -19,9 +19,9 @@ EMPTY_DF_JSON = {
             'data': []}
 
 
-BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
-                        {'index':1, 'a':20, 'b':'bar'},
-                        {'index':2, 'a':20, 'b':'baz'}]
+BASIC_DF_JSON_DATA = [{'index':0, 'foo_col':10, 'bar_col':'foo'},
+                        {'index':1, 'foo_col':20, 'bar_col':'bar'},
+                        {'index':2, 'foo_col':20, 'bar_col':'baz'}]
 DFVIEWER_CONFIG_DEFAULT = {
                    'pinned_rows': [],
                    'column_config':  [
@@ -96,9 +96,9 @@ def test_custom_dataflow():
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'int'}}],
-                   'first_col_config': {'col_name': 'index',
+                       {'header_name':'foo_col', 'col_name':'a', 'displayer_args': {'displayer': 'int'}},
+                       {'header_name':'bar_col', 'col_name':'b', 'displayer_args': {'displayer': 'int'}}],
+                   'first_col_config': {'col_name': 'index', 'header_name':'index',
                        'displayer_args': {'displayer': 'obj'}},
                     'component_config': {},
                     'extra_grid_config': {},
@@ -115,7 +115,7 @@ def test_hide_column_config_overrides():
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
 
     cdfc2 = ACDFC(BASIC_DF,
-                      column_config_overrides={'b': {'merge_rule': 'hidden'}}
+                      column_config_overrides={'bar_col': {'merge_rule': 'hidden'}}
                       )
 
     assert cdfc2.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_WITHOUT_B
@@ -145,8 +145,8 @@ def test_init_sd():
     print(summary_sd)
     print("^"*80)
     assert dc_dfc.merged_sd == {
-        'a': {'distinct_count':2, 'foo':8, 'col_name':'a'},
-        'b': {'distinct_count':3, 'col_name':'b'}}
+        'a': {'orig_col_name':'foo_col', 'rewritten_col_name':'a', 'distinct_count':2, 'foo':8},
+        'b': {'orig_col_name':'bar_col', 'rewritten_col_name':'b', 'distinct_count':3}}
 
 class AlwaysFailStyling(StylingAnalysis):
     requires_summary = []
