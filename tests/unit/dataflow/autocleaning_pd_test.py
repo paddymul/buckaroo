@@ -377,7 +377,7 @@ class SentinelCleaningGenOps(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        ops = [sA('noop', clean_col=column_metadata['col_name']), s('df')]
+        ops = [sA('noop', clean_col=column_metadata['orig_col_name']), s('df')]
         return {'cleaning_ops': ops}
 
 class SentinelConfig(AutocleaningConfig):
@@ -403,7 +403,7 @@ class SentinelCleaningGenOps2(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        if column_metadata['col_name'] == 'c':
+        if column_metadata['orig_col_name'] == 'c':
             ops = [
                 sA('noop2', clean_col='c'),
                 {'symbol': 'df'}]

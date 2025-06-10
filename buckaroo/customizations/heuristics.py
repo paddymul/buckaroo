@@ -34,7 +34,7 @@ class BaseHeuristicCleaningGenOps(ColAnalysis):
                 sA(
                     cleaning_name,
                     clean_strategy=kls.__name__,
-                    clean_col=column_metadata["col_name"],
+                    clean_col=column_metadata["orig_col_name"],
                 ),
                 {"symbol": "df"},
             ]
