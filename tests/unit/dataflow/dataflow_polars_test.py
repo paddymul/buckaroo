@@ -6,11 +6,12 @@ from polars.testing import assert_frame_equal
 import numpy as np
 
 simple_df = pl.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
-BASIC_DF_JSON_DATA = [{'index':0, 'a':10, 'b':'foo'},
-                        {'index':1, 'a':20, 'b':'bar'},
-                        {'index':2, 'a':20, 'b':'baz'}]
+BASIC_DF_JSON_DATA = [
+    {'index':0, 'a':1, 'b':'a'},
+    {'index':1, 'a':2, 'b':'b'},
+    {'index':2, 'a':3, 'b':'c'}]
 
-BASIC_DF = pl.DataFrame({'a': [10, 20, 20], 'b':['foo', 'bar', 'baz']})
+BASIC_DF = pl.DataFrame({'foo_col': [10, 20, 20], 'bar_col':['foo', 'bar', 'baz']})
 
 
 DFVIEWER_CONFIG_DEFAULT = {
@@ -31,10 +32,10 @@ class BasicStyling(StylingAnalysis):
     
 
 def test_widget_instatiation():
-    dfc = PolarsBuckarooWidget(BASIC_DF)
+    dfc = PolarsBuckarooWidget(simple_df)
     #the BasicStyling is simple and predictable, it writes to 'basic' which nothing else should
     dfc.add_analysis(BasicStyling)
-    assert_frame_equal(dfc.dataflow.widget_args_tuple[1], BASIC_DF)
+    assert_frame_equal(dfc.dataflow.widget_args_tuple[1], simple_df)
     assert dfc.df_data_dict['main'] == BASIC_DF_JSON_DATA
 
     actual_column_config = dfc.df_display_args['basic']['df_viewer_config']['column_config']
@@ -63,17 +64,15 @@ def test_custom_dataflow():
     class TwoStyleDFC(PolarsBuckarooWidget):
         analysis_klasses = [StylingAnalysis, IntStyling]
         
-    cdfc = TwoStyleDFC(BASIC_DF)
-    assert_frame_equal(cdfc.dataflow.widget_args_tuple[1], BASIC_DF)
-    print(cdfc.df_display_args['main']['df_viewer_config'])
+    cdfc = TwoStyleDFC(simple_df)
+    assert_frame_equal(cdfc.dataflow.widget_args_tuple[1], simple_df)
     assert cdfc.df_display_args['main']['df_viewer_config'] == DFVIEWER_CONFIG_DEFAULT
     DFVIEWER_CONFIG_INT = {
                    'pinned_rows': [],
                    'column_config':  [
-                       {'col_name':'index', 'displayer_args': {'displayer': 'obj'}},
-                       {'col_name':'a', 'displayer_args': {'displayer': 'int'}},
-                       {'col_name':'b', 'displayer_args': {'displayer': 'int'}}],
-                   'first_col_config': {'col_name': 'index',
+                       {'col_name':'a', 'header_name':'int_col', 'displayer_args': {'displayer': 'int'}},
+                       {'col_name':'b', 'header_name':'str_col', 'displayer_args': {'displayer': 'int'}}],
+                   'first_col_config': {'col_name': 'index', 'header_name':'index',
                        'displayer_args': {'displayer': 'obj'}},
                    'component_config' : {},
                    'extra_grid_config': {},
