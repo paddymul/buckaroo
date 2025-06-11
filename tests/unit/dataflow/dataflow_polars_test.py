@@ -5,6 +5,8 @@ import polars as pl
 from polars.testing import assert_frame_equal
 import numpy as np
 
+from tests.unit.test_utils import assert_dict_eq
+
 simple_df = pl.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 BASIC_DF_JSON_DATA = [
     {'index':0, 'a':1, 'b':'a'},
@@ -219,7 +221,8 @@ def test_column_config_override():
     print(int_cc_after)
     assert int_cc_after['col_name'] == 'a' #make sure we found the right row
     assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
-    assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
+    #assert assert_dict_eq(int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
+    assert assert_dict_eq(int_cc_after, {})
 
 
 def test_column_config_override2():
@@ -237,6 +240,8 @@ def test_column_config_override2():
     print(int_cc_after)
     print(EXPECTED_OVERRIDE)
     print("<"*80)
+    #int_cc_after['color_map_config']
+    #EXPECTED_OVERRIDE['color_map_config']
     assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
     
 
