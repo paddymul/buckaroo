@@ -221,6 +221,26 @@ def test_column_config_override():
     assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
     assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
 
+
+def test_column_config_override2():
+
+    bw = PolarsBuckarooWidget(typed_df, debug=False, column_config_overrides={
+        'int_col':{ 'column_config_override': EXPECTED_OVERRIDE}})
+
+    #assert bw.dataflow.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
+    cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
+    int_cc_after = cc_after[0]
+    print(int_cc_after)
+    assert int_cc_after['col_name'] == 'a' #make sure we found the right row
+    assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
+    print("<"*80)
+    print(int_cc_after)
+    print(EXPECTED_OVERRIDE)
+    print("<"*80)
+    assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
+    
+
+    
 def Xtest_sample():
     """
     this test is slow, sampling isn't used much

@@ -223,7 +223,8 @@ def merge_column(base, new):
 
 OverrideColumnConfig:TypeAlias = Dict[ColIdentifier, BaseColumnConfig]
 
-def merge_column_config(styled_column_config:List[ColumnConfig], overide_column_configs:OverrideColumnConfig) -> List[ColumnConfig]:
+def merge_column_config(styled_column_config:List[ColumnConfig],
+    overide_column_configs:OverrideColumnConfig) -> List[ColumnConfig]:
 
     """
       merge_rule works on orignal column names
@@ -248,8 +249,19 @@ def safedel(dct:Dict[str, Any], key:str) -> Dict[str, Any]:
     if key in dct:
         del dct[key]
     return dct
-        
 
+PartialColConfig:TypeAlias = Dict[str, Union[str, Dict[str, str]]]
+def rewrite_override_col_references(rewrites: Dict[ColIdentifier, ColIdentifier], obj:PartialColConfig) -> PartialColConfig:
+    if obj.get('color_map_config'):
+        if obj['color_map_config'].get('val_column'):
+            obj['color_map_config']['val_column'] = rewrites[obj['color_map_config']['val_column']]
+
+        if obj['color_map_config'].get('exist_column'):
+            obj['color_map_config']['exist_column'] = rewrites[obj['color_map_config']['exist_column']]
+    if obj.get('tooltip_config'):
+        if obj['tooltip_config'].get('val_column'):
+            obj['tooltip_config']['val_column'] = rewrites[obj['tooltip_config']['val_column']]
+    return obj
 class StylingAnalysis(ColAnalysis):
     provides_defaults: ColMeta = {}
     pinned_rows:  List[PinnedRowConfig] = []
@@ -342,13 +354,21 @@ class StylingAnalysis(ColAnalysis):
                 # results in no display which is a very bad user
                 # experience
                 base_style = cls.default_styling(col)
+
+
+
+            print("346 col_meta")
+            print(col, col_meta)
+                
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
-
                 cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
                 base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
+
             if base_style.get('merge_rule') == 'hidden':
                 continue
             ret_col_config.append(base_style)
         return ret_col_config
+    
+
     
