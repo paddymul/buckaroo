@@ -1,15 +1,19 @@
+import unittest
 import polars as pl
 import numpy as np
 from polars import functions as F
 import polars.selectors as cs
+import pytest
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
     ComputedDefaultSummaryStats)
 
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import NotProvidedException
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
 
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysisPipeline, polars_produce_series_df, PolarsAnalysis, PlDfStats)
+from tests.unit.test_utils import assert_dict_eq
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
@@ -218,7 +222,15 @@ def test_pl_typing():
                ComputedDefaultSummaryStats])
     
 
-'''
+class PLLen(PolarsAnalysis):
+
+
+    provides_defaults = {'len':0}
+
+    select_clauses = [
+        F.all().len().name.map(json_postfix('len'))]
+
+    
 class TestDfStats(unittest.TestCase):
     def test_dfstats_sometimes_present(self):
         """many ColAnalysis objects are written such that they only
@@ -236,26 +248,26 @@ class TestDfStats(unittest.TestCase):
         #dfs = DfStats(word_only_df, [SometimesProvides])
 
         #triggers a getter?
-        DfStats(word_only_df, [SometimesProvides]).sdf
+        #PlDfStats(word_only_df, [SometimesProvides]).sdf
+        pass
 
 
 
     def test_dfstats_return(self):
-        dfs = PlDfStats(test_df, [Len, DistinctCount, DistinctPer], 'test_df', debug=True)
+        """
+          test the actual retuns values from dfstats
+          """
+        dfs = PlDfStats(test_df, [PLLen], 'test_df', debug=True)
 
         assert_dict_eq({
-            'a': {'distinct_count': 4, 'distinct_per':1.0, 'len': 4,
+            'a': {'len': 4,
                   'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
-            'b': {'distinct_count': 0, 'distinct_per':0, 'len': 4,
-                  'orig_col_name':'empty_na_ser', 'rewritten_col_name':'b'},
-            'c': {'distinct_count': 2, 'distinct_per':0.5, 'len': 4,
-                  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'c'}},
+            'b': {'len': 4,
+                  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'b'}},
         dfs.sdf)
 
 
-    def test_dfstats_Missing_Analysis(self):
-        # this is missing "len" and should throw an exception
-        with pytest.raises(NotProvidedException):
-            dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-
-'''
+    # def test_dfstats_Missing_Analysis(self):
+    #     # this is missing "len" and should throw an exception
+    #     with pytest.raises(NotProvidedException):
+    #         dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
