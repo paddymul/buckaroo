@@ -1,4 +1,5 @@
 import traceback
+from typing_extensions import TypeAlias
 
 import polars as pl
 
@@ -6,10 +7,10 @@ from buckaroo.df_util import old_col_new_col
 from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 
-from .col_analysis import ColAnalysis
+from .col_analysis import ColAnalysis, SDType
 from .analysis_management import (produce_summary_df, AnalysisPipeline, DfStats)
 from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
-from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
+from typing import Mapping, Any, Callable, Tuple, List, MutableMapping, Type
 
 
 
@@ -17,11 +18,11 @@ class PolarsAnalysis(ColAnalysis):
     select_clauses:List[pl.Expr] = []
     column_ops: Mapping[str, Tuple[List[pl.DataType], Callable[[pl.Series], Any]]] = {}
 
-
+PAObjs: TypeAlias = List[Type[PolarsAnalysis]]
 
 def polars_produce_series_df(df:pl.DataFrame,
-                      unordered_objs:List[PolarsAnalysis],
-                      df_name:str='test_df', debug:bool=False):
+                             unordered_objs:PAObjs,
+                      df_name:str='test_df', debug:bool=False) -> SDType:
     """ just executes the series methods
 
     """
@@ -43,22 +44,9 @@ def polars_produce_series_df(df:pl.DataFrame,
         orig_col_to_rewritten[orig_ser_name] = rewritten_col_name
         ser = df[orig_ser_name]
         sampled_ser = ser
-        #series_stats[rewritten_col_name]['col_name'] = orig_ser_name
-        #series_stats[orig_ser_name]['col_name'] = orig_ser_name
-
-        #right now I'm not doing column name rewriting for polars
-        #because I don't know that it is necessary
-        # summary_dict[orig_ser_name] = {}
-        # summary_dict[orig_ser_name]['orig_col_name'] = orig_ser_name
-        # summary_dict[orig_ser_name]['rewritten_col_name'] = rewritten_col_name
-        # summary_dict[orig_ser_name]['rewritten_col_name'] = orig_ser_name
-
         summary_dict[rewritten_col_name] = {}
         summary_dict[rewritten_col_name]['orig_col_name'] = orig_ser_name
         summary_dict[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
-
-
-
 
 
         for a_klass in unordered_objs:

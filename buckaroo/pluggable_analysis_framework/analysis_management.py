@@ -1,28 +1,37 @@
 from collections import defaultdict 
 import traceback
-from typing import Tuple, Type
+from typing import List, Tuple, Type
 
+from typing_extensions import TypeAlias
 import warnings
 
 import pandas as pd
 import numpy as np
 
 
-from buckaroo.df_util import old_col_new_col
+from buckaroo.df_util import ColIdentifier, old_col_new_col
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
 from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF
 from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
  order_analysis, check_solvable)
 from buckaroo.pluggable_analysis_framework.col_analysis import (
-    AObjs, ColAnalysis, ErrDict, SDType)
+    AObjs, ColAnalysis, ColMeta, ErrDict, SDErrsTuple, SDType)
+
 
 
 def produce_series_df(
         df:pd.DataFrame, ordered_objs:AObjs,
-    df_name:str='test_df', debug:bool=False)-> Tuple[SDType, ErrDict]:
+    df_name:str='test_df', debug:bool=False)-> SDErrsTuple:
     """ just executes the series methods
 
+
+      A lot of numeric code throws warnings
+      Debug False means warnings are swallowed, useful for finding errors
+      Debug True displays warnings... which polutes the output in a notebook
+
+
+      quiet=True swallows exceptions and subsitutes the default
     """
     errs: ErrDict = {}
     series_stats: SDType = defaultdict(lambda: {})
@@ -30,8 +39,6 @@ def produce_series_df(
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         ser = df[orig_ser_name]
         sampled_ser = ser
-        #series_stats[rewritten_col_name]['col_name'] = orig_ser_name
-        #series_stats[orig_ser_name]['col_name'] = orig_ser_name
         series_stats[rewritten_col_name]['orig_col_name'] = orig_ser_name
         series_stats[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
         for a_kls in ordered_objs:
@@ -62,14 +69,19 @@ def produce_series_df(
 
 def produce_summary_df(
     df:pd.DataFrame, series_stats:SDType,
-    ordered_objs:AObjs, df_name='test_df', debug=False):
+    ordered_objs:AObjs, df_name:str='test_df', debug:bool=False) -> SDErrsTuple:
     """
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
-    then it produces a summary dataframe
+    then it produces the summary SDType
+
+      this executes computed_summary on analysis objects, but it requires the previous steps of series_summary completed
+
+      
+      
     """
-    errs = {}
-    summary_col_dict = {}
-    cols = []
+    errs: ErrDict = {}
+    summary_col_dict: SDType = {}
+    cols: List[ColIdentifier] = []
     cols.extend(df.columns)
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
@@ -110,7 +122,9 @@ class AnalysisPipeline(object):
 
     @staticmethod
     def full_produce_summary_df(
-        df:pd.DataFrame, ordered_objs:AObjs, df_name='test_df', debug=False):
+        df:pd.DataFrame, ordered_objs:AObjs,
+        df_name:str='test_df', debug:bool=False) -> SDErrsTuple:
+
         if len(df) == 0:
             return {}, {}
 
@@ -135,11 +149,11 @@ class AnalysisPipeline(object):
         return summary_df, series_errs
 
     ordered_a_objs: AObjs
-    def __init__(self, analysis_objects:AObjs, unit_test_objs=True):
+    def __init__(self, analysis_objects:AObjs, unit_test_objs:bool=True) -> None:
 
         self.summary_stats_display = "all"
         self.unit_test_objs = unit_test_objs
-        self.verify_analysis_objects(analysis_objects)
+        _ = self.verify_analysis_objects(analysis_objects)
 
     def process_summary_facts_set(self) -> bool:
         all_provided = []
@@ -174,7 +188,7 @@ class AnalysisPipeline(object):
             pass
 
 
-    def process_df(self, input_df, debug=False):
+    def process_df(self, input_df:pd.DataFrame, debug:bool=False) -> SDErrsTuple:
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
         return output_df, errs
 
@@ -195,7 +209,11 @@ class AnalysisPipeline(object):
 
 class DfStats(object):
     '''
-    DfStats exists to handle inteligent downampling and applying the ColAnalysis functions
+    DfStats exists to tie the different Pluggable Analysis pieces together that are relevant to a dataframe type.
+
+      this allows DataFlow to only specify DfStats or PlDfStats, and all the other methods work the same.
+      
+      
     '''
 
     ap_class = AnalysisPipeline
@@ -204,7 +222,8 @@ class DfStats(object):
     def verify_analysis_objects(kls, col_analysis_objs:AObjs):
         kls.ap_class(col_analysis_objs)
 
-    def __init__(self, df_stats_df, col_analysis_objs, operating_df_name=None, debug=False):
+    def __init__(self, df_stats_df:pd.DataFrame, col_analysis_objs:AObjs,
+        operating_df_name:str=None, debug:bool=False) -> None:
         self.df = self.get_operating_df(df_stats_df, force_full_eval=False)
         self.col_order = self.df.columns
         self.ap = self.ap_class(col_analysis_objs)

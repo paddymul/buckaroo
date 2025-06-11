@@ -1,6 +1,7 @@
 import json
 import unittest
 from unittest import TestCase
+import warnings
 
 import pytest
 from buckaroo.pluggable_analysis_framework.col_analysis import (
@@ -38,6 +39,16 @@ class AlwaysErr(ColAnalysis):
     @staticmethod
     def computed_summary(summary_dict):
         1/0
+
+class AlwaysWarn(ColAnalysis):
+    provides_defaults = {'foo':0}
+
+    @staticmethod
+    def series_summary(sampled_ser, ser):
+
+        warnings.warn("AlwayWarn", UserWarning)
+        return {'foo': 5}
+
 
 
 class DependsA(ColAnalysis):
@@ -111,14 +122,42 @@ class TestAnalysisPipeline(unittest.TestCase):
 
 
     def test_produce_series_df3(self):
-        """just make sure this doesn't fail"""
+        """just make sure this doesn't fail,
 
+          this technically needs Len, but because of
+          provides_defaults, exceptions are caught and the defaults
+          are subsitututed
+
+        """
         sdf3, _errs = produce_series_df(
-            test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-        sdf3.items() == {
-            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series'},
-            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser'},
-            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser'}}.items()
+        test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+
+        assert_dict_eq({
+            'a': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
+            'b': {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser',      'rewritten_col_name':'b'},
+            'c': {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser',     'rewritten_col_name':'c'}},
+        sdf3)
+
+    def Xtest_produce_series_debug(self):
+        """
+          I can't currently get this test to work properly
+          I want to make sure there are no warnings emitted when Debug=False
+
+          I'm pretty sure this is what happens in the notebook. I'm not sure if pytest is doing something funky
+          
+          """
+
+        with warnings.catch_warnings(record=True) as warn_record_1:
+            sdf3, _errs = produce_series_df(
+                test_df, [AlwaysWarn], 'test_df', debug=False)
+            
+        # print(warn_record_1)
+        # assert warn_record_1 == []
+        with pytest.warns() as record:
+            sdf3, _errs = produce_series_df(
+                test_df, [AlwaysWarn], 'test_df', debug=True)
+        assert len(record) == 1
+        
     def test_produce_series_multiindex_cols_df(self):
         """just make sure this doesn't fail"""
 
@@ -268,6 +307,9 @@ class TestDfStats(unittest.TestCase):
 
 
     def test_dfstats_return(self):
+        """
+          test the actual retuns values from dfstats
+          """
         dfs = DfStats(test_df, [Len, DistinctCount, DistinctPer], 'test_df', debug=True)
 
         assert_dict_eq({

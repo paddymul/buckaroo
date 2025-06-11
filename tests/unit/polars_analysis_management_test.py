@@ -14,10 +14,6 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
         #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
-        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])})
-test_df = pl.DataFrame({
-        'normal_int_series' : pl.Series([1,2,3,4]),
-        #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
         'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])
 })
 
@@ -221,3 +217,45 @@ def test_pl_typing():
                BasicAnalysis, VCAnalysis,
                ComputedDefaultSummaryStats])
     
+
+'''
+class TestDfStats(unittest.TestCase):
+    def test_dfstats_sometimes_present(self):
+        """many ColAnalysis objects are written such that they only
+        provide stats for certain dtypes. This used to cause
+        instantiation failures. This test verifies that there are no
+        stack traces. The alternative would be to have ColAnalyis
+        objects always return every key, even if NA. That's a less
+        natural style to write analyis code.
+
+        Possible future improvement is to run through PERVERSE_DF and
+        verify that each ColAnalyis provides its specified value as
+        non NA at least once
+
+        """
+        #dfs = DfStats(word_only_df, [SometimesProvides])
+
+        #triggers a getter?
+        DfStats(word_only_df, [SometimesProvides]).sdf
+
+
+
+    def test_dfstats_return(self):
+        dfs = PlDfStats(test_df, [Len, DistinctCount, DistinctPer], 'test_df', debug=True)
+
+        assert_dict_eq({
+            'a': {'distinct_count': 4, 'distinct_per':1.0, 'len': 4,
+                  'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
+            'b': {'distinct_count': 0, 'distinct_per':0, 'len': 4,
+                  'orig_col_name':'empty_na_ser', 'rewritten_col_name':'b'},
+            'c': {'distinct_count': 2, 'distinct_per':0.5, 'len': 4,
+                  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'c'}},
+        dfs.sdf)
+
+
+    def test_dfstats_Missing_Analysis(self):
+        # this is missing "len" and should throw an exception
+        with pytest.raises(NotProvidedException):
+            dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+
+'''

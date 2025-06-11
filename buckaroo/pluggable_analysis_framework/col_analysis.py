@@ -79,3 +79,6 @@ ErrKey: TypeAlias = Tuple[ColIdentifier, str]
 ErrDict: TypeAlias = Dict[ErrKey, ErrReportType]
 
 AObjs: TypeAlias = List[Type[ColAnalysis]]
+
+
+SDErrsTuple: TypeAlias = Tuple[SDType, ErrDict]
