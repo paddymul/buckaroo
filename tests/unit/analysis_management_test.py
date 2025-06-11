@@ -1,6 +1,8 @@
 import json
 import unittest
 from unittest import TestCase
+
+import pytest
 from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
 
@@ -9,10 +11,12 @@ from buckaroo.pluggable_analysis_framework.analysis_management import (
     #full_produce_summary_df,
     produce_series_df)
 
+from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import NotProvidedException
 from buckaroo.pluggable_analysis_framework.safe_summary_df import (output_full_reproduce)
 
 
 from buckaroo.customizations.analysis import (TypingStats, DefaultSummaryStats)
+from tests.unit.test_utils import assert_dict_eq
 from .fixtures import (test_df, df, DistinctCount, Len, DistinctPer, test_multi_index_df, word_only_df,
                        empty_df, empty_df_with_columns)
 
@@ -47,13 +51,6 @@ class DependsA(ColAnalysis):
         return { 'b':'bar'}
 
 
-def assert_dict_eq(expected, actual):
-    expected_keys = sorted(expected.keys())
-    actual_keys = sorted(actual.keys())
-    assert expected_keys == actual_keys
-    for k in actual_keys:
-        if not json.dumps(actual[k]) == json.dumps(expected[k]):
-            assert (k, expected[k]) == (k, actual[k])
             
 class ProvidesAComputed(ColAnalysis):
 
@@ -271,37 +268,20 @@ class TestDfStats(unittest.TestCase):
 
 
     def test_dfstats_return(self):
-        # this is missing "len"
         dfs = DfStats(test_df, [Len, DistinctCount, DistinctPer], 'test_df', debug=True)
 
-
-        #         sdf3, _errs = produce_series_df(
-        #     test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-        # assert sdf3.items() == ...
-        assert dfs.sdf.items() ==  {
-            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series'},
-            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser'},
-            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser'}}.items()
+        assert_dict_eq({
+            'a': {'distinct_count': 4, 'distinct_per':1.0, 'len': 4,
+                  'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
+            'b': {'distinct_count': 0, 'distinct_per':0, 'len': 4,
+                  'orig_col_name':'empty_na_ser', 'rewritten_col_name':'b'},
+            'c': {'distinct_count': 2, 'distinct_per':0.5, 'len': 4,
+                  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'c'}},
+        dfs.sdf)
 
 
     def test_dfstats_Missing_Analysis(self):
-        # this is missing "len"
-        dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+        # this is missing "len" and should throw an exception
+        with pytest.raises(NotProvidedException):
+            dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
 
-
-        #         sdf3, _errs = produce_series_df(
-        #     test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
-        # assert sdf3.items() == ...
-        assert dfs.sdf.items() ==  {
-            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series'},
-            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser'},
-            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser'}}.items()
-
-
-        # sdf2, _errs = produce_series_df(
-        #     test_df, [DistinctCount], 'test_df', debug=True)
-        # assert_dict_eq({
-        #     'a': {'distinct_count': 4, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
-        #     'b': {'distinct_count':0,  'orig_col_name':'empty_na_ser', 'rewritten_col_name':'b'},
-        #     'c': {'distinct_count':2,  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'c'}},
-        # sdf2)
