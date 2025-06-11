@@ -40,6 +40,17 @@ class AlwaysErr(ColAnalysis):
     def computed_summary(summary_dict):
         1/0
 
+class AlwaysErrButQuiet(ColAnalysis):
+    """
+      quiet=True makes analysis_management swallow the errors and return the defaults
+      """
+    provides_defaults = {'foo':30}
+    quiet = True
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        1/0
+
 class AlwaysWarn(ColAnalysis):
     provides_defaults = {'foo':0}
 
@@ -189,10 +200,12 @@ class TestAnalysisPipeline(unittest.TestCase):
         assert errs == {}
 
     def test_full_produce_summary_df_errs(self):
-        """just make sure this doesn't fail"""
+        """just make sure this doesn't fail with a stack trace, but
+        that errors are properly caught and returned"""
         single_col_df = test_df[['empty_na_ser']]
         sdf, errs = AnalysisPipeline.full_produce_summary_df(
             single_col_df, [AlwaysErr], 'test_df', debug=False)
+
 
         err_key = list(errs.keys())[0]
         err_val = list(errs.values())[0]
@@ -202,6 +215,13 @@ class TestAnalysisPipeline(unittest.TestCase):
         #can't compare instances of Exception classes
         # assert errs == {
         #     ('empty_na_ser', 'computed_summary'): (ZeroDivisionError('division by zero'), AlwaysErr)}
+
+    def test_full_produce_summary_df_errs_quiet(self):
+        """just make sure this doesn't fail"""
+        single_col_df = test_df[['empty_na_ser']]
+        sdf, errs = AnalysisPipeline.full_produce_summary_df(
+            single_col_df, [AlwaysErrButQuiet], 'test_df', debug=False)
+        assert len(errs) == 0
 
     def test_output_full_reproduce(self):
         errs = {
