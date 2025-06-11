@@ -202,11 +202,12 @@ def test_column_config_override():
     bw = PolarsBuckarooWidget(typed_df, debug=False)
 
     bw.add_analysis(ColumnConfigOverride)
-
-    assert 'column_config_override' not in bw.dataflow.merged_sd['int_col']
+    assert 'column_config_override' not in bw.dataflow.merged_sd['a']
+    assert bw.dataflow.merged_sd['a']['orig_col_name'] == 'int_col'
     cc_initial = bw.df_display_args['main']['df_viewer_config']['column_config']
-    int_cc_initial = cc_initial[1]
-    assert int_cc_initial['col_name'] == 'int_col' #make sure we found the right row
+    int_cc_initial = cc_initial[0]
+    assert int_cc_initial['col_name'] == 'a' #make sure we found the right row
+    assert int_cc_initial['header_name'] == 'int_col' #make sure we found the right row
     assert 'color_map_config' not in int_cc_initial
     
     temp_buckaroo_state = bw.buckaroo_state.copy()
@@ -215,8 +216,10 @@ def test_column_config_override():
     
     assert bw.dataflow.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
     cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
-    int_cc_after = cc_after[1]
-    assert int_cc_after['col_name'] == 'int_col' #make sure we found the right row
+    int_cc_after = cc_after[0]
+    print(int_cc_after)
+    assert int_cc_after['col_name'] == 'a' #make sure we found the right row
+    assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
     assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
 
 def Xtest_sample():

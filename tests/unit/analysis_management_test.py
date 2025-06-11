@@ -264,9 +264,44 @@ class TestDfStats(unittest.TestCase):
 
         """
         #dfs = DfStats(word_only_df, [SometimesProvides])
-        #ab = dfs.presentation_sdf
 
         #triggers a getter?
         DfStats(word_only_df, [SometimesProvides]).sdf
 
 
+
+    def test_dfstats_return(self):
+        # this is missing "len"
+        dfs = DfStats(test_df, [Len, DistinctCount, DistinctPer], 'test_df', debug=True)
+
+
+        #         sdf3, _errs = produce_series_df(
+        #     test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+        # assert sdf3.items() == ...
+        assert dfs.sdf.items() ==  {
+            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series'},
+            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser'},
+            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser'}}.items()
+
+
+    def test_dfstats_Missing_Analysis(self):
+        # this is missing "len"
+        dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+
+
+        #         sdf3, _errs = produce_series_df(
+        #     test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+        # assert sdf3.items() == ...
+        assert dfs.sdf.items() ==  {
+            'normal_int_series': {'distinct_count': 4, 'distinct_per':0, 'orig_col_name':'normal_int_series'},
+            'empty_na_ser':      {'distinct_count': 0, 'distinct_per':0, 'orig_col_name':'empty_na_ser'},
+            'float_nan_ser':     {'distinct_count': 2, 'distinct_per':0, 'orig_col_name':'float_nan_ser'}}.items()
+
+
+        # sdf2, _errs = produce_series_df(
+        #     test_df, [DistinctCount], 'test_df', debug=True)
+        # assert_dict_eq({
+        #     'a': {'distinct_count': 4, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'},
+        #     'b': {'distinct_count':0,  'orig_col_name':'empty_na_ser', 'rewritten_col_name':'b'},
+        #     'c': {'distinct_count':2,  'orig_col_name':'float_nan_ser', 'rewritten_col_name':'c'}},
+        # sdf2)

@@ -134,7 +134,6 @@ class AnalysisPipeline(object):
                     del summary_dict[k]
         return summary_df, series_errs
 
-    style_method = None
     ordered_a_objs: AObjs
     def __init__(self, analysis_objects:AObjs, unit_test_objs=True):
 
@@ -225,10 +224,6 @@ class DfStats(object):
             return df.sample(np.min([50_000, len(df)]))
         else:
             return df
-
-    @property
-    def presentation_sdf(self):
-        raise Exception("deprecated")
 
     def add_analysis(self, a_obj:Type[ColAnalysis]):
         passed_unit_tests, ut_errs = self.ap.add_analysis(a_obj)
