@@ -20,8 +20,8 @@ def test_basic_instantiation():
 EXPECTED_DF_VIEWER_CONFIG = {
     'pinned_rows': [],
     'column_config': [
-        {'col_name': 'normal_int_series', 'displayer_args': {'displayer': 'obj'}}],
-    'first_col_config': {'col_name': 'index',
+        {'col_name':'a', 'header_name': 'normal_int_series', 'displayer_args': {'displayer': 'obj'}}],
+    'first_col_config': {'col_name': 'index', 'header_name': 'index',
                          'displayer_args': {'displayer': 'obj'}},
     'component_config': {},
     'extra_grid_config': {},
@@ -51,7 +51,7 @@ def test_polars_all_stats():
     sdf, errs = polars_produce_series_df(
         test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
     expected = {
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
+        'a':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'rewritten_col_name':'a', 'orig_col_name':'normal_int_series'}}
     #dsdf = replace_in_dict(sdf, [(np.nan, None)])
     class SimplePolarsBuckaroo(PolarsBuckarooWidget):
         analysis_klasses= [SelectOnlyAnalysis, StylingAnalysis]
@@ -59,10 +59,13 @@ def test_polars_all_stats():
     spbw = SimplePolarsBuckaroo(test_df)
     assert spbw.dataflow.merged_sd == expected
 
+    print(spbw.df_data_dict['all_stats'])
     assert spbw.df_data_dict['all_stats'] == [
-        {'index': 'null_count', 'normal_int_series': 0.0},
-        {'index': 'mean', 'normal_int_series': 2.5},
-        {'index': 'quin99', 'normal_int_series': 4.0}]
+        {'index': 'orig_col_name', 'a': 'normal_int_series'},
+        {'index': 'rewritten_col_name', 'a': 'a'},
+        {'index': 'null_count', 'a': 0.0},
+        {'index': 'mean', 'a': 2.5},
+        {'index': 'quin99', 'a': 4.0}]
     assert spbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
 def test_polars_boolean():
@@ -116,7 +119,7 @@ def test_pandas_all_stats():
 
     sbw = SimpleBuckaroo(pd_test_df)
     assert sbw.dataflow.merged_sd == {
-        'normal_int_series':  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0}}
+        'a' :  {'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'rewritten_col_name':'a', 'orig_col_name':'normal_int_series'}}
     assert sbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
 
