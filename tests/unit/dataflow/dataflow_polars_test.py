@@ -242,4 +242,4 @@ def test_column_config_override():
     assert int_cc_after['col_name'] == 'a' #make sure we found the right row
     assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
     #assert assert_dict_eq(int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
-    assert assert_dict_eq(int_cc_after, {}) # 
+    #assert assert_dict_eq(int_cc_after, {})

@@ -247,6 +247,11 @@ def merge_column_config(styled_column_config:List[ColumnConfig],
         ret_column_config.append(row)
     return ret_column_config
 
+def merge_column_config_overrides(final_sd:SDType, df:pd.DataFrame, overrides:SDType) -> SDType:
+    for old_col, new_col in old_col_new_col(df):
+        if old_col in overrides:
+            final_sd[new_col].update(overrides[old_col])
+    return final_sd
 
 def safedel(dct:Dict[str, Any], key:str) -> Dict[str, Any]:
     if key in dct:
@@ -330,10 +335,6 @@ class StylingAnalysis(ColAnalysis):
     
     @classmethod
     def style_columns(cls, sd:SDType, df:pd.DataFrame) -> List[ColumnConfig]:
-        print("sd")
-        print("@"*80)
-        print(sd)
-        print("@"*80)
         ret_col_config: List[ColumnConfig] = []
         skip_orig_cols = []
         for col, col_meta in sd.items():
@@ -375,13 +376,16 @@ class StylingAnalysis(ColAnalysis):
                 #column_config_override, sent by the instantiation, gets set later
                 cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
                 #base_style.update(rewrite_override_col_references(rewrites, cco)) # pyright: ignore[reportCallIssue, reportArgumentType]
-                print("cco 373")
-                print(cco)
+                # print("cco 373")
+                # print(cco)
                 base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
 
             if base_style.get('merge_rule') == 'hidden':
                 continue
-            ret_col_config.append(base_style)
+            if col in rewrites.values() and len(col_meta) == 1 and 'column_config_override' in col_meta:
+                continue
+            else:
+                ret_col_config.append(base_style)
         return ret_col_config
     
 

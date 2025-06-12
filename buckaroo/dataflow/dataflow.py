@@ -16,6 +16,7 @@ from .styling_core import (
     ComponentConfig,
     OverrideColumnConfig,
     PinnedRowConfig,
+    merge_column_config_overrides,
     merge_sds, merge_column_config, StylingAnalysis)
 
 
@@ -208,7 +209,10 @@ class DataFlow(HasTraits):
         #summary_sd, given that processed_df is computed first. My
         #thinking was that processed_sd has greater total knowledge
         #and should supersede summary_sd.
-        self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
+
+        intermediate_sd = merge_sds(self.cleaned_sd, self.summary_sd)
+        self.merged_sd  = merge_column_config_overrides(
+            intermediate_sd, self.processed_df, self.processed_sd)
 
     @observe('merged_sd', 'style_method')
     @exception_protect('widget_config-protector')
@@ -371,7 +375,7 @@ class CustomizableDataflow(DataFlow):
         else:
             post_analysis = self.post_processing_klasses[post_processing_method]
             try:
-                ret_df, sd =  post_analysis.post_process_df(cleaned_df)
+                ret_df, sd = post_analysis.post_process_df(cleaned_df)
                 return (ret_df, sd)
             except Exception as e:
                 return (self._build_error_dataframe(e), {})
