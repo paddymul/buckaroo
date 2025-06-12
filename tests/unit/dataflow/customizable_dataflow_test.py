@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pytest
 from ..fixtures import (DistinctCount)
@@ -135,12 +134,14 @@ def test_custom_summary_stats():
     assert list(summary_sd.keys()) == ['a', 'b']
 
 def test_init_sd():
+    """
+      verify that values put into init_sd end up in merged_sd
+      """
     class DCDFC(ACDFC):
         analysis_klasses = [DistinctCount, StylingAnalysis]
 
     dc_dfc = DCDFC(BASIC_DF, init_sd={'foo_col':{'foo':8}})
 
-    summary_sd = dc_dfc.widget_args_tuple[2]
     assert dc_dfc.merged_sd == {
         'a': {'orig_col_name':'foo_col', 'rewritten_col_name':'a', 'distinct_count':2, 'foo':8},
         'b': {'orig_col_name':'bar_col', 'rewritten_col_name':'b', 'distinct_count':3}}
@@ -163,6 +164,8 @@ def test_always_fail_styling():
     dc_dfc = DCDFC(BASIC_DF) #, init_sd={'a':{'foo':8}})
 
     summary_sd = dc_dfc.widget_args_tuple[2]
+    #BS test, but punting
+    assert len(summary_sd) > 0 
 
 
 SENTINEL_DF = pd.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', 'b', 'c']})

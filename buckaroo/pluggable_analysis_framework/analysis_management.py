@@ -1,8 +1,7 @@
 from collections import defaultdict 
 import traceback
-from typing import List, Tuple, Type
+from typing import List, Type
 
-from typing_extensions import TypeAlias
 import warnings
 
 import pandas as pd

@@ -115,9 +115,6 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
     
 def pd_to_obj(df:pd.DataFrame) -> Dict[str, Any]:
 
-    multi_main_idx = isinstance(df.index, pd.MultiIndex)
-    multi_col_idx = isinstance(df.columns, pd.MultiIndex)
-
     orig_cols = df.columns
     new_cols = [rewritten_col_name for orig_ser_name, rewritten_col_name in old_col_new_col(df)]
     df.columns = new_cols

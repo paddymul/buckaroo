@@ -4,7 +4,6 @@ from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalC
 from buckaroo.ddd_library import get_basic_df2, get_multi_index_cols_df, get_tuple_cols_df
 from buckaroo.df_util import ColIdentifier
 from buckaroo.pluggable_analysis_framework.col_analysis import SDType
-from tests.unit.test_utils import assert_dict_eq
 BASIC_DF = get_basic_df2()
 
 def test_simple_styling() -> None:

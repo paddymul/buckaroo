@@ -1,6 +1,4 @@
-import json
 import unittest
-from unittest import TestCase
 import warnings
 
 import pytest
@@ -158,14 +156,14 @@ class TestAnalysisPipeline(unittest.TestCase):
           
           """
 
-        with warnings.catch_warnings(record=True) as warn_record_1:
-            sdf3, _errs = produce_series_df(
+        with warnings.catch_warnings(record=True) as _warn_record_1:
+            _sdf3, _errs = produce_series_df(
                 test_df, [AlwaysWarn], 'test_df', debug=False)
             
-        # print(warn_record_1)
-        # assert warn_record_1 == []
+        # print(_warn_record_1)
+        # assert _warn_record_1 == []
         with pytest.warns() as record:
-            sdf3, _errs = produce_series_df(
+            _sdf4, _errs = produce_series_df(
                 test_df, [AlwaysWarn], 'test_df', debug=True)
         assert len(record) == 1
         
@@ -345,5 +343,5 @@ class TestDfStats(unittest.TestCase):
     def test_dfstats_Missing_Analysis(self):
         # this is missing "len" and should throw an exception
         with pytest.raises(NotProvidedException):
-            dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
+            _dfs = DfStats(test_df, [DistinctCount, DistinctPer], 'test_df', debug=True)
 

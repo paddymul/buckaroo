@@ -3,9 +3,7 @@ from buckaroo.pluggable_analysis_framework.col_analysis import (ColAnalysis)
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 import polars as pl 
 from polars.testing import assert_frame_equal
-import numpy as np
 
-from tests.unit.test_utils import assert_dict_eq
 
 simple_df = pl.DataFrame({'int_col':[1, 2, 3], 'str_col':['a', 'b', 'c']})
 BASIC_DF_JSON_DATA = [

@@ -42,8 +42,6 @@ def polars_produce_series_df(df:pl.DataFrame,
     summary_dict = {}
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         orig_col_to_rewritten[orig_ser_name] = rewritten_col_name
-        ser = df[orig_ser_name]
-        sampled_ser = ser
         summary_dict[rewritten_col_name] = {}
         summary_dict[rewritten_col_name]['orig_col_name'] = orig_ser_name
         summary_dict[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
