@@ -377,15 +377,11 @@ class StylingAnalysis(ColAnalysis):
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
                 cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
-                #base_style.update(rewrite_override_col_references(rewrites, cco)) # pyright: ignore[reportCallIssue, reportArgumentType]
-                base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
+                base_style.update(rewrite_override_col_references(rewrites, cco)) # pyright: ignore[reportCallIssue, reportArgumentType]
 
             if base_style.get('merge_rule') == 'hidden':
                 continue
-            if col in rewrites.values() and len(col_meta) == 1 and 'column_config_override' in col_meta:
-                continue
-            else:
-                ret_col_config.append(base_style)
+            ret_col_config.append(base_style)
         return ret_col_config
     
 
