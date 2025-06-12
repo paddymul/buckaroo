@@ -12,6 +12,7 @@ import { useState } from "react";
 const objColumn = (col_name: string): ColumnConfig => {
   const foo: NormalColumnConfig = {
     col_name,
+    header_name:col_name,
     displayer_args: {
       displayer: 'obj' as const,
     }
@@ -21,6 +22,7 @@ const objColumn = (col_name: string): ColumnConfig => {
 
 const floatColumn = (col_name: string, min_fraction_digits: number, max_fraction_digits: number): ColumnConfig => ({
   col_name,
+  header_name:col_name,
   displayer_args: {
     displayer: 'float' as const,
     min_fraction_digits,
@@ -30,6 +32,7 @@ const floatColumn = (col_name: string, min_fraction_digits: number, max_fraction
 
 const integerColumn = (col_name: string, min_digits: number, max_digits: number): ColumnConfig => ({
   col_name,
+  header_name:col_name,
   displayer_args: {
     displayer: 'integer' as const,
     min_digits,
@@ -163,7 +166,7 @@ const primaryConfigPrimary:DFViewerConfig = {
         objColumn('b'),
         {
           col_name: 'b',
-	  field: 'b',
+	  header_name: 'b',
           displayer_args: {
             displayer: 'string',
           },
@@ -238,7 +241,7 @@ export const PinnedRows: Story = {
 const ColorMapDFViewerConfig:DFViewerConfig = {
   column_config: [
     {col_name:'a',
-      field:'a',
+      header_name:'a',
       displayer_args: { displayer:'obj' },
         color_map_config: {
             color_rule: "color_map",
@@ -246,7 +249,7 @@ const ColorMapDFViewerConfig:DFViewerConfig = {
             val_column: "b"
     }},
     {col_name:'b',
-      field:'b',
+      header_name:'b',
       
       displayer_args: { displayer:'obj' },
         color_map_config: {

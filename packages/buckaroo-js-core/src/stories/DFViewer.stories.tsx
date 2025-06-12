@@ -80,6 +80,7 @@ export const Primary: Story = {
       column_config: [
       {
         col_name: 'a',
+	header_name: 'a1',
         displayer_args: {
           displayer: 'float',
           min_fraction_digits: 2,
@@ -89,6 +90,7 @@ export const Primary: Story = {
       },
       {
         col_name: 'a',
+	header_name: 'a2',
         displayer_args: {
           displayer: 'integer',
           min_digits:2, max_digits:3
@@ -96,6 +98,7 @@ export const Primary: Story = {
       },
       {
         col_name: 'b',
+	header_name: 'b',
         displayer_args: {
           displayer: 'obj',
         },
@@ -118,12 +121,12 @@ export const Tooltip: Story = {
 
     df_viewer_config: {
       column_config: [
-      { col_name: 'index', displayer_args: {'displayer':'obj'} },
-      { col_name: 'date', displayer_args: {'displayer':'string'},
+	{ col_name: 'index', header_name: 'index', displayer_args: {'displayer':'obj'} },
+	{ col_name: 'date', header_name:  'date',  displayer_args: {'displayer':'string'},
         tooltip_config: { 'tooltip_type':'simple', 'val_column': 'tt'}
     
     },
-      { col_name: 'date2', displayer_args: {'displayer':'string'}},
+	{ col_name: 'date2', header_name: 'date2', displayer_args: {'displayer':'string'}},
     ],
     pinned_rows:[],
   }
@@ -141,8 +144,8 @@ export const ColorFromCol: Story = {
       {index: 5, date: '24th of November, 2021'}],
     df_viewer_config: {
       column_config: [
-        {col_name: 'index', displayer_args: {'displayer':'obj'} },
-        {col_name: 'date', displayer_args: {'displayer':'string'},
+	{ col_name: 'index', header_name: 'index', displayer_args: {'displayer':'obj'} },
+        {col_name: 'date', header_name: 'date',  displayer_args: {'displayer':'string'},
           color_map_config: {
             color_rule: "color_from_column",
             val_column: "color"}}],
@@ -164,8 +167,8 @@ export const Chart: Story = {
       {index: 0, chart1: lineChart}],
     df_viewer_config: {
       column_config: [
-        {col_name: 'index', displayer_args: {'displayer':'obj'} },
-        {col_name: 'chart1', displayer_args: {'displayer':'chart'}}],        
+        {col_name: 'index', header_name: 'index', displayer_args: {'displayer':'obj'} },
+        {col_name: 'chart1', header_name: 'chart1', displayer_args: {'displayer':'chart'}}],        
       pinned_rows:[],
    }
   }

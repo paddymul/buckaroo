@@ -77,6 +77,7 @@ export const Primary: Story = {
       column_config: [
       {
         col_name: 'a',
+        header_name: 'a1',
         displayer_args: {
           displayer: 'float',
           min_fraction_digits: 2,
@@ -86,6 +87,7 @@ export const Primary: Story = {
       },
       {
         col_name: 'a',
+        header_name: 'a2',
         displayer_args: {
           displayer: 'integer',
           min_digits:2, max_digits:3
@@ -93,6 +95,7 @@ export const Primary: Story = {
       },
       {
         col_name: 'b',
+        header_name: 'b',
         displayer_args: {
           displayer: 'obj',
         },

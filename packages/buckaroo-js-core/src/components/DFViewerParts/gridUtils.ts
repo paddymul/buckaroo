@@ -72,8 +72,8 @@ export function extractSingleSeriesSummary(
     return {
         dfviewer_config: {
             column_config: [
-              { col_name: "index", field:"index",  displayer_args: { displayer: "obj" } },
-              { col_name: col_name, field:col_name, displayer_args: { displayer: "obj" } },
+              { col_name: "index", header_name:"index",  displayer_args: { displayer: "obj" } },
+              { col_name: col_name, header_name: col_name,  displayer_args: { displayer: "obj" } },
             ],
             pinned_rows: [],
         },
@@ -109,7 +109,7 @@ export function baseColToColDef (f:ColumnConfig) : ColDef {
 
 export function normalColToColDef (f:NormalColumnConfig) : ColDef {
   const colDef: ColDef = {
-    headerName: f.col_name,
+    headerName: f.header_name,
     ...baseColToColDef(f)};
   return colDef
 }

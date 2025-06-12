@@ -147,6 +147,7 @@ export type BaseColumnConfig = {
 };
 export type NormalColumnConfig = BaseColumnConfig & {
   col_name:string;
+  header_name:string;
 }
 export type MultiIndexColumnConfig = BaseColumnConfig & {
   col_path:string[];

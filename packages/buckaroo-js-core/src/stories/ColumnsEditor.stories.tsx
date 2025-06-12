@@ -11,18 +11,22 @@ const df_viewer_config: DFViewerConfig = {
   column_config: [
     {
       col_name: "index",
+      header_name: "index",
       displayer_args: { displayer: "integer", min_digits: 3, max_digits: 5 },
     },
     {
       col_name: "svg_column",
+      header_name: "svg_column",
       displayer_args: { displayer: "SVGDisplayer" },
     },
     {
       col_name: "link_column",
+      header_name: "link_column",
       displayer_args: { displayer: "linkify" },
     },
     {
       col_name: "nanObject",
+      header_name: "nanObject",
       displayer_args: { displayer: "integer", min_digits: 3, max_digits: 5 },
       color_map_config: {
         color_rule: "color_map",

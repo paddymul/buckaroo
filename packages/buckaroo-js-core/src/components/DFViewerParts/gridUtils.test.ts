@@ -115,6 +115,7 @@ describe("testing utility functions in gridUtils ", () => {
         column_config: [
           {
             col_name: "test",
+	    header_name: "test",
 	    field:"test",
             displayer_args: { displayer: "float", min_fraction_digits: 2, max_fraction_digits: 4 }
           }
@@ -217,13 +218,16 @@ describe("testing multi index organiztion  ", () => {
     ];
   const REGULAR_C :NormalColumnConfig = {
     col_name:'c', 
+    header_name: 'c',
     displayer_args: { displayer:'obj' }};
   const REGULAR_C__DIFFERENT_OBJECT :NormalColumnConfig = {
     col_name:'c', 
+    header_name: 'c2',
     displayer_args: { displayer:'obj' }};
 
   const REGULAR_D :NormalColumnConfig = {
     col_name:'d', 
+    header_name: 'd',
     displayer_args: { displayer:'obj' }};
   it("should group simple multi indexes properly", () => {
     const allMultiIndex: MultiIndexColumnConfig[] = [
