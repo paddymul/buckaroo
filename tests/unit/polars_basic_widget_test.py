@@ -21,8 +21,8 @@ EXPECTED_DF_VIEWER_CONFIG = {
     'pinned_rows': [],
     'column_config': [
         {'col_name':'a', 'header_name': 'normal_int_series', 'displayer_args': {'displayer': 'obj'}}],
-    'first_col_config': {'col_name': 'index', 'header_name': 'index',
-                         'displayer_args': {'displayer': 'obj'}},
+    'left_col_configs': [{'col_name': 'index', 'header_name': 'index',
+                         'displayer_args': {'displayer': 'obj'}}],
     'component_config': {},
     'extra_grid_config': {},
 }

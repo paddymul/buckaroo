@@ -33,7 +33,8 @@ classifiers = [
 dependencies = [
     "anywidget >= 0.9.0",
     "graphlib_backport>=1.0.0",
-    "fastparquet"
+    "fastparquet",
+    "beartype>=0.21.0",
 ]
 
 version = "0.10.5"

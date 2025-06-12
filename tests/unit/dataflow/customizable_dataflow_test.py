@@ -28,8 +28,8 @@ DFVIEWER_CONFIG_DEFAULT = {
                    'column_config':  [
                        {'col_name':'a', 'header_name':'foo_col', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'header_name':'bar_col', 'displayer_args': {'displayer': 'obj'}}],
-                   'first_col_config': {'header_name': 'index', 'col_name':'index',
-                       'displayer_args': {'displayer': 'obj'}},
+                   'left_col_configs': [{'header_name': 'index', 'col_name':'index',
+                       'displayer_args': {'displayer': 'obj'}}],
                     'component_config': {},
                     'extra_grid_config': {},
 }
@@ -39,8 +39,8 @@ DFVIEWER_CONFIG_WITHOUT_B = {
         ## note that col_name:'b' isn't present because of the merge rule
         {'col_name':'a', 'header_name':'foo_col', 'displayer_args': {'displayer': 'obj'}},
     ],
-    'first_col_config': {'col_name': 'index', 'header_name':'index',
-                         'displayer_args': {'displayer': 'obj'}},
+    'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                         'displayer_args': {'displayer': 'obj'}}],
     'component_config': {},
     'extra_grid_config': {},
 }
@@ -99,8 +99,8 @@ def test_custom_dataflow():
                    'column_config':  [
                        {'header_name':'foo_col', 'col_name':'a', 'displayer_args': {'displayer': 'int'}},
                        {'header_name':'bar_col', 'col_name':'b', 'displayer_args': {'displayer': 'int'}}],
-                   'first_col_config': {'col_name': 'index', 'header_name':'index',
-                       'displayer_args': {'displayer': 'obj'}},
+                   'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                       'displayer_args': {'displayer': 'obj'}}],
                     'component_config': {},
                     'extra_grid_config': {},
     }
@@ -210,8 +210,8 @@ SENTINEL_CONFIG_WITHOUT_INT = {
     'column_config':  [
         {'col_name': 'b', 'header_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'}},
     ],
-    'first_col_config': {'col_name': 'index', 'header_name':'index',
-                         'displayer_args': {'displayer': 'obj'}},
+    'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                         'displayer_args': {'displayer': 'obj'}}],
     'component_config': {},
     'extra_grid_config': {},
 }

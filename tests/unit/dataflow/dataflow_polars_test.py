@@ -21,8 +21,8 @@ DFVIEWER_CONFIG_DEFAULT = {
                    'column_config':  [
                        {'col_name':'a', 'header_name':'int_col', 'displayer_args': {'displayer': 'obj'}},
                        {'col_name':'b', 'header_name':'str_col', 'displayer_args': {'displayer': 'obj'}}],
-                   'first_col_config': {'col_name': 'index', 'header_name':'index',
-                       'displayer_args': {'displayer': 'obj'}},
+                   'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                       'displayer_args': {'displayer': 'obj'}}],
                    'component_config' : {},
                    'extra_grid_config': {},
 }
@@ -74,8 +74,8 @@ def test_custom_dataflow():
                    'column_config':  [
                        {'col_name':'a', 'header_name':'int_col', 'displayer_args': {'displayer': 'int'}},
                        {'col_name':'b', 'header_name':'str_col', 'displayer_args': {'displayer': 'int'}}],
-                   'first_col_config': {'col_name': 'index', 'header_name':'index',
-                       'displayer_args': {'displayer': 'obj'}},
+                   'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                       'displayer_args': {'displayer': 'obj'}}],
                    'component_config' : {},
                    'extra_grid_config': {},
     }
@@ -222,7 +222,7 @@ def test_column_config_override():
     assert int_cc_after['col_name'] == 'a' #make sure we found the right row
     assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
     #assert assert_dict_eq(int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
-    assert assert_dict_eq(int_cc_after, {})
+    assert assert_dict_eq(int_cc_after, {}) # 
 
 
 def test_column_config_override2():
