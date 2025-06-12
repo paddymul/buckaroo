@@ -120,7 +120,8 @@ describe("testing utility functions in gridUtils ", () => {
             displayer_args: { displayer: "float", min_fraction_digits: 2, max_fraction_digits: 4 }
           }
         ],
-        pinned_rows: []
+        pinned_rows: [],
+	left_col_configs: []
       };
 
       const result = dfToAgrid(config);
@@ -135,6 +136,7 @@ describe("testing utility functions in gridUtils ", () => {
       const config: DFViewerConfig = {
         column_config: [],
         pinned_rows: [],
+	left_col_configs: [],
         component_config: {
           height_fraction: 2
         }
@@ -148,6 +150,7 @@ describe("testing utility functions in gridUtils ", () => {
       const config: DFViewerConfig = {
         column_config: [],
         pinned_rows: [],
+	left_col_configs: [],
         component_config: {
           shortMode: true
         }

@@ -40,6 +40,15 @@ const integerColumn = (col_name: string, min_digits: number, max_digits: number)
   },
 });
 
+const INDEX_COL_CONFIG:NormalColumnConfig =         {
+          col_name: 'index',
+	  header_name: 'index',
+          displayer_args: {
+            displayer: 'string',
+          },
+        }
+
+
 const DFViewerInfiniteWrap = ({
   data,
   df_viewer_config,
@@ -158,7 +167,7 @@ const data = [
     {'a':undefined, 'b':undefined}
 
   ];
-
+const left_col_configs = [INDEX_COL_CONFIG];
 const primaryConfigPrimary:DFViewerConfig = {
       column_config: [
         floatColumn('a', 2, 8),
@@ -171,8 +180,10 @@ const primaryConfigPrimary:DFViewerConfig = {
             displayer: 'string',
           },
         },
-      ],
-      pinned_rows: [],
+      ],	
+  pinned_rows: [],
+  left_col_configs,
+  
    };
     const LargeConfig:DFViewerConfig = {
       column_config: [
@@ -180,7 +191,8 @@ const primaryConfigPrimary:DFViewerConfig = {
       integerColumn('a', 2, 3),
       objColumn('b'),
     ],
-        pinned_rows:[]
+      pinned_rows:[],
+  left_col_configs,
   }
   const PinnedRowConfig:DFViewerConfig = {
     column_config: [
@@ -192,7 +204,8 @@ const primaryConfigPrimary:DFViewerConfig = {
     pinned_rows: [{
       'primary_key_val': 'histogram',
       'displayer_args': { 'displayer': 'histogram' }
-    }]
+    }],
+  left_col_configs,
   };
 const IntFloatConfig:DFViewerConfig =  {
     column_config: [
@@ -204,6 +217,7 @@ const IntFloatConfig:DFViewerConfig =  {
     'primary_key_val': 'histogram',
     'displayer_args': { 'displayer': 'histogram' }
   }],
+  left_col_configs:[]
   //component_config: {dfvHeight:200}
 };
 
@@ -264,7 +278,8 @@ const ColorMapDFViewerConfig:DFViewerConfig = {
    pinned_rows: [{
     'primary_key_val': 'histogram',
     'displayer_args': { 'displayer': 'histogram' }
-  }]
+   }],
+  left_col_configs,
 }
 
 export const ColorMapExample: Story = {
@@ -310,7 +325,8 @@ const MultiIndexDFViewerConfig:DFViewerConfig = {
       displayer_args: { displayer:'obj' },
     },
   ],
-  pinned_rows: []
+  pinned_rows: [],
+  left_col_configs,
 }
 
 const ThreeLevelIndex:DFViewerConfig = {
@@ -338,7 +354,8 @@ const ThreeLevelIndex:DFViewerConfig = {
       displayer_args: { displayer:'obj' },
     },
   ],
-  pinned_rows: []
+  pinned_rows: [],
+  left_col_configs,
 }
 
   /*

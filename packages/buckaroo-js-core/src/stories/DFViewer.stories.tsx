@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { DFData, DFViewerConfig } from "../components/DFViewerParts/DFWhole";
+import { DFData, DFViewerConfig, NormalColumnConfig } from "../components/DFViewerParts/DFWhole";
 import { SetColumnFunc } from "../components/DFViewerParts/gridUtils";
 
 import "../style/dcf-npm.css"
@@ -70,6 +70,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const INDEX_COL_CONFIG:NormalColumnConfig =         {
+          col_name: 'index',
+	  header_name: 'index',
+          displayer_args: {
+            displayer: 'string',
+          },
+        }
+
+const left_col_configs = [INDEX_COL_CONFIG];
+
 export const Primary: Story = {
   args: {
     df_data: [
@@ -104,7 +114,8 @@ export const Primary: Story = {
         },
       },
     ],
-    pinned_rows:[]
+      pinned_rows:[],
+      left_col_configs
   },
   
     }
@@ -129,6 +140,7 @@ export const Tooltip: Story = {
 	{ col_name: 'date2', header_name: 'date2', displayer_args: {'displayer':'string'}},
     ],
     pinned_rows:[],
+      left_col_configs
   }
 }
 };
@@ -151,6 +163,7 @@ export const ColorFromCol: Story = {
             val_column: "color"}}],
 
       pinned_rows:[],
+      left_col_configs
    }
   }
 }
@@ -170,6 +183,7 @@ export const Chart: Story = {
         {col_name: 'index', header_name: 'index', displayer_args: {'displayer':'obj'} },
         {col_name: 'chart1', header_name: 'chart1', displayer_args: {'displayer':'chart'}}],        
       pinned_rows:[],
+      left_col_configs
    }
   }
 }

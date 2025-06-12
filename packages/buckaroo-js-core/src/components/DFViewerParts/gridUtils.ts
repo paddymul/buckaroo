@@ -75,7 +75,17 @@ export function extractSingleSeriesSummary(
               { col_name: "index", header_name:"index",  displayer_args: { displayer: "obj" } },
               { col_name: col_name, header_name: col_name,  displayer_args: { displayer: "obj" } },
             ],
-            pinned_rows: [],
+          pinned_rows: [],
+	  left_col_configs: [
+	    {
+              col_name: 'index',
+	      header_name: 'index',
+              displayer_args: {
+		displayer: 'string',
+              },
+            }
+	]
+	  
         },
         data: _.filter(
             _.map(full_summary_stats_df, (row) => _.pick(row, ["index", col_name])),

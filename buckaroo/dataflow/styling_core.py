@@ -166,7 +166,7 @@ ComponentConfig = TypedDict('ComponentConfig', {
 DFViewerConfig = TypedDict('DFViewerConfig', {
     'pinned_rows': List[PinnedRowConfig],
     'column_config': List[ColumnConfig],
-    'first_col_config': ColumnConfig,  # basically for the pandas index
+    'left_col_configs': List[ColumnConfig],  # basically for the pandas index
     'extra_grid_config': NotRequired[Dict[str, Any]],  # GridOptions
     'component_config': NotRequired[ComponentConfig]
 })
@@ -319,7 +319,7 @@ class StylingAnalysis(ColAnalysis):
         return {
             'pinned_rows': cls.pinned_rows,
             'column_config': cls.style_columns(sd, df),
-            'first_col_config':  index_config,
+            'left_col_configs':  [index_config],
             'extra_grid_config': cls.extra_grid_config,
             'component_config': cls.component_config
         }

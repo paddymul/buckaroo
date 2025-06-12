@@ -178,6 +178,7 @@ export type ComponentConfig = {
 export interface DFViewerConfig {
     pinned_rows: PinnedRowConfig[];
     column_config: ColumnConfig[];
+    left_col_configs:  ColumnConfig[];
     extra_grid_config?: GridOptions;
     component_config?: ComponentConfig;
 }
@@ -207,6 +208,7 @@ export const EmptyDf: DFWhole = {
     dfviewer_config: {
         pinned_rows: [],
         column_config: [],
+      left_col_configs: []
     },
     data: [],
 };

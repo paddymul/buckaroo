@@ -42,4 +42,5 @@ export const primaryConfigPrimary: DFViewerConfig = {
     },
   ],
   pinned_rows: [],
+  left_col_configs: []
 }; 
