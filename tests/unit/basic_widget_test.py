@@ -95,8 +95,6 @@ def test_interpreter():
     temp_ops = w.operations.copy()
     temp_ops.append([{"symbol":"dropcol"},{"symbol":"df"},"str_col"])
 
-    print("setting operations")
-    print("-"*80)
     w.operations = temp_ops
 
     tdf = w.dataflow.cleaned_df
@@ -119,10 +117,7 @@ def test_string_column_handling():
     
     df = pd.DataFrame([["foo","bar","baz"]], columns=[10,20,30])
     bw = BuckarooWidget(df)
-    print(bw.df_data_dict['main'])
-    # print(bw.df_display_args['main']['df_viewer_config']['column_config'])
-    #we want the column to be named the string '10' not the number t10
-
+    #we want the  column have col_name 'a' and the header_name to be 10
     bw.df_display_args['main']['df_viewer_config']['column_config'][0]
     ten_col = bw.df_display_args['main']['df_viewer_config']['column_config'][0]
     assert ten_col['col_name'] == 'a'  # this is the field that ag-grid will read from

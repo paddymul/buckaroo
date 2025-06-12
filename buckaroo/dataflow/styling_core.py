@@ -349,9 +349,6 @@ class StylingAnalysis(ColAnalysis):
                 skip_orig_cols.append(col)
 
         rewrites= dict( old_col_new_col(df))
-        # print("346 rewrites")
-        # print(rewrites)
-
         for col, col_meta in sd.items():
             try:
                 orig_col_name = col_meta.get('orig_col_name')
@@ -378,12 +375,9 @@ class StylingAnalysis(ColAnalysis):
 
             print(col, list(col_meta.keys()), 'column_config_override' in list(col_meta.keys()), 'column_config_override'  in col_meta)
             if 'column_config_override' in col_meta:
-                print("COL CONFIG OVERRIDE FOR", col)
                 #column_config_override, sent by the instantiation, gets set later
                 cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]
                 #base_style.update(rewrite_override_col_references(rewrites, cco)) # pyright: ignore[reportCallIssue, reportArgumentType]
-                # print("cco 373")
-                # print(cco)
                 base_style.update(cco) # pyright: ignore[reportCallIssue, reportArgumentType]
 
             if base_style.get('merge_rule') == 'hidden':

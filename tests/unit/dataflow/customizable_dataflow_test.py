@@ -129,8 +129,6 @@ def test_custom_summary_stats():
     dc_dfc = DCDFC(BASIC_DF)
 
     summary_sd = dc_dfc.widget_args_tuple[2]
-    print(summary_sd)
-    print("^"*80)
     assert summary_sd == {
                           'a': {'distinct_count':2, 'rewritten_col_name':'a', 'orig_col_name':'foo_col', },
                           'b': {'distinct_count':3, 'rewritten_col_name':'b', 'orig_col_name':'bar_col', }}
@@ -143,8 +141,6 @@ def test_init_sd():
     dc_dfc = DCDFC(BASIC_DF, init_sd={'foo_col':{'foo':8}})
 
     summary_sd = dc_dfc.widget_args_tuple[2]
-    print(summary_sd)
-    print("^"*80)
     assert dc_dfc.merged_sd == {
         'a': {'orig_col_name':'foo_col', 'rewritten_col_name':'a', 'distinct_count':2, 'foo':8},
         'b': {'orig_col_name':'bar_col', 'rewritten_col_name':'b', 'distinct_count':3}}
@@ -167,9 +163,6 @@ def test_always_fail_styling():
     dc_dfc = DCDFC(BASIC_DF) #, init_sd={'a':{'foo':8}})
 
     summary_sd = dc_dfc.widget_args_tuple[2]
-    print(summary_sd)
-    print("^"*80)
-
 
 
 SENTINEL_DF = pd.DataFrame({'sent_int_col':[11, 22, 33], 'sent_str_col':['ka', 'b', 'c']})
@@ -568,15 +561,3 @@ def test_bstate_commands3():
         [sQ('search'), s('df'), "col", "needle"]]
     assert len(vcb.dataflow.processed_df) == 2
     assert vcb.df_meta['filtered_rows'] == 2
-
-def Xtest_sample():
-    """
-    this test is slow, and sample is barely used anymore
-    """
-    big_df = pd.DataFrame({'a': np.arange(105_000)})
-    bw = ACDFC(big_df)
-    assert len(bw.processed_df) == 100_000
-    print(list(bw.df_data_dict.keys()))
-    assert len(bw.df_data_dict['main']) == 5_000
-
-

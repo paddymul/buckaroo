@@ -154,28 +154,6 @@ def rewrite_override():
         'displayer_args': {'displayer':'boolean'}}
     assert rewrite_override_col_references(rewrites, no_rewrite_config.copy()) == no_rewrite_config
 
-def Xtest_override_columnconfig2() -> None:
-    sd: SDType = {
-        'a': {'orig_col_name': 'int_col', 'rewritten_col_name': 'a'},
-        'int_col': {
-            'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}}
-    typed_df = pd.DataFrame(
-    {'int_col': [1] * 5,
-     # 'float_col': [.5] * ROWS,
-     # "str_col": ["foobar"]* ROWS},
-    })
-    result = StylingAnalysis.style_columns(sd, typed_df)
-
-    assert result[0]['col_name'] == 'a'
-    print("0"*80)
-    print(result[0])
-    print("1"*80)
-    print(result[1])
-    print("&"*80)
-    assert_dict_eq({'col_name':'a', 'header_name':'int_col',
-                    'displayer_args': {'displayer': 'obj'},
-                    'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}, result[0])
-
 def test_merge_column_config_overrides():
     typed_df = pd.DataFrame({'int_col': [1] * 5})
     
@@ -183,8 +161,6 @@ def test_merge_column_config_overrides():
     #BECAUSE override_sd int_col only has merge_column_config_overrides in it, nothing else should be merged
     override_sd: SDType = { 'int_col': {
         'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}}
-
-
 
     merged : SDType = merge_column_config_overrides(orig_sd, typed_df, override_sd)
 
