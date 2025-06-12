@@ -140,7 +140,7 @@ def test_init_sd():
     class DCDFC(ACDFC):
         analysis_klasses = [DistinctCount, StylingAnalysis]
 
-    dc_dfc = DCDFC(BASIC_DF, init_sd={'a':{'foo':8}})
+    dc_dfc = DCDFC(BASIC_DF, init_sd={'foo_col':{'foo':8}})
 
     summary_sd = dc_dfc.widget_args_tuple[2]
     print(summary_sd)
@@ -275,7 +275,7 @@ class HidePostProcessingAnalysis2(ColAnalysis):
 
     @classmethod
     def post_process_df(kls, cleaned_df):
-        return [cleaned_df, {'b': {'merge_rule': 'hidden'}}]
+        return [cleaned_df, {'bar_col': {'merge_rule': 'hidden'}}]
 
 
 def test_hide_column_config_post_processing2():

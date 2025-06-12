@@ -248,8 +248,14 @@ def merge_column_config(styled_column_config:List[ColumnConfig],
     return ret_column_config
 
 def merge_column_config_overrides(final_sd:SDType, df:pd.DataFrame, overrides:SDType) -> SDType:
+    """
+      this is psecifically built for places where keys from the original dataframe will be used in 'overrides'
+      those should be mapped onto the rewritten col_name
+      """
     for old_col, new_col in old_col_new_col(df):
         if old_col in overrides:
+            if new_col not in final_sd:
+                final_sd[new_col] = {}
             final_sd[new_col].update(overrides[old_col])
     return final_sd
 

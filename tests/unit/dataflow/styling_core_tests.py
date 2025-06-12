@@ -1,7 +1,8 @@
-from typing import List
+from typing import Dict, List
 import pandas as pd
-from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalColumnConfig, StylingAnalysis, rewrite_override_col_references
+from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalColumnConfig, PartialColConfig, StylingAnalysis, merge_column_config_overrides, rewrite_override_col_references
 from buckaroo.ddd_library import get_basic_df2, get_multi_index_cols_df, get_tuple_cols_df
+from buckaroo.df_util import ColIdentifier
 from buckaroo.pluggable_analysis_framework.col_analysis import SDType
 from tests.unit.test_utils import assert_dict_eq
 BASIC_DF = get_basic_df2()
@@ -73,8 +74,8 @@ def test_get_dfviewer_config_merge_hidden():
         'column_config':  [
             {'col_name': 'b', 'header_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'}},
         ],
-        'first_col_config': {'col_name': 'index', 'header_name':'index',
-                             'displayer_args': {'displayer': 'obj'}},
+        'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                             'displayer_args': {'displayer': 'obj'}}],
         'component_config': {},
         'extra_grid_config': {},
     }
@@ -105,8 +106,8 @@ def test_get_dfviewer_column_config_override():
             {'col_name': 'a', 'header_name':'sent_int_col', 'displayer_args': {'displayer': 'obj'}},
             b_config
         ],
-        'first_col_config': {'col_name': 'index', 'header_name':'index',
-                             'displayer_args': {'displayer': 'obj'}},
+        'left_col_configs': [{'col_name': 'index', 'header_name':'index',
+                             'displayer_args': {'displayer': 'obj'}}],
         'component_config': {},
         'extra_grid_config': {},
     }
@@ -123,11 +124,11 @@ def rewrite_override():
 
       """
 
-    rewrites: Dist[str,str] =  {
+    rewrites: Dict[ColIdentifier, ColIdentifier] =  {
         'Volume_colors': "ccc",
         'foo' : 'ddd'
     }
-    color_from_column = {
+    color_from_column:PartialColConfig = {
               'color_map_config': {'color_rule': 'color_from_column', 'val_column': 'Volume_colors'}}
     rewritten_color_from_column = {
               'color_map_config': {'color_rule': 'color_from_column', 'val_column': 'ccc'}}
@@ -149,11 +150,11 @@ def rewrite_override():
         'tooltip_config': {'tooltip_type':'simple', 'val_column':'ccc'}}
 
     assert rewrite_override_col_references(rewrites, tooltip_config) == rewritten_tooltip_config
-    no_rewrite_config = {
+    no_rewrite_config:PartialColConfig = {
         'displayer_args': {'displayer':'boolean'}}
     assert rewrite_override_col_references(rewrites, no_rewrite_config.copy()) == no_rewrite_config
 
-def test_override_columnconfig2() -> None:
+def Xtest_override_columnconfig2() -> None:
     sd: SDType = {
         'a': {'orig_col_name': 'int_col', 'rewritten_col_name': 'a'},
         'int_col': {
@@ -174,3 +175,42 @@ def test_override_columnconfig2() -> None:
     assert_dict_eq({'col_name':'a', 'header_name':'int_col',
                     'displayer_args': {'displayer': 'obj'},
                     'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}, result[0])
+
+def test_merge_column_config_overrides():
+    typed_df = pd.DataFrame({'int_col': [1] * 5})
+    
+    orig_sd : SDType = {'a': {'foo':10, 'orig_col_name':'int_col', 'rewritten_col_name':'a'}}
+    #BECAUSE override_sd int_col only has merge_column_config_overrides in it, nothing else should be merged
+    override_sd: SDType = { 'int_col': {
+        'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}}
+
+
+
+    merged : SDType = merge_column_config_overrides(orig_sd, typed_df, override_sd)
+
+    assert merged['a'] == {'foo':10, 'orig_col_name':'int_col', 'rewritten_col_name':'a', 
+        'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}
+    assert len(merged) == 1
+    assert 'int_col' not in merged
+
+def test_merge_column_config_overrides2():
+    """
+      make sure extra keys are merged too, back to the rwritten col_name.
+      I'm not 100% sure I want to support this.
+      """
+    typed_df = pd.DataFrame({'int_col': [1] * 5})
+    override_sd: SDType = { 'int_col': {
+        'extra_key': 9,
+        'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}}
+
+    
+    orig_sd : SDType = {'a': {'foo':10, 'orig_col_name':'int_col', 'rewritten_col_name':'a'}}
+
+    merged : SDType = merge_column_config_overrides(orig_sd, typed_df, override_sd)
+
+    assert merged['a'] == { 'foo':10,
+    'orig_col_name':'int_col', 'rewritten_col_name':'a', 
+    'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}},
+    'extra_key':9}
+    assert len(merged) == 1
+

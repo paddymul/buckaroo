@@ -179,7 +179,7 @@ class DataFlow(HasTraits):
         return None
 
     @property
-    def processed_sd(self):
+    def processed_sd(self) -> SDType:
         if self.processed_result is not None:
             return self.processed_result[1]
         return {}
@@ -210,9 +210,8 @@ class DataFlow(HasTraits):
         #thinking was that processed_sd has greater total knowledge
         #and should supersede summary_sd.
 
-        intermediate_sd = merge_sds(self.cleaned_sd, self.summary_sd)
-        self.merged_sd  = merge_column_config_overrides(
-            intermediate_sd, self.processed_df, self.processed_sd)
+        self.merged_sd = merge_sds(self.cleaned_sd, self.summary_sd, self.processed_sd)
+        
 
     @observe('merged_sd', 'style_method')
     @exception_protect('widget_config-protector')
@@ -354,7 +353,19 @@ class CustomizableDataflow(DataFlow):
         #summary_sd, given that processed_df is computed first. My
         #thinking was that processed_sd has greater total knowledge
         #and should supersede summary_sd.
-        self.merged_sd = merge_sds(self.init_sd, self.cleaned_sd, self.summary_sd, self.processed_sd)
+
+        if self.processed_df is None:
+            #on initial startup
+            self.merged_sd = merge_sds(self.init_sd, self.cleaned_sd, self.summary_sd, self.processed_sd)
+            return
+
+        #we do this to get rewrtten keys for init_sd
+        rewritten_init_sd = merge_column_config_overrides({}, self.processed_df, self.init_sd)
+        intermediate_sd = merge_sds(rewritten_init_sd, self.cleaned_sd, self.summary_sd)
+        print("hereeeeeeeeeeeeeeeee")
+        self.merged_sd  = merge_column_config_overrides(
+            intermediate_sd, self.processed_df, self.processed_sd)
+
 
 
     ### start code interpreter block

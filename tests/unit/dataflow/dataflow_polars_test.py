@@ -231,12 +231,23 @@ def test_column_config_override():
     
     temp_buckaroo_state = bw.buckaroo_state.copy()
     temp_buckaroo_state['post_processing'] = 'override'
+
+
     print("<"*80)
     print("override")
     print("<"*80)
     bw.buckaroo_state = temp_buckaroo_state
-    assert bw.dataflow.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
+    #assert list(bw.dataflow.merged_sd.keys()) == ['a']
+    assert bw.dataflow.processed_sd == {
+            'int_col':{
+	        'column_config_override': EXPECTED_OVERRIDE}}
+    assert bw.dataflow.cleaned_sd == {}
+    assert list(bw.dataflow.summary_sd.keys()) == ['a']
+    print("`"*80)
+    print(list(bw.dataflow.merged_sd.keys()))
+    assert bw.dataflow.merged_sd['a']['column_config_override'] == EXPECTED_OVERRIDE
     cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
+    assert len(cc_after) == 1
     int_cc_after = cc_after[0]
     print(int_cc_after)
     assert int_cc_after['col_name'] == 'a' #make sure we found the right row
