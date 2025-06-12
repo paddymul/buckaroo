@@ -330,6 +330,10 @@ class StylingAnalysis(ColAnalysis):
     
     @classmethod
     def style_columns(cls, sd:SDType, df:pd.DataFrame) -> List[ColumnConfig]:
+        print("sd")
+        print("@"*80)
+        print(sd)
+        print("@"*80)
         ret_col_config: List[ColumnConfig] = []
         skip_orig_cols = []
         for col, col_meta in sd.items():
@@ -338,8 +342,8 @@ class StylingAnalysis(ColAnalysis):
                 skip_orig_cols.append(col)
 
         rewrites= dict( old_col_new_col(df))
-        print("346 rewrites")
-        print(rewrites)
+        # print("346 rewrites")
+        # print(rewrites)
 
         for col, col_meta in sd.items():
             try:

@@ -185,10 +185,11 @@ def test_always_error_post_processing():
 ROWS = 5
 typed_df = pl.DataFrame(
     {'int_col': [1] * ROWS,
-     'float_col': [.5] * ROWS,
-     "str_col": ["foobar"]* ROWS})
+     # 'float_col': [.5] * ROWS,
+     # "str_col": ["foobar"]* ROWS},
+    })
 
-EXPECTED_OVERRIDE = {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'Volume_colors'}}
+EXPECTED_OVERRIDE = {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}
 class ColumnConfigOverride(ColAnalysis):
     provides_defaults = {}
     @classmethod
@@ -198,6 +199,23 @@ class ColumnConfigOverride(ColAnalysis):
 	        'column_config_override': EXPECTED_OVERRIDE}}]
     post_processing_method = "override"
 
+
+
+def test_column_config_override2():
+    """
+      verifies that PolarsBuckarooWidget __init__ column_config_overrides works
+      and that color_map_config inside column_config_overrides is properly overwritten
+      """
+    bw = PolarsBuckarooWidget(typed_df, debug=False, column_config_overrides={
+        'int_col':EXPECTED_OVERRIDE})
+
+
+    cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
+    int_cc_after = cc_after[0]
+    assert int_cc_after['col_name'] == 'a' #make sure we found the right row
+    assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
+    assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
+    
 def test_column_config_override():
 
     bw = PolarsBuckarooWidget(typed_df, debug=False)
@@ -213,8 +231,10 @@ def test_column_config_override():
     
     temp_buckaroo_state = bw.buckaroo_state.copy()
     temp_buckaroo_state['post_processing'] = 'override'
+    print("<"*80)
+    print("override")
+    print("<"*80)
     bw.buckaroo_state = temp_buckaroo_state
-    
     assert bw.dataflow.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
     cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
     int_cc_after = cc_after[0]
@@ -223,34 +243,3 @@ def test_column_config_override():
     assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
     #assert assert_dict_eq(int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
     assert assert_dict_eq(int_cc_after, {}) # 
-
-
-def test_column_config_override2():
-
-    bw = PolarsBuckarooWidget(typed_df, debug=False, column_config_overrides={
-        'int_col':{ 'column_config_override': EXPECTED_OVERRIDE}})
-
-    #assert bw.dataflow.merged_sd['int_col']['column_config_override'] == EXPECTED_OVERRIDE
-    cc_after = bw.df_display_args['main']['df_viewer_config']['column_config']
-    int_cc_after = cc_after[0]
-    print(int_cc_after)
-    assert int_cc_after['col_name'] == 'a' #make sure we found the right row
-    assert int_cc_after['header_name'] == 'int_col' #make sure we found the right row
-    print("<"*80)
-    print(int_cc_after)
-    print(EXPECTED_OVERRIDE)
-    print("<"*80)
-    #int_cc_after['color_map_config']
-    #EXPECTED_OVERRIDE['color_map_config']
-    assert int_cc_after['color_map_config'] == EXPECTED_OVERRIDE['color_map_config']
-    
-
-    
-def Xtest_sample():
-    """
-    this test is slow, sampling isn't used much
-    """
-    big_df = pl.DataFrame({'a': np.arange(30_000)})
-    bw = PolarsBuckarooWidget(big_df)
-    assert len(bw.dataflow.processed_df) == len(big_df)
-    assert len(bw.df_data_dict['main']) == 5_000
