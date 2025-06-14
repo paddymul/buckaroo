@@ -2,12 +2,12 @@ from collections import OrderedDict
 import polars as pl
 import numpy as np
 
-from buckaroo.jlisp.lispy import s
 from polars.testing import assert_frame_equal
 from buckaroo.jlisp.configure_utils import configure_buckaroo
 from buckaroo.customizations.polars_commands import (
     DropCol, FillNA, GroupBy #, OneHot, GroupBy, reindex
 )
+from buckaroo.jlisp.lisp_utils import s
 
 
 def result_from_exec(code_str, df_input):
