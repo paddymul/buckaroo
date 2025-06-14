@@ -265,6 +265,9 @@ PartialColConfig:TypeAlias = Dict[str, Union[str, Dict[str, str]]]
 def rewrite_override_col_references(rewrites: Dict[ColIdentifier, ColIdentifier], obj:PartialColConfig) -> PartialColConfig:
     if obj.get('color_map_config'):
         if obj['color_map_config'].get('val_column'):
+            print("REWRITES")
+            print(rewrites)
+            print("&"*80)
             obj['color_map_config']['val_column'] = rewrites[obj['color_map_config']['val_column']]
 
         if obj['color_map_config'].get('exist_column'):
@@ -346,6 +349,9 @@ class StylingAnalysis(ColAnalysis):
                 skip_orig_cols.append(col)
 
         rewrites= dict( old_col_new_col(df))
+        print("rewrites352")
+        print(rewrites)
+        print("#"*80)
         for col, col_meta in sd.items():
             try:
                 orig_col_name = col_meta.get('orig_col_name')
@@ -370,7 +376,7 @@ class StylingAnalysis(ColAnalysis):
 
 
 
-            print(col, list(col_meta.keys()), 'column_config_override' in list(col_meta.keys()), 'column_config_override'  in col_meta)
+            #print(col, list(col_meta.keys()), 'column_config_override' in list(col_meta.keys()), 'column_config_override'  in col_meta)
             if 'column_config_override' in col_meta:
                 #column_config_override, sent by the instantiation, gets set later
                 cco: ColumnConfig = col_meta['column_config_override'] # pyright: ignore[reportAssignmentType]

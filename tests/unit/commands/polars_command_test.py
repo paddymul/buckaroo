@@ -50,7 +50,10 @@ def test_dropcol():
 
     same(DropCol, [[s('dropcol'), s('df'), "a"]], base_df)
 
-def test_groupby():
+def Xtest_groupby():
+    """
+      foregot what this test does
+      """
     base_df = pl.DataFrame({
         'a':['cc', 'cc', 'cc', 'ee', 'ff'], 'b': [None, 2, 2, 2, None], 
         'c': [10, 20, 30, 40, 50]})

@@ -114,25 +114,30 @@ def test_get_dfviewer_column_config_override():
     'a': {'orig_col_name': 'sent_int_col', 'rewritten_col_name': 'a'},
     'b': {'orig_col_name': 'sent_str_col', 'rewritten_col_name': 'b',
           'column_config_override' : {
-              'color_map_config': {'color_rule': 'color_from_column', 'val_column': 'Volume_colors'}}}
+              'color_map_config': {'color_rule': 'color_from_column', 'val_column': 'Volume_colors'}}},
+    'c': {'orig_col_name': 'Volume_colors', 'rewritten_col_name': 'c'},
     }
-
+    
     b_config : NormalColumnConfig = {
     'col_name': 'b', 'header_name':'sent_str_col', 'displayer_args': {'displayer': 'obj'},
-             'color_map_config': {'color_rule': 'color_from_column', 'val_column': 'Volume_colors'}}
+             'color_map_config': {'color_rule': 'color_from_column', 'val_column': 'c'}}
     expected_output: DFViewerConfig = {
         'pinned_rows': [],
         'column_config':  [
             {'col_name': 'a', 'header_name':'sent_int_col', 'displayer_args': {'displayer': 'obj'}},
-            b_config
+            b_config,
+            {'col_name': 'c',
+             'displayer_args': {'displayer': 'obj'},
+        'header_name': 'Volume_colors'}
         ],
         'left_col_configs': [{'col_name': 'index', 'header_name':'index',
                              'displayer_args': {'displayer': 'obj'}}],
         'component_config': {},
         'extra_grid_config': {},
     }
-
-    actual = StylingAnalysis.get_dfviewer_config(sd, BASIC_DF)
+    bdf = BASIC_DF.copy()
+    bdf['Volume_colors'] = 8 # necessary so Volume_ccolors exists as a column and it can be rewritten to c
+    actual = StylingAnalysis.get_dfviewer_config(sd, bdf)
     assert expected_output == actual
 
 
