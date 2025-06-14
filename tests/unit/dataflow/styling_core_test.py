@@ -61,6 +61,9 @@ def test_tuple_col_styling() -> None:
     assert col_config[2]['col_path'] == ('bar', 'a')
 
     
+def test_index_styling_simple():
+    assert [{'col_name': 'index', 'header_name':'index', 'displayer_args': {'displayer': 'obj'}}] == \
+        StylingAnalysis.get_left_col_configs(get_basic_df2())
 
 def test_index_styling1():
     assert [{'col_path':[''],

@@ -312,6 +312,7 @@ class StylingAnalysis(ColAnalysis):
     @classmethod
     def get_left_col_configs(cls, df:pd.DataFrame) -> List[ColumnConfig]:
         if not isinstance(df, pd.DataFrame):
+            return [{'col_name': 'index', 'header_name':'index', 'displayer_args': {'displayer': 'obj'}}]
         if index_names_empty(df.index) and index_names_empty(df.columns) and not isinstance(df.index, pd.MultiIndex):
             return [{'col_name': 'index', 'header_name':'index',
                              'displayer_args': {'displayer': 'obj'}}]
@@ -342,8 +343,6 @@ class StylingAnalysis(ColAnalysis):
             for i, cl in enumerate(col_levels):
                 ccs[-1]['col_path'][i] = cl
         return ccs
-
-
 
     provides_defaults: ColMeta = {}
     pinned_rows:  List[PinnedRowConfig] = []
