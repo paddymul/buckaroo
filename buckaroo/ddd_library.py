@@ -15,6 +15,10 @@ def get_basic_df():
 def get_basic_df2() -> pd.DataFrame:
     return pd.DataFrame({'foo_col': [10, 20, 20], 'bar_col':['foo', 'bar', 'baz']})
 
+def get_basic_df_with_named_index():
+    basic_index_with_df = pd.DataFrame({'foo':[10,20, 30]})
+    basic_index_with_df.index.name = "named_index"
+    return basic_index_with_df
 
 def get_multindex_cols_df(rows=15) -> pd.DataFrame:
     cols = pd.MultiIndex.from_tuples(

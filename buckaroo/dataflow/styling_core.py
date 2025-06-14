@@ -3,7 +3,7 @@ from typing import Iterable, TypedDict, Union, List, Dict, Any, Literal
 from typing_extensions import NotRequired, TypeAlias
 
 import pandas as pd
-from buckaroo.df_util import ColIdentifier, old_col_new_col
+from buckaroo.df_util import ColIdentifier, old_col_new_col, to_chars
 from buckaroo.pluggable_analysis_framework.col_analysis import (ColAnalysis, ColMeta, SDType)
 
 logger = logging.getLogger()
@@ -261,6 +261,20 @@ def safedel(dct:Dict[str, Any], key:str) -> Dict[str, Any]:
         del dct[key]
     return dct
 
+def get_index_level_names(index:Union[pd.Index[Any], pd.MultiIndex]) -> List[str]:
+    if isinstance(index, pd.MultiIndex):
+        if all(x is None for x in index.names):
+            index_level_names = ['' for idx_name in index.names]
+        else:
+            index_level_names = [str(idx_name) for idx_name in index.names]
+    elif index.name is not None:
+        index_level_names = [index.name]
+    else:
+        index_level_names = []
+    return index_level_names
+    
+    
+
 PartialColConfig:TypeAlias = Dict[str, Union[str, Dict[str, str]]]
 def rewrite_override_col_references(rewrites: Dict[ColIdentifier, ColIdentifier], obj:PartialColConfig) -> PartialColConfig:
     if obj.get('color_map_config'):
@@ -337,8 +351,34 @@ class StylingAnalysis(ColAnalysis):
             'extra_grid_config': cls.extra_grid_config,
             'component_config': cls.component_config
         }
+        # if not isinstance(df, pd.DataFrame):
+        #     return [{'col_name': 'index', 'header_name':'index',
+        #                      'displayer_args': {'displayer': 'obj'}}]
+        # else:
 
-    
+        #     col_index_names = get_index_level_names(df.columns)
+        #     main_index_names = get_index_level_names(df.index)
+        #     if len(col_index_names) == 0 and len(main_index_names) == 0:
+        #         return [{'col_name': 'index', 'header_name':'index',
+        #                      'displayer_args': {'displayer': 'obj'}}]
+        #     elif isinstance(df.index, pd.MultiIndex):
+        #         cc = []
+        #         for i, index_name in enumerate(main_index_names):
+        #             if i == len(main_index_names) -1:
+        #                 col_path=col_index_names
+        #             else:
+        #                 col_path = [''] * len(col_index_names)
+        #             if index_name is not None:
+        #                 col_path.append(index_name)
+        #             cc.append({'col_path':col_path, 'field':'index_' + to_chars(i),
+        #                        'displayer_args': {'displayer': 'obj'}})
+                    
+
+
+    @classmethod
+    def get_left_col_configs(df:pd.DataFrame) -> List[ColumnConfig]:
+        pass
+                    
     @classmethod
     def style_columns(cls, sd:SDType, df:pd.DataFrame) -> List[ColumnConfig]:
         ret_col_config: List[ColumnConfig] = []
