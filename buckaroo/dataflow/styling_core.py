@@ -292,34 +292,79 @@ def get_index_level_names(index:Any) -> List[str]:
         index_level_names = []
     return index_level_names
 
+#Union[pd.Index[Any], pd.MultiIndex]
+def get_empty_index_level_arr(index:Any) -> List[str]:
+    if isinstance(index, pd.MultiIndex):
+        index_level_names = ['' for idx_name in index.names]
+    elif index.name is not None:
+        index_level_names = [index.name]
+    else:
+        index_level_names = []
+    return index_level_names
+
+def index_names_empty(index:Any) -> bool:
+    if isinstance(index, pd.MultiIndex):
+        return all(x is None for x in index.names)
+    return index.name is None
+    
 
 class StylingAnalysis(ColAnalysis):
     @classmethod
     def get_left_col_configs(cls, df:pd.DataFrame) -> List[ColumnConfig]:
-        pass
-
         if not isinstance(df, pd.DataFrame):
             return [{'col_name': 'index', 'header_name':'index',
                              'displayer_args': {'displayer': 'obj'}}]
-        else:
-
-            col_index_names = get_index_level_names(df.columns)
-            main_index_names = get_index_level_names(df.index)
-            if len(col_index_names) == 0 and len(main_index_names) == 0:
-                return [{'col_name': 'index', 'header_name':'index',
+        if index_names_empty(df.index) and index_names_empty(df.columns) and not isinstance(df.index, pd.MultiIndex):
+            return [{'col_name': 'index', 'header_name':'index',
                              'displayer_args': {'displayer': 'obj'}}]
-            elif isinstance(df.index, pd.MultiIndex):
-                cc = []
-                for i, index_name in enumerate(main_index_names):
-                    if i == len(main_index_names) -1:
-                        col_path=col_index_names
-                    else:
-                        col_path = [''] * len(col_index_names)
-                    if index_name is not None:
-                        col_path.append(index_name)
-                    cc.append({'col_path':col_path, 'field':'index_' + to_chars(i),
-                               'displayer_args': {'displayer': 'obj'}})
-                    
+        base_col_path = get_empty_index_level_arr(df.columns)
+        col_levels = get_index_level_names(df.columns)
+
+        if not(isinstance(df.index, pd.MultiIndex)):
+            if index_names_empty(df.index):
+                col_levels.append('index')
+            else:
+                col_levels.append(df.index.name)
+            return [{'col_path':col_levels, 'field':'index',
+                     'displayer_args': {'displayer': 'obj'}}]
+        ccs:List[ColumnConfig] = []
+
+        for i, idx_name in enumerate(df.index.names):
+            if idx_name is None:
+                if len(base_col_path) == 0:
+                    base_col_path = ['']
+                ccs.append({'col_path': base_col_path.copy(), 'field':'index_' + to_chars(i),
+                     'displayer_args': {'displayer': 'obj'}})
+            else:
+                local_col_path = base_col_path.copy()
+                local_col_path.append(str(idx_name))
+                ccs.append({'col_path': local_col_path, 'field':'index_' + to_chars(i),
+                     'displayer_args': {'displayer': 'obj'}})
+        if not index_names_empty(df.columns):
+            for i, cl in enumerate(col_levels):
+                ccs[-1]['col_path'][i] = cl
+        return ccs
+                
+                
+        
+
+        # col_index_names = get_index_level_names(df.columns)
+        # main_index_names = get_index_level_names(df.index)
+        # if len(col_index_names) == 0 and len(main_index_names) == 0:
+        #     return [{'col_name': 'index', 'header_name':'index',
+        #                  'displayer_args': {'displayer': 'obj'}}]
+        # elif isinstance(df.index, pd.MultiIndex):
+        #     cc = []
+        #     for i, index_name in enumerate(main_index_names):
+        #         if i == len(main_index_names) -1:
+        #             col_path=col_index_names
+        #         else:
+        #             col_path = [''] * len(col_index_names)
+        #         if index_name is not None:
+        #             col_path.append(index_name)
+        #         cc.append({'col_path':col_path, 'field':'index_' + to_chars(i),
+        #                    'displayer_args': {'displayer': 'obj'}})
+                
 
 
 

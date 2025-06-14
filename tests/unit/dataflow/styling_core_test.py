@@ -64,35 +64,35 @@ def test_tuple_col_styling() -> None:
 
 def test_index_styling1():
     assert [{'col_path':[''],
-             'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':[''],'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}
+             'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
+    {'col_path':[''],'field':'index_b', 'displayer_args': {'displayer': 'obj'}}
 
     ] == StylingAnalysis.get_left_col_configs(get_multiindex_index_df())
-def test_index_styling2():
+# def test_index_styling2():
 
-    assert [{'col_path':[''],
-             'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':[''],'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}
+#     assert [{'col_path':[''],
+#              'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
+#     {'col_path':[''],'field':'index_b', 'displayer_args': {'displayer': 'obj'}}
 
-    ] == StylingAnalysis.get_left_col_configs(get_multiindex_index_df())
+#     ] == StylingAnalysis.get_left_col_configs(get_multiindex_index_df())
 def test_index_styling3():
     #assert_dict_eq(
-    assert [{'col_path':['level_a', 'level_b', 'index_name_2'],
-            'col_name':'index', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multindex_with_names_cols_df())
+    assert [{'col_path':['level_a', 'level_b', 'index'],
+            'field':'index', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multindex_with_names_cols_df())
 def test_index_styling4():
-    assert [{'col_path':['index_name_1'], 'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':['index_name_2'], 'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_with_names_index_df())
+    assert [{'col_path':['index_name_1'], 'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
+    {'col_path':['index_name_2'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_with_names_index_df())
 
 def test_index_styling4():
-    assert [{'col_path':['', ''], 'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':['level_a', 'level_b'], 'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_index_multiindex_with_names_cols_df())
+    assert [{'col_path':['', ''], 'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
+    {'col_path':['level_a', 'level_b'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_index_multiindex_with_names_cols_df())
 def test_index_styling5():
-    assert [{'col_path':['', '', 'index_name_1'], 'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':['', '', 'index_name_2'], 'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_index_with_names_multiindex_cols_df())
+    assert [{'col_path':['', '', 'index_name_1'], 'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
+    {'col_path':['', '', 'index_name_2'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_index_with_names_multiindex_cols_df())
 
 def test_index_styling6():
-    assert [{'col_path':['', '', 'index_name_1'], 'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':['level_a', 'level_b', 'index_name_2'], 'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_with_names_both())
+    assert [{'col_path':['', '', 'index_name_1'], 'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
+    {'col_path':['level_a', 'level_b', 'index_name_2'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_with_names_both())
         
 
 def test_get_dfviewer_config_merge_hidden():
