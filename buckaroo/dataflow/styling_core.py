@@ -312,8 +312,6 @@ class StylingAnalysis(ColAnalysis):
     @classmethod
     def get_left_col_configs(cls, df:pd.DataFrame) -> List[ColumnConfig]:
         if not isinstance(df, pd.DataFrame):
-            return [{'col_name': 'index', 'header_name':'index',
-                             'displayer_args': {'displayer': 'obj'}}]
         if index_names_empty(df.index) and index_names_empty(df.columns) and not isinstance(df.index, pd.MultiIndex):
             return [{'col_name': 'index', 'header_name':'index',
                              'displayer_args': {'displayer': 'obj'}}]
@@ -344,27 +342,6 @@ class StylingAnalysis(ColAnalysis):
             for i, cl in enumerate(col_levels):
                 ccs[-1]['col_path'][i] = cl
         return ccs
-                
-                
-        
-
-        # col_index_names = get_index_level_names(df.columns)
-        # main_index_names = get_index_level_names(df.index)
-        # if len(col_index_names) == 0 and len(main_index_names) == 0:
-        #     return [{'col_name': 'index', 'header_name':'index',
-        #                  'displayer_args': {'displayer': 'obj'}}]
-        # elif isinstance(df.index, pd.MultiIndex):
-        #     cc = []
-        #     for i, index_name in enumerate(main_index_names):
-        #         if i == len(main_index_names) -1:
-        #             col_path=col_index_names
-        #         else:
-        #             col_path = [''] * len(col_index_names)
-        #         if index_name is not None:
-        #             col_path.append(index_name)
-        #         cc.append({'col_path':col_path, 'field':'index_' + to_chars(i),
-        #                    'displayer_args': {'displayer': 'obj'}})
-                
 
 
 
