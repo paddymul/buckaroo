@@ -1,7 +1,7 @@
 from typing import Dict, List
 import pandas as pd
 from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalColumnConfig, PartialColConfig, StylingAnalysis, merge_column_config_overrides, rewrite_override_col_references
-from buckaroo.ddd_library import get_basic_df2, get_multi_index_cols_df, get_tuple_cols_df
+from buckaroo.ddd_library import get_basic_df2, get_multindex_cols_df, get_tuple_cols_df
 from buckaroo.df_util import ColIdentifier
 from buckaroo.pluggable_analysis_framework.col_analysis import SDType
 BASIC_DF = get_basic_df2()
@@ -23,7 +23,7 @@ def test_simple_styling() -> None:
 
 def test_multi_index_styling() -> None:
 
-    mic_df: pd.DataFrame = get_multi_index_cols_df()
+    mic_df: pd.DataFrame = get_multindex_cols_df()
     fake_sd:SDType = {
         "a": {'orig_col_name':('foo','a')},
         "b": {'orig_col_name':('foo','b')},

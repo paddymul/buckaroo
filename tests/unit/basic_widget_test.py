@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from IPython.display import display
 from buckaroo.buckaroo_widget import BuckarooWidget
-from buckaroo.ddd_library import get_multi_index_cols_df
+from buckaroo.ddd_library import get_multindex_cols_df
 from buckaroo.pluggable_analysis_framework.analysis_management import PERVERSE_DF
 from .fixtures import (word_only_df)
 from buckaroo.serialization_utils import (DuplicateColumnsException)
@@ -191,7 +191,7 @@ def test_quick_commands_run():
 
 
 def test_multi_index_cols() -> None:
-    df = get_multi_index_cols_df()
+    df = get_multindex_cols_df()
     bw = BuckarooWidget(df)
     col_config = bw.df_display_args['main']['df_viewer_config']['column_config']
 
