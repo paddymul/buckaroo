@@ -1,13 +1,13 @@
 from io import BytesIO
 import json
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple
 from pandas._libs.tslibs import timezones
 from pandas.core.dtypes.dtypes import DatetimeTZDtype
 from fastparquet import json as fp_json
 import logging
 
-from buckaroo.df_util import old_col_new_col
+from buckaroo.df_util import old_col_new_col, to_chars
 logger = logging.getLogger()
 
 #realy pd.Series
@@ -139,6 +139,11 @@ class MyJsonImpl(fp_json.BaseImpl):
     def loads(self, s):
         return self.api.loads(s)
 
+def get_multiindex_to_cols_sers(index) -> List[Tuple[str, Any]]: #pd.Series[Any]
+    if not isinstance(index, pd.MultiIndex):
+        return []
+    return [("index_" + to_chars(i), pd.Series(index.get_level_values(i))) for i in range(index.nlevels)]
+
 
 def to_parquet(df):
     data: BytesIO = BytesIO()
@@ -148,14 +153,19 @@ def to_parquet(df):
     data.close = lambda: None
     # I don't like this copy.  modify to keep the same data with different names
     df2 = df.copy()    
-    print("df2.columns before")
-    print(df2.columns)
-    print("df2.columns after")
+    # print("df2.columns before")
+    # print(df2.columns)
+    # print("df2.columns after")
     attempted_columns = [new_col for _, new_col in old_col_new_col(df)]
-    print(attempted_columns)
-    print("@"*80)
+    # print(attempted_columns)
+    # print("@"*80)
     df2.columns = attempted_columns
-    df2['index'] = df2.index
+    if isinstance(df2.index, pd.MultiIndex):
+        for index_col_name, index_series in get_multiindex_to_cols_sers(df2.index):
+            df2[index_col_name] = index_series
+        df2.index = pd.RangeIndex(len(df2))
+    else:
+        df2['index'] = df2.index
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     encodings = {k:'json' for k in obj_columns}
 

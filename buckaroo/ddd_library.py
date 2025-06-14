@@ -22,6 +22,17 @@ def get_multi_index_cols_df(rows=15) -> pd.DataFrame:
     return pd.DataFrame(
         [["asdf","foo_b", "bar_a", "bar_b", "bar_c"]] * rows,
         columns=cols)
+
+def get_multi_index_index_df() -> pd.DataFrame:
+    row_index = pd.MultiIndex.from_tuples([
+        ('foo', 'a'), ('foo', 'b'),
+        ('bar', 'a'), ('bar', 'b'), ('bar', 'c'),
+        ('baz', 'a')])
+    return pd.DataFrame({
+        'foo_col':[10,20,30,40, 50, 60],
+        'bar_col':['foo', 'bar', 'baz', 'quux', 'boff', None]},
+         index=row_index)
+
 def get_tuple_cols_df(rows=15) -> pd.DataFrame:
     multi_col_df = get_multi_index_cols_df(rows)
     multi_col_df.columns = multi_col_df.columns.to_flat_index()
