@@ -411,6 +411,82 @@ export const ThreeLevelColumnIndex: Story = {
   }
 }
 
+const FIP:DFViewerConfig = {
+  "pinned_rows": [
+    {
+      "primary_key_val": "dtype",
+      "displayer_args": {
+        "displayer": "obj"
+      }
+    },
+    {
+      "primary_key_val": "histogram",
+      "displayer_args": {
+        "displayer": "histogram"
+      }
+    }
+  ],
+  "column_config": [
+    {
+      "displayer_args": {
+        "displayer": "float",
+        "min_fraction_digits": 0,
+        "max_fraction_digits": 0
+      },
+      "col_name": "a",
+      "header_name": "foo_col"
+    },
+    {
+      "tooltip_config": {
+        "tooltip_type": "simple",
+        "val_column": "b"
+      },
+      "displayer_args": {
+        "displayer": "obj"
+      },
+      "col_name": "b",
+      "header_name": "bar_col"
+    }
+  ],
+  "left_col_configs": [
+    {
+      "col_path": [
+        ""
+      ],
+      "field": "index_a",
+      "displayer_args": {
+        "displayer": "obj"
+      }
+    },
+    {
+      "col_path": [
+        ""
+      ],
+      "field": "index_b",
+      "displayer_args": {
+        "displayer": "obj"
+      }
+    }
+  ],
+  "extra_grid_config": {},
+  "component_config": {}
+};
+
+export const FailingInMarimo:Story = {
+
+  args: {
+    data: [
+      {a:50,  b:5,   c: "asdfasdf"},
+      {a:70,  b:10,  c: "foo bar ba"},
+      {a:300, b:3,   c: "stop breaking down"},
+      {a:200, b:19,  c: "exile on main"},
+    ],
+    df_viewer_config: FIP,
+    
+    secondary_df_viewer_config :IntFloatConfig,
+    summary_stats_data: HistogramSummaryStats
+  }
+}
 
 const MEDIUM= 300;
 

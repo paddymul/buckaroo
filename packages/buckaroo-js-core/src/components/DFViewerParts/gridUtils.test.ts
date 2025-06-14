@@ -397,5 +397,50 @@ describe("testing multi index organiztion  ", () => {
     //@ts-ignore
     expect(child1.children.length).toBe(2)
   });
+
+  it("multiIndexColumnConfig should return proper nested", () => {
+    // make sure it doesn't break with singular items in col_path 
+
+    const a: MultiIndexColumnConfig = {
+      "col_path": [
+        ""
+      ],
+      "field": "index_a",
+      "displayer_args": {
+        "displayer": "obj"
+      }
+    }
+    const b: MultiIndexColumnConfig = {
+      "col_path": [
+        ""
+      ],
+      "field": "index_b",
+      "displayer_args": {
+        "displayer": "obj"
+      }
+    }
+    console.log("a",a)
+    const groupedCC: MultiIndexColumnConfig[] = [a,b];
+    // console.log("groupedCC2", groupedCC2);
+    // const groupedCC: MultiIndexColumnConfig[] = [
+    // {
+    //   "col_path": [
+    //     ""
+    //   ],
+    //   "field": "index_a",
+    //   "displayer_args": {
+    //     "displayer": "obj"
+    //   }
+    // },
+
+    // ]
+    const MIColGroupDef = multiIndexColToColDef(groupedCC);
+
+    //@ts-ignore
+    const children = MIColGroupDef.children;  
+    expect(children.length).toBe(2);
+
+  });
+
   
 });

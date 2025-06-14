@@ -104,7 +104,6 @@ export const getFieldVal = (f:ColumnConfig) : string => {
 export function baseColToColDef (f:ColumnConfig) : ColDef {
   const color_map_config = f.color_map_config
     ? getStyler(f.color_map_config) : {};
-
   const colDef: ColDef = {
     field: getFieldVal(f),
     cellDataType: false,
@@ -114,7 +113,7 @@ export function baseColToColDef (f:ColumnConfig) : ColDef {
     ...getTooltipParams(f.tooltip_config),
     ...f.ag_grid_specs,
   };
-  return colDef
+    return colDef
 }
 
 export function normalColToColDef (f:NormalColumnConfig) : ColDef {
@@ -171,9 +170,17 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
 
   const rootDepth = rootColPath.length;
   if (level == rootDepth) {
+    debugger;
     throw new Error("something went wrong, level is too deep");
   }
   const childLevel = level + 1;
+  if(rootDepth == 1) {
+    const colDef: ColGroupDef = {
+      headerName: rootHeader,
+      children: _.map(f, (x) => childColDef(x, 0))
+    };
+    return colDef
+  }
 
   if (childLevel == (rootDepth -1)) {
     const colDef: ColGroupDef = {
