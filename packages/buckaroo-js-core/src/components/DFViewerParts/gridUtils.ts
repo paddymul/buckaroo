@@ -215,11 +215,15 @@ export function dfToAgrid(
    */
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
 
+  const groupedIndexColumnConfigs = getSubChildren(dfviewer_config.left_col_configs, 0)
+  const flattenedIndexColumnConfigs = groupedIndexColumnConfigs.map(switchToColDef)
+
   const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
 
-  const retMultiColumns:(ColDef|ColGroupDef)[] = groupedColumnConfigs.map(switchToColDef)
-  console.log("retMultiColumns");
-  console.log(retMultiColumns)
+
+  const retMultiColumns:(ColDef|ColGroupDef)[] = [
+    ...flattenedIndexColumnConfigs,
+    ...groupedColumnConfigs.map(switchToColDef)]
   return retMultiColumns
 }
 
