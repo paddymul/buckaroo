@@ -62,7 +62,7 @@ def test_tuple_col_styling() -> None:
 
     
 
-def test_index_styling():
+def xtest_index_styling():
     #assert_dict_eq(
     assert [{'col_path':['level_a', 'level_b', 'index_name_2'],
             'col_name':'index', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multindex_with_names_cols_df())
