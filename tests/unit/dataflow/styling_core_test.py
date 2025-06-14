@@ -141,7 +141,7 @@ def test_get_dfviewer_column_config_override():
     assert expected_output == actual
 
 
-def rewrite_override():
+def test_rewrite_override():
     """
       certain column_config overrides, notably  tooltip and color map will reference original column configs
 
