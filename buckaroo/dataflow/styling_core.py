@@ -376,7 +376,7 @@ class StylingAnalysis(ColAnalysis):
 
 
     @classmethod
-    def get_left_col_configs(df:pd.DataFrame) -> List[ColumnConfig]:
+    def get_left_col_configs(cls, df:pd.DataFrame) -> List[ColumnConfig]:
         pass
                     
     @classmethod

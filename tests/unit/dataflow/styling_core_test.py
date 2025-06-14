@@ -1,7 +1,7 @@
 from typing import Dict, List
 import pandas as pd
 from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalColumnConfig, PartialColConfig, StylingAnalysis, merge_column_config_overrides, rewrite_override_col_references
-from buckaroo.ddd_library import get_basic_df2, get_multindex_cols_df, get_tuple_cols_df
+from buckaroo.ddd_library import get_basic_df2, get_multiindex_index_df, get_multiindex_index_multiindex_with_names_cols_df, get_multiindex_index_with_names_multiindex_cols_df, get_multiindex_with_names_both, get_multiindex_with_names_index_df, get_multindex_cols_df, get_multindex_with_names_cols_df, get_tuple_cols_df
 from buckaroo.df_util import ColIdentifier
 from buckaroo.pluggable_analysis_framework.col_analysis import SDType
 BASIC_DF = get_basic_df2()
@@ -63,6 +63,12 @@ def test_tuple_col_styling() -> None:
     
 
 def test_index_styling():
+    assert [{'col_path':[''],
+             'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
+    {'col_path':[''],'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}
+
+    ] == StylingAnalysis.get_left_col_configs(get_multiindex_index_df())
+
     assert [{'col_path':[''],
              'col_name':'index_a', 'displayer_args': {'displayer': 'obj'}},
     {'col_path':[''],'col_name':'index_b', 'displayer_args': {'displayer': 'obj'}}
