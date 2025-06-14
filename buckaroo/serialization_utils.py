@@ -147,9 +147,15 @@ def to_parquet(df):
     orig_close = data.close
     data.close = lambda: None
     # I don't like this copy.  modify to keep the same data with different names
-    df2 = df.copy()
+    df2 = df.copy()    
+    print("df2.columns before")
+    print(df2.columns)
+    print("df2.columns after")
+    attempted_columns = [new_col for _, new_col in old_col_new_col(df)]
+    print(attempted_columns)
+    print("@"*80)
+    df2.columns = attempted_columns
     df2['index'] = df2.index
-    df2.columns = [str(x) for x in df2.columns]
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     encodings = {k:'json' for k in obj_columns}
 

@@ -91,8 +91,12 @@ def test_serialize_multiindex_json():
 
 def test_serialize_multiindex_parquet():
     df = get_multi_index_cols_df()
-    to_parquet(df)
-
+    output = to_parquet(df)
+    #second_df = pd.read_parquet(output)
+    import polars as pl
+    second_df = pl.read_parquet(output)
+    assert set(second_df.columns) ==  set(['index','a','b','c','d','e'])
+    
 def test_serialize_naive_json():
     d = date(year=1999, month=10, day=3)
     d2 = date(year=1999, month=10, day=3)
