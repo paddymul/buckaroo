@@ -1,7 +1,7 @@
 from datetime import date
 import pytest
 import pandas as pd
-from buckaroo.ddd_library import get_multindex_cols_df, get_multiindex_index_df
+from buckaroo.ddd_library import get_multiindex_with_names_index_df, get_multindex_cols_df, get_multiindex_index_df
 from buckaroo.serialization_utils import (
     is_ser_dt_safe, is_dataframe_datetime_safe, check_and_fix_df, pd_to_obj,
     to_parquet, DuplicateColumnsException)
@@ -99,6 +99,14 @@ def test_serialize_multiindex_cols_parquet():
 
 def test_serialize_multiindex_index():
     df = get_multiindex_index_df()
+    output = to_parquet(df)
+    #second_df = pd.read_parquet(output)
+    import polars as pl
+    second_df = pl.read_parquet(output)
+    assert set(second_df.columns) ==  set(['index_a', 'index_b', 'a', 'b'])
+
+def test_serialize_multiindex_index():
+    df = get_multiindex_with_names_index_df()
     output = to_parquet(df)
     #second_df = pd.read_parquet(output)
     import polars as pl
