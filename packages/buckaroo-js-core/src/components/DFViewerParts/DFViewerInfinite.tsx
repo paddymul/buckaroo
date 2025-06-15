@@ -282,6 +282,10 @@ export function DFViewerInfiniteInner({
         browserColorScheme: "dark",
         cellHorizontalPaddingScale: 0.3,
         columnBorder: true,
+        headerRowBorder: true,
+        headerColumnBorder: true,
+        headerColumnResizeHandleWidth: 0,
+
         rowBorder: false,
         rowVerticalPaddingScale: 0.5,
         wrapperBorder: false,
