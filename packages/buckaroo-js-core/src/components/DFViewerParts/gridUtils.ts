@@ -252,7 +252,7 @@ export function dfToAgrid(
     lcc2[lastI] =  mergeCellClass(lcc2[lastI], "headerClass", "left_col_configs_header_last")
     lcc2[lastI] =  mergeCellClass(lcc2[lastI], "cellClass", "left_col_configs_cell_last")
   }
-
+  console.log("lcc2", lcc2);
 
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
   const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
@@ -268,7 +268,7 @@ export function dfToAgrid(
 export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
     const anyRenderer: CellRendererSelectorResult = {
         component: getTextCellRenderer(objFormatter),
-      params: {colDef: {cellClass:"pinned_row_cell_class"}}
+      //params: {colDef: {cellClass:"pinned_row_cell_class"}}
     };
     return (params: ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
         if (params.node.rowPinned) {
@@ -298,12 +298,12 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
                     component: getTextCellRenderer(
                         getFormatter(prc.displayer_args as FormatterArgs),
                     ),
-		  params: {colDef: {cellClass:"pinned_row_cell_class"}}
+		  //		  params: {colDef: {cellClass:"pinned_row_cell_class"}}
                 };
                 return formattedRenderer;
             }
           return { component: possibCellRenderer, 
-		  params: {colDef: {cellClass:"pinned_row_cell_class"}}
+	    //params: {colDef: {cellClass:"pinned_row_cell_class"}}
 	  };
         } else {
             return undefined; // rows that are not pinned don't use a row level cell renderer
