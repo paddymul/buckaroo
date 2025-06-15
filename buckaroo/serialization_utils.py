@@ -142,7 +142,12 @@ class MyJsonImpl(fp_json.BaseImpl):
 def get_multiindex_to_cols_sers(index) -> List[Tuple[str, Any]]: #pd.Series[Any]
     if not isinstance(index, pd.MultiIndex):
         return []
-    return [("index_" + to_chars(i), pd.Series(index.get_level_values(i))) for i in range(index.nlevels)]
+    objs: List[Tuple[str, Any]] = [] #pd.Series[Any] = []
+    for i in range(index.nlevels):
+        col_name = "index_" + to_chars(i)
+        ser = pd.Series(index.get_level_values(i), index=pd.RangeIndex(len(index)))
+        objs.append((col_name, ser))
+    return objs
 
 
 def to_parquet(df):
@@ -161,9 +166,11 @@ def to_parquet(df):
     # print("@"*80)
     df2.columns = attempted_columns
     if isinstance(df2.index, pd.MultiIndex):
+        new_idx = pd.RangeIndex(len(df2))
         for index_col_name, index_series in get_multiindex_to_cols_sers(df2.index):
+            print("index_series", index_series)
             df2[index_col_name] = index_series
-        df2.index = pd.RangeIndex(len(df2))
+        df2.index = new_idx
     else:
         df2['index'] = df2.index
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()

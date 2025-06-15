@@ -97,13 +97,17 @@ def test_serialize_multiindex_cols_parquet():
     second_df = pl.read_parquet(output)
     assert set(second_df.columns) ==  set(['index','a','b','c','d','e'])
 
-def test_serialize_multiindex_index():
+def test_serialize_multiindex_index_simple():
     df = get_multiindex_index_df()
     output = to_parquet(df)
     #second_df = pd.read_parquet(output)
     import polars as pl
     second_df = pl.read_parquet(output)
     assert set(second_df.columns) ==  set(['index_a', 'index_b', 'a', 'b'])
+    print(second_df)
+    print(second_df['index_a'])
+    assert second_df['index_a'].to_list() == [10,20,30,40,50,60]
+    #pldf['a'].to_list()
 
 def test_serialize_multiindex_index():
     df = get_multiindex_with_names_index_df()
