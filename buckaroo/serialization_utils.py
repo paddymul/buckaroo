@@ -114,15 +114,18 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
 
     
 def pd_to_obj(df:pd.DataFrame) -> Dict[str, Any]:
-
-    orig_cols = df.columns
-    new_cols = [rewritten_col_name for orig_ser_name, rewritten_col_name in old_col_new_col(df)]
-    df.columns = new_cols
+    df2 = prepare_df_for_serialization(df)
+    
+    # orig_cols = df.columns
+    
+    # new_cols = [rewritten_col_name for orig_ser_name, rewritten_col_name in old_col_new_col(df)]
+    # df.columns = new_cols
     try:
-        obj = json.loads(df.to_json(orient='table', indent=2, default_handler=str))
+        obj = json.loads(df2.to_json(orient='table', indent=2, default_handler=str))
         return obj['data']
     finally:
-        df.columns = orig_cols
+        #df.columns = orig_cols
+        pass
 
 
 class MyJsonImpl(fp_json.BaseImpl):
@@ -150,12 +153,7 @@ def get_multiindex_to_cols_sers(index) -> List[Tuple[str, Any]]: #pd.Series[Any]
     return objs
 
 
-def to_parquet(df):
-    data: BytesIO = BytesIO()
-
-    # data.close doesn't work in pyodide, so we make close a no-op
-    orig_close = data.close
-    data.close = lambda: None
+def prepare_df_for_serialization(df:pd.DataFrame) -> pd.DataFrame:
     # I don't like this copy.  modify to keep the same data with different names
     df2 = df.copy()    
     attempted_columns = [new_col for _, new_col in old_col_new_col(df)]
@@ -167,6 +165,17 @@ def to_parquet(df):
         df2.index = new_idx
     else:
         df2['index'] = df2.index
+    obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
+    return df2
+
+def to_parquet(df):
+    data: BytesIO = BytesIO()
+
+    # data.close doesn't work in pyodide, so we make close a no-op
+    orig_close = data.close
+    data.close = lambda: None
+    # I don't like this copy.  modify to keep the same data with different names
+    df2 = prepare_df_for_serialization(df)
     obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     encodings = {k:'json' for k in obj_columns}
 
