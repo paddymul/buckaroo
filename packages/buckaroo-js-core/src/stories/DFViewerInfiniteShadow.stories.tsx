@@ -1003,3 +1003,144 @@ export const get_multiindex_index_multiindex_with_names_cols_df :Story = {
         "summary_stats_data": []
     }
 }
+
+//get_multiindex3_index_df
+export const get_multiindex3_index_df :Story = {
+    "args": {
+        "data": [
+            {
+                "index": 0,
+                "a": 10,
+                "b": "foo",
+                "index_a": "foo",
+                "index_b": "a",
+                "index_c": 3
+            },
+            {
+                "index": 1,
+                "a": 20,
+                "b": "bar",
+                "index_a": "foo",
+                "index_b": "b",
+                "index_c": 2
+            },
+            {
+                "index": 2,
+                "a": 30,
+                "b": "baz",
+                "index_a": "bar",
+                "index_b": "a",
+                "index_c": 1
+            },
+            {
+                "index": 3,
+                "a": 40,
+                "b": "quux",
+                "index_a": "bar",
+                "index_b": "b",
+                "index_c": 3
+            },
+            {
+                "index": 4,
+                "a": 50,
+                "b": "boff",
+                "index_a": "bar",
+                "index_b": "c",
+                "index_c": 5
+            },
+            {
+                "index": 5,
+                "a": 60,
+                "b": null,
+                "index_a": "baz",
+                "index_b": "a",
+                "index_c": 6
+            }
+        ],
+        "df_viewer_config": {
+            "pinned_rows": [
+                {
+                    "primary_key_val": "dtype",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    }
+                },
+                {
+                    "primary_key_val": "histogram",
+                    "displayer_args": {
+                        "displayer": "histogram"
+                    }
+                }
+            ],
+            "column_config": [
+                {
+                    "displayer_args": {
+                        "displayer": "float",
+                        "min_fraction_digits": 0,
+                        "max_fraction_digits": 0
+                    },
+                    "col_name": "a",
+                    "header_name": "foo_col"
+                },
+                {
+                    "tooltip_config": {
+                        "tooltip_type": "simple",
+                        "val_column": "b"
+                    },
+                    "displayer_args": {
+                        "displayer": "obj"
+                    },
+                    "col_name": "b",
+                    "header_name": "bar_col"
+                }
+            ],
+            "left_col_configs": [
+                {
+                    "header_name": "",
+                    "col_name": "index_a",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    }
+                },
+                {
+                    "header_name": "",
+                    "col_name": "index_b",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    }
+                },
+                {
+                    "header_name": "",
+                    "col_name": "index_c",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    },
+                    "ag_grid_specs": {
+                        "headerClass": [
+                            "last-index-header-class"
+                        ],
+                        "cellClass": [
+                            "last-index-cell-class"
+                        ]
+                    }
+                }
+            ],
+            "extra_grid_config": {},
+            "component_config": {}
+        },
+        "secondary_df_viewer_config": {
+            "pinned_rows": [],
+            "column_config": [],
+            "left_col_configs": [
+                {
+                    "col_name": "index",
+                    "header_name": "index",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    }
+                }
+            ]
+        },
+        "summary_stats_data": []
+    }
+}

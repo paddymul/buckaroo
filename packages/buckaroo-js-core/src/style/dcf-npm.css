@@ -593,6 +593,7 @@ div.cell-output-ipywidget-background {
 
 /* https://colorffy.com/dark-theme-generator?colors=b2317d-121212 */
 
+/*
 .last-index-header-class {
     font-weight:bold;
     border-right:4px solid #717171 !important;
@@ -605,9 +606,37 @@ div.cell-output-ipywidget-background {
     border-bottom:none;
     border-top:none;
 }
-.left_col_configs_header {
-   border-left:4px solid red !important;
+*/
+/*
+A: .ag-header-row .left_col_configs_header:last-child 
+B: .ag-header-row .ag-header-cell:last-child 
+
+.ag-header-row .left_col_configs_header:last-child { 
+.ag-header-row .ag-header-cell:last-child {
+.ag-header-row .left_col_configs:last-of-type {
+div.ag-header-cell
+*/
+
+/*
+.ag-header-row .left_col_configs_header:nth-child(3) {
+    */
+.ag-header-row .left_col_configs_header_last {
+
+    border-left:4px solid purple !important;
+    background:green;
 }
+/*
+.ag-header-row .left_col_configs_header {
+    border-left:4px solid red !important;
+    background:blue;
+}
+*/
+.ag-header-row .left_col_configs_header:first-child {
+    border-left:4px solid pink !important;
+    background:orange;
+}
+
+
 .ag-header {
     border-bottom:4px solid #717171 !important;
     /* bottom of headers */

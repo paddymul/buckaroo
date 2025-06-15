@@ -51,6 +51,16 @@ def get_multiindex_index_df() -> pd.DataFrame:
         'bar_col':['foo', 'bar', 'baz', 'quux', 'boff', None]},
          index=row_index)
 
+def get_multiindex3_index_df() -> pd.DataFrame:
+    row_index = pd.MultiIndex.from_tuples([
+        ('foo', 'a', 3), ('foo', 'b', 2),
+        ('bar', 'a', 1), ('bar', 'b', 3), ('bar', 'c', 5),
+        ('baz', 'a', 6)])
+    return pd.DataFrame({
+        'foo_col':[10,20,30,40, 50, 60],
+        'bar_col':['foo', 'bar', 'baz', 'quux', 'boff', None]},
+         index=row_index)
+
 def get_multiindex_with_names_index_df() -> pd.DataFrame:
     row_index = pd.MultiIndex.from_tuples([
         ('foo', 'a'), ('foo', 'b'),

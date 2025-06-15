@@ -160,20 +160,7 @@ export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGr
 }
 
 
-export function mergeCellClass(
-  c:ColDef|ColGroupDef, classSpec:"headerClass"|"cellClass", extraClass:string) : ColDef|ColGroupDef {
 
-    //@ts-ignore
-    if(c[classSpec] === undefined) { 
-      //@ts-ignore
-      c[classSpec] = extraClass
-    } else {
-      console.log("c", c, classSpec)
-      //@ts-ignore
-      c[classSpec].push(extraClass)
-    }
-    return c
-  }
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=0) : ColGroupDef {
   // this will return the nested groups of ColGroupDef with children
   if (f.length == 0) {
@@ -235,6 +222,20 @@ const switchToColDef = (x:ColumnConfig[]): ColDef|ColGroupDef => {
     return normalColToColDef(x[0] as NormalColumnConfig)
   }
 }
+export function mergeCellClass(
+  cOrig:ColDef|ColGroupDef, classSpec:"headerClass"|"cellClass", extraClass:string) : ColDef|ColGroupDef {
+    const c = _.cloneDeep(cOrig);
+    //@ts-ignore
+    if(c[classSpec] === undefined) { 
+      //@ts-ignore
+      c[classSpec] = extraClass
+    } else {
+      console.log("c", c, classSpec)
+      //@ts-ignore
+      c[classSpec].push(extraClass)
+    }
+    return c
+  }
 
 export function dfToAgrid(
     dfviewer_config: DFViewerConfig,
@@ -245,6 +246,10 @@ export function dfToAgrid(
   const groupedIndexColumnConfigs = getSubChildren(dfviewer_config.left_col_configs, 0)
   const flattenedIndexColumnConfigs = groupedIndexColumnConfigs.map(switchToColDef)
   const classedIndexColumnConfigs = flattenedIndexColumnConfigs.map((x) => mergeCellClass(x,"headerClass", "left_col_configs_header"))
+  if (classedIndexColumnConfigs.length > 0) {
+    const last = classedIndexColumnConfigs[classedIndexColumnConfigs.length-1]
+    classedIndexColumnConfigs[classedIndexColumnConfigs.length-1] =  mergeCellClass(last, "headerClass", "left_col_configs_header_last")
+  }
 
 
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
@@ -261,6 +266,7 @@ export function dfToAgrid(
 export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
     const anyRenderer: CellRendererSelectorResult = {
         component: getTextCellRenderer(objFormatter),
+      params: {colDef: {cellClass:"pinned_row_cell_class"}}
     };
     return (params: ICellRendererParams<any, any, any>): CellRendererSelectorResult | undefined => {
         if (params.node.rowPinned) {
@@ -290,10 +296,13 @@ export function getCellRendererSelector(pinned_rows: PinnedRowConfig[]) {
                     component: getTextCellRenderer(
                         getFormatter(prc.displayer_args as FormatterArgs),
                     ),
+		  params: {colDef: {cellClass:"pinned_row_cell_class"}}
                 };
                 return formattedRenderer;
             }
-            return { component: possibCellRenderer };
+          return { component: possibCellRenderer, 
+		  params: {colDef: {cellClass:"pinned_row_cell_class"}}
+	  };
         } else {
             return undefined; // rows that are not pinned don't use a row level cell renderer
         }
