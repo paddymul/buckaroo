@@ -278,3 +278,9 @@ def test_auto_clean_preserve_error():
         "search_string": "",
         "quick_command_args": {}}
     
+def test_get_story_config():
+    df = get_multindex_cols_df()
+    bw = BuckarooWidget(df)
+    bw.get_story_config(test_name="basic_widget_test")
+    #fix this when there is more debugging done
+    #assert bw.get_story_config(test_name="basic_widget_test") == ""

@@ -176,11 +176,12 @@ DisplayArgs = TypedDict('DisplayArgs', {
     'df_viewer_config':DFViewerConfig,
     'summary_stats_key': str})
 
+INDEX_COL_CONFIG:ColumnConfig = {'col_name': 'index', 'header_name':'index',
+                       'displayer_args': {'displayer': 'obj'}}
 EMPTY_DFVIEWER_CONFIG: DFViewerConfig = {
     'pinned_rows': [],
     'column_config': [],
-    'first_col_config': {'col_name': 'index', 'header_name':'index',
-                       'displayer_args': {'displayer': 'obj'}}
+    'left_col_configs': [INDEX_COL_CONFIG]
 }
 
 

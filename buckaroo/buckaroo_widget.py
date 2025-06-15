@@ -10,8 +10,10 @@ TODO: Add module docstring
 import traceback
 from typing import Literal, Union
 import pandas as pd
+import json
 import logging
-
+import random
+import string
 
 from traitlets import List, Dict, observe, Unicode, Any
 import anywidget
@@ -27,7 +29,7 @@ from buckaroo.extension_utils import copy_extend
 from .serialization_utils import EMPTY_DF_WHOLE, check_and_fix_df, pd_to_obj, to_parquet
 from .dataflow.dataflow import CustomizableDataflow
 from .dataflow.dataflow_extras import (Sampling, exception_protect)
-from .dataflow.styling_core import (ComponentConfig, DFViewerConfig, DisplayArgs, OverrideColumnConfig, PinnedRowConfig, StylingAnalysis, merge_column_config)
+from .dataflow.styling_core import (ComponentConfig, DFViewerConfig, DisplayArgs, OverrideColumnConfig, PinnedRowConfig, StylingAnalysis, merge_column_config, EMPTY_DFVIEWER_CONFIG)
 from .dataflow.autocleaning import PandasAutocleaning
 from pathlib import Path
 
@@ -70,6 +72,7 @@ def bidirectional_wire(outer_instance, inner_instance, prop_name):
     outer_val, inner_val = getattr(outer_instance, prop_name), getattr(inner_instance, prop_name)
     if not inner_val == outer_val:
         setattr(outer_instance, prop_name, inner_val)
+
     
 class BuckarooWidgetBase(anywidget.AnyWidget):
     """Extends CustomizableDataFlow and DOMWIdget
@@ -80,6 +83,26 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
     """
 
 
+    def get_story_config(self, include_summary_stats=False, test_name=None) -> str:
+        print("PADDY87")
+        df = self.dataflow.processed_df
+        if len(df) > 100 or len(df.columns) > 20:
+            raise Exception("This dataframe or columns is pretty big, you don't want to serialize it")
+        args_dict = {'args':
+             {'data': pd_to_obj(self.dataflow.processed_df),
+            'df_viewer_config': self.dataflow.df_display_args[self.buckaroo_state['df_display']]['df_viewer_config'],
+            'secondary_df_viewer_config': EMPTY_DFVIEWER_CONFIG}}
+        args_dict['args']['summary_stats_data'] = []
+        if include_summary_stats:
+            1/0 # not supported yet
+            # summary_stats data is big, and most of the time you won't want to serialize it
+            #args_dict['summary_stats_data'] = {} #desrialize here
+
+        test_name = test_name or ''.join(random.choices(string.ascii_letters, k=8))
+        args_json_str = json.dumps(args_dict, indent=4)
+        code_str = f"export const {test_name} :Story = {args_json_str}"
+        return code_str
+        
 
     def __init__(self, orig_df, debug=False,
         column_config_overrides:Union[Literal[None], OverrideColumnConfig]=None,
@@ -237,20 +260,10 @@ class RawDFViewerWidget(BuckarooWidgetBase):
         {'a': 58.2, 'b': 9, 'c': 'Margaret'}]).tag(sync=True)
 
     df_viewer_config: DFViewerConfig = Dict({
-        'column_config': [
-            { 'col_name': 'a',
-              'displayer_args': { 'displayer': 'float',   'min_fraction_digits': 2, 'max_fraction_digits': 8 }},
-            { 'col_name': 'b',
-              'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }},
-            { 'col_name': 'c',
-              'displayer_args': { 'displayer': 'string',  'min_digits': 3, 'max_digits': 5 }}],
-        'pinned_rows': [
-            { 'primary_key_val': 'dtype', 'displayer_args': { 'displayer': 'obj' }},
-            { 'primary_key_val': 'mean', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 }}],
-        'first_col_config': {'col_name': 'index',
-                        'displayer_args': {'displayer': 'obj'}}
-        }
-                            ).tag(sync=True)
+        'column_config': [],
+        'pinned_rows': [],
+        'first_col_configs':[]}).tag(sync=True)
+
 
     summary_stats_data = List([
         { 'index': 'mean',  'a':      28,   'b':      14, 'c': 'Padarget' },

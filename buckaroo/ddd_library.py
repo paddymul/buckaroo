@@ -64,15 +64,14 @@ def get_multiindex_with_names_index_df() -> pd.DataFrame:
          index=row_index)
 
 def get_multiindex_index_multiindex_with_names_cols_df() -> pd.DataFrame:
-    row_index = pd.MultiIndex.from_tuples([
-        ('foo', 'a'), ('foo', 'b'),
-        ('bar', 'a'), ('bar', 'b'), ('bar', 'c'),
-        ('baz', 'a')],
-    )
     cols = pd.MultiIndex.from_tuples(
         [('foo', 'a'), ('foo', 'b'),  ('bar', 'a'), ('bar', 'b'), ('bar', 'c'), ('baz', 'a')],
         names=['level_a', 'level_b'])
 
+    row_index = pd.MultiIndex.from_tuples([
+        ('foo', 'a'), ('foo', 'b'),
+        ('bar', 'a'), ('bar', 'b'), ('bar', 'c'),
+        ('baz', 'a')])
 
     return pd.DataFrame([
         [10,20,30,40, 50, 60],
