@@ -115,16 +115,10 @@ def force_to_pandas(df_pd_or_pl) -> pd.DataFrame:
     
 def pd_to_obj(df:pd.DataFrame) -> Dict[str, Any]:
     df2 = prepare_df_for_serialization(df)
-    
-    # orig_cols = df.columns
-    
-    # new_cols = [rewritten_col_name for orig_ser_name, rewritten_col_name in old_col_new_col(df)]
-    # df.columns = new_cols
     try:
         obj = json.loads(df2.to_json(orient='table', indent=2, default_handler=str))
         return obj['data']
     finally:
-        #df.columns = orig_cols
         pass
 
 

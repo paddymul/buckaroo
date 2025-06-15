@@ -293,9 +293,8 @@ export function DFViewerInfiniteInner({
         dataFontSize: "12px",
         headerFontSize: 14,
         iconSize: 10,
-        backgroundColor: "#181D1F",
-
-        oddRowBackgroundColor: '#222628',
+      backgroundColor: "#121212",
+      oddRowBackgroundColor: '#3f3f3f',
         headerVerticalPaddingScale: 0.6,
         //    cellHorizontalPadding: 3,
 

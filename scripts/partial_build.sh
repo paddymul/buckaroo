@@ -3,14 +3,14 @@ set -e
 #partial doesn't delete node_modules
 
 
-mv node_modules temp_node_modules
+mv node_modules temp_node_modules || true
 cd packages/buckaroo-js-core
 pnpm install
 pnpm run build:tsc
 pnpm run build:vite 
 cd ../..
 cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
-mv packages/buckaroo-js-core/node_modules  packages/buckaroo-js-core/temp_node_modules
+mv packages/buckaroo-js-core/node_modules  packages/buckaroo-js-core/temp_node_modules || true
 pnpm install && pnpm run build
 rm -rf dist
 uv build --wheel

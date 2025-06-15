@@ -589,3 +589,20 @@ div.cell-output-ipywidget-background {
 .cell-output-ipywidget-background .df-viewer  .theme-hanger{
     margin-top:-12px;
 }
+
+
+/* https://colorffy.com/dark-theme-generator?colors=b2317d-121212 */
+
+.last-index-header-class {
+    font-weight:bold;
+    border-right:4px solid #717171 !important;
+    border-bottom:none;
+    border-top:none;
+
+}
+.last-index-cell-class {
+    border-right:4px solid #717171 !important;
+    border-bottom:none;
+    border-top:none;
+
+}

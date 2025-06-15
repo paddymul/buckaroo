@@ -330,7 +330,7 @@ class StylingAnalysis(ColAnalysis):
             if idx_name is None:
                 if len(base_col_path) == 0:
                     base_col_path = ['']
-                ccs.append({'col_path': base_col_path.copy(), 'field':'index_' + to_chars(i),
+                ccs.append({'header_name':'', 'col_name':'index_' + to_chars(i),
                      'displayer_args': {'displayer': 'obj'}})
             else:
                 local_col_path = base_col_path.copy()
@@ -340,6 +340,12 @@ class StylingAnalysis(ColAnalysis):
         if not index_names_empty(df.columns):
             for i, cl in enumerate(col_levels):
                 ccs[-1]['col_path'][i] = cl
+        ccs[-1]['ag_grid_specs'] = {
+		    'headerClass': ['last-index-header-class'],
+		    'cellClass': ['last-index-cell-class'],
+		  }
+                    
+
         return ccs
 
     provides_defaults: ColMeta = {}
