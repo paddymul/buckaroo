@@ -80,8 +80,40 @@ def test_index_styling3():
     {'col_path':['index_name_2'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_with_names_index_df())
 
 def test_index_styling4():
-    assert [{'col_path':['', ''], 'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':['level_a', 'level_b'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_index_multiindex_with_names_cols_df())
+
+    left_col_configs: List[ColumnConfig] = [
+                {
+                    "col_path": [
+                        "",
+                        "",
+                    ],
+                    "field": "index_a",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    }
+                },
+                {
+                    "col_path": [
+                        "level_a",
+                        "level_b",
+                    ],
+                    "field": "index_b",
+                    "displayer_args": {
+                        "displayer": "obj"
+                    },
+                    "ag_grid_specs": {
+                        "headerClass": [
+                            "last-index-header-class"
+                        ],
+                        "cellClass": [
+                            "last-index-cell-class"
+                        ]
+                    }
+                }
+            ]
+    actual = StylingAnalysis.get_left_col_configs(get_multiindex_index_multiindex_with_names_cols_df())
+    assert left_col_configs == actual
+
 def test_index_styling5():
     assert [{'col_path':['', '', 'index_name_1'], 'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
     {'col_path':['', '', 'index_name_2'], 'field':'index_b', 'displayer_args': {'displayer': 'obj'}}] == StylingAnalysis.get_left_col_configs(get_multiindex_index_with_names_multiindex_cols_df())

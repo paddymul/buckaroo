@@ -313,7 +313,11 @@ class StylingAnalysis(ColAnalysis):
             return [{'col_name': 'index', 'header_name':'index', 'displayer_args': {'displayer': 'obj'}}]
         if index_names_empty(df.index) and index_names_empty(df.columns) and not isinstance(df.index, pd.MultiIndex):
             return [{'col_name': 'index', 'header_name':'index',
-                             'displayer_args': {'displayer': 'obj'}}]
+                             'displayer_args': {'displayer': 'obj'},
+                      'ag_grid_specs': {
+                          'headerClass': ['last-index-header-class'],
+                          'cellClass': ['last-index-cell-class']}
+                     }]
         base_col_path = get_empty_index_level_arr(df.columns)
         col_levels = get_index_level_names(df.columns)
 
@@ -323,13 +327,18 @@ class StylingAnalysis(ColAnalysis):
             else:
                 col_levels.append(df.index.name)
             return [{'col_path':col_levels, 'field':'index',
-                     'displayer_args': {'displayer': 'obj'}}]
+                     'displayer_args': {'displayer': 'obj'},
+                     'ag_grid_specs': {
+		    'headerClass': ['last-index-header-class'],
+		    'cellClass': ['last-index-cell-class'],
+		  }
+                     }]
         ccs:List[ColumnConfig] = []
 
         for i, idx_name in enumerate(df.index.names):
-            if idx_name is None:
-                if len(base_col_path) == 0:
-                    base_col_path = ['']
+            if idx_name is None and index_names_empty(df.columns):
+                # if len(base_col_path) == 0:
+                #     base_col_path = ['']
                 ccs.append({'header_name':'', 'col_name':'index_' + to_chars(i),
                      'displayer_args': {'displayer': 'obj'}})
             else:
