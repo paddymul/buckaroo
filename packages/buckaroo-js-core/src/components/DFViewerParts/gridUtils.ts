@@ -170,13 +170,12 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
 
   const rootDepth = rootColPath.length;
   if (level == rootDepth) {
-    debugger;
     throw new Error("something went wrong, level is too deep");
   }
   const childLevel = level + 1;
   if(rootDepth == 1) {
     const colDef: ColGroupDef = {
-      headerName: rootHeader,
+      //headerName: rootHeader,
       children: _.map(f, (x) => childColDef(x, 0))
     };
     return colDef
