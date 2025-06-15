@@ -605,7 +605,9 @@ div.cell-output-ipywidget-background {
     border-bottom:none;
     border-top:none;
 }
-
+.left_col_configs_header {
+   border-left:4px solid red !important;
+}
 .ag-header {
     border-bottom:4px solid #717171 !important;
     /* bottom of headers */

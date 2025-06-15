@@ -159,6 +159,21 @@ export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGr
   }
 }
 
+
+export function mergeCellClass(
+  c:ColDef|ColGroupDef, classSpec:"headerClass"|"cellClass", extraClass:string) : ColDef|ColGroupDef {
+
+    //@ts-ignore
+    if(c[classSpec] === undefined) { 
+      //@ts-ignore
+      c[classSpec] = extraClass
+    } else {
+      console.log("c", c, classSpec)
+      //@ts-ignore
+      c[classSpec].push(extraClass)
+    }
+    return c
+  }
 export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=0) : ColGroupDef {
   // this will return the nested groups of ColGroupDef with children
   if (f.length == 0) {
@@ -173,9 +188,6 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
   if (level == rootDepth) {
     throw new Error("something went wrong, level is too deep");
   }
-  if(f.ag_grid_specs !== undefined) {
-    console.log(" colDef from multiIndexColToColDef", colDef)
-  }
   const childLevel = level + 1;
   if(rootDepth == 1) {
     const colDef: ColGroupDef = {
@@ -183,6 +195,7 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
       children: _.map(f, (x) => childColDef(x, 0)),
       ...(f[0].ag_grid_specs)
     };
+
     console.log(" colDef from multiIndexColToColDef", colDef)
     return colDef
   }
@@ -229,17 +242,18 @@ export function dfToAgrid(
   /*
   gets the aggrid column config given the buckaroo inputs
    */
-  const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
-
   const groupedIndexColumnConfigs = getSubChildren(dfviewer_config.left_col_configs, 0)
   const flattenedIndexColumnConfigs = groupedIndexColumnConfigs.map(switchToColDef)
+  const classedIndexColumnConfigs = flattenedIndexColumnConfigs.map((x) => mergeCellClass(x,"headerClass", "left_col_configs_header"))
 
+
+  const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
   const groupedColumnConfigs = getSubChildren(columnConfigs, 0);
-
+  const flattenedColumnConfigs = groupedColumnConfigs.map(switchToColDef)
 
   const retMultiColumns:(ColDef|ColGroupDef)[] = [
-    ...flattenedIndexColumnConfigs,
-    ...groupedColumnConfigs.map(switchToColDef)]
+    ...classedIndexColumnConfigs,
+    ...flattenedColumnConfigs]
   return retMultiColumns
 }
 
