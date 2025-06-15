@@ -152,6 +152,7 @@ export function childColDef(f:MultiIndexColumnConfig, level:number) : ColDefOrGr
   /*
   returns the proper colDef at level
    */
+  console.log("f",f, f.ag_grid_specs)
   return {
     headerName:f.col_path[level],
     ...baseColToColDef(f),
@@ -172,27 +173,36 @@ export function multiIndexColToColDef (f:MultiIndexColumnConfig[], level:number=
   if (level == rootDepth) {
     throw new Error("something went wrong, level is too deep");
   }
+  if(f.ag_grid_specs !== undefined) {
+    console.log(" colDef from multiIndexColToColDef", colDef)
+  }
   const childLevel = level + 1;
   if(rootDepth == 1) {
     const colDef: ColGroupDef = {
       //headerName: rootHeader,
-      children: _.map(f, (x) => childColDef(x, 0))
+      children: _.map(f, (x) => childColDef(x, 0)),
+      ...(f[0].ag_grid_specs)
     };
+    console.log(" colDef from multiIndexColToColDef", colDef)
     return colDef
   }
 
   if (childLevel == (rootDepth -1)) {
     const colDef: ColGroupDef = {
       headerName: rootHeader,
-      children: _.map(f, (x) => childColDef(x, childLevel))
+      children: _.map(f, (x) => childColDef(x, childLevel)),
+      ...(f[0].ag_grid_specs)
     };
+    console.log(" colDef from multiIndexColToColDef", colDef)
     return colDef
   } else {
     const groupedColumnConfigs = getSubChildren(f, childLevel);
     const colDef: ColGroupDef = {
       headerName: rootHeader,
-      children: _.map(groupedColumnConfigs, (x) => multiIndexColToColDef(x as MultiIndexColumnConfig[], childLevel))
+      children: _.map(groupedColumnConfigs, (x) => multiIndexColToColDef(x as MultiIndexColumnConfig[], childLevel)),
+      ...(f[0].ag_grid_specs)
     };
+    console.log(" colDef from multiIndexColToColDef", colDef)
     return colDef
   }
 }
