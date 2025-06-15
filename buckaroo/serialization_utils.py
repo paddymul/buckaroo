@@ -158,18 +158,12 @@ def to_parquet(df):
     data.close = lambda: None
     # I don't like this copy.  modify to keep the same data with different names
     df2 = df.copy()    
-    # print("df2.columns before")
-    # print(df2.columns)
-    # print("df2.columns after")
     attempted_columns = [new_col for _, new_col in old_col_new_col(df)]
-    # print(attempted_columns)
-    # print("@"*80)
     df2.columns = attempted_columns
     if isinstance(df2.index, pd.MultiIndex):
         new_idx = pd.RangeIndex(len(df2))
         for index_col_name, index_series in get_multiindex_to_cols_sers(df2.index):
-            print("index_series", index_series)
-            df2[index_col_name] = index_series
+            df2[index_col_name] = index_series.values
         df2.index = new_idx
     else:
         df2['index'] = df2.index
@@ -189,7 +183,6 @@ def to_parquet(df):
     finally:
         data.close = orig_close
         fp_json._get_cached_codec = orig_get_cached_codec
-
 
     data.seek(0)
     return data.read()

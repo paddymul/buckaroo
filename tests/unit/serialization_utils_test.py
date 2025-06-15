@@ -98,16 +98,23 @@ def test_serialize_multiindex_cols_parquet():
     assert set(second_df.columns) ==  set(['index','a','b','c','d','e'])
 
 def test_serialize_multiindex_index_simple():
+    
     df = get_multiindex_index_df()
     output = to_parquet(df)
-    #second_df = pd.read_parquet(output)
     import polars as pl
     second_df = pl.read_parquet(output)
-    assert set(second_df.columns) ==  set(['index_a', 'index_b', 'a', 'b'])
+    print("Actual columns:", second_df.columns)
+    print("DataFrame contents:")
     print(second_df)
-    print(second_df['index_a'])
-    assert second_df['index_a'].to_list() == [10,20,30,40,50,60]
-    #pldf['a'].to_list()
+    assert set(second_df.columns) ==  set(['index_a', 'index_b', 'a', 'b'])
+
+    def decode_bytes_column(col):
+        return [v.decode('utf-8').strip('"') if v is not None else None for v in col]
+
+    assert decode_bytes_column(second_df['index_a']) == ['foo', 'foo', 'bar', 'bar', 'bar', 'baz']
+    assert decode_bytes_column(second_df['index_b']) == ['a', 'b', 'a', 'b', 'c', 'a']
+    assert list(second_df['a']) == [10, 20, 30, 40, 50, 60]
+    assert decode_bytes_column(second_df['b']) == ['foo', 'bar', 'baz', 'quux', 'boff', None]
 
 def test_serialize_multiindex_index():
     df = get_multiindex_with_names_index_df()
