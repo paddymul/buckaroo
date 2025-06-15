@@ -245,10 +245,12 @@ export function dfToAgrid(
    */
   const groupedIndexColumnConfigs = getSubChildren(dfviewer_config.left_col_configs, 0)
   const flattenedIndexColumnConfigs = groupedIndexColumnConfigs.map(switchToColDef)
-  const classedIndexColumnConfigs = flattenedIndexColumnConfigs.map((x) => mergeCellClass(x,"headerClass", "left_col_configs_header"))
-  if (classedIndexColumnConfigs.length > 0) {
-    const last = classedIndexColumnConfigs[classedIndexColumnConfigs.length-1]
-    classedIndexColumnConfigs[classedIndexColumnConfigs.length-1] =  mergeCellClass(last, "headerClass", "left_col_configs_header_last")
+  const lcc = flattenedIndexColumnConfigs.map((x) => mergeCellClass(x,"headerClass", "left_col_configs_header"))
+  const lcc2 = lcc.map((x) => mergeCellClass(x,"cellClass", "left_col_configs_cell"))
+  if (lcc2.length > 0) {
+    const lastI = lcc2.length -1;
+    lcc2[lastI] =  mergeCellClass(lcc2[lastI], "headerClass", "left_col_configs_header_last")
+    lcc2[lastI] =  mergeCellClass(lcc2[lastI], "cellClass", "left_col_configs_cell_last")
   }
 
 
@@ -257,7 +259,7 @@ export function dfToAgrid(
   const flattenedColumnConfigs = groupedColumnConfigs.map(switchToColDef)
 
   const retMultiColumns:(ColDef|ColGroupDef)[] = [
-    ...classedIndexColumnConfigs,
+    ...lcc2,
     ...flattenedColumnConfigs]
   return retMultiColumns
 }
