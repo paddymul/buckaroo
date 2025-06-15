@@ -541,7 +541,6 @@ const left_col_configs2:ColumnConfig[] = [
 		  ag_grid_specs: {
 		    headerClass: ['last-index-header-class'],
 		    cellClass: ['last-index-cell-class'],
-
 		  }
                 }
             ]
@@ -1092,22 +1091,73 @@ export const get_multiindex3_index_df :Story = {
                     },
                     "col_name": "b",
                     "header_name": "bar_col"
-                }
+                },
+                {
+                    "displayer_args": {
+                        "displayer": "float",
+                        "min_fraction_digits": 0,
+                        "max_fraction_digits": 0
+                    },
+                    "col_name": "a",
+                    "header_name": "foo_col"
+                },
+                {
+                    "displayer_args": {
+                        "displayer": "obj"
+                    },
+                    "col_name": "b",
+                    "header_name": "bar_col"
+                },
+                {
+                    "displayer_args": {
+                        "displayer": "float",
+                        "min_fraction_digits": 0,
+                        "max_fraction_digits": 0
+                    },
+                    "col_name": "a",
+                    "header_name": "foo_col"
+                },
+                {
+                    "displayer_args": {
+                        "displayer": "obj"
+                    },
+                    "col_name": "b",
+                    "header_name": "bar_col"
+                },
+                {
+                    "displayer_args": {
+                        "displayer": "float",
+                        "min_fraction_digits": 0,
+                        "max_fraction_digits": 0
+                    },
+                    "col_name": "a",
+                    "header_name": "foo_col"
+                },
+                {
+                    "displayer_args": {
+                        "displayer": "obj"
+                    },
+                    "col_name": "b",
+                    "header_name": "bar_col"
+                },
             ],
+
             "left_col_configs": [
                 {
                     "header_name": "",
                     "col_name": "index_a",
                     "displayer_args": {
                         "displayer": "obj"
-                    }
+                    },
+                  "ag_grid_specs": {pinned:'left',}
                 },
                 {
                     "header_name": "",
                     "col_name": "index_b",
                     "displayer_args": {
                         "displayer": "obj"
-                    }
+                    },
+                  "ag_grid_specs": {pinned:'left',}
                 },
                 {
                     "header_name": "",
@@ -1115,14 +1165,7 @@ export const get_multiindex3_index_df :Story = {
                     "displayer_args": {
                         "displayer": "obj"
                     },
-                    "ag_grid_specs": {
-                        "headerClass": [
-                            "last-index-header-class"
-                        ],
-                        "cellClass": [
-                            "last-index-cell-class"
-                        ]
-                    }
+                  "ag_grid_specs": {pinned:'left',}
                 }
             ],
             "extra_grid_config": {},

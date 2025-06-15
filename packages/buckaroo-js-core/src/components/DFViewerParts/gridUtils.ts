@@ -232,7 +232,13 @@ export function mergeCellClass(
     } else {
       console.log("c", c, classSpec)
       //@ts-ignore
-      c[classSpec].push(extraClass)
+      if(_.isArray(c[classSpec])) {
+	//@ts-ignore
+	c[classSpec].push(extraClass)
+      } else {
+	//@ts-ignore
+	c[classSpec] = [c[classSpec], extraClass]
+      }
     }
     return c
   }
@@ -246,13 +252,20 @@ export function dfToAgrid(
   const groupedIndexColumnConfigs = getSubChildren(dfviewer_config.left_col_configs, 0)
   const flattenedIndexColumnConfigs = groupedIndexColumnConfigs.map(switchToColDef)
   const lcc = flattenedIndexColumnConfigs.map((x) => mergeCellClass(x,"headerClass", "left_col_configs_header"))
+  
   const lcc2 = lcc.map((x) => mergeCellClass(x,"cellClass", "left_col_configs_cell"))
   if (lcc2.length > 0) {
     const lastI = lcc2.length -1;
     lcc2[lastI] =  mergeCellClass(lcc2[lastI], "headerClass", "left_col_configs_header_last")
     lcc2[lastI] =  mergeCellClass(lcc2[lastI], "cellClass", "left_col_configs_cell_last")
   }
-  console.log("lcc2", lcc2);
+  const addPinned = (x:ColDef|ColGroupDef) :ColDef => {
+    return {
+    ...x,
+    pinned:'left'}
+  }
+  const lcc3 = lcc2.map(addPinned)
+  console.log("lcc3", lcc3);
 
   const columnConfigs: ColumnConfig[] =  dfviewer_config.column_config;
   const groupedColumnConfigs = getSubChildren(columnConfigs, 0);

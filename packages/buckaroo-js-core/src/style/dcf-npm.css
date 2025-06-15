@@ -433,8 +433,8 @@ div.dependent-tabs ul.tabs li.active {
 
 .histogram-component {
     margin:0;
-    border-left:1px solid #68686e;
-    border-right:1px solid #68686e;
+    /* border-left:1px solid #68686e; */
+    /* border-right:1px solid #68686e; */
 		
 	   
 }
@@ -592,34 +592,10 @@ div.cell-output-ipywidget-background {
 
 
 /* https://colorffy.com/dark-theme-generator?colors=b2317d-121212 */
-
-/*
-.last-index-header-class {
-    font-weight:bold;
-    border-right:4px solid #717171 !important;
-    border-bottom:none;
-    border-top:none;
-
+.ag-header-row .left_col_configs_header,
+.ag-row .left_col_configs_cell {
+    border-right:2px solid #717171 !important;
 }
-.last-index-cell-class {
-    border-right:4px solid #717171 !important;
-    border-bottom:none;
-    border-top:none;
-}
-*/
-/*
-A: .ag-header-row .left_col_configs_header:last-child 
-B: .ag-header-row .ag-header-cell:last-child 
-
-.ag-header-row .left_col_configs_header:last-child { 
-.ag-header-row .ag-header-cell:last-child {
-.ag-header-row .left_col_configs:last-of-type {
-div.ag-header-cell
-*/
-
-/*
-.ag-header-row .left_col_configs_header:nth-child(3) {
-    */
 .ag-header-row .left_col_configs_header_last,
 .ag-row .left_col_configs_cell_last {
 
@@ -633,12 +609,12 @@ div.ag-header-cell
 /*     background:orange; */
 /* } */
 
-
-.ag-header {
+/* we don't want these applying to the status bar too*/
+.df-viewer .ag-header {
     border-bottom:4px solid #717171 !important;
 }
 
-.ag-center-cols-viewport .ag-row:first-child {
+.df-viewer .ag-center-cols-viewport .ag-row:first-child {
     /* first row at the top of regular rows */
     border-top:2px solid #717171 !important;
 }
