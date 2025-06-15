@@ -604,5 +604,29 @@ div.cell-output-ipywidget-background {
     border-right:4px solid #717171 !important;
     border-bottom:none;
     border-top:none;
+}
+
+.ag-header {
+    border-bottom:4px solid #717171 !important;
+    /* bottom of headers */
+}
+
+.ag-center-cols-viewport .ag-row:first-child {
+    /* first row at the top of regular rows */
+    border-top:4px solid #717171 !important;
+}
+
+/*
+.ag-floating-top {
+    border-bottom:3px solid teal;
+    border-bottom:3px solid red;
 
 }
+
+.ag-sticky-top {
+    border-top:7px solid white;
+    border-bottom:3px solid pink;
+}
+*/
+
+
