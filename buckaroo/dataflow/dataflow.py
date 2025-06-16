@@ -16,7 +16,7 @@ from .styling_core import (
     ComponentConfig,
     OverrideColumnConfig,
     PinnedRowConfig,
-    merge_column_config_overrides,
+    merge_sd_overrides,
     merge_sds, merge_column_config, StylingAnalysis)
 
 
@@ -360,9 +360,9 @@ class CustomizableDataflow(DataFlow):
             return
 
         #we do this to get rewrtten keys for init_sd
-        rewritten_init_sd = merge_column_config_overrides({}, self.processed_df, self.init_sd)
+        rewritten_init_sd = merge_sd_overrides({}, self.processed_df, self.init_sd)
         intermediate_sd = merge_sds(rewritten_init_sd, self.cleaned_sd, self.summary_sd)
-        self.merged_sd  = merge_column_config_overrides(
+        self.merged_sd  = merge_sd_overrides(
             intermediate_sd, self.processed_df, self.processed_sd)
 
 

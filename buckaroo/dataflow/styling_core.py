@@ -234,6 +234,9 @@ def merge_column_config(styled_column_config:List[ColumnConfig],
       """
     existing_column_config: List[ColumnConfig] = styled_column_config.copy()
     ret_column_config: List[ColumnConfig] = []
+
+
+    
     for row in existing_column_config:
         orig_col: ColIdentifier = row.get('header_name', None) or row.get('col_path', None)
 
@@ -245,7 +248,7 @@ def merge_column_config(styled_column_config:List[ColumnConfig],
         ret_column_config.append(row)
     return ret_column_config
 
-def merge_column_config_overrides(final_sd:SDType, df:pd.DataFrame, overrides:SDType) -> SDType:
+def merge_sd_overrides(final_sd:SDType, df:pd.DataFrame, overrides:SDType) -> SDType:
     """
       this is psecifically built for places where keys from the original dataframe will be used in 'overrides'
       those should be mapped onto the rewritten col_name

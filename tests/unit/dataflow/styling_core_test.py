@@ -1,6 +1,6 @@
 from typing import Dict, List
 import pandas as pd
-from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalColumnConfig, PartialColConfig, StylingAnalysis, merge_column_config_overrides, rewrite_override_col_references
+from buckaroo.dataflow.styling_core import ColumnConfig, DFViewerConfig, NormalColumnConfig, PartialColConfig, StylingAnalysis, merge_sd_overrides, rewrite_override_col_references
 from buckaroo.ddd_library import get_basic_df2, get_multiindex_index_df, get_multiindex_index_multiindex_with_names_cols_df, get_multiindex_index_with_names_multiindex_cols_df, get_multiindex_with_names_both, get_multiindex_with_names_index_df, get_multindex_cols_df, get_multindex_with_names_cols_df, get_tuple_cols_df
 from buckaroo.df_util import ColIdentifier
 from buckaroo.pluggable_analysis_framework.col_analysis import SDType
@@ -216,7 +216,7 @@ def test_rewrite_override():
         'displayer_args': {'displayer':'boolean'}}
     assert rewrite_override_col_references(rewrites, no_rewrite_config.copy()) == no_rewrite_config
 
-def test_merge_column_config_overrides():
+def test_merge_sd_overrides():
     typed_df = pd.DataFrame({'int_col': [1] * 5})
     
     orig_sd : SDType = {'a': {'foo':10, 'orig_col_name':'int_col', 'rewritten_col_name':'a'}}
@@ -224,14 +224,14 @@ def test_merge_column_config_overrides():
     override_sd: SDType = { 'int_col': {
         'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}}
 
-    merged : SDType = merge_column_config_overrides(orig_sd, typed_df, override_sd)
+    merged : SDType = merge_sd_overrides(orig_sd, typed_df, override_sd)
 
     assert merged['a'] == {'foo':10, 'orig_col_name':'int_col', 'rewritten_col_name':'a', 
         'column_config_override': {'color_map_config': {'color_rule': 'color_from_column', 'col_name': 'a'}}}
     assert len(merged) == 1
     assert 'int_col' not in merged
 
-def test_merge_column_config_overrides2():
+def test_merge_sd_overrides2():
     """
       make sure extra keys are merged too, back to the rwritten col_name.
       I'm not 100% sure I want to support this.
@@ -244,7 +244,7 @@ def test_merge_column_config_overrides2():
     
     orig_sd : SDType = {'a': {'foo':10, 'orig_col_name':'int_col', 'rewritten_col_name':'a'}}
 
-    merged : SDType = merge_column_config_overrides(orig_sd, typed_df, override_sd)
+    merged : SDType = merge_sd_overrides(orig_sd, typed_df, override_sd)
 
     assert merged['a'] == { 'foo':10,
     'orig_col_name':'int_col', 'rewritten_col_name':'a', 
