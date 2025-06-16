@@ -351,6 +351,27 @@ def test_column_config_override_widget():
     assert float_col_config == {'col_name': 'b', 'header_name':'float_col', 'displayer_args': { 'displayer': 'integer', 'min_digits': 3, 'max_digits': 5 },
     #'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'c'}
     }
+
+def test_column_config_override_rewrite():
+    ROWS = 200
+    typed_df = pd.DataFrame(
+        {'int_col': [1] * ROWS,
+         'float_col': [.5] * ROWS,
+         "str_col": ["foobar"]* ROWS})
+    bw2 = BuckarooWidget(
+        typed_df, 
+        column_config_overrides={
+            'float_col': {
+                'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'str_column'}}})
+            
+        
+    float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][1]
+    expected = {'col_name': 'b', 'header_name':'float_col', 
+                'displayer_args': {'displayer': 'float',
+                                   'max_fraction_digits': 3,
+                                   'min_fraction_digits': 3},
+                'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'c'}}
+    assert expected == float_col_config
     
 
 
