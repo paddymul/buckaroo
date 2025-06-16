@@ -94,6 +94,7 @@ export type BaseColumnConfig = {
 };
 export type NormalColumnConfig = BaseColumnConfig & {
     col_name: string;
+    header_name: string;
 };
 export type MultiIndexColumnConfig = BaseColumnConfig & {
     col_path: string[];
@@ -116,6 +117,7 @@ export type ComponentConfig = {
 export interface DFViewerConfig {
     pinned_rows: PinnedRowConfig[];
     column_config: ColumnConfig[];
+    left_col_configs: ColumnConfig[];
     extra_grid_config?: GridOptions;
     component_config?: ComponentConfig;
 }

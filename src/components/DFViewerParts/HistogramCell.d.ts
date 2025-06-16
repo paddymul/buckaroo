@@ -21,7 +21,8 @@ export declare const HistogramCell: (props: {
     context: Context;
     value: any;
 }) => import("react/jsx-runtime").JSX.Element;
-export declare const TypedHistogramCell: ({ histogramArr, context }: {
+export declare const TypedHistogramCell: ({ histogramArr, context, className }: {
     histogramArr: HistogramBar[];
     context: any;
+    className?: string;
 }) => import("react/jsx-runtime").JSX.Element;

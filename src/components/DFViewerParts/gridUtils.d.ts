@@ -13,6 +13,7 @@ export declare function normalColToColDef(f: NormalColumnConfig): ColDef;
 export declare const getSubChildren: (arr: ColumnConfig[], level: number) => ColumnConfig[][];
 export declare function childColDef(f: MultiIndexColumnConfig, level: number): ColDefOrGroup;
 export declare function multiIndexColToColDef(f: MultiIndexColumnConfig[], level?: number): ColGroupDef;
+export declare function mergeCellClass(cOrig: ColDef | ColGroupDef, classSpec: "headerClass" | "cellClass", extraClass: string): ColDef | ColGroupDef;
 export declare function dfToAgrid(dfviewer_config: DFViewerConfig): (ColDef | ColGroupDef)[];
 export declare function getCellRendererSelector(pinned_rows: PinnedRowConfig[]): (params: ICellRendererParams<any, any, any>) => CellRendererSelectorResult | undefined;
 export declare function extractSDFT(summaryStatsDf: DFData): SDFT;
