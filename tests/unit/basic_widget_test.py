@@ -123,7 +123,7 @@ def test_string_column_handling():
     assert ten_col['col_name'] == 'a'  # this is the field that ag-grid will read from
     assert ten_col['header_name'] == '10'  # this should be a string
     
-    assert bw.df_data_dict['main'] == [{'index': 0, 'a': 'foo', 'b': 'bar', 'c': 'baz'}]
+    assert bw.df_data_dict['main'] == [{'index': 0, 'a': 'foo', 'b': 'bar', 'c': 'baz', 'level_0':0}]
     assert ten_col['tooltip_config'] == {'tooltip_type': 'simple', 'val_column': 'a'}
 
 

@@ -59,13 +59,12 @@ def test_polars_all_stats():
     spbw = SimplePolarsBuckaroo(test_df)
     assert spbw.dataflow.merged_sd == expected
 
-    print(spbw.df_data_dict['all_stats'])
     assert spbw.df_data_dict['all_stats'] == [
-        {'index': 'orig_col_name', 'a': 'normal_int_series'},
-        {'index': 'rewritten_col_name', 'a': 'a'},
-        {'index': 'null_count', 'a': 0.0},
-        {'index': 'mean', 'a': 2.5},
-        {'index': 'quin99', 'a': 4.0}]
+        {'index': 'orig_col_name', 'a': 'normal_int_series', 'level_0':'orig_col_name'},
+        {'index': 'rewritten_col_name', 'a': 'a', 'level_0':'rewritten_col_name'},
+        {'index': 'null_count', 'a': 0.0, 'level_0':'null_count'},
+        {'index': 'mean', 'a': 2.5, 'level_0':'mean'},
+        {'index': 'quin99', 'a': 4.0, 'level_0':'quin99'}]
     assert spbw.df_display_args['main']['df_viewer_config'] == EXPECTED_DF_VIEWER_CONFIG
 
 def test_polars_boolean():

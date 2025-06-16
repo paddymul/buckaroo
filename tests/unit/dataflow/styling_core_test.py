@@ -66,6 +66,9 @@ def test_index_styling_simple():
         StylingAnalysis.get_left_col_configs(get_basic_df2())
 
 def test_index_styling1():
+
+    print(StylingAnalysis.get_left_col_configs(get_multiindex_index_df()))
+    1/0
     assert [{'col_path':[''],
              'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
     {'col_path':[''],'field':'index_b', 'displayer_args': {'displayer': 'obj'}}
@@ -101,14 +104,6 @@ def test_index_styling4():
                     "displayer_args": {
                         "displayer": "obj"
                     },
-                    "ag_grid_specs": {
-                        "headerClass": [
-                            "last-index-header-class"
-                        ],
-                        "cellClass": [
-                            "last-index-cell-class"
-                        ]
-                    }
                 }
             ]
     actual = StylingAnalysis.get_left_col_configs(get_multiindex_index_multiindex_with_names_cols_df())

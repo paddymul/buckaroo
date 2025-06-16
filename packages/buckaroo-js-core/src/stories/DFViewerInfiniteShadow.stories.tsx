@@ -545,9 +545,6 @@ const left_col_configs2:ColumnConfig[] = [
                 }
             ]
 
-
-
-
 // // from ddd.get_multiindex_with_names_index_df()
 export const get_multiindex_with_names_index_df :Story = {
     "args": {
