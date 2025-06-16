@@ -76,17 +76,24 @@ class PolarsBuckarooWidget(BuckarooWidget):
         return pd_to_obj(self.sampling_klass.serialize_sample(df.to_pandas()))
 
 
+def prepare_df_for_serialization(df:pl.DataFrame) -> pl.DataFrame:
+    # I don't like this copy.  modify to keep the same data with different names
+    df2 = df.copy()    
+    attempted_columns = [new_col for _, new_col in old_col_new_col(df)]
+    df2.columns = attempted_columns
+    return df2
+
 def to_parquet(df):
     # I don't like this copy.  modify to keep the same data with different names
     #df2 = df.copy()
     
-    df.columns = [str(x) for x in df.columns]
+
     #obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     #encodings = {k:'json' for k in obj_columns}
 
     out = BytesIO()
 
-    df.with_row_index().write_parquet(out, compression='uncompressed') #engine='fastparquet', object_encoding=encodings)
+    prepare_df_for_serialization(df).with_row_index().write_parquet(out, compression='uncompressed') #engine='fastparquet', object_encoding=encodings)
     out.seek(0)
     return out.read()
 

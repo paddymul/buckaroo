@@ -8,7 +8,7 @@ from buckaroo.pluggable_analysis_framework.col_analysis import (
     ColAnalysis)
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix)
-from buckaroo.polars_buckaroo import PolarsBuckarooWidget, PolarsBuckarooInfiniteWidget
+from buckaroo.polars_buckaroo import PolarsBuckarooWidget, PolarsBuckarooInfiniteWidget, to_parquet
 from buckaroo.dataflow.dataflow import StylingAnalysis
 from buckaroo.jlisp.lisp_utils import (s, sQ)
 
@@ -291,7 +291,17 @@ def test_polars_search():
 
     """
 
-    
-'''
-FIXME:test a large dataframe that forces sampling
-'''
+def get_named_col_pldf():
+    return pl.DataFrame({'foo':[1,2,3],
+                  'bar':["asdf","iiu", "asd999"],
+                  'baz':[True, False, True]
+                  })
+                  
+
+def test_serialize_regular_df():
+    df = get_named_col_pldf()
+    output = to_parquet(df)
+    #second_df = pd.read_parquet(output)
+    import polars as pl
+    second_df = pl.read_parquet(output)
+    assert set(second_df.columns) ==  set(['index','a','b','c'])
