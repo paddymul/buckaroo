@@ -159,7 +159,6 @@ def prepare_df_for_serialization(df:pd.DataFrame) -> pd.DataFrame:
         df2.index = new_idx
     else:
         df2['index'] = df2.index
-    obj_columns = df2.select_dtypes([pd.CategoricalDtype(), 'object']).columns.to_list()
     return df2
 
 def to_parquet(df):

@@ -15,8 +15,8 @@ def result_from_exec(code_str, df_input):
     full_code_str = CODE_PREAMBLE + code_str + RETRIEVE_RESULT_STR
     try:
         exec(full_code_str, {'__test_df':df_input, '__ret_closure':outer_scope_result})
-    except:
-        print("Failure calling exec with following code string")
+    except Exception as e:
+        print("Failure calling exec with following code string", e)
         print(full_code_str)
     #print(full_code_str)
     return outer_scope_result[0]
