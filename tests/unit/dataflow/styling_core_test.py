@@ -66,14 +66,14 @@ def test_index_styling_simple():
         StylingAnalysis.get_left_col_configs(get_basic_df2())
 
 def test_index_styling1():
+    expected = [
+        {'header_name': '', 'col_name': 'index_a', 'displayer_args':
+         {'displayer': 'obj'}},
+        {'header_name': '', 'col_name': 'index_b',
+         'displayer_args': {'displayer': 'obj'}}]
 
-    print(StylingAnalysis.get_left_col_configs(get_multiindex_index_df()))
-    1/0
-    assert [{'col_path':[''],
-             'field':'index_a', 'displayer_args': {'displayer': 'obj'}},
-    {'col_path':[''],'field':'index_b', 'displayer_args': {'displayer': 'obj'}}
-
-    ] == StylingAnalysis.get_left_col_configs(get_multiindex_index_df())
+    actual = StylingAnalysis.get_left_col_configs(get_multiindex_index_df())
+    assert expected == actual
 
 def test_index_styling2():
     assert [{'col_path':['level_a', 'level_b', 'index'],

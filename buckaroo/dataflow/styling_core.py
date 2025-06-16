@@ -337,8 +337,11 @@ class StylingAnalysis(ColAnalysis):
                 ccs.append({'header_name':'', 'col_name':'index_' + to_chars(i),
                      'displayer_args': {'displayer': 'obj'}})
             else:
-                local_col_path = base_col_path.copy()
-                local_col_path.append(str(idx_name))
+                if index_names_empty(df.index):
+                    local_col_path = base_col_path.copy()
+                else:
+                    local_col_path = base_col_path.copy()
+                    local_col_path.append(str(idx_name))
                 ccs.append({'col_path': local_col_path, 'field':'index_' + to_chars(i),
                      'displayer_args': {'displayer': 'obj'}})
         if not index_names_empty(df.columns):
