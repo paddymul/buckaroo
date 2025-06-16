@@ -84,7 +84,6 @@ class BuckarooWidgetBase(anywidget.AnyWidget):
 
 
     def get_story_config(self, include_summary_stats=False, test_name=None) -> str:
-        print("PADDY87")
         df = self.dataflow.processed_df
         if len(df) > 100 or len(df.columns) > 20:
             raise Exception("This dataframe or columns is pretty big, you don't want to serialize it")
@@ -321,7 +320,6 @@ class BuckarooInfiniteWidget(BuckarooWidget):
 
         temp_display_args = {}
         for display_name, A_Klass in self.dataflow.df_display_klasses.items():
-            print("HERERRRRRRRRRRRRR")
             df_viewer_config = A_Klass.get_dfviewer_config(merged_sd, processed_df)
             base_column_config = df_viewer_config['column_config']
             df_viewer_config['column_config'] =  merge_column_config(

@@ -32,7 +32,6 @@ def is_dataframe_datetime_safe(df:pd.DataFrame) -> bool:
 def fix_df_dates(df:pd.DataFrame) -> pd.DataFrame:
     for col in df.columns:
         if not is_ser_dt_safe(df[col]):
-            print("col", col)
             df[col] = pd.to_datetime(df[col], utc=True)
     if not is_ser_dt_safe(df.index):
         df.index = df.index.tz_convert('UTC')
