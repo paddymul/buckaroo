@@ -223,6 +223,7 @@ describe("testing multi index organiztion  ", () => {
     col_name:'c', 
     header_name: 'c',
     displayer_args: { displayer:'obj' }};
+
   const REGULAR_C__DIFFERENT_OBJECT :NormalColumnConfig = {
     col_name:'c', 
     header_name: 'c2',
@@ -300,7 +301,7 @@ describe("testing multi index organiztion  ", () => {
       REGULAR_D];
     const grouped:  ColumnConfig[][] = [
       [REGULAR_C],
-      [REGULAR_C],
+      [REGULAR_C__DIFFERENT_OBJECT],
       [REGULAR_D]];
 
     expect(getSubChildren(allMultiIndex, 0)).toEqual(grouped);
