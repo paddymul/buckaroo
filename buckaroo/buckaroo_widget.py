@@ -325,7 +325,7 @@ class BuckarooInfiniteWidget(BuckarooWidget):
             df_viewer_config = A_Klass.get_dfviewer_config(merged_sd, processed_df)
             base_column_config = df_viewer_config['column_config']
             df_viewer_config['column_config'] =  merge_column_config(
-                base_column_config, self.dataflow.column_config_overrides)
+                base_column_config, self.dataflow.processed_df, self.dataflow.column_config_overrides)
             disp_arg = {'data_key': A_Klass.data_key,
                         #'df_viewer_config': json.loads(json.dumps(df_viewer_config)),
                         'df_viewer_config': df_viewer_config,

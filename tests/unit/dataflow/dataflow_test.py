@@ -120,9 +120,8 @@ def test_merge_column_config():
     computed_column_config =     [
             {'header_name':'foo', 'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
             {'header_name':'bar', 'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
-
-    merged = dft.merge_column_config(
-        computed_column_config, overrides)
+    temp_df=pd.DataFrame({'foo':[], 'bar':[], 'volume_colors':[]})
+    merged = dft.merge_column_config(computed_column_config, temp_df, overrides)
 
     expected = [
             {'header_name':'foo', 'col_name': 'a', 'displayer_args': {'displayer': 'obj'},
@@ -138,9 +137,9 @@ def test_merge_column_config_hide():
     computed_column_config =     [
             {'header_name':'foo', 'col_name':'a', 'displayer_args': {'displayer': 'obj'}},
             {'header_name':'bar', 'col_name':'b', 'displayer_args': {'displayer': 'obj'}}]
-
+    temp_df=pd.DataFrame({'foo':[], 'bar':[], 'volume_colors':[]})
     merged = dft.merge_column_config(
-        computed_column_config, overrides)
+        computed_column_config, temp_df, overrides)
 
     expected = [
             {'header_name':'foo', 'col_name':'a', 'displayer_args': {'displayer': 'obj'}}]

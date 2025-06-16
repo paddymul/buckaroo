@@ -1,3 +1,4 @@
+import copy
 import logging
 from typing import Iterable, TypedDict, Union, List, Dict, Any, Literal
 from typing_extensions import NotRequired, TypeAlias
@@ -225,6 +226,7 @@ def merge_column(base, new):
 OverrideColumnConfig:TypeAlias = Dict[ColIdentifier, BaseColumnConfig]
 
 def merge_column_config(styled_column_config:List[ColumnConfig],
+                        df:pd.DataFrame,
     overide_column_configs:OverrideColumnConfig) -> List[ColumnConfig]:
 
     """
@@ -235,18 +237,33 @@ def merge_column_config(styled_column_config:List[ColumnConfig],
     existing_column_config: List[ColumnConfig] = styled_column_config.copy()
     ret_column_config: List[ColumnConfig] = []
 
-
+    rewrites= dict( old_col_new_col(df))
     
     for row in existing_column_config:
         orig_col: ColIdentifier = row.get('header_name', None) or row.get('col_path', None)
 
         if orig_col in overide_column_configs:
-            row.update(overide_column_configs[orig_col])
+            row.update(rewrite_override_col_references(rewrites, overide_column_configs[orig_col]))
         if row.get('merge_rule', 'blank') == 'hidden':
 
             continue
         ret_column_config.append(row)
     return ret_column_config
+
+PartialColConfig:TypeAlias = Dict[str, Union[str, Dict[str, str]]]
+def rewrite_override_col_references(rewrites: Dict[ColIdentifier, ColIdentifier], override:PartialColConfig) -> PartialColConfig:
+    obj = copy.deepcopy(override)
+    if obj.get('color_map_config'):
+        if obj['color_map_config'].get('val_column'):
+            obj['color_map_config']['val_column'] = rewrites[obj['color_map_config']['val_column']]
+
+        if obj['color_map_config'].get('exist_column'):
+            obj['color_map_config']['exist_column'] = rewrites[obj['color_map_config']['exist_column']]
+    if obj.get('tooltip_config'):
+        if obj['tooltip_config'].get('val_column'):
+            obj['tooltip_config']['val_column'] = rewrites[obj['tooltip_config']['val_column']]
+    return obj
+
 
 def merge_sd_overrides(final_sd:SDType, df:pd.DataFrame, overrides:SDType) -> SDType:
     """
@@ -267,18 +284,6 @@ def safedel(dct:Dict[str, Any], key:str) -> Dict[str, Any]:
 
     
 
-PartialColConfig:TypeAlias = Dict[str, Union[str, Dict[str, str]]]
-def rewrite_override_col_references(rewrites: Dict[ColIdentifier, ColIdentifier], obj:PartialColConfig) -> PartialColConfig:
-    if obj.get('color_map_config'):
-        if obj['color_map_config'].get('val_column'):
-            obj['color_map_config']['val_column'] = rewrites[obj['color_map_config']['val_column']]
-
-        if obj['color_map_config'].get('exist_column'):
-            obj['color_map_config']['exist_column'] = rewrites[obj['color_map_config']['exist_column']]
-    if obj.get('tooltip_config'):
-        if obj['tooltip_config'].get('val_column'):
-            obj['tooltip_config']['val_column'] = rewrites[obj['tooltip_config']['val_column']]
-    return obj
 
 #Union[pd.Index[Any], pd.MultiIndex]
 def get_index_level_names(index:Any) -> List[str]:

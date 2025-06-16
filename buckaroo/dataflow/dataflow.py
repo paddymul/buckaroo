@@ -472,7 +472,7 @@ class CustomizableDataflow(DataFlow):
             df_viewer_config = A_Klass.get_dfviewer_config(merged_sd, processed_df)
             base_column_config = df_viewer_config['column_config']
             df_viewer_config['column_config'] =  merge_column_config(
-                base_column_config, self.column_config_overrides)
+                base_column_config, self.processed_df, self.column_config_overrides)
             disp_arg = {'data_key': A_Klass.data_key,
                         'df_viewer_config': df_viewer_config,
                         'summary_stats_key': A_Klass.summary_stats_key}

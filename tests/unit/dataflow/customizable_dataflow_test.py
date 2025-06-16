@@ -362,7 +362,7 @@ def test_column_config_override_rewrite():
         typed_df, 
         column_config_overrides={
             'float_col': {
-                'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'str_column'}}})
+                'tooltip_config': {'tooltip_type': 'simple', 'val_column': 'str_col'}}})
             
         
     float_col_config = bw2.df_display_args['main']['df_viewer_config']['column_config'][1]
