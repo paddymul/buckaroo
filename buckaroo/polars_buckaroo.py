@@ -4,6 +4,7 @@ import traceback
 import polars as pl
 
 from buckaroo.buckaroo_widget import BuckarooWidget, BuckarooInfiniteWidget, RawDFViewerWidget
+from buckaroo.df_util import old_col_new_col
 from .customizations.polars_analysis import PL_Analysis_Klasses
 from .pluggable_analysis_framework.polars_analysis_management import (
     PlDfStats)
@@ -78,10 +79,8 @@ class PolarsBuckarooWidget(BuckarooWidget):
 
 def prepare_df_for_serialization(df:pl.DataFrame) -> pl.DataFrame:
     # I don't like this copy.  modify to keep the same data with different names
-    df2 = df.copy()    
-    attempted_columns = [new_col for _, new_col in old_col_new_col(df)]
-    df2.columns = attempted_columns
-    return df2
+    return df.select([pl.col(old_col).alias(new_col) for old_col, new_col in old_col_new_col(df)])
+
 
 def to_parquet(df):
     # I don't like this copy.  modify to keep the same data with different names
