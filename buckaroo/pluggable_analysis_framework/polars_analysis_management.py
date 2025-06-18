@@ -1,14 +1,16 @@
 import traceback
+from typing_extensions import TypeAlias
 
 import polars as pl
 
+from buckaroo.df_util import old_col_new_col
 from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 
-from .pluggable_analysis_framework import ColAnalysis
+from .col_analysis import ColAnalysis, SDType
 from .analysis_management import (produce_summary_df, AnalysisPipeline, DfStats)
 from buckaroo.pluggable_analysis_framework.safe_summary_df import safe_summary_df
-from typing import Mapping, Any, Callable, Tuple, List, MutableMapping
+from typing import Mapping, Any, Callable, Tuple, List, MutableMapping, Type
 
 
 
@@ -16,11 +18,11 @@ class PolarsAnalysis(ColAnalysis):
     select_clauses:List[pl.Expr] = []
     column_ops: Mapping[str, Tuple[List[pl.DataType], Callable[[pl.Series], Any]]] = {}
 
-
+PAObjs: TypeAlias = List[Type[PolarsAnalysis]]
 
 def polars_produce_series_df(df:pl.DataFrame,
-                      unordered_objs:List[PolarsAnalysis],
-                      df_name:str='test_df', debug:bool=False):
+                             unordered_objs:PAObjs,
+                      df_name:str='test_df', debug:bool=False) -> SDType:
     """ just executes the series methods
 
     """
@@ -36,15 +38,22 @@ def polars_produce_series_df(df:pl.DataFrame,
         traceback.print_exc()
         return dict([[k, str(e)] for k in df.columns]), {}
 
+    orig_col_to_rewritten = {}
     summary_dict = {}
-    for col in df.columns:
-        summary_dict[col] = {}
+    for orig_ser_name, rewritten_col_name in old_col_new_col(df):
+        orig_col_to_rewritten[orig_ser_name] = rewritten_col_name
+        summary_dict[rewritten_col_name] = {}
+        summary_dict[rewritten_col_name]['orig_col_name'] = orig_ser_name
+        summary_dict[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
+
+
         for a_klass in unordered_objs:
-            summary_dict[col].update(a_klass.provides_defaults)
+            summary_dict[rewritten_col_name].update(a_klass.provides_defaults)
     first_run_dict = split_to_dicts(result_df)
 
     for col, measures in first_run_dict.items():
-        summary_dict[col].update(measures)
+        rw_col = orig_col_to_rewritten[col]
+        summary_dict[rw_col].update(measures)
 
     for pa in unordered_objs:
         for measure_name, action_tuple in pa.column_ops.items():
@@ -54,7 +63,8 @@ def polars_produce_series_df(df:pl.DataFrame,
             else:
                 sub_df = df.select(pl.col(col_selector))
             for col in sub_df.columns:
-                summary_dict[col][measure_name] = func(df[col])
+                rw_col = orig_col_to_rewritten[col]
+                summary_dict[rw_col][measure_name] = func(df[col])
                 pass
     return summary_dict, errs
 

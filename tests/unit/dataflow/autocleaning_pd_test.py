@@ -4,7 +4,7 @@ import numpy as np
 from buckaroo import BuckarooWidget
 from buckaroo.customizations.analysis import (
     DefaultSummaryStats, PdCleaningStats)
-from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (ColAnalysis)
+from buckaroo.pluggable_analysis_framework.col_analysis import (ColAnalysis)
 from buckaroo.dataflow.autocleaning import AutocleaningConfig
 from buckaroo.dataflow.autocleaning import PandasAutocleaning, generate_quick_ops
 from buckaroo.jlisp.lisp_utils import (s, sA, sQ)
@@ -377,7 +377,7 @@ class SentinelCleaningGenOps(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        ops = [sA('noop', clean_col=column_metadata['col_name']), s('df')]
+        ops = [sA('noop', clean_col=column_metadata['orig_col_name']), s('df')]
         return {'cleaning_ops': ops}
 
 class SentinelConfig(AutocleaningConfig):
@@ -403,7 +403,7 @@ class SentinelCleaningGenOps2(ColAnalysis):
 
     @classmethod
     def computed_summary(kls, column_metadata):
-        if column_metadata['col_name'] == 'c':
+        if column_metadata['orig_col_name'] == 'c':
             ops = [
                 sA('noop2', clean_col='c'),
                 {'symbol': 'df'}]
