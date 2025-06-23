@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 
-from buckaroo.df_util import ColIdentifier, old_col_new_col
+from buckaroo.df_util import ColIdentifier, get_rewrite_dict, old_col_new_col
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
 from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF
@@ -70,6 +70,54 @@ def produce_summary_df(
     df:pd.DataFrame, series_stats:SDType,
     ordered_objs:AObjs, df_name:str='test_df', debug:bool=False) -> SDErrsTuple:
     """
+      takes dataframes that havent had the names changed.  this will be the polars version
+      
+      
+    """
+    errs: ErrDict = {}
+    summary_col_dict: SDType = {}
+    rewrites = get_rewrite_dict(df)
+    
+    print("seriestats 85")
+    print(list(series_stats.keys()))
+    # print("rewrites", rewrites)
+    # rewritten_series_stats = dict([(new_col, series_stats[old_col]) for old_col, new_col in rewrites.items()])
+    # print(list(rewritten_series_stats.keys()))
+    # 1/0
+    
+    for orig_ser_name, rewritten_ser_name in old_col_new_col(df):
+        # print("orig_ser_name", orig_ser_name, len(series_stats.get(orig_ser_name, {})),
+        #       "rewritten_ser_name", rewritten_ser_name, len(series_stats.get(rewritten_ser_name, {})))
+
+        #base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
+        base_summary_dict: ColMeta = series_stats.get(rewritten_ser_name, {})
+        for a_kls in ordered_objs:
+            try:
+                if a_kls.quiet or a_kls.quiet_warnings:
+                    if debug is False:
+                        warnings.filterwarnings('ignore')
+                    summary_res = a_kls.computed_summary(base_summary_dict)
+                    warnings.filterwarnings('default')
+                else:
+                    summary_res = a_kls.computed_summary(base_summary_dict)
+                for k,v in summary_res.items():
+                    base_summary_dict.update(summary_res)
+            except Exception as e:
+                if not a_kls.quiet:
+                    errs[(rewritten_ser_name, "computed_summary")] = e, a_kls
+                if debug:
+                    traceback.print_exc()
+                continue
+        summary_col_dict[rewritten_ser_name] = base_summary_dict
+    return summary_col_dict, errs
+
+
+def produce_summary_df_rewritten_names(
+    df:pd.DataFrame, series_stats:SDType,
+    ordered_objs:AObjs, df_name:str='test_df', debug:bool=False) -> SDErrsTuple:
+    """
+      takes dataframes that havent had the names changed. the version to be used for pandas
+      
     takes a dataframe and a list of analyses that have been ordered by a graph sort,
     then it produces the summary SDType
 
@@ -82,8 +130,12 @@ def produce_summary_df(
     summary_col_dict: SDType = {}
     cols: List[ColIdentifier] = []
     cols.extend(df.columns)
+    print("seriestats 85")
+    print(list(series_stats.keys()))
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
-        base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
+
+        #base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
+        base_summary_dict: ColMeta = series_stats.get(orig_ser_name, {})
         for a_kls in ordered_objs:
             try:
                 if a_kls.quiet or a_kls.quiet_warnings:
@@ -188,6 +240,7 @@ class AnalysisPipeline(object):
 
 
     def process_df(self, input_df:pd.DataFrame, debug:bool=False) -> SDErrsTuple:
+        print("243 process_df")
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
         return output_df, errs
 

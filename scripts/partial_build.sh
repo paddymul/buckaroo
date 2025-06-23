@@ -19,3 +19,4 @@ mv packages/buckaroo-js-core/temp_node_modules packages/buckaroo-js-core/node_mo
 #time hatch build
 #python -m twine upload --repository pypi dist/*.whl
 
+#./scripts/partial_build.sh && uv pip install  buckaroo@dist/buckaroo-0.10.5-py3-none-any.whl && time python scripts/warm_imports.py 

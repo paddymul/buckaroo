@@ -30,7 +30,13 @@ def polars_produce_series_df(df:pl.DataFrame,
     all_clauses = []
     for obj in unordered_objs:
         all_clauses.extend(obj.select_clauses)
+
     try:
+        print("all_clauses", all_clauses)
+        for clause in all_clauses:
+            res = df.lazy().select(clause).collect()
+            print("polars_analysis_management 38", clause, len(res))
+        print("&"*80)
         result_df = df.lazy().select(all_clauses).collect()
     except Exception as e:
         if debug:
@@ -80,7 +86,9 @@ class PolarsAnalysisPipeline(AnalysisPipeline):
     def full_produce_summary_df(
             df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
             df_name:str='test_df', debug:bool=False):
+        print("full_produce_summary_df")
         series_stat_dict, series_errs = polars_produce_series_df(df, ordered_objs, df_name, debug)
+        print("about to call produce_summary_df")
         summary_dict, summary_errs = produce_summary_df(
             df, series_stat_dict, ordered_objs, df_name, debug)
         series_errs.update(summary_errs)

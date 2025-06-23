@@ -1,10 +1,11 @@
+import os
 import unittest
 import polars as pl
 import numpy as np
 from polars import functions as F
 import polars.selectors as cs
 from buckaroo.customizations.polars_analysis import (
-    VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
+    PL_Analysis_Klasses, VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
     ComputedDefaultSummaryStats)
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
@@ -15,9 +16,7 @@ from tests.unit.test_utils import assert_dict_eq
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
-        #'empty_na_ser' : pl.Series([pl.Null] * 4, dtype="Int64"),
-        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])
-})
+        'float_nan_ser' : pl.Series([3.5, np.nan, 4.8, 2.2])})
 
 word_only_df = pl.DataFrame({'letters': 'h o r s e'.split(' ')})
 
@@ -29,11 +28,26 @@ empty_df = pl.DataFrame({})
 
 
 class SelectOnlyAnalysis(PolarsAnalysis):
-    provides_defaults = {}
+    provides_defaults = {'null_count':3}
     select_clauses = [
         F.all().null_count().name.map(json_postfix('null_count')),
         F.all().mean().name.map(json_postfix('mean')),
         F.all().quantile(.99).name.map(json_postfix('quin99'))]
+
+class RequiresNullCount(PolarsAnalysis):
+    requires_summary = ['null_count']
+    provides_defaults = {'null_count2':-1}
+
+    @staticmethod
+    def computed_summary(summary_dict):
+        return {'null_count2': summary_dict['null_count']}
+
+
+class MixedAnalysis(PolarsAnalysis):
+    provides_defaults = dict(
+    empty_count=0, sum=0)
+
+
 
 
 def test_non_full_analysis():
@@ -51,6 +65,31 @@ def test_non_full_analysis():
     assert pdf.sdf == {'a': dict(empty_count=0, sum=30, orig_col_name='foo_col', rewritten_col_name='a'),
                        'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
     
+def test_citibike():
+    citibike_df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
+    PL_Analysis_Klasses = [VCAnalysis,
+    #BasicAnalysis,
+    #PlTyping,
+    #ComputedDefaultSummaryStats, HistogramAnalysis
+                       ]
+
+    pdf = PlDfStats(citibike_df, PL_Analysis_Klasses)
+    assert pdf.sdf == {'a': dict(empty_count=0, sum=30, orig_col_name='foo_col', rewritten_col_name='a'),
+                       'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
+    
+    
+def test_citibike():
+    citibike_df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
+    PL_Analysis_Klasses = [VCAnalysis,
+    #BasicAnalysis,
+    #PlTyping,
+    #ComputedDefaultSummaryStats, HistogramAnalysis
+                       ]
+
+    pdf = PlDfStats(citibike_df, PL_Analysis_Klasses)
+    assert pdf.sdf == {'a': dict(empty_count=0, sum=30, orig_col_name='foo_col', rewritten_col_name='a'),
+                       'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
+    
 
 def test_produce_series_df():
     """just make sure this doesn't fail"""
@@ -61,6 +100,21 @@ def test_produce_series_df():
     'b': {'mean': None, 'null_count':  0, 'quin99': None, 'orig_col_name':'float_nan_ser', 'rewritten_col_name':'b'},
     'a' :{'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'}
 }
+    dsdf = replace_in_dict(sdf, [(np.nan, None)])
+    assert dsdf == expected
+
+def test_simple_mixed_pipeline():
+    """ show that a simple polars pipeline where one analysis depends on the other succesfully computes"""
+
+    pdf = PlDfStats(test_df, [SelectOnlyAnalysis, RequiresNullCount])
+    
+    sdf, errs = polars_produce_series_df(
+        test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
+    expected = {
+    'b': {'mean': None,  'null_count':  0, 'null_count2':0, 'quin99': None,
+          'orig_col_name':'float_nan_ser', 'rewritten_col_name':'b'},
+    'a' :{'mean': 2.5,  'null_count':  0, 'null_count2':0, 'quin99':  4.0,
+          'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'}}
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
 
