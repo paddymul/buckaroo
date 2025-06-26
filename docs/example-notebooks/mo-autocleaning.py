@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.6"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
@@ -179,9 +179,8 @@ def _(mo):
 @app.cell
 def _(pd, strip_int_and_period_frac):
     # we have defined other functions in the buckaroo code
-    from buckaroo.pluggable_analysis_framework.pluggable_analysis_framework import (
-        ColAnalysis,
-    )
+    from buckaroo.pluggable_analysis_framework.col_analysis import ColAnalysis
+
     from buckaroo.customizations.heuristics import BaseHeuristicCleaningGenOps
     from buckaroo.jlisp.lisp_utils import s
     from buckaroo.customizations.pd_fracs import (str_bool_frac, regular_int_parse_frac, us_dates_frac, cache_series_func)
