@@ -33,17 +33,30 @@ def polars_produce_series_df(df:pl.DataFrame,
 
     try:
         print("all_clauses", all_clauses)
+        
+        # Execute clauses individually to avoid polars conflicts
+        individual_results = []
         for clause in all_clauses:
             try:
                 res = df.lazy().select(clause).collect()
+                individual_results.append(res)
                 print("polars_analysis_management 38", clause, len(res))
             except Exception as clause_error:
                 print(f"ERROR executing clause {clause}: {clause_error}")
                 if debug:
                     traceback.print_exc()
                 continue
+        
+        # Combine results horizontally
+        if individual_results:
+            result_df = individual_results[0]
+            for additional_result in individual_results[1:]:
+                result_df = result_df.hstack(additional_result)
+        else:
+            # Fallback if no clauses worked
+            result_df = df.lazy().select([]).collect()
+            
         print("&"*80)
-        result_df = df.lazy().select(all_clauses).collect()
         print(f"DEBUG: result_df shape: {result_df.shape}")
         print(f"DEBUG: result_df columns: {result_df.columns}")
     except Exception as e:

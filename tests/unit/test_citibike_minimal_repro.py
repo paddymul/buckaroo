@@ -29,28 +29,26 @@ import polars as pl
 import polars.selectors as cs
 from polars import functions as F
 from buckaroo.polars_buckaroo import PolarsBuckarooInfiniteWidget
-from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
+from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
+    PolarsAnalysis, polars_produce_series_df, PlDfStats, PolarsAnalysisPipeline
+)
+from buckaroo.pluggable_analysis_framework.analysis_management import produce_summary_df
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
 from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
+import pandas as pd
+import numpy as np
 
 
 # Create test data that reproduces the issue
 def get_test_data():
+    """Create minimal test data that reproduces the polars mode() error"""
     return pl.DataFrame({
-        'tripduration': [558, 501, 116, 1151, 819, 330, 720, 480, 900, 650],
-        'start_station_name': [
-            'W 22 St & 8 Ave', 'E 25 St & 1 Ave', 'Canal St & Rutgers St',
-            'LaGuardia Pl & W 3 St', 'E 9 St & Avenue C', 'Allen St & Hester St',
-            'W 22 St & 8 Ave', 'E 25 St & 1 Ave', 'Canal St & Rutgers St',
-            'LaGuardia Pl & W 3 St'
-        ],
-        'usertype': [
-            'Subscriber', 'Subscriber', 'Subscriber', 'Subscriber', 'Subscriber',
-            'Customer', 'Customer', 'Subscriber', 'Customer', 'Subscriber'
-        ],
-        'birth_year': [1983.0, 1983.0, 1988.0, 1987.0, 1986.0, 1990.0, 1992.0, 1985.0, 1989.0, 1984.0],
-        'gender': [1, 1, 1, 1, 2, 1, 2, 1, 2, 1]
-    })
+        'tripduration': [400, 500, 600, 400],  # Repeated values for mode
+        'start_station_name': ['W 3 St', 'E 5 St', 'W 3 St', 'E 5 St'],
+        'usertype': ['Subscriber', 'Customer', 'Subscriber', 'Subscriber'], 
+        'birth_year': [1990.0, 1985.0, 1990.0, 1995.0],
+        'gender': [1, 2, 1, 1]
+    }).with_row_count().head(10)  # Extend to 10 rows to match error
 
 
 # 🎯 ULTRA-MINIMAL ANALYSIS CLASSES THAT REPRODUCE THE BUG
@@ -60,40 +58,56 @@ NOT_STRUCTS = (~PROBABLY_STRUCTS)
 
 class MinimalModeAnalysis(PolarsAnalysis):
     """MINIMAL: Just the problematic mode() select clause"""
-    provides_defaults = {'most_freq': 0}
+    provides_defaults = {'most_freq': 'NotComputed'}
     select_clauses = [
         NOT_STRUCTS.mode().name.map(json_postfix('most_freq')),
     ]
+    @staticmethod
+    def computed_summary(summary_dict):
+        return {}
 
 class MinimalValueCountsAnalysis(PolarsAnalysis):
     """MINIMAL: Just value_counts select clause (might interact with mode)"""
-    provides_defaults = dict(
-        value_counts=pl.Series("", [{'a': 'error', 'count': 1}], 
-                              dtype=pl.Struct({'a': pl.String, 'count': pl.UInt32})))
+    provides_defaults = {'value_counts': 'NotComputed'}
     select_clauses = [
-        NOT_STRUCTS.exclude("count").value_counts(sort=True)
+        cs.exclude(["count"]).value_counts(sort=True, parallel=False).head(7)
         .implode().name.map(json_postfix('value_counts')),
     ]
+    @staticmethod
+    def computed_summary(summary_dict):
+        return {}
 
 class MinimalBasicStatsAnalysis(PolarsAnalysis):
     """MINIMAL: Basic stats that might interact with mode"""
-    provides_defaults = {'length': 0, 'null_count': 0, 'mean': 0}
+    provides_defaults = {'length': 'NotComputed', 'null_count': 'NotComputed', 'mean': 'NotComputed'}
     select_clauses = [
         F.all().len().name.map(json_postfix('length')),
         F.all().null_count().name.map(json_postfix('null_count')),
         NOT_STRUCTS.mean().name.map(json_postfix('mean')),
     ]
+    @staticmethod
+    def computed_summary(summary_dict):
+        return {}
 
 class MinimalComputedAnalysis(PolarsAnalysis):
     """MINIMAL: Simple computed_summary that depends on select_clauses results"""
+    provides_defaults = {'derived_stat': 'NotComputed'}
     requires_summary = ['length', 'null_count']
-    provides_defaults = dict(null_per=0)
-
+    select_clauses = []  # No select clauses - pure computed
+    
     @staticmethod
     def computed_summary(summary_dict):
-        len_ = summary_dict['length']
-        null_count = summary_dict.get('null_count', 0)
-        return dict(null_per=null_count/len_ if len_ > 0 else 0)
+        try:
+            len_ = summary_dict['length']
+            null_count = summary_dict['null_count']
+            return {'derived_stat': len_ - null_count}
+        except KeyError as e:
+            print(f"DEBUG: Error in MinimalComputedAnalysis.computed_summary: {e}")
+            print(f"DEBUG: Missing keys that MinimalComputedAnalysis expects:")
+            for req_key in MinimalComputedAnalysis.requires_summary:
+                if req_key not in summary_dict:
+                    print(f"  - {req_key}")
+            raise e
 
 
 # 🎯 ULTRA-MINIMAL TEST WIDGETS
@@ -202,7 +216,7 @@ def test_failing_combination():
 def test_citibike_minimal_failure():
     """Original test that reproduces the citibike polars mode() error."""
     minimal_df = get_test_data()
-    widget = PolarsBuckarooInfiniteWidget(minimal_df, debug=True)
+    widget = FailingWidget(minimal_df, debug=True)
 
 
 # ULTRA-MINIMAL TESTS (NO STYLING DEPENDENCIES)
@@ -246,4 +260,99 @@ def test_three_classes():
 def test_four_classes():
     """Test: Mode + ValueCounts + BasicStats + Computed"""
     minimal_df = get_test_data()
-    widget = FourClassWidget(minimal_df, debug=True) 
+    widget = FourClassWidget(minimal_df, debug=True)
+
+
+# Test functions for direct analysis pipeline calls
+def test_direct_polars_produce_series_df():
+    """Test polars_produce_series_df directly without widgets"""
+    df = get_test_data()
+    
+    # Test with just mode analysis - should work
+    mode_classes = [MinimalModeAnalysis]
+    result_dict, errs = polars_produce_series_df(df, mode_classes, debug=True)
+    print(f"Mode only - Result keys: {list(result_dict.keys())}")
+    print(f"Mode only - Errors: {errs}")
+    assert len(errs) == 0, f"Expected no errors, got: {errs}"
+    
+    # Test with all 4 classes - the combination that fails
+    all_classes = [MinimalModeAnalysis, MinimalValueCountsAnalysis, MinimalBasicStatsAnalysis, MinimalComputedAnalysis]
+    result_dict, errs = polars_produce_series_df(df, all_classes, debug=True)
+    print(f"All 4 classes - Result keys: {list(result_dict.keys())}")
+    print(f"All 4 classes - Errors: {errs}")
+
+
+def test_direct_produce_summary_df():
+    """Test produce_summary_df directly with polars data"""
+    df = get_test_data()
+    
+    # First get series results
+    all_classes = [MinimalModeAnalysis, MinimalValueCountsAnalysis, MinimalBasicStatsAnalysis, MinimalComputedAnalysis]
+    series_dict, series_errs = polars_produce_series_df(df, all_classes, debug=True)
+    
+    print(f"Series dict keys: {list(series_dict.keys())}")
+    for key, value in series_dict.items():
+        print(f"  {key}: {type(value)} - {value}")
+    
+    # Now test produce_summary_df
+    summary_dict, summary_errs = produce_summary_df(df.to_pandas(), series_dict, all_classes, debug=True)
+    print(f"Summary dict keys: {list(summary_dict.keys())}")
+    print(f"Summary errors: {summary_errs}")
+
+
+def test_polars_pipeline_direct():
+    """Test PolarsAnalysisPipeline.full_produce_summary_df directly"""
+    df = get_test_data()
+    
+    # Test working combination 
+    working_classes = [MinimalModeAnalysis, MinimalValueCountsAnalysis, MinimalBasicStatsAnalysis]
+    result_dict, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, working_classes, debug=True)
+    print(f"Working combination - Result keys: {list(result_dict.keys())}")
+    print(f"Working combination - Errors: {errs}")
+    
+    # Test failing combination
+    failing_classes = [MinimalModeAnalysis, MinimalValueCountsAnalysis, MinimalBasicStatsAnalysis, MinimalComputedAnalysis]
+    result_dict, errs = PolarsAnalysisPipeline.full_produce_summary_df(df, failing_classes, debug=True)
+    print(f"Failing combination - Result keys: {list(result_dict.keys())}")
+    print(f"Failing combination - Errors: {errs}")
+
+
+# Individual class testing for ultra-granular isolation
+def test_individual_mode_clause():
+    """Test just the mode clause in isolation"""
+    df = get_test_data()
+    mode_clause = NOT_STRUCTS.mode().name.map(json_postfix('most_freq'))
+    
+    # Test individual execution
+    result = df.lazy().select(mode_clause).collect()
+    print(f"Mode clause result shape: {result.shape}")
+    print(f"Mode clause result columns: {result.columns}")
+    print(f"Mode clause result: {result}")
+
+
+def test_individual_clauses_combined():
+    """Test combining individual clauses step by step"""
+    df = get_test_data()
+    
+    clauses = [
+        NOT_STRUCTS.mode().name.map(json_postfix('most_freq')),
+        cs.exclude(["count"]).value_counts(sort=True, parallel=False).head(7).implode().name.map(json_postfix('value_counts')),
+        F.all().len().name.map(json_postfix('length')),
+        F.all().null_count().name.map(json_postfix('null_count')),
+        NOT_STRUCTS.mean().name.map(json_postfix('mean')),
+    ]
+    
+    # Test each clause individually 
+    for i, clause in enumerate(clauses):
+        try:
+            result = df.lazy().select(clause).collect()
+            print(f"Clause {i} works: {result.shape} columns")
+        except Exception as e:
+            print(f"Clause {i} fails: {e}")
+    
+    # Test combining them all
+    try:
+        result = df.lazy().select(clauses).collect()
+        print(f"All clauses combined work: {result.shape}")
+    except Exception as e:
+        print(f"All clauses combined fail: {e}") 
