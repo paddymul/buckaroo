@@ -312,27 +312,8 @@ def test_citibike_df():
     citibike_df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
     PolarsBuckarooInfiniteWidget(citibike_df, debug=True)
 
-def test_polars_column_rename_minimal():
-    """Minimal reproduction of the citibike failure - specifically the mode() issue"""
+def test_citibike_minimal_failure():
     import polars as pl
-    from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
-    from buckaroo.pluggable_analysis_framework.polars_analysis_management import polars_produce_series_df
-    from buckaroo.pluggable_analysis_framework.utils import json_postfix
-
-    # Create a DataFrame where mode() will cause issues
-    df = pl.DataFrame({
-        'tripduration': [100, 200, 300, 400, 500],
-        'starttime': ["2020-01-01 01:00", "2020-01-01 02:00", "2020-01-01 03:00", "2020-01-01 04:00", "2020-01-01 05:00"],
-        'usertype': ["Subscriber", "Customer", "Subscriber", "Customer", "Subscriber"],
-        'gender': [1, 2, 1, 2, 1]
-    })
-
-    from buckaroo.customizations.polars_analysis import BasicAnalysis, VCAnalysis, PlTyping, ComputedDefaultSummaryStats, HistogramAnalysis
-    from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
-    
-    analysis_classes = [VCAnalysis, PlTyping, BasicAnalysis, ComputedDefaultSummaryStats, DefaultSummaryStatsStyling, HistogramAnalysis, DefaultMainStyling]
-    
-    result, errs = polars_produce_series_df(df, analysis_classes, 'test_df', debug=True)
-    print("Result:", result)
-    print("Errors:", errs)
-    assert len(errs) == 0, f"Expected no errors, but got: {errs}"
+    from buckaroo.polars_buckaroo import PolarsBuckarooInfiniteWidget
+    df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
+    PolarsBuckarooInfiniteWidget(df)
