@@ -13,6 +13,7 @@ from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_i
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysisPipeline, polars_produce_series_df, PolarsAnalysis, PlDfStats)
 from tests.unit.test_utils import assert_dict_eq
+from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),
