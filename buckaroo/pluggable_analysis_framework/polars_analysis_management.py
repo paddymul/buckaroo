@@ -33,36 +33,45 @@ def polars_produce_series_df(df:pl.DataFrame,
         all_clauses.extend(obj.select_clauses)
 
     try:
-
-        # Execute clauses individually and combine horizontally
-        individual_results = []
-        for clause in all_clauses:
-            try:
-                res = df.lazy().select(clause).collect()
-                individual_results.append(res)
-            except Exception as clause_error:
-                if debug:
-                    print(f"ERROR in individual execution of {clause}: {clause_error}")
-                    traceback.print_exc()
-                continue
-        
-        # Combine results horizontally 
-        if individual_results:
-            result_df = individual_results[0]
-            for additional_result in individual_results[1:]:
-                result_df = result_df.hstack(additional_result)
-        else:
-            # If no clauses worked, create empty result
-            result_df = pl.DataFrame()
-            
+        # First try the original approach: execute all clauses together
+        result_df = df.lazy().select(all_clauses).collect()
         if debug:
             print(f"result_df shape: {result_df.shape}")
             print(f"result_df columns: {result_df.columns}")
     except Exception as e:
         if debug:
-            df.write_parquet('error.parq')
-        traceback.print_exc()
-        return dict([[k, str(e)] for k in df.columns]), {}
+            print(f"Combined clause execution failed: {e}")
+            print("Falling back to individual clause execution...")
+        
+        # Fallback: Execute clauses individually and combine horizontally
+        try:
+            individual_results = []
+            for clause in all_clauses:
+                try:
+                    res = df.lazy().select(clause).collect()
+                    individual_results.append(res)
+                except Exception as clause_error:
+                    if debug:
+                        print(f"Skipping failed clause {clause}: {clause_error}")
+                    continue
+            
+            # Combine results horizontally 
+            if individual_results:
+                result_df = individual_results[0]
+                for additional_result in individual_results[1:]:
+                    result_df = result_df.hstack(additional_result)
+                if debug:
+                    print(f"Fallback successful: {result_df.shape}")
+            else:
+                # If no clauses worked, return error strings
+                if debug:
+                    df.write_parquet('error.parq')
+                return dict([[k, str(e)] for k in df.columns]), {}
+        except Exception as fallback_error:
+            if debug:
+                print(f"Fallback also failed: {fallback_error}")
+                df.write_parquet('error.parq')
+            return dict([[k, str(e)] for k in df.columns]), {}
 
     orig_col_to_rewritten = {}
     summary_dict = {}
@@ -148,8 +157,7 @@ def polars_produce_summary_df(
                 if not a_kls.quiet:
                     errs[(rewritten_col_name, "computed_summary")] = e, a_kls
                 if debug:
-                    print(f"DEBUG: Error in {a_kls.__name__}.computed_summary: {e}")
-                    traceback.print_exc()
+                    print(f"Error in {a_kls.__name__}.computed_summary: {e}")
                 continue
         summary_col_dict[rewritten_col_name] = base_summary_dict
     return summary_col_dict, errs
@@ -167,8 +175,19 @@ class PolarsAnalysisPipeline(AnalysisPipeline):
             df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
             df_name:str='test_df', debug:bool=False):
         series_stat_dict, series_errs = polars_produce_series_df(df, ordered_objs, df_name, debug)
-        summary_dict, summary_errs = polars_produce_summary_df(
-            df, series_stat_dict, ordered_objs, df_name, debug)
+        
+        # Use the original produce_summary_df for compatibility with autocleaning and other functionality
+        # Only use polars_produce_summary_df if there are specific polars-related issues
+        try:
+            summary_dict, summary_errs = produce_summary_df(
+                df, series_stat_dict, ordered_objs, df_name, debug)
+        except Exception as e:
+            if debug:
+                print(f"Falling back to polars_produce_summary_df due to error: {e}")
+            # Fallback to polars-specific version if pandas-style processing fails  
+            summary_dict, summary_errs = polars_produce_summary_df(
+                df, series_stat_dict, ordered_objs, df_name, debug)
+            
         series_errs.update(summary_errs)
         return summary_dict, series_errs
 
