@@ -70,29 +70,38 @@ def produce_summary_df(
     df:pd.DataFrame, series_stats:SDType,
     ordered_objs:AObjs, df_name:str='test_df', debug:bool=False) -> SDErrsTuple:
     """
-      takes dataframes that havent had the names changed.  this will be the polars version
+      takes a dataframe and a list of analyses that have been ordered by a graph sort,
+    then it produces the summary SDType
+
+      this executes computed_summary on analysis objects, but it requires the previous steps of series_summary completed
+
       
       
     """
     errs: ErrDict = {}
     summary_col_dict: SDType = {}
-    rewrites = get_rewrite_dict(df)
-    
+    cols: List[ColIdentifier] = []
+    cols.extend(df.columns)
     print("seriestats 85")
     print(list(series_stats.keys()))
-    # print("rewrites", rewrites)
-    # rewritten_series_stats = dict([(new_col, series_stats[old_col]) for old_col, new_col in rewrites.items()])
-    # print(list(rewritten_series_stats.keys()))
-    # 1/0
-    
-    for orig_ser_name, rewritten_ser_name in old_col_new_col(df):
-        # print("orig_ser_name", orig_ser_name, len(series_stats.get(orig_ser_name, {})),
-        #       "rewritten_ser_name", rewritten_ser_name, len(series_stats.get(rewritten_ser_name, {})))
+    for orig_ser_name, rewritten_col_name in old_col_new_col(df):
 
         #base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
-        base_summary_dict: ColMeta = series_stats.get(rewritten_ser_name, {})
+        base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
+        print(f"DEBUG: Processing {orig_ser_name} -> {rewritten_col_name}")
+        print(f"DEBUG: base_summary_dict type: {type(base_summary_dict)}")
+        print(f"DEBUG: base_summary_dict value: {base_summary_dict}")
+        
+        # Handle case where series_stats contains error strings instead of dicts
+        if isinstance(base_summary_dict, str):
+            print(f"DEBUG: Found error string for {orig_ser_name}: {base_summary_dict}")
+            base_summary_dict = {}
+        
+        print(f"DEBUG: base_summary_dict keys: {list(base_summary_dict.keys())}")
+        
         for a_kls in ordered_objs:
             try:
+                print(f"DEBUG: Calling {a_kls.__name__}.computed_summary with keys: {list(base_summary_dict.keys())}")
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
                         warnings.filterwarnings('ignore')
@@ -100,15 +109,22 @@ def produce_summary_df(
                     warnings.filterwarnings('default')
                 else:
                     summary_res = a_kls.computed_summary(base_summary_dict)
+                print(f"DEBUG: {a_kls.__name__} returned: {list(summary_res.keys())}")
                 for k,v in summary_res.items():
                     base_summary_dict.update(summary_res)
             except Exception as e:
+                print(f"DEBUG: Error in {a_kls.__name__}.computed_summary: {e}")
+                print(f"DEBUG: Missing keys that {a_kls.__name__} expects:")
+                if hasattr(a_kls, 'requires_summary'):
+                    for req_key in a_kls.requires_summary:
+                        if req_key not in base_summary_dict:
+                            print(f"  - {req_key}")
                 if not a_kls.quiet:
-                    errs[(rewritten_ser_name, "computed_summary")] = e, a_kls
+                    errs[(rewritten_col_name, "computed_summary")] = e, a_kls
                 if debug:
                     traceback.print_exc()
                 continue
-        summary_col_dict[rewritten_ser_name] = base_summary_dict
+        summary_col_dict[rewritten_col_name] = base_summary_dict
     return summary_col_dict, errs
 
 

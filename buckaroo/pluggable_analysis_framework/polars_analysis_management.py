@@ -34,10 +34,18 @@ def polars_produce_series_df(df:pl.DataFrame,
     try:
         print("all_clauses", all_clauses)
         for clause in all_clauses:
-            res = df.lazy().select(clause).collect()
-            print("polars_analysis_management 38", clause, len(res))
+            try:
+                res = df.lazy().select(clause).collect()
+                print("polars_analysis_management 38", clause, len(res))
+            except Exception as clause_error:
+                print(f"ERROR executing clause {clause}: {clause_error}")
+                if debug:
+                    traceback.print_exc()
+                continue
         print("&"*80)
         result_df = df.lazy().select(all_clauses).collect()
+        print(f"DEBUG: result_df shape: {result_df.shape}")
+        print(f"DEBUG: result_df columns: {result_df.columns}")
     except Exception as e:
         if debug:
             df.write_parquet('error.parq')
@@ -52,10 +60,15 @@ def polars_produce_series_df(df:pl.DataFrame,
         summary_dict[rewritten_col_name]['orig_col_name'] = orig_ser_name
         summary_dict[rewritten_col_name]['rewritten_col_name'] = rewritten_col_name
 
-
         for a_klass in unordered_objs:
             summary_dict[rewritten_col_name].update(a_klass.provides_defaults)
+    
+    print(f"DEBUG: summary_dict after defaults: {list(summary_dict.keys())}")
+    for col, data in summary_dict.items():
+        print(f"DEBUG: {col} keys: {list(data.keys())}")
+    
     first_run_dict = split_to_dicts(result_df)
+    print(f"DEBUG: first_run_dict keys: {list(first_run_dict.keys())}")
 
     for col, measures in first_run_dict.items():
         rw_col = orig_col_to_rewritten[col]
@@ -72,6 +85,11 @@ def polars_produce_series_df(df:pl.DataFrame,
                 rw_col = orig_col_to_rewritten[col]
                 summary_dict[rw_col][measure_name] = func(df[col])
                 pass
+    
+    print(f"DEBUG: Final summary_dict keys: {list(summary_dict.keys())}")
+    for col, data in summary_dict.items():
+        print(f"DEBUG: Final {col} keys: {list(data.keys())}")
+    
     return summary_dict, errs
 
 

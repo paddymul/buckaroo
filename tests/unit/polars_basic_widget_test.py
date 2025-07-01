@@ -306,8 +306,8 @@ def test_serialize_regular_df():
     second_df = pl.read_parquet(output)
     assert set(second_df.columns) ==  set(['index','a','b','c'])
 
-# def test_citibike_df():
-#     from buckaroo.polars_buckaroo import PolarsBuckarooInfiniteWidget
-#     print(os.getcwd())
-#     citibike_df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
-#     PolarsBuckarooInfiniteWidget(citibike_df, debug=True)
+def test_citibike_df():
+    from buckaroo.polars_buckaroo import PolarsBuckarooInfiniteWidget
+    print(os.getcwd())
+    citibike_df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
+    PolarsBuckarooInfiniteWidget(citibike_df, debug=True)
