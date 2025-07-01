@@ -27,9 +27,6 @@ def polars_produce_series_df(df:pl.DataFrame,
     """ just executes the series methods
 
     """
-    if debug:
-        raise Exception("Debug mode enabled - throwing error for testing")
-    
     errs: MutableMapping[str, str] = {}
     all_clauses = []
     for obj in unordered_objs:
@@ -59,8 +56,8 @@ def polars_produce_series_df(df:pl.DataFrame,
             result_df = pl.DataFrame()
             
         if debug:
-            print(f"DEBUG: result_df shape: {result_df.shape}")
-            print(f"DEBUG: result_df columns: {result_df.columns}")
+            print(f"result_df shape: {result_df.shape}")
+            print(f"result_df columns: {result_df.columns}")
     except Exception as e:
         if debug:
             df.write_parquet('error.parq')
@@ -78,41 +75,29 @@ def polars_produce_series_df(df:pl.DataFrame,
         for a_klass in unordered_objs:
             summary_dict[rewritten_col_name].update(a_klass.provides_defaults)
     
-    print(f"DEBUG: summary_dict after defaults: {list(summary_dict.keys())}")
-    for col, data in summary_dict.items():
-        print(f"DEBUG: {col} keys: {list(data.keys())}")
-    
     first_run_dict = split_to_dicts(result_df)
-    print(f"DEBUG: first_run_dict keys: {list(first_run_dict.keys())}")
 
     # Map from original column names to rewritten column names
     for orig_col, measures in first_run_dict.items():
         if orig_col in orig_col_to_rewritten:
             rw_col = orig_col_to_rewritten[orig_col]
             summary_dict[rw_col].update(measures)
-            print(f"DEBUG: Mapped {orig_col} -> {rw_col}, measures: {list(measures.keys())}")
-        else:
-            print(f"DEBUG: Skipping unmapped column: {orig_col}")
-            
-    print(f"DEBUG: summary_dict after mapping: {list(summary_dict.keys())}")
-    for col, data in summary_dict.items():
-        print(f"DEBUG: {col} has measures: {list(data.keys())}")
 
     for pa in unordered_objs:
         for measure_name, action_tuple in pa.column_ops.items():
             col_selector, func = action_tuple
-            if col_selector == "all":
-                sub_df = df.select(pl.all())
-            else:
-                sub_df = df.select(pl.col(col_selector))
-            for col in sub_df.columns:
-                rw_col = orig_col_to_rewritten[col]
-                summary_dict[rw_col][measure_name] = func(df[col])
-                pass
-    
-    print(f"DEBUG: Final summary_dict keys: {list(summary_dict.keys())}")
-    for col, data in summary_dict.items():
-        print(f"DEBUG: Final {col} keys: {list(data.keys())}")
+            try:
+                if col_selector == "all":
+                    sub_df = df.select(pl.all())
+                else:
+                    sub_df = df.select(pl.col(col_selector))
+                for col in sub_df.columns:
+                    rw_col = orig_col_to_rewritten[col]
+                    summary_dict[rw_col][measure_name] = func(df[col])
+            except Exception as e:
+                if debug:
+                    print(f"Error in column_ops for {measure_name}: {e}")
+                continue
     
     return summary_dict, errs
 
@@ -138,26 +123,18 @@ def polars_produce_summary_df(
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         orig_to_rewritten[orig_ser_name] = rewritten_col_name
     
-    print("seriestats 85")
-    print(list(series_stats.keys()))
+
     
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         # series_stats uses rewritten column names as keys, not original names
         base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
-        print(f"DEBUG: Processing {orig_ser_name} -> {rewritten_col_name}")
-        print(f"DEBUG: base_summary_dict type: {type(base_summary_dict)}")
-        print(f"DEBUG: base_summary_dict value: {base_summary_dict}")
         
         # Handle case where series_stats contains error strings instead of dicts
         if isinstance(base_summary_dict, str):
-            print(f"DEBUG: Found error string for {rewritten_col_name}: {base_summary_dict}")
             base_summary_dict = {}
-        
-        print(f"DEBUG: base_summary_dict keys: {list(base_summary_dict.keys())}")
         
         for a_kls in ordered_objs:
             try:
-                print(f"DEBUG: Calling {a_kls.__name__}.computed_summary with keys: {list(base_summary_dict.keys())}")
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
                         warnings.filterwarnings('ignore')
@@ -165,19 +142,13 @@ def polars_produce_summary_df(
                     warnings.filterwarnings('default')
                 else:
                     summary_res = a_kls.computed_summary(base_summary_dict)
-                print(f"DEBUG: {a_kls.__name__} returned: {list(summary_res.keys())}")
                 for k,v in summary_res.items():
                     base_summary_dict.update(summary_res)
             except Exception as e:
-                print(f"DEBUG: Error in {a_kls.__name__}.computed_summary: {e}")
-                print(f"DEBUG: Missing keys that {a_kls.__name__} expects:")
-                if hasattr(a_kls, 'requires_summary'):
-                    for req_key in a_kls.requires_summary:
-                        if req_key not in base_summary_dict:
-                            print(f"  - {req_key}")
                 if not a_kls.quiet:
                     errs[(rewritten_col_name, "computed_summary")] = e, a_kls
                 if debug:
+                    print(f"DEBUG: Error in {a_kls.__name__}.computed_summary: {e}")
                     traceback.print_exc()
                 continue
         summary_col_dict[rewritten_col_name] = base_summary_dict
@@ -195,9 +166,7 @@ class PolarsAnalysisPipeline(AnalysisPipeline):
     def full_produce_summary_df(
             df:pl.DataFrame, ordered_objs:List[PolarsAnalysis],
             df_name:str='test_df', debug:bool=False):
-        print("full_produce_summary_df")
         series_stat_dict, series_errs = polars_produce_series_df(df, ordered_objs, df_name, debug)
-        print("about to call polars_produce_summary_df")
         summary_dict, summary_errs = polars_produce_summary_df(
             df, series_stat_dict, ordered_objs, df_name, debug)
         series_errs.update(summary_errs)
