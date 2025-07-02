@@ -128,8 +128,6 @@ def polars_produce_summary_df(
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         orig_to_rewritten[orig_ser_name] = rewritten_col_name
     
-
-    
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
         # series_stats uses rewritten column names as keys, not original names
         base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
@@ -172,18 +170,8 @@ class PolarsAnalysisPipeline(AnalysisPipeline):
             df_name:str='test_df', debug:bool=False):
         series_stat_dict, series_errs = polars_produce_series_df(df, ordered_objs, df_name, debug)
         
-        # Use the original produce_summary_df for compatibility with autocleaning and other functionality
-        # Only use polars_produce_summary_df if there are specific polars-related issues
-        try:
-            summary_dict, summary_errs = produce_summary_df(
-                df, series_stat_dict, ordered_objs, df_name, debug)
-        except Exception as e:
-            if debug:
-                print(f"Falling back to polars_produce_summary_df due to error: {e}")
-            # Fallback to polars-specific version if pandas-style processing fails  
-            summary_dict, summary_errs = polars_produce_summary_df(
-                df, series_stat_dict, ordered_objs, df_name, debug)
-            
+        summary_dict, summary_errs = polars_produce_summary_df(
+        df, series_stat_dict, ordered_objs, df_name, debug)
         series_errs.update(summary_errs)
         return summary_dict, series_errs
 
