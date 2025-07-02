@@ -1,4 +1,4 @@
-import{j as r}from"./jsx-runtime-DiklIkkE.js";import{r as d,R as s}from"./index-DRjF_FHU.js";import{a as p}from"./client-DTWAFNtf.js";const c=`.columns-editor {
+import{j as r}from"./jsx-runtime-DiklIkkE.js";import{r as d,R as s}from"./index-DRjF_FHU.js";import{a as p}from"./client-DQginrwT.js";const c=`.columns-editor {
 
   padding: 2px 2px;
   margin: 0;
@@ -433,8 +433,8 @@ div.dependent-tabs ul.tabs li.active {
 
 .histogram-component {
     margin:0;
-    border-left:1px solid #68686e;
-    border-right:1px solid #68686e;
+    /* border-left:1px solid #68686e; */
+    /* border-right:1px solid #68686e; */
 		
 	   
 }
@@ -589,4 +589,48 @@ div.cell-output-ipywidget-background {
 .cell-output-ipywidget-background .df-viewer  .theme-hanger{
     margin-top:-12px;
 }
+
+
+/* https://colorffy.com/dark-theme-generator?colors=b2317d-121212 */
+.ag-header-row .left_col_configs_header,
+.ag-row .left_col_configs_cell {
+    border-right:2px solid #717171 !important;
+}
+.ag-header-row .left_col_configs_header_last,
+.ag-row .left_col_configs_cell_last {
+
+    border-right:4px solid #717171 !important;
+    border-bottom:none;
+    border-top:none;
+
+}
+/* .ag-header-row .left_col_configs_header:first-child { */
+/*     border-left:4px solid pink !important; */
+/*     background:orange; */
+/* } */
+
+/* we don't want these applying to the status bar too*/
+.df-viewer .ag-header {
+    border-bottom:4px solid #717171 !important;
+}
+
+.df-viewer .ag-center-cols-viewport .ag-row:first-child {
+    /* first row at the top of regular rows */
+    border-top:2px solid #717171 !important;
+}
+
+/*
+.ag-floating-top {
+    border-bottom:3px solid teal;
+    border-bottom:3px solid red;
+
+}
+
+.ag-sticky-top {
+    border-top:7px solid white;
+    border-bottom:3px solid pink;
+}
+*/
+
+
 `,g=({children:a})=>{const o=d.useRef(null),n=d.useRef(null);return d.useEffect(()=>{if(o.current&&!n.current&&(n.current=o.current.attachShadow({mode:"open"})),n.current){const t=document.createElement("div"),i=document.createElement("style");i.innerHTML=c,n.current.appendChild(i),n.current.appendChild(t);const e=p.createRoot(t);return e.render(r.jsx(s.StrictMode,{children:a})),()=>{var l;e.unmount(),(l=n.current)==null||l.removeChild(t)}}},[a]),r.jsx("div",{ref:o})},u=({label:a,options:o,value:n,onChange:t})=>{const i=()=>{const l=(o.indexOf(n)+1)%o.length;t(o[l])};return r.jsxs("label",{style:{margin:"0 10px"},children:[r.jsxs("span",{onClick:i,style:{cursor:"pointer"},children:[a,":"]}),r.jsx("select",{value:n,onChange:e=>t(e.target.value),style:{marginLeft:"5px"},children:o.map(e=>r.jsx("option",{value:e,children:e},e))})]})};g.__docgenInfo={description:"",methods:[],displayName:"ShadowDomWrapper",props:{children:{required:!0,tsType:{name:"ReactReactNode",raw:"React.ReactNode"},description:""}}};u.__docgenInfo={description:"",methods:[],displayName:"SelectBox",props:{label:{required:!0,tsType:{name:"string"},description:""},options:{required:!0,tsType:{name:"Array",elements:[{name:"T"}],raw:"T[]"},description:""},value:{required:!0,tsType:{name:"T"},description:""},onChange:{required:!0,tsType:{name:"signature",type:"function",raw:"(value: T) => void",signature:{arguments:[{type:{name:"T"},name:"value"}],return:{name:"void"}}},description:""}}};export{g as S,u as a};
