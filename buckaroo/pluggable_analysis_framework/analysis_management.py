@@ -82,26 +82,24 @@ def produce_summary_df(
     summary_col_dict: SDType = {}
     cols: List[ColIdentifier] = []
     cols.extend(df.columns)
-    print("seriestats 85")
-    print(list(series_stats.keys()))
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
 
         #base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
         base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
-        print(f"DEBUG: Processing {orig_ser_name} -> {rewritten_col_name}")
-        print(f"DEBUG: base_summary_dict type: {type(base_summary_dict)}")
-        print(f"DEBUG: base_summary_dict value: {base_summary_dict}")
+        # print(f"DEBUG: Processing {orig_ser_name} -> {rewritten_col_name}")
+        # print(f"DEBUG: base_summary_dict type: {type(base_summary_dict)}")
+        # print(f"DEBUG: base_summary_dict value: {base_summary_dict}")
         
         # Handle case where series_stats contains error strings instead of dicts
         if isinstance(base_summary_dict, str):
-            print(f"DEBUG: Found error string for {orig_ser_name}: {base_summary_dict}")
+            # print(f"DEBUG: Found error string for {orig_ser_name}: {base_summary_dict}")
             base_summary_dict = {}
         
-        print(f"DEBUG: base_summary_dict keys: {list(base_summary_dict.keys())}")
+        # print(f"DEBUG: base_summary_dict keys: {list(base_summary_dict.keys())}")
         
         for a_kls in ordered_objs:
             try:
-                print(f"DEBUG: Calling {a_kls.__name__}.computed_summary with keys: {list(base_summary_dict.keys())}")
+                #print(f"DEBUG: Calling {a_kls.__name__}.computed_summary with keys: {list(base_summary_dict.keys())}")
                 if a_kls.quiet or a_kls.quiet_warnings:
                     if debug is False:
                         warnings.filterwarnings('ignore')
@@ -109,7 +107,7 @@ def produce_summary_df(
                     warnings.filterwarnings('default')
                 else:
                     summary_res = a_kls.computed_summary(base_summary_dict)
-                print(f"DEBUG: {a_kls.__name__} returned: {list(summary_res.keys())}")
+                #print(f"DEBUG: {a_kls.__name__} returned: {list(summary_res.keys())}")
                 for k,v in summary_res.items():
                     base_summary_dict.update(summary_res)
             except Exception as e:
@@ -146,8 +144,6 @@ def produce_summary_df_rewritten_names(
     summary_col_dict: SDType = {}
     cols: List[ColIdentifier] = []
     cols.extend(df.columns)
-    print("seriestats 85")
-    print(list(series_stats.keys()))
     for orig_ser_name, rewritten_col_name in old_col_new_col(df):
 
         #base_summary_dict: ColMeta = series_stats.get(rewritten_col_name, {})
@@ -256,7 +252,6 @@ class AnalysisPipeline(object):
 
 
     def process_df(self, input_df:pd.DataFrame, debug:bool=False) -> SDErrsTuple:
-        print("243 process_df")
         output_df, errs = self.full_produce_summary_df(input_df, self.ordered_a_objs, debug=debug)
         return output_df, errs
 

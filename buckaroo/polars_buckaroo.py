@@ -100,7 +100,6 @@ def to_parquet(df):
 class PolarsBuckarooInfiniteWidget(PolarsBuckarooWidget, BuckarooInfiniteWidget):
     def _handle_payload_args(self, new_payload_args):
         start, end = new_payload_args['start'], new_payload_args['end']
-        print("payload_args changed", start, end)
         _unused, processed_df, merged_sd = self.dataflow.widget_args_tuple
         if processed_df is None:
             return

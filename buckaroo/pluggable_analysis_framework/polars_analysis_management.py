@@ -35,9 +35,6 @@ def polars_produce_series_df(df:pl.DataFrame,
     try:
         # First try the original approach: execute all clauses together
         result_df = df.lazy().select(all_clauses).collect()
-        if debug:
-            print(f"result_df shape: {result_df.shape}")
-            print(f"result_df columns: {result_df.columns}")
     except Exception as e:
         if debug:
             print(f"Combined clause execution failed: {e}")
