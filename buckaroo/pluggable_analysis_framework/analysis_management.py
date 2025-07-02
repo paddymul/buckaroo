@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 
-from buckaroo.df_util import ColIdentifier, get_rewrite_dict, old_col_new_col
+from buckaroo.df_util import ColIdentifier, old_col_new_col
 from buckaroo.pluggable_analysis_framework.safe_summary_df import output_full_reproduce, output_reproduce_preamble
 
 from buckaroo.pluggable_analysis_framework.utils import FAST_SUMMARY_WHEN_GREATER, PERVERSE_DF

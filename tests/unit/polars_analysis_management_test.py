@@ -1,11 +1,10 @@
-import os
 import unittest
 import polars as pl
 import numpy as np
 from polars import functions as F
 import polars.selectors as cs
 from buckaroo.customizations.polars_analysis import (
-    PL_Analysis_Klasses, VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
+    VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
     ComputedDefaultSummaryStats)
 
 from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_in_dict)
@@ -13,7 +12,6 @@ from buckaroo.pluggable_analysis_framework.utils import (json_postfix, replace_i
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysisPipeline, polars_produce_series_df, PolarsAnalysis, PlDfStats)
 from tests.unit.test_utils import assert_dict_eq
-from buckaroo.customizations.styling import DefaultSummaryStatsStyling, DefaultMainStyling
 
 test_df = pl.DataFrame({
         'normal_int_series' : pl.Series([1,2,3,4]),

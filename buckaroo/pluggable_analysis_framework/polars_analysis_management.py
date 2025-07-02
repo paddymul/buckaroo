@@ -1,4 +1,3 @@
-import traceback
 from typing_extensions import TypeAlias
 
 import polars as pl
@@ -117,7 +116,7 @@ def polars_produce_summary_df(
     The issue: polars results use original column names in JSON format like ["tripduration", "most_freq"]
     but the analysis pipeline expects rewritten names like "a", "b", "c", etc.
     """
-    from .analysis_management import ColMeta, ErrDict, ColIdentifier, AObjs
+    from .analysis_management import ColMeta, ErrDict, ColIdentifier
     
     errs: ErrDict = {}
     summary_col_dict: SDType = {}
