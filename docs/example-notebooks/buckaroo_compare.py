@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.7-dev22"
+__generated_with = "0.13.15"
 app = marimo.App(width="medium")
 
 
@@ -37,9 +37,8 @@ async def _():
         await micropip.install("buckaroo")
     import buckaroo
     from buckaroo import BuckarooInfiniteWidget, BuckarooWidget
-    from buckaroo.dataflow.dataflow_extras import (
-        merge_sds, exception_protect)
-
+    from buckaroo.dataflow.styling_core import merge_sds
+    from buckaroo.dataflow.dataflow_extras import exception_protect
     import logging
     logger = logging.getLogger()
     return BuckarooInfiniteWidget, BuckarooWidget, logging, merge_sds, pd
