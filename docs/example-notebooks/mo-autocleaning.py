@@ -31,7 +31,34 @@ def _(mo):
 def _(MyAutocleaningBuckaroo, dirty_df):
     from buckaroo.buckaroo_widget import AutocleaningBuckaroo
     #MyAutocleaningBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
-    MyAutocleaningBuckaroo(dirty_df)
+    mybw = MyAutocleaningBuckaroo(dirty_df)
+    mybw
+    return (mybw,)
+
+
+@app.cell
+def _(dirty_df, pd):
+    def clean(df):
+        TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
+        FALSE_SYNONYMS = ['false', 'no', 'off', '0']
+        _ser = df['mostly_bool']
+        _int_sanitize = _ser.replace(1, True).replace(0, False) 
+        _real_bools = _int_sanitize.isin([True, False])
+        _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
+        _str_ser = _ser.str.lower().str.strip()
+        _trues = _str_ser.isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
+        _falses =  ~ (_str_ser.isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+        _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
+
+        df['mostly_bool'] = _combined
+        return df
+    clean(dirty_df)
+    return
+
+
+@app.cell
+def _(mybw):
+    mybw.dataflow.processed_df
     return
 
 

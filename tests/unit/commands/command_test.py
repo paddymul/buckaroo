@@ -29,6 +29,8 @@ def assert_to_py_same_transform_df(command_kls, operations, test_df):
     py_code_string = transform_to_py(operations)
 
     edf = result_from_exec(py_code_string, test_df.copy())
+    print("edf")
+    print(edf)
     pd.testing.assert_frame_equal(tdf, edf)
     return tdf
 same = assert_to_py_same_transform_df

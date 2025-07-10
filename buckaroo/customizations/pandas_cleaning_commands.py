@@ -69,7 +69,7 @@ class StrBool(Command):
     _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
     _str_ser = _ser.str.lower().str.strip()
     _trues = _str_ser.isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
-    _falses =  ~ (_str_ser().isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
+    _falses =  ~ (_str_ser.isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
     _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
 
     df['{col}'] = _combined"""

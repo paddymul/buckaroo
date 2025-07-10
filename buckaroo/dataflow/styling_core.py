@@ -448,8 +448,8 @@ class StylingAnalysis(ColAnalysis):
                     pass
                 else:
                     # something unexpected happened here, warn so that the develoepr is notified
-                    logger.warn(f"Warning, styling failed from {cls} on column {col} with col_meta {col_meta} using default_styling instead")
-                    logger.warn(exc)
+                    logger.warning(f"Warning, styling failed from {cls} on column {col} with col_meta {col_meta} using default_styling instead")
+                    logger.warning(exc)
                 # Always provide a style, not providing a style
                 # results in no display which is a very bad user
                 # experience
