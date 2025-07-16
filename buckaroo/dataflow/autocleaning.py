@@ -128,7 +128,10 @@ class PandasAutocleaning:
         return self.gencode_interpreter(operations)
 
     def _run_cleaning(self, df, cleaning_method):
+        print("_run_cleaning 199 ", cleaning_method)
         dfs = self.DFStatsKlass(df, self.autocleaning_analysis_klasses, debug=True)
+        add_orig_debug = dict([(k, v.get('add_orig', None)) for k,v in dfs.sdf.items()])
+        print("_run_cleaning 133 ", cleaning_method, add_orig_debug)
         gen_ops = format_ops(dfs.sdf)
         return gen_ops, dfs.sdf
 
@@ -137,7 +140,11 @@ class PandasAutocleaning:
         cols = {}
 
         changed = 0
-        for col, sd in cleaning_sd.items():
+        print("143 cleaned_df.columns", cleaned_df.columns)
+        for rewritten_col, sd in cleaning_sd.items():
+
+            col = sd.get("orig_col_name")
+            print("col", col, "rewritten_col", rewritten_col,  rewritten_col in cleaned_df.columns)
             if col not in cleaned_df.columns:
                 continue
             if col == 'index':
@@ -166,6 +173,8 @@ class PandasAutocleaning:
             return [], {}
         self._setup_from_command_kls_list(cleaning_method)
         cleaning_operations, cleaning_sd = self._run_cleaning(df, cleaning_method)
+        add_orig_debug = dict([(k, v.get('add_orig', None)) for k,v in cleaning_sd.items()])
+        print("autocleaning.py:169 cleaning_sd", add_orig_debug)
         return cleaning_operations, cleaning_sd
 
     def produce_final_ops(self, cleaning_ops, quick_command_args, existing_operations):
@@ -181,13 +190,15 @@ class PandasAutocleaning:
             return None
 
         cleaning_ops, cleaning_sd = self.produce_cleaning_ops(df, cleaning_method)
-
+        add_orig_debug = dict([(k, v.get('add_orig', None)) for k,v in cleaning_sd.items()])
+        print("cleaning_sd", add_orig_debug)
         # [{'meta':'no-op'}] is a sentinel for the initial state
         if ops_eq(existing_operations, [{'meta':'no-op'}]) and cleaning_method == "":
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, [])
             #FIXME, a little bit of a hack to reset cleaning_sd, but it helps tests pass. I
             # don't know how any other properties could really be set
             # when 'no-op' the initial state is true
+            print("setting cleaning sd to empty")
             cleaning_sd = {}
         else:
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, existing_operations)
@@ -195,8 +206,12 @@ class PandasAutocleaning:
         if ops_eq(final_ops,[]) and cleaning_method == "":
             #nothing to be done here, no point in running the interpreter
             #this also has the nice effect of not copying the DF, which the interpreter does
+            print("autocleaning.py:199 returning early")
             return [df, {}, "", []]
 
+        print("autocleaning.py:201 handle_ops_and_clean cleaning_sd", cleaning_sd)
+        add_orig_debug = dict([(k, v.get('add_orig', None)) for k,v in cleaning_sd.items()])
+        print("cleaning_sd210", add_orig_debug)
 
         cleaned_df = self._run_df_interpreter(df, final_ops)
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)

@@ -65,21 +65,23 @@ dirty_df = pd.DataFrame(
 
 expected_df = pd.DataFrame({
     'untouched_a': dirty_df['untouched_a'],
-    'mostly_ints': [
-        3,
-        4,
-        None,
-        5,
-        5,
-        None,
-        None,
-        9,
-        9,
-        11,
-        8675309,
-        -9,
-        None
-    ],
+    'mostly_ints': pd.Series(
+[
+  3,
+  4,
+  None,
+  5,
+  5,
+  9,
+  None,
+  9,
+  9,
+  11,
+  8675309,
+  -9,
+  None,
+]
+, dtype='Int64'),
     'mostly_ints_orig': dirty_df['mostly_ints'],
     'us_dates' : pd.Series([
         "NaT",
@@ -95,7 +97,7 @@ expected_df = pd.DataFrame({
         "2024-06-22 00:00:00",
         "1776-07-04 00:00:00",
         "1969-07-20 00:00:00"
-    ], dtype='timestamp[ns][pyarrow]'),
+    ], dtype='datetime64[ns]'),
     'us_dates_orig': dirty_df['us_dates'],
     'mostly_bool': pd.Series([
         True,
@@ -140,7 +142,7 @@ def test_full_autoclean():
     result =  abw.dataflow.processed_df
 
     assert result.columns.to_list() == expected_df.columns.to_list()
-    assert abw.dataflow.processed_df == expected_df
+    pd.testing.assert_frame_equal( abw.dataflow.processed_df, expected_df)
     
 # def test_to_float():
 #     base_df = pd.DataFrame({
