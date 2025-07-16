@@ -33,7 +33,7 @@ def _(MyAutocleaningBuckaroo, dirty_df):
     #MyAutocleaningBuckaroo(pd.concat([dirty_df]*3000)) # to see how this works on more rows
     mybw = MyAutocleaningBuckaroo(dirty_df)
     mybw
-    return (mybw,)
+    return
 
 
 @app.cell
@@ -52,53 +52,8 @@ def _(pd):
 
         df['mostly_bool'] = _combined
         return df
-    #cdf = clean(dirty_df)
+    #cdf = clean(dirty_df.copy())
     #cdf
-    return
-
-
-@app.cell
-def _(mybw):
-    mybw.buckaroo_state
-    return
-
-
-@app.cell
-def _():
-    from buckaroo.customizations.pandas_cleaning_commands import USDate as LUSDate
-    #LUSDate.transform(dirty_df, 'us_dates')
-    return
-
-
-@app.cell
-def _(mybw):
-    mybw.dataflow.processed_df
-    return
-
-
-@app.cell
-def _(mybw):
-    mybw.dataflow.processed_df['us_dates'].to_list()
-    return
-
-
-@app.cell
-def _(pd):
-    pd.Series([
-      "NaT",
-      "1982-07-10 00:00:00",
-      "1982-07-15 00:00:00",
-      "1982-07-10 00:00:00",
-      "NaT",
-      "1982-03-04 00:00:00",
-      "2002-03-02 00:00:00",
-      "1968-12-09 00:00:00",
-      "1982-03-04 00:00:00",
-      "NaT",
-      "2024-06-22 00:00:00",
-      "1776-07-04 00:00:00",
-      "1969-07-20 00:00:00"
-    ], dtype='timestamp[ns][pyarrow]')
     return
 
 
