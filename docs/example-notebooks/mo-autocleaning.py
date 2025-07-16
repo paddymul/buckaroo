@@ -37,7 +37,7 @@ def _(MyAutocleaningBuckaroo, dirty_df):
 
 
 @app.cell
-def _(dirty_df, pd):
+def _(pd):
     def clean(df):
         TRUE_SYNONYMS = ['true', 'yes', 'on', '1']
         FALSE_SYNONYMS = ['false', 'no', 'off', '0']
@@ -45,14 +45,28 @@ def _(dirty_df, pd):
         _int_sanitize = _ser.replace(1, True).replace(0, False) 
         _real_bools = _int_sanitize.isin([True, False])
         _boolean_ser = _int_sanitize.where(_real_bools, pd.NA).astype('boolean')    
-        _str_ser = _ser.str.lower().str.strip()
+        _str_ser = _ser.astype('string').str.lower().str.strip()
         _trues = _str_ser.isin(TRUE_SYNONYMS).replace(False, pd.NA).astype('boolean')
         _falses =  ~ (_str_ser.isin(FALSE_SYNONYMS).replace(False, pd.NA)).astype('boolean')
         _combined = _boolean_ser.fillna(_trues).fillna(_falses)    
 
         df['mostly_bool'] = _combined
         return df
-    clean(dirty_df)
+    #cdf = clean(dirty_df)
+    #cdf
+    return
+
+
+@app.cell
+def _(mybw):
+    mybw.buckaroo_state
+    return
+
+
+@app.cell
+def _():
+    from buckaroo.customizations.pandas_cleaning_commands import USDate as LUSDate
+    #LUSDate.transform(dirty_df, 'us_dates')
     return
 
 
@@ -63,11 +77,37 @@ def _(mybw):
 
 
 @app.cell
+def _(mybw):
+    mybw.dataflow.processed_df['us_dates'].to_list()
+    return
+
+
+@app.cell
+def _(pd):
+    pd.Series([
+      "NaT",
+      "1982-07-10 00:00:00",
+      "1982-07-15 00:00:00",
+      "1982-07-10 00:00:00",
+      "NaT",
+      "1982-03-04 00:00:00",
+      "2002-03-02 00:00:00",
+      "1968-12-09 00:00:00",
+      "1982-03-04 00:00:00",
+      "NaT",
+      "2024-06-22 00:00:00",
+      "1776-07-04 00:00:00",
+      "1969-07-20 00:00:00"
+    ], dtype='timestamp[ns][pyarrow]')
+    return
+
+
+@app.cell
 def _(pd):
     dirty_df = pd.DataFrame(
         {
-            "a": [10, 20, 30, 40, 10, 20.3, None, 8, 9, 10, 11, 20, None],
-            "b": [
+            "untouched_a": [10, 20, 30, 40, 10, 20.3, None, 8, 9, 10, 11, 20, None],
+            "mostly_ints": [
                 "3",
                 "4",
                 "a",
@@ -146,7 +186,7 @@ def _(DataFrame, dirty_df, pd):
         only_numeric_str_ser = ser.str.replace(digits_and_period, "", regex=True)
         numeric_ser = pd.to_numeric(only_numeric_str_ser, errors="coerce") #, dtype_backend="pyarrow")
         return numeric_ser.astype('Int64')
-    DataFrame({'orig': dirty_df['b'], 'cleaned': strip_int_and_period(dirty_df['b'])})
+    DataFrame({'orig': dirty_df['mostly_ints'], 'cleaned': strip_int_and_period(dirty_df['mostly_ints'])})
     return re, strip_int_and_period
 
 
@@ -180,8 +220,8 @@ def _(pd, strip_int_and_period):
 @app.cell
 def _(dirty_df, strip_int_and_period_frac):
     #Try it out on dirty_df
-    {'a':           strip_int_and_period_frac(dirty_df['a']),
-     'b':           strip_int_and_period_frac(dirty_df['b']),
+    {'untouched_a':           strip_int_and_period_frac(dirty_df['untouched_a']),
+     'mostly_ints':           strip_int_and_period_frac(dirty_df['mostly_ints']),
      'mostly_bool': strip_int_and_period_frac(dirty_df['mostly_bool'])}
     #so we can see that ['b'] is a good fit, the other two are not
     return

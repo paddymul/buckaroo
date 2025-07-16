@@ -12,45 +12,40 @@ from buckaroo.customizations.pandas_cleaning_commands import (
 
 
 same = assert_to_py_same_transform_df
-
-expected_df = pd.DataFrame({
-        'mixed_bool': pd.Series([
-            True,
-            True, 
-            True, 
-            True,
-            False,
-            False,
-            True,
-            False,
-            False,
-            False,
-            False,
-            True,
-            None
-        ], dtype='boolean')})
-
-# expected_df = pd.DataFrame({
-#         'mixed_bool': pd.Series([
-#             5, #True,
-#             6, #True, 
-#             7, #True, 
-#             8, #True,
-
-#             False,
-#             False,
-#             True,
-#             False,
-#             False,
-#             False,
-#             False,
-#             True,
-#             None
-#         ])})
-
-def test_str_bool():
-    base_df = pd.DataFrame({
-        'mixed_bool': [
+dirty_df = pd.DataFrame(
+    {
+        "untouched_a": [10, 20, 30, 40, 10, 20.3, None, 8, 9, 10, 11, 20, None],
+        "mostly_ints": [
+            "3",
+            "4",
+            "a",
+            "5",
+            "5",
+            "b9",
+            None,
+            " 9",
+            "9-",
+            11,
+            "867-5309",
+            "-9",
+            None,
+        ],
+        "us_dates": [
+            "",
+            "07/10/1982",
+            "07/15/1982",
+            "7/10/1982",
+            "17/10/1982",
+            "03/04/1982",
+            "03/02/2002",
+            "12/09/1968",
+            "03/04/1982",
+            "",
+            "06/22/2024",
+            "07/4/1776",
+            "07/20/1969",
+        ],
+        "mostly_bool": [
             True,
             "True",
             "Yes",
@@ -64,12 +59,89 @@ def test_str_bool():
             "No",
             1,
             None,
-        ]})
-    
-    output_df = same(StrBool, [[s('str_bool'), s('df'), "mixed_bool"]], base_df)
-    assert isinstance(output_df['mixed_bool'].dtype , pd.core.arrays.boolean.BooleanDtype)
-    assert output_df['mixed_bool'].to_list() == expected_df['mixed_bool'].to_list()
+        ],
+    }
+)
 
+expected_df = pd.DataFrame({
+    'untouched_a': dirty_df['untouched_a'],
+    'mostly_ints': [
+        3,
+        4,
+        None,
+        5,
+        5,
+        None,
+        None,
+        9,
+        9,
+        11,
+        8675309,
+        -9,
+        None
+    ],
+    'mostly_ints_orig': dirty_df['mostly_ints'],
+    'us_dates' : pd.Series([
+        "NaT",
+        "1982-07-10 00:00:00",
+        "1982-07-15 00:00:00",
+        "1982-07-10 00:00:00",
+        "NaT",
+        "1982-03-04 00:00:00",
+        "2002-03-02 00:00:00",
+        "1968-12-09 00:00:00",
+        "1982-03-04 00:00:00",
+        "NaT",
+        "2024-06-22 00:00:00",
+        "1776-07-04 00:00:00",
+        "1969-07-20 00:00:00"
+    ], dtype='timestamp[ns][pyarrow]'),
+    'us_dates_orig': dirty_df['us_dates'],
+    'mostly_bool': pd.Series([
+        True,
+        True, 
+        True, 
+        True,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+        False,
+        True,
+        None
+    ], dtype='boolean'),
+    'mostly_bool_orig':dirty_df['mostly_bool']
+})
+
+def test_str_bool():
+    base_df = pd.DataFrame({'mostly_bool': dirty_df['mostly_bool']})
+    
+    output_df = same(StrBool, [[s('str_bool'), s('df'), "mostly_bool"]], base_df)
+    assert isinstance(output_df['mostly_bool'].dtype , pd.core.arrays.boolean.BooleanDtype)
+    assert output_df['mostly_bool'].to_list() == expected_df['mostly_bool'].to_list()
+
+
+
+def test_full_autoclean():
+    from buckaroo.buckaroo_widget import AutocleaningBuckaroo
+    abw = AutocleaningBuckaroo(dirty_df)
+    abw.buckaroo_state = {
+        "cleaning_method": "aggressive",
+        "post_processing": "",
+        "sampled": False,
+        "show_commands": False,
+        "df_display": "main",
+        "search_string": "",
+        "quick_command_args": {}
+    }
+
+    result =  abw.dataflow.processed_df
+
+    assert result.columns.to_list() == expected_df.columns.to_list()
+    assert abw.dataflow.processed_df == expected_df
+    
 # def test_to_float():
 #     base_df = pd.DataFrame({
 #         'mixed_floats':['3', '4', '7.1', 'asdf', np.nan], 'b': [pd.NA] * 5})
