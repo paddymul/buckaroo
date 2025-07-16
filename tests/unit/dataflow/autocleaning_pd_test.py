@@ -91,7 +91,7 @@ def test_make_origs_different_dtype():
             'a': [30, 40],
             'a_orig': [30,  "40"]})
     combined = PandasAutocleaning.make_origs(
-        raw, cleaned, {'a':{'add_orig': True}})
+        raw, cleaned, {'a':{'add_orig': True, 'orig_col_name': 'a'}})
     assert combined.to_dict() == expected.to_dict()
 
 def test_make_origs_preserve():
@@ -105,7 +105,7 @@ def test_make_origs_preserve():
             'a': pd.Series([30, 40, None], dtype='Int64'),
             'a_orig': [30,  "40", "not_used"]})
     combined = PandasAutocleaning.make_origs(
-        raw, cleaned, {'a':{'add_orig': True, 'preserve_orig_index':True}})
+        raw, cleaned, {'a':{'add_orig': True, 'preserve_orig_index':True, 'orig_col_name':'a'}})
     assert combined.to_dict() == expected.to_dict()
 
 def test_make_origs_non_alphabetpreserve():
@@ -119,7 +119,7 @@ def test_make_origs_non_alphabetpreserve():
             'a_modified': pd.Series([30, 40, None], dtype='Int64'),
             'a_modified_orig': [30,  "40", "not_used"]})
     combined = PandasAutocleaning.make_origs(
-        raw, cleaned, {'a_modified':{'add_orig': True, 'preserve_orig_index':True}})
+        raw, cleaned, {'a_modified':{'add_orig': True, 'preserve_orig_index':True, 'orig_col_name':'a_modified'}})
     assert combined.to_dict() == expected.to_dict()
 
 def Xtest_make_origs_filtered_new():
