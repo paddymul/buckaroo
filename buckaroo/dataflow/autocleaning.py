@@ -183,7 +183,6 @@ class PandasAutocleaning:
             return None
 
         cleaning_ops, cleaning_sd = self.produce_cleaning_ops(df, cleaning_method)
-        add_orig_debug = dict([(k, v.get('add_orig', None)) for k,v in cleaning_sd.items()])
         # [{'meta':'no-op'}] is a sentinel for the initial state
         if ops_eq(existing_operations, [{'meta':'no-op'}]) and cleaning_method == "":
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, [])
@@ -199,7 +198,6 @@ class PandasAutocleaning:
             #this also has the nice effect of not copying the DF, which the interpreter does
             return [df, {}, "", []]
 
-        add_orig_debug = dict([(k, v.get('add_orig', None)) for k,v in cleaning_sd.items()])
 
         cleaned_df = self._run_df_interpreter(df, final_ops)
         merged_cleaned_df = self.make_origs(df, cleaned_df, cleaning_sd)
