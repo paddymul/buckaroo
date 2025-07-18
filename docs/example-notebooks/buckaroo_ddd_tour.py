@@ -39,7 +39,7 @@ def _(buckaroo, mo):
     def get_code(df):
         return mo.ui.code_editor(buckaroo.BuckarooInfiniteWidget(df).get_story_config())
 
-    return (disp,)
+    return
 
 
 @app.cell
@@ -63,43 +63,212 @@ def _():
 @app.cell(hide_code=True)
 def _(ddd):
 
-    _df = ddd.get_multiindex_cols_df()
+    _df = ddd.get_basic_df()
 
     _explain_md = """
-    ##  multi_index_cols_df
-     This dataframe has a column multi_index
-
+    ##  basic_df
+     This is a simple basic dataframe with column 'a'
     """
-    multiindex_cols_df_config = (_df, _explain_md)
-    return (multiindex_cols_df_config,)
+    basic_df_config = (_df, _explain_md)
+    return (basic_df_config,)
 
 
 @app.cell(hide_code=True)
 def _(ddd):
 
-    _df = ddd.get_multiindex_with_names_index_df()
+    _df = ddd.get_basic_df2()
 
     _explain_md = """
-    ##  multi_index_with_names_index_df
-     This dataframe has a multi_index with names
-
+    ##  basic_df2
+     This dataframe has foo_col and bar_col for testing
     """
-    multi_index_with_names_index_df_config = (_df, _explain_md)
-    return (multi_index_with_names_index_df_config,)
+    basic_df2_config = (_df, _explain_md)
+    return (basic_df2_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_basic_df_with_named_index()
+
+    _explain_md = """
+    ##  basic_df_with_named_index
+     This dataframe has a named index called 'named_index'
+    """
+    basic_df_with_named_index_config = (_df, _explain_md)
+    return (basic_df_with_named_index_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_multiindex_with_names_cols_df()
+
+    _explain_md = """
+    ##  multiindex_with_names_cols_df
+     This dataframe has a multi_index columns with level names
+    """
+    multiindex_with_names_cols_df_config = (_df, _explain_md)
+    return (multiindex_with_names_cols_df_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_tuple_cols_df()
+
+    _explain_md = """
+    ##  tuple_cols_df
+     This dataframe has tuple column names from flattened multi_index
+    """
+    tuple_cols_df_config = (_df, _explain_md)
+    return (tuple_cols_df_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_multiindex_index_df()
+
+    _explain_md = """
+    ##  multiindex_index_df
+     This dataframe has a multi_index on the row index
+    """
+    multiindex_index_df_config = (_df, _explain_md)
+    return (multiindex_index_df_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_multiindex3_index_df()
+
+    _explain_md = """
+    ##  multiindex3_index_df
+     This dataframe has a 3-level multi_index on the row index
+    """
+    multiindex3_index_df_config = (_df, _explain_md)
+    return (multiindex3_index_df_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_multiindex_index_multiindex_with_names_cols_df()
+
+    _explain_md = """
+    ##  multiindex_index_multiindex_with_names_cols_df
+     This dataframe has multi_index on both rows and columns with named column levels
+    """
+    multiindex_index_multiindex_with_names_cols_df_config = (_df, _explain_md)
+    return (multiindex_index_multiindex_with_names_cols_df_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_multiindex_index_with_names_multiindex_cols_df()
+
+    _explain_md = """
+    ##  multiindex_index_with_names_multiindex_cols_df
+     This dataframe has multi_index on both rows (with names) and columns
+    """
+    multiindex_index_with_names_multiindex_cols_df_config = (_df, _explain_md)
+    return (multiindex_index_with_names_multiindex_cols_df_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_multiindex_with_names_both()
+
+    _explain_md = """
+    ##  multiindex_with_names_both
+     This dataframe has multi_index with names on both rows and columns
+    """
+    multiindex_with_names_both_config = (_df, _explain_md)
+    return (multiindex_with_names_both_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.df_with_infinity()
+
+    _explain_md = """
+    ##  df_with_infinity
+     This dataframe contains NaN, infinity, and negative infinity values
+    """
+    df_with_infinity_config = (_df, _explain_md)
+    return (df_with_infinity_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.df_with_col_named_index()
+
+    _explain_md = """
+    ##  df_with_col_named_index
+     This dataframe has a column actually named 'index'
+    """
+    df_with_col_named_index_config = (_df, _explain_md)
+    return (df_with_col_named_index_config,)
+
+
+@app.cell(hide_code=True)
+def _(ddd):
+
+    _df = ddd.get_df_with_named_index()
+
+    _explain_md = """
+    ##  df_with_named_index
+     This dataframe has a named index called 'foo'
+    """
+    df_with_named_index_config = (_df, _explain_md)
+    return (df_with_named_index_config,)
 
 
 @app.cell
-def _(mo, multi_index_with_names_index_df_config, multiindex_cols_df_config):
+def _(
+    basic_df2_config,
+    basic_df_config,
+    basic_df_with_named_index_config,
+    df_with_col_named_index_config,
+    df_with_infinity_config,
+    df_with_named_index_config,
+    mo,
+    multiindex3_index_df_config,
+    multiindex_index_df_config,
+    multiindex_index_multiindex_with_names_cols_df_config,
+    multiindex_index_with_names_multiindex_cols_df_config,
+    multiindex_with_names_both_config,
+    multiindex_with_names_cols_df_config,
+    tuple_cols_df_config,
+):
     # The DFs and configs are defined in the above hidden cells.  Unhide them for details
     dfs = {
-    'multiindex_cols_df_config': multiindex_cols_df_config,
-    'multi_index_with_names_index_df_config': multi_index_with_names_index_df_config,
-    }
+        'basic_df_config': basic_df_config,
+        'basic_df2_config': basic_df2_config,
+        'basic_df_with_named_index_config': basic_df_with_named_index_config,
+       # 'multiindex_cols_df_config': multiindex_cols_df_config,
+        'multiindex_with_names_cols_df_config': multiindex_with_names_cols_df_config,
+        'tuple_cols_df_config': tuple_cols_df_config,
+        'multiindex_index_df_config': multiindex_index_df_config,
+        'multiindex3_index_df_config': multiindex3_index_df_config,
 
+        #'multi_index_with_names_index_df_config': multi_index_with_names_index_df_config,
+        'multiindex_index_multiindex_with_names_cols_df_config': multiindex_index_multiindex_with_names_cols_df_config,
+        'multiindex_index_with_names_multiindex_cols_df_config': multiindex_index_with_names_multiindex_cols_df_config,
+        'multiindex_with_names_both_config': multiindex_with_names_both_config,
+        'df_with_infinity_config': df_with_infinity_config,
+        'df_with_col_named_index_config': df_with_col_named_index_config,
+        'df_with_named_index_config': df_with_named_index_config,
+    }
 
     dropdown_dict = mo.ui.dropdown(
         options=dfs,
-        value="multiindex_cols_df_config",
+        value="df_with_infinity_config",
         label="Choose the config",
     )
     return (dropdown_dict,)
