@@ -6,23 +6,50 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    #import marimo as mo
-    #import pandas as pd
-    #import buckaroo
     from buckaroo import ddd_library as ddd
     from buckaroo.marimo_utils import marimo_unmonkeypatch; marimo_unmonkeypatch()
-    return (ddd,)
+
+    return ddd, marimo_unmonkeypatch
 
 
 @app.cell
-def _(BuckarooInfiniteWidget, dropdown_dict, mo):
+def _(buckaroo, mo):
+    def plain_disp(df):
+        return mo.plain(df)
+    def default_disp(df):
+        return df
+
+    def buckaroo_disp(df):
+        return buckaroo.BuckarooInfiniteWidget(df ) #, pinned_rows=[])
+
+
+    disp_options = {
+        'plain': plain_disp,
+        'default': default_disp,
+        'buckaroo_disp': buckaroo_disp,
+    }
+
+
+
+    disp_func_dropdown = mo.ui.dropdown(
+    options=disp_options,
+    value='buckaroo_disp',
+    label='choose display widget')
+
+    return (disp_func_dropdown,)
+
+
+@app.cell
+def _(disp_func_dropdown, dropdown_dict, marimo_unmonkeypatch, mo):
     # Welcome to the the Buckaroo styling gallery
 
     # Give Marimo and this gallery a little bit of time to load. The rest of the app and explanatory text will load in about 30 seconds. A lot is going on, python is being downloaded to run via Web Assembly in your browser.
-    disp_func = BuckarooInfiniteWidget
+    marimo_unmonkeypatch()
+    disp_func = disp_func_dropdown.value 
     mo.vstack(
         [
          dropdown_dict,
+         disp_func_dropdown,
          disp_func(dropdown_dict.value[0]),
         mo.md(dropdown_dict.value[1])])
     return
@@ -30,12 +57,7 @@ def _(BuckarooInfiniteWidget, dropdown_dict, mo):
 
 @app.cell
 def _(buckaroo, mo):
-    def disp(df):
-        return mo.plain(df)
-    def disp(df):
-        return df
-    def disp(df):
-        return buckaroo.BuckarooInfiniteWidget(df ) #, pinned_rows=[])
+
     def get_code(df):
         return mo.ui.code_editor(buckaroo.BuckarooInfiniteWidget(df).get_story_config())
 
@@ -271,6 +293,7 @@ def _(
         value="df_with_infinity_config",
         label="Choose the config",
     )
+
     return (dropdown_dict,)
 
 
@@ -310,7 +333,7 @@ async def _():
         formatted_string = re.sub(r"\s+}", "}", json_string)
         # formatted_string = json_string
         return formatted_string
-    return BuckarooInfiniteWidget, buckaroo, mo
+    return buckaroo, mo
 
 
 if __name__ == "__main__":
