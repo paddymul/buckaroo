@@ -14,6 +14,8 @@ def _():
 
 @app.cell
 def _(buckaroo, mo):
+    from great_tables import GT
+    from itables.widget import ITable
     def plain_disp(df):
         return mo.plain(df)
     def default_disp(df):
@@ -21,19 +23,28 @@ def _(buckaroo, mo):
 
     def buckaroo_disp(df):
         return buckaroo.BuckarooInfiniteWidget(df ) #, pinned_rows=[])
-
+    def great_tables_disp(df):
+        try:
+            return GT(df)
+        except Exception as e:
+            return e
+    def itables_disp(df):
+        return ITable(df)
 
     disp_options = {
         'plain': plain_disp,
         'default': default_disp,
-        'buckaroo_disp': buckaroo_disp,
+        'buckaroo': buckaroo_disp,
+        'great_tables': great_tables_disp,
+        'itables': itables_disp
+    
     }
 
 
 
     disp_func_dropdown = mo.ui.dropdown(
     options=disp_options,
-    value='buckaroo_disp',
+    value='buckaroo',
     label='choose display widget')
 
     return (disp_func_dropdown,)
