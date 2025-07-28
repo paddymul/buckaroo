@@ -7,7 +7,7 @@ declare const meta: {
         df_data: DFData;
         df_viewer_config: DFViewerConfig;
         summary_stats_data?: DFData;
-        activeCol?: string;
+        activeCol?: [string, string];
         setActiveCol?: SetColumnFunc;
         outside_df_params?: any;
         error_info?: string;

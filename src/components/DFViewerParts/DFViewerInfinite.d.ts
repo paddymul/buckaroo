@@ -16,7 +16,7 @@ export declare function DFViewerInfinite({ data_wrapper, df_viewer_config, summa
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
-    activeCol?: string;
+    activeCol?: [string, string];
     setActiveCol: SetColumnFunc;
     outside_df_params?: any;
     error_info?: string;
@@ -26,7 +26,7 @@ export declare function DFViewerInfiniteInner({ data_wrapper, df_viewer_config, 
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
     summary_stats_data: DFData;
-    activeCol: string;
+    activeCol: [string, string];
     setActiveCol: SetColumnFunc;
     outside_df_params?: any;
     renderStartTime: any;
@@ -36,6 +36,6 @@ export declare function DFViewer({ df_data, df_viewer_config, summary_stats_data
     df_data: DFData;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
-    activeCol?: string;
+    activeCol?: [string, string];
     setActiveCol?: SetColumnFunc;
 }): import("react/jsx-runtime").JSX.Element;

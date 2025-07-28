@@ -8,7 +8,7 @@ export interface WidgetConfig {
 }
 export declare function ColumnsEditor({ df_viewer_config, activeColumn, operations, setOperations, operation_result, command_config, }: {
     df_viewer_config: DFViewerConfig;
-    activeColumn: string;
+    activeColumn: [string, string];
     operations: Operation[];
     setOperations: OperationSetter;
     operation_result: OperationResult;
