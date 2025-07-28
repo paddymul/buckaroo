@@ -88,8 +88,10 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
             if (setActiveCol === undefined || colName === undefined) {
                 return;
             } else {
-                const oldActiveCol = event.context.activeCol;
-                setActiveCol(colName);
+              const oldActiveCol = event.context.activeCol;
+	      console.log("DFVIewerInfinite 92 event.column", event.column)
+	      //@ts-ignore
+              setActiveCol([colName, event.column?.header_name]);
                 event.context.activeCol = colName;
                 // this section is very performance sensitive.
                 const args:RefreshCellsParams = {
@@ -117,7 +119,7 @@ export function DFViewerInfinite({
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
-    activeCol?: string;
+    activeCol?: [string, string];
     setActiveCol: SetColumnFunc;
     // these are the parameters that could affect the table,
     // dfviewer doesn't need to understand them, but it does need to use
@@ -152,6 +154,8 @@ export function DFViewerInfinite({
             df_viewer_config?.extra_grid_config?.rowHeight
         )}, [hsCacheKey]
     );
+  console.log("DFViewerInfinite df_viewer_config", df_viewer_config)
+  const defaultActiveCol:[string, string] = ["", ""];
     const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
     return (
         <div className={`df-viewer  ${hs.classMode} ${hs.inIframe}`}>
@@ -162,7 +166,7 @@ export function DFViewerInfinite({
                     data_wrapper={data_wrapper}
                     df_viewer_config={df_viewer_config}
                     summary_stats_data={summary_stats_data || []}
-                    activeCol={activeCol || ""}
+                  activeCol={activeCol || defaultActiveCol}
                     setActiveCol={setActiveCol}
                     outside_df_params={outside_df_params}
                     renderStartTime={renderStartTime}
@@ -184,7 +188,7 @@ export function DFViewerInfiniteInner({
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
     summary_stats_data: DFData;
-    activeCol: string;
+    activeCol: [string, string];
     setActiveCol: SetColumnFunc;
     // these are the parameters that could affect the table,
     // dfviewer doesn't need to understand them, but it does need to use
@@ -242,7 +246,7 @@ export function DFViewerInfiniteInner({
             cellStyle: (params: CellClassParams) => {
                 const colDef = params.column.getColDef();
                 const field = colDef.field;
-                const activeCol = params.context?.activeCol;
+                const activeCol = params.context?.activeCol[0];
                 ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
                 //console.log("getCellStyleFunc", locCounter)
                 if (params.node.isRowPinned()) {
@@ -401,10 +405,10 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
     df_data: DFData;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
-    activeCol?: string;
+  activeCol?: [string, string];
     setActiveCol?: SetColumnFunc;
 }) {
-    const defaultSetColumnFunc = (newCol:string):void => {
+  const defaultSetColumnFunc = (newCol:[string, string]):void => {
         console.log("defaultSetColumnFunc", newCol)
     }
     const sac:SetColumnFunc = setActiveCol || defaultSetColumnFunc;
