@@ -89,15 +89,16 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
                 return;
             } else {
               const oldActiveCol = event.context.activeCol;
-	      console.log("DFVIewerInfinite 92 event.column", event.column)
 	      //@ts-ignore
-              setActiveCol([colName, event.column?.header_name]);
-                event.context.activeCol = colName;
+	      const localActiveCol = [colName, event.column.colDef.headerName];
+	      //@ts-ignore
+              setActiveCol(localActiveCol)
+              event.context.activeCol = localActiveCol;
                 // this section is very performance sensitive.
                 const args:RefreshCellsParams = {
                     rowNodes: event.api.getRenderedNodes(),
                     //@ts-ignore
-                    columns: [event.api.getColumn(colName), event.api.getColumn(oldActiveCol)],
+                    columns: [event.api.getColumn(colName), event.api.getColumn(oldActiveCol[0])],
                     force:true
                 }
                 event.api.refreshCells(args)
@@ -154,7 +155,6 @@ export function DFViewerInfinite({
             df_viewer_config?.extra_grid_config?.rowHeight
         )}, [hsCacheKey]
     );
-  console.log("DFViewerInfinite df_viewer_config", df_viewer_config)
   const defaultActiveCol:[string, string] = ["", ""];
     const divClass = df_viewer_config?.component_config?.className || "ag-theme-alpine-dark";
     return (
@@ -247,8 +247,6 @@ export function DFViewerInfiniteInner({
                 const colDef = params.column.getColDef();
                 const field = colDef.field;
                 const activeCol = params.context?.activeCol[0];
-                ///console.log("defaultColDef cellStyle params", params, colDef, field, params, activeCol);
-                //console.log("getCellStyleFunc", locCounter)
                 if (params.node.isRowPinned()) {
                     return;
                 }
@@ -323,8 +321,6 @@ export function DFViewerInfiniteInner({
         const [finalGridOptions, datasource] = useMemo( () => {
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
-            //console.log(styledColumns)
-            //console.log(gridOptions)
         return (
 
                 <AgGridReact
