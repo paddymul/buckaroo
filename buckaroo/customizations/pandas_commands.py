@@ -518,8 +518,6 @@ class SearchCol(Command):
     def transform_to_py(df, col, needle):
         return f"""    from buckaroo.customizations.pandas_commands import search_col_str
     return search_col_str(df, '{col}', '{needle}')"""
-    #df = df[~(df['{col}'].str.find('{needle}').fillna(-1) == -1).fillna(False)]"
-
 
 
 class DropDuplicates(Command):

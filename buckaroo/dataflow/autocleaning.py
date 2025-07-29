@@ -191,9 +191,7 @@ class PandasAutocleaning:
             # when 'no-op' the initial state is true
             cleaning_sd = {}
         else:
-            #fixed_col_name_existing_ops = fix_column_names(existing_operations, cleaning_sd)
             final_ops = self.produce_final_ops(cleaning_ops, quick_command_args, existing_operations)
-            
         if ops_eq(final_ops,[]) and cleaning_method == "":
             #nothing to be done here, no point in running the interpreter
             #this also has the nice effect of not copying the DF, which the interpreter does

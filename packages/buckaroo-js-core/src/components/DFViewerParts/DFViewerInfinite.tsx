@@ -94,7 +94,7 @@ const outerGridOptions = (setActiveCol:SetColumnFunc, extra_grid_config?:GridOpt
 	      //@ts-ignore
               setActiveCol(localActiveCol)
               event.context.activeCol = localActiveCol;
-                // this section is very performance sensitive.
+                // this section is very performance sensitive.it controls which cells to rerender
                 const args:RefreshCellsParams = {
                     rowNodes: event.api.getRenderedNodes(),
                     //@ts-ignore
@@ -166,7 +166,7 @@ export function DFViewerInfinite({
                     data_wrapper={data_wrapper}
                     df_viewer_config={df_viewer_config}
                     summary_stats_data={summary_stats_data || []}
-                  activeCol={activeCol || defaultActiveCol}
+                    activeCol={activeCol || defaultActiveCol}
                     setActiveCol={setActiveCol}
                     outside_df_params={outside_df_params}
                     renderStartTime={renderStartTime}
@@ -401,7 +401,7 @@ const getDsGridOptions = (origGridOptions: GridOptions, maxRowsWithoutScrolling:
     df_data: DFData;
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
-  activeCol?: [string, string];
+    activeCol?: [string, string];
     setActiveCol?: SetColumnFunc;
 }) {
   const defaultSetColumnFunc = (newCol:[string, string]):void => {

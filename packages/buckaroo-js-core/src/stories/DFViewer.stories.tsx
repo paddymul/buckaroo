@@ -16,7 +16,7 @@ const DFViewerWrap = ({
     df_data:DFData,
     df_viewer_config: DFViewerConfig;
     summary_stats_data?: DFData;
-  activeCol?: [string, string];
+    activeCol?: [string, string];
     setActiveCol?: SetColumnFunc;
     // these are the parameters that could affect the table,
     // dfviewer doesn't need to understand them, but it does need to use
