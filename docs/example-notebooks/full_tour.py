@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
@@ -24,17 +24,15 @@ def _(mo):
 
 
 @app.cell
-def _():
-    import pandas as pd
-    import buckaroo
+def _(pd):
     citibike_df = pd.read_parquet("./citibike-trips-2016-04.parq")
     citibike_df
-    return citibike_df, pd
+    return (citibike_df,)
 
 
 @app.cell
 def _(mo):
-    #import buckaroo  # for most notebook environments
+    import buckaroo  # for most notebook environments
 
 
     mo.md("""## Running buckaroo
@@ -51,7 +49,7 @@ def _(mo):
     import buckaroo```
     in the notebook.  Buckaroo will become the default way of displaying dataframes in that environment.
     """)
-    return
+    return (buckaroo,)
 
 
 @app.cell(hide_code=True)
@@ -111,7 +109,7 @@ def _(bimodal, np, pd, random_categorical):
         }
     )
     histogram_df
-    return (histogram_df,)
+    return N, histogram_df
 
 
 @app.cell(hide_code=True)
@@ -194,7 +192,7 @@ def _(dirty_df, sys):
     from buckaroo.buckaroo_widget import AutocleaningBuckaroo
     sys #necessary so this runs after the main important block at the bottom
     AutocleaningBuckaroo(dirty_df)
-    return
+    return (AutocleaningBuckaroo,)
 
 
 @app.cell(hide_code=True)
@@ -248,7 +246,7 @@ def _(BuckarooInfiniteWidget, citibike_df, pd):
             mask |= (ser <= p1) | (ser >= p99)
         return df[mask]
     bw
-    return
+    return bw, outliers
 
 
 @app.cell(hide_code=True)
@@ -272,7 +270,7 @@ def _(mo):
 @app.cell(hide_code=True)
 async def _():
     import marimo as mo
-    #import pandas as pd
+    import pandas as pd
     import numpy as np
     import sys
 
@@ -281,7 +279,7 @@ async def _():
 
         await micropip.install("buckaroo")
     from buckaroo import BuckarooInfiniteWidget
-    return BuckarooInfiniteWidget, mo, np, sys
+    return BuckarooInfiniteWidget, micropip, mo, np, pd, sys
 
 
 @app.cell(hide_code=True)
@@ -329,7 +327,7 @@ def _(np, pd):
             return pd.Series(all_arr, dtype="UInt64")
         except:
             return pd.Series(all_arr, dtype=pd.StringDtype())
-    return bimodal, random_categorical
+    return bimodal, rand_cat, random_categorical
 
 
 @app.cell
