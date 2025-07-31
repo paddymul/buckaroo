@@ -54,7 +54,8 @@ jobs:
         env:
           UV_PYTHON: ${{ matrix.python-version }}
       - uses: codecov/codecov-action@v5
-
+        with:
+          files: ./packages/build_config/codecove.yml
 
 
   # buckaroo isn't currently setup for mypy
