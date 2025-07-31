@@ -95,10 +95,10 @@ Homepage = "https://github.com/paddymul/buckaroo"
 
 [tool.hatch.build]
 only-packages = true
-artifacts = ["buckaroo/static/widget.js", "buckaroo/static/compiled.css"]
+artifacts = ["buckaroo/static/widget.js", "buckaroo/static/compiled.css", "packages/scripts/hatch_build.py"]
 
 [tool.hatch.build.hooks.custom]
-path = "scripts/hatch_build.py"
+path = "pacakges/scripts/hatch_build.py"
 
 
 [tool.hatch.envs.default]
