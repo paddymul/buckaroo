@@ -63,7 +63,7 @@ def test_produce_series_df():
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
 
-
+    
 def test_simple_mixed_pipeline():
     """ show that a simple polars pipeline where one analysis depends on the other succesfully computes"""
 
@@ -96,17 +96,6 @@ def test_non_full_analysis():
                        'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
     
 
-def test_produce_series_df():
-    """just make sure this doesn't fail"""
-    
-    sdf, errs = polars_produce_series_df(
-        test_df, [SelectOnlyAnalysis], 'test_df', debug=True)
-    expected = {
-    'b': {'mean': None, 'null_count':  0, 'quin99': None, 'orig_col_name':'float_nan_ser', 'rewritten_col_name':'b'},
-    'a' :{'mean': 2.5,  'null_count':  0, 'quin99':  4.0, 'orig_col_name':'normal_int_series', 'rewritten_col_name':'a'}
-}
-    dsdf = replace_in_dict(sdf, [(np.nan, None)])
-    assert dsdf == expected
 
 class MaxAnalysis(PolarsAnalysis):
     provides_defaults = {}

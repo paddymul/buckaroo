@@ -1,16 +1,7 @@
 import pandas as pd
 import numpy as np
 
-# Example usage
-df = pd.DataFrame(
-    {
-        "A": range(100),
-        "B": np.random.normal(0, 1, 100),
-        "C": ["text"] * 100,  # non-numeric column will be ignored
-    }
-)
 
-filtered_df = filter_outliers(df)
 
 
 def filter_outliers(df):
@@ -46,3 +37,14 @@ def filter_outliers(df):
 
     # Return filtered DataFrame
     return df[mask]
+
+def test_outliers_filter():
+    # Example usage
+    df = pd.DataFrame({
+        "A": range(100),
+        "B": np.random.normal(0, 1, 100),
+        "C": ["text"] * 100,  # non-numeric column will be ignored
+        }
+    )
+    filtered_df = filter_outliers(df)
+    assert filtered_df
