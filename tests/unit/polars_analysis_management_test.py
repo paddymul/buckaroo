@@ -82,7 +82,6 @@ def test_non_full_analysis():
     assert pdf.sdf == {'a': dict(empty_count=0, sum=30, orig_col_name='foo_col', rewritten_col_name='a'),
                        'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
 
-    
 def test_produce_series_df():
     """just make sure this doesn't fail"""
     
@@ -94,8 +93,6 @@ def test_produce_series_df():
 }
     dsdf = replace_in_dict(sdf, [(np.nan, None)])
     assert dsdf == expected
-
-
 
 class MaxAnalysis(PolarsAnalysis):
     provides_defaults = {}
