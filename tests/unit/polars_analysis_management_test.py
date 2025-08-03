@@ -67,7 +67,6 @@ def test_simple_mixed_pipeline():
     dsdf = replace_in_dict(pdf.sdf, [(np.nan, None)])
     assert dsdf == expected
 
-    
 def test_non_full_analysis():
     class MixedAnalysis(PolarsAnalysis):
         provides_defaults = dict(
@@ -82,6 +81,7 @@ def test_non_full_analysis():
     pdf = PlDfStats(df, [MixedAnalysis])
     assert pdf.sdf == {'a': dict(empty_count=0, sum=30, orig_col_name='foo_col', rewritten_col_name='a'),
                        'b': dict(empty_count=1, sum=0, orig_col_name='bar_col', rewritten_col_name='b')}
+
     
 def test_produce_series_df():
     """just make sure this doesn't fail"""
