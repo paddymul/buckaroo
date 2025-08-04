@@ -20,7 +20,7 @@ async with app.setup:
 def _():
     mo.md(
         r"""
-    # Tour of Buckaroo
+    # Tour of Buckaroo 107
     Buckaroo expedites the core task of data work - looking at the data - by showing histograms and summary stats with every DataFrame.
 
     This notebook gives a tour of Buckaroo features.
@@ -54,8 +54,8 @@ def _():
 def _():
     import pandas as pd
     import buckaroo
-
-    citibike_df = pd.read_parquet("./citibike-trips-2016-04.parq")
+    
+    citibike_df = pd.read_parquet(mo.notebook_location() / "public" / "citibike-trips-2016-04.parq")
     citibike_df
     return citibike_df, pd
 
