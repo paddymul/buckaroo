@@ -24,8 +24,8 @@ build:
       - uv tree
     build:
       html:
-        - pnpm -c packages/buckaroo-js-core install
-        - pnpm -c packages/buckaroo-js-core run build-storybook
+        - pnpm -C packages/buckaroo-js-core install
+        - pnpm -C packages/buckaroo-js-core run build-storybook
         - cp -r packages/buckaroo-js-core/dist/storybook docs/extra-html/
         - uv tree
         - uv venv
