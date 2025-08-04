@@ -25,7 +25,6 @@ build:
         - uv tree
         - uv venv
         - uv run sphinx-build -T -b html docs/source  $READTHEDOCS_OUTPUT/html
-        - uv run marimo export html-wasm docs/example-notebooks/buckaroo_ddd_tour.py  -o docs/extra-html/buckaroo_ddd_tour  --mode run
         - ./scripts/marimo_wasm_output.sh buckaroo_ddd_tour.py run
         - ./scripts/marimo_wasm_output.sh buckaroo_compare.py edit
         - ./scripts/marimo_wasm_output.sh full_tour.py edit
