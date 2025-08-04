@@ -9,10 +9,9 @@ You can click on preview links [here](???) or by navigating through the PR here
 Here is a preview link for a succesful build:
 https://buckaroo-data--420.org.readthedocs.build/en/420/
 from there
-the following line in the yaml
-`- uv run marimo export html-wasm docs/example-notebooks/buckaroo_ddd_tour.py  -o docs/extra-html/buckaroo_ddd_tour  --mode run`
+- ./scripts/marimo_wasm_output.sh buckaroo_ddd_tour.py run
 produces the following working directory
-https://buckaroo-data--420.org.readthedocs.build/en/420/buckaroo_ddd_tour/
+https://buckaroo-data--420.org.readthedocs.build/en/420/example_notebooks/buckaroo_ddd_tour/
 
 This is a work in progress
 
@@ -40,4 +39,16 @@ async def _():
 
 That makes sure that pyodide install buckaroo and there isn't an error loop
 
+## Adding files to the built notebook
+for now any file added to `docs/example-notebooks/marimo-wasm/public` will be avilable to all notebooks
 
+accessing them in the notebook is tricky
+`citibike_df = pd.read_parquet(mo.notebook_location() / "public" / "citibike-trips-2016-04.parq")`
+follow this bug for more
+https://github.com/marimo-team/marimo/issues/5901
+
+
+### serving wasm
+for local dev
+npx http-server -o ./
+this is much faster than the python server
