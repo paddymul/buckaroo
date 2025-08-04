@@ -8,10 +8,12 @@ build:
   apt_packages:
     - graphviz
     - npm
-    - pnpm
   jobs:
     pre_create_environment:
       - asdf plugin add uv
+      - asdf plugin add pnpm
+      - asdf install pnpm 9.5.0
+      - asdf global pnpm 9.5.0
       - asdf install uv 0.6.12
       - asdf global uv 0.6.12
     create_environment:
