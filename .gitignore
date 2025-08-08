@@ -165,3 +165,4 @@ docs/source/_static/*woff*
 
 packages/buckaroo-js-core/tsconfig.tsbuildinfo
 buckaroo/static/*
+packages/buckaroo-js-core/public/*
