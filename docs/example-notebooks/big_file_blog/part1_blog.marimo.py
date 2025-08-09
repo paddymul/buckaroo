@@ -306,6 +306,13 @@ def _(drop_na_columns, july_df):
     na_outliers_only(drop_na_columns(july_df))
     return
 
+@app.cell
+def _(pd):
+    big_df = pd.read_parquet("~/code/buckaroo_data/npi_150k_100col.parq")
+
+    big_df
+    return (big_df,)
+
 
 @app.cell
 def _():
