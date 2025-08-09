@@ -1,0 +1,5 @@
+## This directory is mostly for putting generated files, these files are specifically generated and ignored
+# this is a temp solution, something more holistic is needed
+buckaroo_ddd_tour/*
+example_notebooks/*
+full_tour/*
