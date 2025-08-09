@@ -7,32 +7,65 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import polars as pl
+    import buckaroo
     return (pl,)
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+    # digging in
+    `get_categoricals`  
+    d
+    """
+    )
+    return
 
 
 @app.cell
 def _(pl):
 
-    def get_categoricals(df):
+    def get_categoricals(df, n_vals=250):
         cat_columns = []
         for col in df.columns:
-            if len(df[col].value_counts()) < 250:
+            if len(df[col].value_counts()) < n_vals:
                 cat_columns.append(col)
         return cat_columns
-    def scan_vc(fname, out_fname):
-        small_df = pl.read_parquet(fname, n_rows=1_000_000)
+
+    def scan_vc(fname, out_fname, n_rows=500_000):
+        small_df = pl.read_parquet(fname, n_rows=n_rows)
         cat_columns = get_categoricals(small_df)
+        print("finished get_categoricals this many columns", len(cat_columns))
         select_args = []
         for k in small_df.columns:
             if k in cat_columns:
                 select_args.append(pl.col(k).value_counts(sort=True).implode())
-        #.select(pl.col(pl.String).value_counts(sort=True).implode())
-        #pl.scan_parquet(fname).select(select_args).sink_parquet(out_fname)
-        pl.scan_parquet(fname).select(select_args).collect().write_parquet(out_fname)
-    
-    #    scan_vc("~/JULY_FULL.parq", "~/JULY_FULL_vc.parq")
-
+        lazy_df = pl.scan_csv(fname) if fname.endswith("csv") else pl.scan_parquet(fname)
+        pl.scan_parquet(fname).select(select_args).sink_parquet(out_fname)
+    #scan_vc("~/JULY_FULL.parq", "~/JULY_FULL_vc2.parq")
+    #this took 57 seconds on my MBA M1
     return get_categoricals, scan_vc
+
+
+@app.cell
+def _(scan_vc):
+    scan_vc("~/NPPES_Data_Dissemination_July_2025/npidata_pfile_20050523-20250713.csv", "~/JULY_FULL_vc2.parq")
+
+    return
+
+
+@app.cell
+def _(pl):
+    vc_df = pl.read_parquet("~/JULY_FULL_vc2.parq")
+    vc_df
+    return (vc_df,)
+
+
+@app.cell
+def _(pl, vc_df):
+    vc_df.select([pl.all().explode().len()]).transpose(include_header=True).sort('column_0')
+    return
 
 
 @app.cell
@@ -46,16 +79,12 @@ def _(get_categoricals, pl):
         del small_df
         with pl.StringCache():
             pl.scan_parquet(fname).cast(cast_args).sink_parquet(out_fname)
-    #to_categorical_parq("~/JULY_FULL.parq", "~/JULY_FULL_CAT.parq")
-
-    #
 
     def get_enum_words(vc_df):
-        #vc_df = pl.read_parquet("~/JULY_FULL_vc.parq")
         word_set = set()
         for col in vc_df.columns:
             _ser = vc_df[col].explode()
-            _col_df = pl.DataFrame({'vc':vc_df[col].explode()}).unnest('vc') #.select(pl.all().exclude('count'))
+            _col_df = pl.DataFrame({'vc':vc_df[col].explode()}).unnest('vc')
             col_ser =_col_df[_col_df.columns[0]]
             word_set = word_set.union({*col_ser.to_list()})
             print("col", col, len(_col_df), len(word_set))
@@ -63,13 +92,20 @@ def _(get_categoricals, pl):
 
     def convert_to_enum(fname, out_fname, vc_df):
         word_set = get_enum_words(vc_df)
+        print("got word_set")
         word_enum = pl.Enum(list(word_set))
         enum_select = []
         for col in vc_df.columns:
             enum_select.append(pl.col(col).cast(word_enum))
-
         pl.scan_parquet(fname).select(enum_select).sink_parquet(out_fname)
     return (convert_to_enum,)
+
+
+@app.cell
+def _():
+    #takes 33 seconds on my machine
+    #convert_to_enum("~/JULY_FULL.parq", "~/JULY_FULL_enum2.parq", vc_df)
+    return
 
 
 @app.cell
@@ -315,6 +351,12 @@ def _():
         "Healthcare Provider Taxonomy Group_15"
     ]
     return
+
+
+@app.cell
+def _():
+    import marimo as mo
+    return (mo,)
 
 
 if __name__ == "__main__":
