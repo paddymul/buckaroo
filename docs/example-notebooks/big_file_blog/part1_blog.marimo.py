@@ -186,19 +186,6 @@ def _(mo):
 
 @app.cell
 def _():
-    # the following cell when executed over 2m rows, took 4m 33s
-    return
-
-
-@app.function
-def clean(df):
-    from buckaroo.customizations.pandas_commands import search_df_str
-    return search_df_str(df, '367H00000X')
-    return df
-
-
-@app.cell
-def _():
     import polars as pl
     from buckaroo.polars_buckaroo import PolarsBuckarooInfiniteWidget
     NROWS = 10_000
