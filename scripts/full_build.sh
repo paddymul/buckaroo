@@ -14,6 +14,8 @@ pnpm install && pnpm run build
 cd ..
 rm -rf dist || true
 uv build --wheel
+uv pip install --reinstall buckaroo@$(ls dist/buckaroo-0.*)
+#uv pip install --reinstall buckaroo@$(ls dist/buckaroo-0.*)
 #time hatch build
 #python -m twine upload --repository pypi dist/*.whl
 #time ./scripts/full_build.sh && time
