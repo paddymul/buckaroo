@@ -1,7 +1,7 @@
 #from buckaroo.file_cache import base
-from buckaroo.file_cache.base import ColGroup, ProgressNotification, ColumnResults, FileCache, Executor
+from buckaroo.file_cache.base import ColGroup, ProgressNotification, ColumnResults, ColumnResult, FileCache, Executor
 import polars as pl
-
+from typing import cast
 # fc = FileCache()    
 
 # def pseudo(fname:str) -> None:
@@ -27,11 +27,11 @@ def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
 
       """
 
-    only_cols_ldf = ldf.select([cols])
+    only_cols_ldf = ldf.select(cols)
     res = only_cols_ldf.select(
-    pl.all().pl_series_hash.hash_xx().suffix("_hash"),
-    pl.all().len().suffix("_len")).collect()
-
+    pl.all().pl_series_hash.hash_xx().name.suffix("_hash"),
+    pl.all().len().name.suffix("_len")).collect()
+    
     col_results:ColumnResults = {}
     for col in cols:
 
@@ -63,5 +63,5 @@ def test_simple_executor():
     exc = Executor(ldf, simple_column_func, [], listener, fc)
     exc.run()
 
-    assert call_count[0] == 1
+    assert call_count[0] == 2
     

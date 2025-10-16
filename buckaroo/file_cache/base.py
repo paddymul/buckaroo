@@ -168,6 +168,7 @@ class Executor:
             
             self.log_start_col_group(col_group)
             t1 = now()
+
             try:
                 res = self.exec_column_group(col_group)
                 t2 = now()
@@ -181,6 +182,7 @@ class Executor:
 
                 for col, col_result in res.items():
                     self.fc.upsert_key(col_result.series_hash, col_result.result)
+
                 self.listener(notification)
                 self.log_end_col_group(col_group)
             except Exception as e:
@@ -192,6 +194,8 @@ class Executor:
                     result=None,
                     execution_time=t3-t1,
                     failure_message=str(e))
+                print("e", e)
+                raise
                 
                 
     def exec_column_group(self, columns:ColGroup) -> ColumnResults:
