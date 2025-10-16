@@ -3,6 +3,7 @@ from buckaroo.file_cache.base import ColGroup, ProgressNotification, ColumnResul
 import polars as pl
 import polars.selectors as cs
 from typing import cast
+from datetime import timedelta
 # fc = FileCache()    
 
 # def pseudo(fname:str) -> None:
@@ -73,21 +74,29 @@ def test_simple_executor():
     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
 
     assert fc.get_series_results(1505513022777147474) == {'len':3}
-    # print(fc.summary_stats_cache)
-    # 1/0
-#     Here58 True {'a1': ColumnResult(series_hash=13038993034761730339, column_name='a1', expressions=[], result={'len': 3})}
-# here58 True {'b2': ColumnResult(series_hash=1505513022777147474, column_name='b2', expressions=[], result={'len': 3})}
 
 
 def test_simple_executor_listener_calls():
     fc = FileCache()
-    call_count = [0]
+    call_args = []
     def listener(progress:ProgressNotification) -> None:
-        print("here58", progress.success, progress.result)
-        call_count[0]+=1
+        call_args.append(progress)
 
 
     exc = Executor(ldf, simple_column_func, [], listener, fc)
     exc.run()
-    assert call_count[0] == 2
 
+    expected_notification_1 = ProgressNotification(
+        success=True,
+        col_group=['a1'],
+        execution_args=[],
+        result={'a1': ColumnResult(
+            series_hash=13038993034761730339,
+            column_name='a1',
+            expressions=[],
+            result={'len': 3,
+                    'sum': 60})},
+        execution_time=timedelta(microseconds=96),
+        failure_message=None)
+    assert len(call_args) == 2
+    assert call_args[0] == expected_notification_1

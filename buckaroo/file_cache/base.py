@@ -99,6 +99,15 @@ class ProgressNotification:
     execution_time: int # millisecones?
     failure_message: str|None
 
+    def __eq__(self, other):
+        props = [self.success == other.success,
+                 tuple(self.col_group) == tuple(other.col_group),
+                 self.execution_args == other.execution_args,
+                 self.result == other.result,
+                 self.failure_message == other.failure_message]
+        return all(props)
+            
+
 ProgressListener:TypeAlias = Callable[[ProgressNotification], None]
 
 @dataclass
