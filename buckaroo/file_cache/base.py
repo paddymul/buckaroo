@@ -1,9 +1,10 @@
-from time import time
+from datetime.datetime import now
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, TypeAlias, Callable, cast, List, Dict, Tuple
 import polars as pl
 from pl_series_hash import hash_xx
+
 
 SummaryStats:TypeAlias = dict[str, Any]
 class FileCache:
@@ -11,8 +12,8 @@ class FileCache:
       acutally as written this is more like an in memory cache
       """
     def __init__(self) -> None:
-        self.file_cache = {}
-        self.summary_stats_cache = {}
+        self.file_cache: dict[str, int] = {}
+        self.summary_stats_cache: dict[int, Any] = {}
 
         
     def add_file(self, path:Path) -> None:
@@ -164,10 +165,10 @@ class Executor:
                     result=dict())
             
             self.log_start_col_group(col_group)
-            t1 = cast(int, time.now())
+            t1 = now()
             try:
                 res = self.exec_column_group(col_group)
-                t2 = cast(int, time.now())
+                t2 = now()
                 notification = ProgressNotification(
                     success=True,
                     col_group=col_group,
@@ -181,7 +182,7 @@ class Executor:
                 self.listener(notification)
                 self.log_end_col_group(col_group)
             except Exception as e:
-                t3 = cast(int, time.now())
+                t3 = now()
                 notification = ProgressNotification(
                     success=True,
                     col_group=col_group,
@@ -227,7 +228,7 @@ def pseudo(fname:str) -> None:
     fpath = Path(fname)
     lazy_df = pl.scan_parquet(fpath)
     if fc.check_file(Path(fname)):
-        summary_stats = fc.get_(fpath)
+        summary_stats = fc.get_hashes(fpath)
         #PolarsBuckaroo(lazy_df, summary_stats)
     else:
         #PolarsBuckarooTableOnly(lazy_df, None)
