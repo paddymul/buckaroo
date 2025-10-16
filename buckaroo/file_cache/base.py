@@ -1,10 +1,11 @@
-from datetime.datetime import now
+from datetime import datetime as dtdt
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, TypeAlias, Callable, cast, List, Dict, Tuple
 import polars as pl
 from pl_series_hash import hash_xx
 
+now = dtdt.now
 
 SummaryStats:TypeAlias = dict[str, Any]
 class FileCache:
@@ -56,6 +57,7 @@ class AnnotatedFile:
     
 
 
+# call PlugableAnalysisFramework2 TypedAnalysisDAG    
 class PAF2:
     """
       Plugable analys framework 2
@@ -103,7 +105,7 @@ ProgressListener:TypeAlias = Callable[[ProgressNotification], None]
 class ColumnResult:
     series_hash: int #u64 actually
     column_name: str # strictly necessary?
-    expressions: list[pl.Expression]
+    expressions: list[pl.Expr]
     # I want expressions in plass of execution_args
     # expression names are fine for expressions,  everything else should fall to theColAnalyis class name
     
@@ -143,7 +145,7 @@ class Executor:
 
     def __init__(self,
         ldf:pl.LazyFrame, column_func:ColumnFunc,
-        expressions: list[pl.Expression],
+        expressions: list[pl.Expr],
         listener:ProgressListener, fc:FileCache) -> None:
         self.ldf = ldf
         self.column_func = column_func
@@ -238,7 +240,16 @@ def pseudo(fname:str) -> None:
         exc = Executor(lazy_df, simple_column_func, [], listener, fc)
         exc.run()
         
-      
+"""
+Goals:
+  be able to interogate the execution log and basically run git-bisect until you get to the minimal reproducable failure.
+
+  this implementation is synchronous and simple
+
+  Future implementtions will work out of process.  Hoepfully multiprocessing works
+  
+
+  """
         
         
 
