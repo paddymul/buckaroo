@@ -119,7 +119,7 @@ exclude = ["**/node_modules",
 reportMissingImports = "error"
 reportMissingTypeStubs = false
 
-pythonVersion = "3.8"
+pythonVersion = "3.11"
 
 [tool.basedpyright.analysis.inlayHints]
 callArgumentNames = false
