@@ -55,6 +55,12 @@ class FileCache:
         return self.summary_stats_cache.get(series_hash, None)
 
     def _get_buffer_key(self, series:pl.Series) -> BufferKey:
+        """
+
+          This kind of works.  We want dataframe and series level metadata
+          https://github.com/pola-rs/polars/issues/5117
+          these aren't implemented yet
+          """
 
         buffers = series._get_buffers()
         if 'validity' in buffers and buffers['validity'] is not None:

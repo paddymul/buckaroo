@@ -136,25 +136,24 @@ def test_in_memory_cache():
 #def test_series_
 
 """
-test how the file cache bits work, at least for in memory.
-
-  
-
-  figure out how to check that a series isn't hashed twice
-
-
-  figure out hwo to do partial cache updates and plumb that in  AnalysisDAG
-
-  AnalysisDag needs to alter the queries/code run based on what is already in the cache
-
-  add and test LRU logic
+test how the file cache bits work, at least for in memory (not SQLITE).
 
   tests around the log functionality
 
   tests around the exception catching
 
   bisect functionality
+
+
+  figure out how to do partial cache updates and plumb that in  AnalysisDAG
+
+  AnalysisDag needs to alter the queries/code run based on what is already in the cache
+
+  add and test LRU logic
+
   
+# Done
+    figure out how to check that a series isn't hashed twice  - kinda
   
 
   """
