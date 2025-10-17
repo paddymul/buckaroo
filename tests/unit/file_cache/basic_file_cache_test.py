@@ -49,6 +49,7 @@ def test_filecache():
     assert fc.get_file_metadata(path_1) == {'first_key':9, 'second_key': 'bar'}
     
     open(path_1, "w").write("new_data")
+    #this should now fail because path_1 has a newer m_time then what the cache was relevant for
     assert not fc.check_file(path_1) 
     
 
