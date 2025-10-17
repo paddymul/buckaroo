@@ -20,6 +20,37 @@ from datetime import timedelta
 #         exc = Executor(lazy_df, simple_column_func, [], listener, fc)
 #         exc.run()
 
+from tempfile import NamedTemporaryFile
+from pathlib import Path
+
+def create_tempfile_with_text(text: str) -> Path:
+    # File persists after this function (delete=False). Caller should unlink() when done.
+    with NamedTemporaryFile(mode="w", encoding="utf-8", delete=False, suffix=".txt") as f:
+        f.write(text)
+        f.flush()
+        temp_path = Path(f.name)
+    return temp_path
+
+def test_filecache():
+    fc = FileCache()
+
+    path_1 = create_tempfile_with_text("blah_string")
+    assert not fc.check_file(path_1) 
+
+    md_1 = {'first_key':9}
+    fc.add_metadata(path_1,  md_1)
+
+    assert fc.check_file(path_1)
+    assert fc.get_file_metadata(path_1) == md_1
+
+    md_extra = {'second_key': 'bar'}
+    fc.upsert_file_metadata(path_1, md_extra)
+
+    assert fc.get_file_metadata(path_1) == {'first_key':9, 'second_key': 'bar'}
+    
+    open(path_1, "w").write("new_data")
+    assert not fc.check_file(path_1) 
+    
 
 def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
     """

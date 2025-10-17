@@ -28,7 +28,7 @@ class FileCache:
         self.series_hash_cache: dict[BufferKey, int] = {}
 
         
-    def add_file(self, path:Path) -> None:
+    def add_file(self, path:Path, metadata:dict[str, Any]) -> None:
         pass
 
     def check_file(self, path:Path) -> bool :
