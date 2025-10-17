@@ -4,10 +4,20 @@ from pathlib import Path
 from typing import Any, Optional, TypeAlias, Callable, cast, List, Dict, Tuple
 import polars as pl
 from pl_series_hash import hash_xx
+import itertools
 
 now = dtdt.now
 
+
 SummaryStats:TypeAlias = dict[str, Any]
+
+SimpleBufferKey:TypeAlias = tuple[int, int, int]
+ComplexBufferKey:TypeAlias = tuple[SimpleBufferKey, SimpleBufferKey, SimpleBufferKey]
+#BufferKey:TypeAlias = SimpleBufferKey|ComplexBufferKey
+BufferKey = ComplexBufferKey 
+
+def flatten(*lists):
+    list(itertools.chain(*nested_list))
 class FileCache:
     """
       acutally as written this is more like an in memory cache
@@ -15,7 +25,7 @@ class FileCache:
     def __init__(self) -> None:
         self.file_cache: dict[str, int] = {}
         self.summary_stats_cache: dict[int, Any] = {}
-        self.series_hash_cache: dict[tuple[int, int, int], int] = {}
+        self.series_hash_cache: dict[BufferKey, int] = {}
 
         
     def add_file(self, path:Path) -> None:
@@ -44,29 +54,57 @@ class FileCache:
     def get_series_results(self, series_hash:int) -> SummaryStats|None:
         return self.summary_stats_cache.get(series_hash, None)
 
+    def _get_buffer_key(self, series:pl.Series) -> BufferKey:
+
+        buffers = series._get_buffers()
+        if 'validity' in buffers and buffers['validity'] is not None:
+            validity:SimpleBufferKey = buffers['validity']._get_buffer_info()
+        else:
+            validity:SimpleBufferKey = (0,0,0,)
+        if 'offsets' in buffers and buffers['offsets'] is not None:
+            offsets:SimpleBufferKey = buffers['offsets']._get_buffer_info()
+        else:
+            offsets:SimpleBufferKey = (0,0,0,)
+        values = buffers['values']._get_buffer_info()
+        
+        # assert isinstance(values, tuple)
+        # assert len(values) == 3
+        # assert isinstance(validity, tuple)
+        # assert len(validity) == 3
+        # assert isinstance(offsets, tuple)
+        # assert len(offsets) == 3
+
+        return tuple([values, validity, offsets])
+    
     def check_series(self, series:pl.Series) -> bool:
         """
         Do we have a series_hash for this series (based on it's memory address)  
 
           """
-        return series._get_buffer_info() in self.series_hash_cache
+        key = self._get_buffer_key(series)
+        existing = list(self.series_hash_cache.keys())
+        #print("key", key, "existing", existing, "in", key in existing)
+        return key in self.series_hash_cache
 
-    def add_series(self, series:pl.Series) -> None:
+    def add_series(self, series:pl.Series, col=None) -> None:
         """
           make sure that the hash for this in memory series is put in the local hash cache
 
           we can't attach metadata to a series, but we can track the series by memory location
-
-          
-          
           """
+        # if col:
+        #     print("add col", col, self._get_buffer_key(series))
         if not self.check_series(series):
-            buffer_info = series._get_buffer_info()
+            buffer_info = self._get_buffer_key(series)
             df = pl.DataFrame({'a':series})
             res = df.select(pl.col('a').pl_series_hash.hash_xx())
             self.series_hash_cache[buffer_info] = res['a'][0]
-            
+
+    def add_df(self, df:pl.DataFrame) -> None:
+        for col in df.columns:
+            self.add_series(df[col], col)
         
+
 
         
 class AnnotatedFile:
@@ -292,3 +330,8 @@ Goals:
         
 
     
+# key ((4695495808, 0, 3), (0, 0, 0), (0, 0, 0)) 
+# [((4695495808, 0, 3), (0, 0, 0), (0, 0, 0)), ((5182046224, 0, 9), (0, 0, 0), (4695495904, 0, 4))] in True
+
+# key ((4966039552, 0, 9), (0, 0, 0), (4695495904, 0, 4)) 
+# existing [((4695495808, 0, 3), (0, 0, 0), (0, 0, 0)), ((5182046224, 0, 9), (0, 0, 0), (4695495904, 0, 4))] in False

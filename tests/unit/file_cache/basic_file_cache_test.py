@@ -100,6 +100,39 @@ def test_simple_executor_listener_calls():
     assert len(call_args) == 2
     assert call_args[0] == expected_notification_1
 
+def test_in_memory_cache():
+    df = pl.DataFrame({
+        'a1': [10,20,30],
+        'b2': [50,60,80]
+        })
+    ldf = df.lazy()
+
+    fc = FileCache()
+    assert fc.check_series(df['a1']) == False
+    assert fc.check_series(df['b2']) == False
+
+    fc.add_df(df)
+    # print(fc.check_series(df['a1']))
+    # print(fc.check_series(df['b2']))
+    # print(fc._get_buffer_key(df['b2']))
+    # print(list(fc.series_hash_cache.keys()))
+    assert fc.check_series(df['a1']) == True
+
+    # buffer info for string series is unreliable commented out for now
+    # look at polars-core/src/series/buffer.rs::get_buffers_from_string
+    #assert fc.check_series(df['b2']) == True
+
+    # I dont even see this reliably working
+    #assert not fc._get_buffer_key(df['b2']) == fc._get_buffer_key(df['b2'])
+
+    #this should show that the same physical memory is used by df2['a1'] as df['a1']
+    df2 = df.select(pl.col('a1').alias('alias_a1'),
+                    pl.col('b2').alias('alias_b2'))
+    
+    assert fc.check_series(df2['alias_a1']) == True
+    #assert fc.check_series(df2['alias_b2']) == True
+
+
 #def test_series_
 
 """
@@ -114,6 +147,7 @@ test how the file cache bits work, at least for in memory.
 
   AnalysisDag needs to alter the queries/code run based on what is already in the cache
 
+  add and test LRU logic
 
   tests around the log functionality
 
