@@ -82,7 +82,6 @@ def test_simple_executor_listener_calls():
     def listener(progress:ProgressNotification) -> None:
         call_args.append(progress)
 
-
     exc = Executor(ldf, simple_column_func, [], listener, fc)
     exc.run()
 
@@ -100,3 +99,28 @@ def test_simple_executor_listener_calls():
         failure_message=None)
     assert len(call_args) == 2
     assert call_args[0] == expected_notification_1
+
+#def test_series_
+
+"""
+test how the file cache bits work, at least for in memory.
+
+  
+
+  figure out how to check that a series isn't hashed twice
+
+
+  figure out hwo to do partial cache updates and plumb that in  AnalysisDAG
+
+  AnalysisDag needs to alter the queries/code run based on what is already in the cache
+
+
+  tests around the log functionality
+
+  tests around the exception catching
+
+  bisect functionality
+  
+  
+
+  """
