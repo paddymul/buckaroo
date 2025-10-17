@@ -23,20 +23,42 @@ class FileCache:
       acutally as written this is more like an in memory cache
       """
     def __init__(self) -> None:
-        self.file_cache: dict[str, int] = {}
+        self.file_cache: dict[str, tuple[float, dict[str, Any]]] = {}
         self.summary_stats_cache: dict[int, Any] = {}
         self.series_hash_cache: dict[BufferKey, int] = {}
 
         
     def add_file(self, path:Path, metadata:dict[str, Any]) -> None:
-        pass
+        """
+        Record a file's current mtime along with provided metadata.
+        """
+        try:
+            mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            # If file does not exist, do not add to cache
+            return
+        self.file_cache[str(path)] = (mtime, dict(metadata))
+
+    # Compatibility with tests expecting add_metadata/get_file_metadata/upsert_file_metadata
+    def add_metadata(self, path:Path, metadata:dict[str, Any]) -> None:
+        self.add_file(path, metadata)
 
     def check_file(self, path:Path) -> bool :
         """
           is this path in the cache
           is the mtime of this file before the mtime in the cache for this file
           """
-        return False
+        key = str(path)
+        if key not in self.file_cache:
+            return False
+        try:
+            current_mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            # If file is gone, consider cache invalid
+            return False
+        cached_mtime, _ = self.file_cache[key]
+        # Valid only if the file has not been modified since it was cached
+        return current_mtime <= cached_mtime
 
     def get_hashes(self, path:Path):
         """
@@ -44,7 +66,32 @@ class FileCache:
 
           hashes only or maybe hashes and column names???
           """
-        pass
+        # Placeholder: not used by current tests
+        return None
+
+    def get_file_metadata(self, path:Path) -> Optional[dict[str, Any]]:
+        key = str(path)
+        entry = self.file_cache.get(key)
+        if entry is None:
+            return None
+        _, metadata = entry
+        return metadata
+
+    def upsert_file_metadata(self, path:Path, extra_metadata:dict[str, Any]) -> None:
+        key = str(path)
+        try:
+            current_mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            return
+        if key in self.file_cache:
+            cached_mtime, existing_md = self.file_cache[key]
+            merged_md: dict[str, Any] = dict(existing_md)
+            merged_md.update(extra_metadata)
+            # Keep the original cached mtime to represent when metadata was valid
+            self.file_cache[key] = (cached_mtime, merged_md)
+        else:
+            # If not present, behave like add_file with provided metadata
+            self.file_cache[key] = (current_mtime, dict(extra_metadata))
     
     def upsert_key(self, series_hash:int, result:SummaryStats) -> None:
         existing_result = self.summary_stats_cache.get(series_hash, {})
