@@ -15,6 +15,7 @@ class FileCache:
     def __init__(self) -> None:
         self.file_cache: dict[str, int] = {}
         self.summary_stats_cache: dict[int, Any] = {}
+        self.series_hash_cache: dict[tuple[int, int, int], int] = {}
 
         
     def add_file(self, path:Path) -> None:
@@ -42,6 +43,30 @@ class FileCache:
 
     def get_series_results(self, series_hash:int) -> SummaryStats|None:
         return self.summary_stats_cache.get(series_hash, None)
+
+    def check_series(self, series:pl.Series) -> bool:
+        """
+        Do we have a series_hash for this series (based on it's memory address)  
+
+          """
+        return series._get_buffer_info() in self.series_hash_cache
+
+    def add_series(self, series:pl.Series) -> None:
+        """
+          make sure that the hash for this in memory series is put in the local hash cache
+
+          we can't attach metadata to a series, but we can track the series by memory location
+
+          
+          
+          """
+        if not self.check_series(series):
+            buffer_info = series._get_buffer_info()
+            df = pl.DataFrame({'a':series})
+            res = df.select(pl.col('a').pl_series_hash.hash_xx())
+            self.series_hash_cache[buffer_info] = res['a'][0]
+            
+        
 
         
 class AnnotatedFile:
