@@ -265,10 +265,14 @@ class ColumnExecutor(Generic[E], ABC):
 
     @abstractmethod
     def execute(self, ldf:pl.LazyFrame, col_group:ColGroup, execution_args:E) -> ColumnResults:
-        """
-          this should generally be a prety simple wrapper around
+        """this should generally be a prety simple wrapper around ldf.select/collect
+          it can be overriden for testing to throw different errors,
 
-          """
+          particularly FatalStop which causes no log to be written.
+          That is useful for testing without crashing the python
+          process
+
+        """
         ...
 
 ExecutorArg:TypeAlias = str|int|bool
@@ -281,13 +285,13 @@ class ExecutorLog:
     def __init__(self):
         pass
 
-    def log_start_col_group(self, dfi: DFIdentifier, columns:list[str]) -> None:
+    def log_start_col_group(self, dfi: DFIdentifier, columns:ColGroup) -> None:
         """
           used so we know that we started execution of a col_group even if it crashes
           """
         pass
 
-    def log_end_col_group(self, dfi: DFIdentifier, columns:list[str]) -> None:
+    def log_end_col_group(self, dfi: DFIdentifier, columns:ColGroup) -> None:
         """
           used so we know that execution finished, Maybe include status
           """
@@ -303,59 +307,32 @@ class ExecutorLog:
 
 
 
-
-def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
-    """
-      a very simple column_func that just returns series_hash and len of each column
-
-      eventually this will be replaced by a closure over pluggable analysis framework
-
-      """
-
-    only_cols_ldf = ldf.select([cols])
-    res = only_cols_ldf.select(
-    pl.all().pl_series_hash.hash_xx().suffix("_hash"), # type: ignore
-    pl.all().len().suffix("_len")).collect() # type: ignore
-
-    col_results:ColumnResults = {}
-    for col in cols:
-
-        hash_:int = cast(int, res[col+"_hash"][0])
-        cr = ColumnResult(
-            series_hash=hash_,
-            column_name=col,
-            expressions=[],
-            result={'len':res[col+"_len"][0]})
-        col_results[col] = cr
-    return col_results
-
-    
 class Executor:
 
     def __init__(self,
-        ldf:pl.LazyFrame, column_func:ColumnFunc,
-        expressions: list[pl.Expr],
+        ldf:pl.LazyFrame, column_executor:ColumnExecutor,
         listener:ProgressListener, fc:FileCache) -> None:
         self.ldf = ldf
-        self.column_func = column_func
+        self.column_executor = column_executor
         self.listener = listener
-        self.expressions = expressions
         self.fc = fc
+        self.executor_log = ExecutorLog()
 
+        self.dfi = (id(self.ldf),"",)
 
     def run(self) -> None:
 
         for col_group in self.get_column_chunks():
-            if self.check_log_for_previous_failure(col_group):
+            if self.executor_log.check_log_for_previous_failure(self.dfi, col_group):
                 log_fail_result = dict()
                 for col in col_group:
                     log_fail_result[col] = ColumnResult(
                         series_hash=0, #it's unclear if we can get a series hash in failure case
                         column_name=col,
-                        expressions=self.expressions,
-                    result=dict())
+                        expressions=[], # FIXME
+                        result=dict())
             
-            self.log_start_col_group(col_group)
+            self.executor_log.log_start_col_group(self.dfi, col_group)
             t1 = now()
 
             try:
@@ -364,7 +341,7 @@ class Executor:
                 notification = ProgressNotification(
                     success=True,
                     col_group=col_group,
-                    execution_args=[str(ex) for ex in self.expressions],
+                    execution_args=[], #FIXME
                     result=res,
                     execution_time=t2-t1,
                     failure_message=None)
@@ -373,13 +350,13 @@ class Executor:
                     self.fc.upsert_key(col_result.series_hash, col_result.result)
 
                 self.listener(notification)
-                self.log_end_col_group(col_group)
+                self.executor_log.log_end_col_group(self.dfi, col_group)
             except Exception as e:
                 t3 = now()
                 notification = ProgressNotification(
                     success=True,
                     col_group=col_group,
-                    execution_args=[str(ex) for ex in self.expressions],
+                    execution_args=[], #FIXME
                     result=None,
                     execution_time=t3-t1,
                     failure_message=str(e))
@@ -388,7 +365,18 @@ class Executor:
                 
                 
     def exec_column_group(self, columns:ColGroup) -> ColumnResults:
-        return self.column_func(self.ldf, columns)
+        hashes_for_cols: dict[str,int]= {} # how are we getting the hashes for this ldf?
+
+        existing_cached = {}
+        for col in columns:
+            hash_ = hashes_for_cols.get(col)
+            if hash_:
+                existing_cached[col] = self.fc.get_series_results(hash_) or {}
+            else:
+                existing_cached[col] = {}
+        
+        args = self.column_executor.get_execution_args(existing_cached)
+        return self.column_executor.execute(self.ldf, columns, args)
 
 
     def get_column_chunks(self) -> list[ColGroup]:
@@ -398,21 +386,21 @@ class Executor:
         return [[column] for column in self.ldf.columns]
 
     
-fc = FileCache()    
+# fc = FileCache()    
 
-def pseudo(fname:str) -> None:
-    fpath = Path(fname)
-    lazy_df = pl.scan_parquet(fpath)
-    if fc.check_file(Path(fname)):
-        summary_stats = fc.get_hashes(fpath)
-        #PolarsBuckaroo(lazy_df, summary_stats)
-    else:
-        #PolarsBuckarooTableOnly(lazy_df, None)
-        def listener(progress:ProgressNotification) -> None:
-            print(progress.success, progress.result)
+# def pseudo(fname:str) -> None:
+#     fpath = Path(fname)
+#     lazy_df = pl.scan_parquet(fpath)
+#     if fc.check_file(Path(fname)):
+#         summary_stats = fc.get_hashes(fpath)
+#         #PolarsBuckaroo(lazy_df, summary_stats)
+#     else:
+#         #PolarsBuckarooTableOnly(lazy_df, None)
+#         def listener(progress:ProgressNotification) -> None:
+#             print(progress.success, progress.result)
 
-        exc = Executor(lazy_df, simple_column_func, [], listener, fc)
-        exc.run()
+#         exc = Executor(lazy_df, simple_column_func, listener, fc)
+#         exc.run()
         
 """
 Goals:
