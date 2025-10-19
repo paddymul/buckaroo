@@ -1,9 +1,14 @@
-from datetime import datetime as dtdt
+from abc import ABC, abstractmethod
+
+from datetime import datetime as dtdt, timedelta
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, TypeAlias, Callable, cast, List, Dict, Tuple
+from typing import (
+    Any, Optional, TypeAlias, Callable, cast, List, Dict, Tuple,
+    Literal,
+    Generic, TypeVar)
 import polars as pl
-from pl_series_hash import hash_xx
+from pl_series_hash import hash_xx # type:ignore
 import itertools
 
 now = dtdt.now
@@ -12,12 +17,20 @@ now = dtdt.now
 SummaryStats:TypeAlias = dict[str, Any]
 
 SimpleBufferKey:TypeAlias = tuple[int, int, int]
-ComplexBufferKey:TypeAlias = tuple[SimpleBufferKey, SimpleBufferKey, SimpleBufferKey]
-#BufferKey:TypeAlias = SimpleBufferKey|ComplexBufferKey
-BufferKey = ComplexBufferKey 
+
+#ComplexBufferKey:TypeAlias = tuple[SimpleBufferKey, SimpleBufferKey, SimpleBufferKey]
+# I don't know why the above line causes errors but the below key works
+BufferKey:TypeAlias = tuple[SimpleBufferKey, ...]
+                                          #mtime
+FileDFIdentifier: TypeAlias = tuple[Path, int]
+                                    #id of dataframe, joined string of all columns
+MemoryDFIdentifer:TypeAlias = tuple[int, str]
+DFIdentifier: TypeAlias = FileDFIdentifier | MemoryDFIdentifer
+
 
 def flatten(*lists):
     list(itertools.chain(*nested_list))
+    
 class FileCache:
     """
       acutally as written this is more like an in memory cache
@@ -26,7 +39,6 @@ class FileCache:
         self.file_cache: dict[str, tuple[float, dict[str, Any]]] = {}
         self.summary_stats_cache: dict[int, Any] = {}
         self.series_hash_cache: dict[BufferKey, int] = {}
-
         
     def add_file(self, path:Path, metadata:dict[str, Any]) -> None:
         """
@@ -110,14 +122,12 @@ class FileCache:
           """
 
         buffers = series._get_buffers()
-        if 'validity' in buffers and buffers['validity'] is not None:
-            validity:SimpleBufferKey = buffers['validity']._get_buffer_info()
-        else:
-            validity:SimpleBufferKey = (0,0,0,)
-        if 'offsets' in buffers and buffers['offsets'] is not None:
-            offsets:SimpleBufferKey = buffers['offsets']._get_buffer_info()
-        else:
-            offsets:SimpleBufferKey = (0,0,0,)
+        def get_buffer_info(k:Literal["validity"]|Literal["offsets"]) -> SimpleBufferKey:
+            if k in buffers and buffers[k] is not None:
+                return buffers[k]._get_buffer_info() #type:ignore
+            return (0,0,0,)
+        validity: SimpleBufferKey = get_buffer_info('validity')
+        offsets:SimpleBufferKey = get_buffer_info('offsets')
         values = buffers['values']._get_buffer_info()
         
         # assert isinstance(values, tuple)
@@ -150,7 +160,7 @@ class FileCache:
         if not self.check_series(series):
             buffer_info = self._get_buffer_key(series)
             df = pl.DataFrame({'a':series})
-            res = df.select(pl.col('a').pl_series_hash.hash_xx())
+            res = df.select(pl.col('a').pl_series_hash.hash_xx()) # type: ignore
             self.series_hash_cache[buffer_info] = res['a'][0]
 
     def add_df(self, df:pl.DataFrame) -> None:
@@ -212,7 +222,8 @@ class ProgressNotification:
     col_group:ColGroup
     execution_args: Any
     result: Any
-    execution_time: int # millisecones?
+    #execution_time: int # millisecones?
+    execution_time: timedelta
     failure_message: str|None
 
     def __eq__(self, other):
@@ -240,6 +251,59 @@ ColumnResults:TypeAlias = Dict[str, ColumnResult]
 ColumnFunc:TypeAlias = Callable[[pl.LazyFrame, ColGroup], ColumnResults]
 
 
+
+E = TypeVar('E')
+
+class ColumnExecutor(Generic[E], ABC):
+
+    @abstractmethod
+    def get_execution_args(self, existing_stats:dict[str,SummaryStats]) -> E:
+        """
+          Return execution arguments computed from existing stats.
+          """
+        ...
+
+    @abstractmethod
+    def execute(self, ldf:pl.LazyFrame, col_group:ColGroup, execution_args:E) -> ColumnResults:
+        """
+          this should generally be a prety simple wrapper around
+
+          """
+        ...
+
+ExecutorArg:TypeAlias = str|int|bool
+ExecutorArgs:TypeAlias = Tuple[ExecutorArg, ...]
+
+
+
+class ExecutorLog:
+
+    def __init__(self):
+        pass
+
+    def log_start_col_group(self, dfi: DFIdentifier, columns:list[str]) -> None:
+        """
+          used so we know that we started execution of a col_group even if it crashes
+          """
+        pass
+
+    def log_end_col_group(self, dfi: DFIdentifier, columns:list[str]) -> None:
+        """
+          used so we know that execution finished, Maybe include status
+          """
+        pass
+
+    def check_log_for_previous_failure(self, dfi: DFIdentifier, columns:ColGroup) -> bool:
+        """
+          check the log for this lazy_dataframe, this set of columns, and this set of column_args
+          did it start and not finish, if so, return false
+          
+          """
+        return False
+
+
+
+
 def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
     """
       a very simple column_func that just returns series_hash and len of each column
@@ -250,8 +314,8 @@ def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
 
     only_cols_ldf = ldf.select([cols])
     res = only_cols_ldf.select(
-    pl.all().pl_series_hash.hash_xx().suffix("_hash"),
-    pl.all().len().suffix("_len")).collect()
+    pl.all().pl_series_hash.hash_xx().suffix("_hash"), # type: ignore
+    pl.all().len().suffix("_len")).collect() # type: ignore
 
     col_results:ColumnResults = {}
     for col in cols:
@@ -264,8 +328,8 @@ def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
             result={'len':res[col+"_len"][0]})
         col_results[col] = cr
     return col_results
-            
 
+    
 class Executor:
 
     def __init__(self,
@@ -326,25 +390,6 @@ class Executor:
     def exec_column_group(self, columns:ColGroup) -> ColumnResults:
         return self.column_func(self.ldf, columns)
 
-    def log_start_col_group(self, columns:list[str]) -> None:
-        """
-          used so we know that we started execution of a col_group even if it crashes
-          """
-        pass
-
-    def log_end_col_group(self, columns:list[str]) -> None:
-        """
-          used so we know that execution finished, Maybe include status
-          """
-        pass
-
-    def check_log_for_previous_failure(self, columns:ColGroup) -> bool:
-        """
-          check the log for this lazy_dataframe, this set of columns, and this set of column_args
-          did it start and not finish, if so, return false
-          
-          """
-        return False
 
     def get_column_chunks(self) -> list[ColGroup]:
         """
