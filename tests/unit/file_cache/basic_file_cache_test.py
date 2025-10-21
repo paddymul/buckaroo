@@ -168,9 +168,14 @@ def test_in_memory_cache():
 #def test_series_
 
 """
-test how the file cache bits work, at least for in memory (not SQLITE).
+
 
   tests around the log functionality
+
+
+  test around the multiprocess timeout stuff
+  
+
 
   tests around the exception catching
 
@@ -186,6 +191,6 @@ test how the file cache bits work, at least for in memory (not SQLITE).
   
 # Done
     figure out how to check that a series isn't hashed twice  - kinda
-  
+  test how the file cache bits work, at least for in memory (not SQLITE).  
 
   """

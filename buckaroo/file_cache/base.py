@@ -200,26 +200,14 @@ class PAF2:
 
 
 
-"""
-pseudo code implementation
 
-  make sure to use OpenAI
-
-add rex=execution to foind error columsn/rwos
-
-  split ldf by rows and columns and se if a failure reporduce
-
-  write rust/crash/panic plugin that determinatcally fails this lets us check this type of 
-
-  """
-
-ColGroup:TypeAlias = list[str]
+ColumnGroup:TypeAlias = list[str]
 
 @dataclass
 class ProgressNotification:
     # how do we get a failure notification when it results in a crash?
     success: bool
-    col_group:ColGroup
+    col_group:ColumnGroup
     execution_args: Any
     result: Any
     #execution_time: int # millisecones?
@@ -237,6 +225,8 @@ class ProgressNotification:
 
 ProgressListener:TypeAlias = Callable[[ProgressNotification], None]
 
+ColumnRawResults:TypeAlias = Dict[str, Any]
+
 @dataclass
 class ColumnResult:
     series_hash: int #u64 actually
@@ -245,10 +235,12 @@ class ColumnResult:
     # I want expressions in plass of execution_args
     # expression names are fine for expressions,  everything else should fall to theColAnalyis class name
     
-    result: dict[str, Any] #
+    result: ColumnRawResults
 
 ColumnResults:TypeAlias = Dict[str, ColumnResult]    
-ColumnFunc:TypeAlias = Callable[[pl.LazyFrame, ColGroup], ColumnResults]
+ColumnHashes:TypeAlias = Dict[str, int]
+
+ColumnFunc:TypeAlias = Callable[[pl.LazyFrame, ColumnGroup], ColumnResults]
 
 
 
@@ -264,7 +256,7 @@ class ColumnExecutor(Generic[E], ABC):
         ...
 
     @abstractmethod
-    def execute(self, ldf:pl.LazyFrame, col_group:ColGroup, execution_args:E) -> ColumnResults:
+    def execute(self, ldf:pl.LazyFrame, execution_args:E) -> ColumnResults:
         """this should generally be a prety simple wrapper around ldf.select/collect
           it can be overriden for testing to throw different errors,
 
@@ -275,36 +267,52 @@ class ColumnExecutor(Generic[E], ABC):
         """
         ...
 
-ExecutorArg:TypeAlias = str|int|bool
-ExecutorArgs:TypeAlias = Tuple[ExecutorArg, ...]
+@dataclass
+class ExecutorArgs:
+    columns: ColumnGroup
+    expressions: list[pl.Expr]
+    row_start: int|None
+    row_end: int|None
+    extra: Any
 
 
 
-class ExecutorLog:
 
-    def __init__(self):
-        pass
+class ExecutorLog(ABC):
 
-    def log_start_col_group(self, dfi: DFIdentifier, columns:ColGroup) -> None:
+    @abstractmethod
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         """
           used so we know that we started execution of a col_group even if it crashes
           """
-        pass
+        ...
 
-    def log_end_col_group(self, dfi: DFIdentifier, columns:ColGroup) -> None:
+    @abstractmethod
+    def log_end_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         """
           used so we know that execution finished, Maybe include status
           """
-        pass
+        ...
 
-    def check_log_for_previous_failure(self, dfi: DFIdentifier, columns:ColGroup) -> bool:
+    @abstractmethod
+    def check_log_for_previous_failure(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
         """
           check the log for this lazy_dataframe, this set of columns, and this set of column_args
           did it start and not finish, if so, return false
           
           """
-        return False
+        ...
 
+class SimpleExecutorLog(ExecutorLog):
+
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
+        pass
+
+    def log_end_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
+        pass
+
+    def check_log_for_previous_failure(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
+        return False
 
 
 class Executor:
@@ -316,27 +324,29 @@ class Executor:
         self.column_executor = column_executor
         self.listener = listener
         self.fc = fc
-        self.executor_log = ExecutorLog()
+        self.executor_log = SimpleExecutorLog()
 
         self.dfi = (id(self.ldf),"",)
 
     def run(self) -> None:
 
         for col_group in self.get_column_chunks():
-            if self.executor_log.check_log_for_previous_failure(self.dfi, col_group):
-                log_fail_result = dict()
-                for col in col_group:
-                    log_fail_result[col] = ColumnResult(
-                        series_hash=0, #it's unclear if we can get a series hash in failure case
-                        column_name=col,
-                        expressions=[], # FIXME
-                        result=dict())
+            ex_args = self.get_executor_args(col_group)
+            if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
+                pass # not sure what to do here or what progress notification to send back
+                
+                # for col in col_group:
+                #     log_fail_result[col] = ColumnResult(
+                #         series_hash=0, #it's unclear if we can get a series hash in failure case
+                #         column_name=col,
+                #         expressions=[], # FIXME
+                #         result=dict())
             
-            self.executor_log.log_start_col_group(self.dfi, col_group)
+            self.executor_log.log_start_col_group(self.dfi, ex_args)
             t1 = now()
 
             try:
-                res = self.exec_column_group(col_group)
+                res = self.column_executor.execute(self.ldf, ex_args)
                 t2 = now()
                 notification = ProgressNotification(
                     success=True,
@@ -350,7 +360,7 @@ class Executor:
                     self.fc.upsert_key(col_result.series_hash, col_result.result)
 
                 self.listener(notification)
-                self.executor_log.log_end_col_group(self.dfi, col_group)
+                self.executor_log.log_end_col_group(self.dfi, ex_args)
             except Exception as e:
                 t3 = now()
                 notification = ProgressNotification(
@@ -363,8 +373,7 @@ class Executor:
                 print("e", e)
                 raise
                 
-                
-    def exec_column_group(self, columns:ColGroup) -> ColumnResults:
+    def get_column_raw_results(self, columns:ColumnGroup) -> ColumnRawResults:
         hashes_for_cols: dict[str,int]= {} # how are we getting the hashes for this ldf?
 
         existing_cached = {}
@@ -374,12 +383,16 @@ class Executor:
                 existing_cached[col] = self.fc.get_series_results(hash_) or {}
             else:
                 existing_cached[col] = {}
-        
+        return existing_cached
+
+    def get_executor_args(self, columns:ColumnGroup) -> ExecutorArgs:
+        existing_cached = self.get_column_raw_results(columns)
         args = self.column_executor.get_execution_args(existing_cached)
-        return self.column_executor.execute(self.ldf, columns, args)
+        return args
+    
 
 
-    def get_column_chunks(self) -> list[ColGroup]:
+    def get_column_chunks(self) -> list[ColumnGroup]:
         """
           dumb impl
           """
