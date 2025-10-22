@@ -1,5 +1,13 @@
 #from buckaroo.file_cache import base
-from buckaroo.file_cache.base import ColGroup, ProgressNotification, ColumnResults, ColumnResult, FileCache, Executor
+from buckaroo.file_cache.base import (
+    ColumnExecutor,
+    ExecutorArgs,
+    ColumnResults,
+    ColumnResult,
+    FileCache,
+    Executor,
+    ProgressNotification,
+)
 import polars as pl
 import polars.selectors as cs
 from typing import cast
@@ -53,37 +61,43 @@ def test_filecache():
     assert not fc.check_file(path_1) 
     
 
-def simple_column_func(ldf:pl.LazyFrame, cols:ColGroup) -> ColumnResults:
-    """
-      a very simple column_func that just returns series_hash and len of each column
+class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
+    def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
+        columns = list(existing_stats.keys())
+        return ExecutorArgs(
+            columns=columns,
+            column_specific_expressions=False,
+            include_hash=True,
+            expressions=[
+                pl.all().pl_series_hash.hash_xx().name.suffix("_hash"),
+                cs.numeric().sum().name.suffix("_sum"),
+                pl.all().len().name.suffix("_len"),
+            ],
+            row_start=None,
+            row_end=None,
+            extra=None,
+        )
 
-      eventually this will be replaced by a closure over pluggable analysis framework
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        cols = execution_args.columns
+        only_cols_ldf = ldf.select(cols)
+        res = only_cols_ldf.select(*execution_args.expressions).collect()
 
-      """
-
-    only_cols_ldf = ldf.select(cols)
-    res = only_cols_ldf.select(
-    pl.all().pl_series_hash.hash_xx().name.suffix("_hash"),
-    #pl.col(pl.NUMERIC_DTYPES)
-    cs.numeric().sum().name.suffix("_sum"),
-    pl.all().len().name.suffix("_len")).collect()
-    
-    col_results:ColumnResults = {}
-    for col in cols:
-
-        hash_:int = cast(int, res[col+"_hash"][0])
-        if col+"_sum" in res.columns:
-            actual_result = {'len':res[col+"_len"][0], 'sum':res[col+"_sum"][0] }
-        else:
-            actual_result = {'len':res[col+"_len"][0]}
-            
-        cr = ColumnResult(
-            series_hash=hash_,
-            column_name=col,
-            expressions=[],
-            result=actual_result)
-        col_results[col] = cr
-    return col_results
+        col_results: ColumnResults = {}
+        for col in cols:
+            hash_: int = cast(int, res[col+"_hash"][0])
+            if col+"_sum" in res.columns:
+                actual_result = {"len": res[col+"_len"][0], "sum": res[col+"_sum"][0]}
+            else:
+                actual_result = {"len": res[col+"_len"][0]}
+            cr = ColumnResult(
+                series_hash=hash_,
+                column_name=col,
+                expressions=[],
+                result=actual_result,
+            )
+            col_results[col] = cr
+        return col_results
 
 df = pl.DataFrame({
     'a1': [10,20,30],
@@ -100,7 +114,7 @@ def test_simple_executor():
         call_count[0]+=1
 
 
-    exc = Executor(ldf, simple_column_func, [], listener, fc)
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
     exc.run()
     assert call_count[0] == 2
     #verify that series are saved to cache, and that we can retrieve them with expected result
@@ -114,7 +128,7 @@ def test_simple_executor_listener_calls():
     def listener(progress:ProgressNotification) -> None:
         call_args.append(progress)
 
-    exc = Executor(ldf, simple_column_func, [], listener, fc)
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
     exc.run()
 
     expected_notification_1 = ProgressNotification(
