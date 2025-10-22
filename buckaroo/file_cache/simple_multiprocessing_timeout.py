@@ -96,6 +96,32 @@ def mp_timeout(orig_f, timeout_secs=3):
             raise
     return actual_func
 
+def mp_timeout_dec(timeout_secs):
+    def mp_timeout(orig_f):
+
+        func_name = orig_f.__name__
+        funcs[func_name] = orig_f
+        def actual_func(*args, **kwargs):
+            print("actual_func start")
+            kwargs2 = kwargs.copy()
+            kwargs2['que'] = q
+            kwargs2['func_name'] = func_name
+            p = mp.Process(target=func_runner, args=args, kwargs=kwargs2)
+            p.start()
+            p.join(timeout_secs)
+            try:
+                name, outer_res = q.get_nowait()
+                print("name")
+                return outer_res
+            except Exception as e:
+                print(e)
+                p.terminate()
+                p.join()
+                raise
+        return actual_func
+    return mp_timeout
+    
+
 def sleep_4_return():
     time.sleep(4)
     return 4.5
@@ -109,16 +135,23 @@ def sleep_2_return():
 dec_sleep2 = mp_timeout(sleep_2_return, 3)
 dec_sleep4 = mp_timeout(sleep_4_return, 3)
 
-        
+dec_sleep4 = mp_timeout(sleep_4_return, 3)
+
+@mp_timeout_dec(1)        
+def sleep_4_return2():
+    time.sleep(4)
+    return 4.5
 
         
 if __name__ == "__main__":
+    print(sleep_4_return2())
+    
     # print("here")
     # sleep2_res = dec_sleep2()
     # print("sleep2_res", sleep2_res)
 
-    sleep4_res = dec_sleep4()
-    print("sleep3_res", sleep4_res)
+    # sleep4_res = dec_sleep4()
+    # print("sleep3_res", sleep4_res)
     
 
     #main(3.0)
