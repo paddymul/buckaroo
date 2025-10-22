@@ -14,9 +14,8 @@ def sleep_four_seconds(q: mp.Queue) -> None:
     time.sleep(4)
     q.put(("four", "slept 4s"))
 
-# def mp_timeout(f):
-#     def wrapped(*args, **kwargs):
-
+            
+        
 def main(timeout_seconds: float = 3.0) -> None:
     q: mp.Queue = mp.Queue()
     p_two = mp.Process(target=sleep_two_seconds, args=(q,))
@@ -61,8 +60,65 @@ def main(timeout_seconds: float = 3.0) -> None:
     #     p_two.terminate()
     #     p_two.join()
 
+
+q: mp.Queue = mp.Queue()
+funcs = {}
+wrap_funcs = {}
+
+def func_runner(*args2, func_name=None, que=None, **kwargs3):
+    print("func_runner start")
+    res = funcs[func_name](*args2, **kwargs3)
+    que.put((func_name, res,))
+    print("func_runner finish")
+
+def mp_timeout(orig_f, timeout_secs=3):
+
+    func_name = orig_f.__name__
+    funcs[func_name] = orig_f
+
+
+    def actual_func(*args, **kwargs):
+        print("actual_func start")
+        kwargs2 = kwargs.copy()
+        kwargs2['que'] = q
+        kwargs2['func_name'] = func_name
+        p = mp.Process(target=func_runner, args=args, kwargs=kwargs2)
+        p.start()
+        p.join(timeout_secs)
+        try:
+            name, outer_res = q.get_nowait()
+            print("name")
+            return outer_res
+        except Exception as e:
+            print(e)
+            p.terminate()
+            p.join()
+            raise
+    return actual_func
+
+def sleep_4_return():
+    time.sleep(4)
+    return 4.5
+
+def sleep_2_return():
+    print("sleep_2_return start")
+    time.sleep(2)
+    print("sleep_2_return after sleep")
+    return 2
+
+dec_sleep2 = mp_timeout(sleep_2_return, 3)
+dec_sleep4 = mp_timeout(sleep_4_return, 3)
+
         
 
         
 if __name__ == "__main__":
-    main(3.0)
+    # print("here")
+    # sleep2_res = dec_sleep2()
+    # print("sleep2_res", sleep2_res)
+
+    sleep4_res = dec_sleep4()
+    print("sleep3_res", sleep4_res)
+    
+
+    #main(3.0)
