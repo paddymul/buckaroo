@@ -103,8 +103,8 @@ def test_simple_executor():
     exc = Executor(ldf, simple_column_func, [], listener, fc)
     exc.run()
     assert call_count[0] == 2
+    #verify that series are saved to cache, and that we can retrieve them with expected result
     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
-
     assert fc.get_series_results(1505513022777147474) == {'len':3}
 
 
@@ -129,10 +129,17 @@ def test_simple_executor_listener_calls():
                     'sum': 60})},
         execution_time=timedelta(microseconds=96),
         failure_message=None)
+    # our listener function should be called twice
     assert len(call_args) == 2
+    
     assert call_args[0] == expected_notification_1
 
 def test_in_memory_cache():
+    """
+      This is trying to demonstrate caching series from a dataframe that was never written to a file
+
+      it kind of works
+      """
     df = pl.DataFrame({
         'a1': [10,20,30],
         'b2': [50,60,80]

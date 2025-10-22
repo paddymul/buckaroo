@@ -270,6 +270,17 @@ class ColumnExecutor(Generic[E], ABC):
 @dataclass
 class ExecutorArgs:
     columns: ColumnGroup
+
+    #does this expression set include pl.col calls or is it all
+    #selectors pl.col calls come up when ColumnExecutor was trying to
+    #work around differently cached columns
+    column_specific_expressions: bool
+    #maybe when column_specific_expressions is false
+    #a column group should be included... a union
+    
+
+    # do we need to compute hashes for the columns
+    include_hash: bool
     expressions: list[pl.Expr]
     row_start: int|None
     row_end: int|None
