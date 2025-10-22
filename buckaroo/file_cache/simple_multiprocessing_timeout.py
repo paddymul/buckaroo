@@ -14,6 +14,8 @@ def sleep_four_seconds(q: mp.Queue) -> None:
     time.sleep(4)
     q.put(("four", "slept 4s"))
 
+# def mp_timeout(f):
+#     def wrapped(*args, **kwargs):
 
 def main(timeout_seconds: float = 3.0) -> None:
     q: mp.Queue = mp.Queue()
@@ -48,17 +50,19 @@ def main(timeout_seconds: float = 3.0) -> None:
         print(f"four: timed out after {timeout_seconds}s")
         p_four.terminate()
         p_four.join()
-    else:
-        if "four" in results:
-            print(results["four"])  # if it somehow finished within timeout
-        else:
-            print("four: error")
+    # else:
+    #     if "four" in results:
+    #         print(results["four"])  # if it somehow finished within timeout
+    #     else:
+    #         print("four: error")
 
-    # Ensure cleanup
-    if p_two.is_alive():
-        p_two.terminate()
-        p_two.join()
+    # # Ensure cleanup
+    # if p_two.is_alive():
+    #     p_two.terminate()
+    #     p_two.join()
 
+        
 
+        
 if __name__ == "__main__":
     main(3.0)
