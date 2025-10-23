@@ -4,63 +4,6 @@
 import time
 import multiprocessing as mp
 
-
-def sleep_two_seconds(q: mp.Queue) -> None:
-    time.sleep(2)
-    q.put(("two", "slept 2s"))
-
-
-def sleep_four_seconds(q: mp.Queue) -> None:
-    time.sleep(4)
-    q.put(("four", "slept 4s"))
-
-            
-        
-def main(timeout_seconds: float = 3.0) -> None:
-    q: mp.Queue = mp.Queue()
-    p_two = mp.Process(target=sleep_two_seconds, args=(q,))
-    p_four = mp.Process(target=sleep_four_seconds, args=(q,))
-
-    p_two.start()
-    p_four.start()
-
-    start = time.time()
-    # Wait up to the timeout across both processes
-    p_two.join(timeout_seconds)
-    remaining = max(0.0, timeout_seconds - (time.time() - start))
-    p_four.join(remaining)
-
-    results: dict[str, str] = {}
-    try:
-        while True:
-            name, msg = q.get_nowait()
-            results[name] = msg
-    except Exception:
-        pass
-
-    # Print result for the 2-second task if completed
-    if "two" in results:
-        print(results["two"])  # expected: slept 2s
-    elif not p_two.is_alive():
-        print("two: error")
-
-    # Handle the 4-second task: timeout -> terminate and report
-    if p_four.is_alive():
-        print(f"four: timed out after {timeout_seconds}s")
-        p_four.terminate()
-        p_four.join()
-    # else:
-    #     if "four" in results:
-    #         print(results["four"])  # if it somehow finished within timeout
-    #     else:
-    #         print("four: error")
-
-    # # Ensure cleanup
-    # if p_two.is_alive():
-    #     p_two.terminate()
-    #     p_two.join()
-
-
 q: mp.Queue = mp.Queue()
 funcs = {}
 wrap_funcs = {}
@@ -97,26 +40,6 @@ def mp_timeout_dec(timeout_secs):
     return mp_timeout
     
 
-def sleep_4_return():
-    time.sleep(4)
-    return 4.5
-
-def sleep_2_return():
-    print("sleep_2_return start")
-    time.sleep(2)
-    print("sleep_2_return after sleep")
-    return 2
-
-# dec_sleep2 = mp_timeout(sleep_2_return, 3)
-# dec_sleep4 = mp_timeout(sleep_4_return, 3)
-# dec_sleep4 = mp_timeout(sleep_4_return, 3)
-
-@mp_timeout_dec(1)        
-def sleep_4_return2():
-    time.sleep(4)
-    return 4.5
-
-
 @mp_timeout_dec(1)
 def return_1():
     #time.sleep(.5)
@@ -129,9 +52,8 @@ def raw_return_1():
 if __name__ == "__main__":
     #print(sleep_4_return2())
     #print(return_1())
-    pass
-    # for i in range(100):
-    #     print(i, return_1())
+    for i in range(100):
+        print(i, return_1())
         #decorator timing
         #python simple_multiprocessing_timeout.py  2.43s user 0.66s system 97% cpu 3.160 total
 
