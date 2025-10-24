@@ -49,11 +49,20 @@ def raw_return_1():
     return 1
 
 
+@mp_timeout_dec(1)
+def sleep_and_fail():
+    time.sleep(2)
+    return 1
+
+
 if __name__ == "__main__":
     #print(sleep_4_return2())
     #print(return_1())
-    for i in range(100):
-        print(i, return_1())
+
+    sleep_and_fail()
+    
+    # for i in range(100):
+    #     print(i, return_1())
         #decorator timing
         #python simple_multiprocessing_timeout.py  2.43s user 0.66s system 97% cpu 3.160 total
 
