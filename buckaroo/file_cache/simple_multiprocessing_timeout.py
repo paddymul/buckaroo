@@ -131,11 +131,6 @@ def t_sleep1():
 def t_sys_exit():
     sys.exit()
 
-def crash_python() -> None:
-    """Crash the Python interpreter (segmentation fault)."""
-    import ctypes
-    ctypes.string_at(0)
-
 @mp_timeout_dec(.1)
 def mp_polars_longread():
     
