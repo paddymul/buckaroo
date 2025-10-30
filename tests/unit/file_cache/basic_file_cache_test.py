@@ -175,14 +175,16 @@ class FailOnSumExecutor(SimpleColumnExecutor):
                 1/0
                 
         col_results: ColumnResults = {}
+        # compute fallbacks when expressions are absent
+        fallback_len = only_cols_ldf.select(pl.len().alias("n")).collect()["n"][0]
         for col in cols:
-            hash_: int = cast(int, res[col+"_hash"][0])
+            hash_val = res[col+"_hash"][0] if col+"_hash" in res.columns else 0
+            len_val = res[col+"_len"][0] if col+"_len" in res.columns else fallback_len
+            actual_result = {"len": len_val}
             if col+"_sum" in res.columns:
-                actual_result = {"len": res[col+"_len"][0], "sum": res[col+"_sum"][0]}
-            else:
-                actual_result = {"len": res[col+"_len"][0]}
+                actual_result["sum"] = res[col+"_sum"][0]
             cr = ColumnResult(
-                series_hash=hash_,
+                series_hash=int(hash_val),
                 column_name=col,
                 expressions=[],
                 result=actual_result,

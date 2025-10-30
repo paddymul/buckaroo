@@ -501,8 +501,6 @@ class Bisector:
 
     Notes:
     - Only calls ColumnExecutor.execute (never get_execution_args).
-    - Compares exceptions by type to distinguish the target failure from
-      incidental errors (e.g., missing dependent expressions during search).
     - Works on stable indices rather than comparing polars expressions.
     """
 
@@ -517,13 +515,6 @@ class Bisector:
         self.ldf = ldf
         self.dfi = event.dfi
         self._base_expressions: list[pl.Expr] = list(event.args.expressions)
-        # Determine baseline failure type by executing with the original args once
-        baseline_exc: Optional[type[BaseException]] = None
-        try:
-            self.column_executor.execute(self.ldf, self.original_event.args)
-        except Exception as e:  # noqa: BLE001
-            baseline_exc = type(e)
-        self._baseline_exc_type: Optional[type[BaseException]] = baseline_exc
 
     def build_args_with_expressions(self, expressions: list[pl.Expr]) -> ExecutorArgs:
         """Clone original args, replacing only expressions with the provided list."""
@@ -549,21 +540,7 @@ class Bisector:
         self.executor_log.log_start_col_group(self.dfi, args)
         try:
             self.column_executor.execute(self.ldf, args)
-        except Exception as e:  # noqa: BLE001
-            # If this exception is not the same type as the baseline failure, treat as success
-            if self._baseline_exc_type is not None and not isinstance(e, self._baseline_exc_type):
-                try:
-                    self.executor_log.log_end_col_group(self.dfi, args)
-                except Exception:  # noqa: BLE001
-                    pass
-                ev = self.executor_log.find_event(self.dfi, args)
-                if ev is None or not ev.completed:
-                    ev = ExecutorLogEvent(dfi=self.dfi,
-                                          args=args,
-                                          start_time=now(),
-                                          end_time=now(),
-                                          completed=True)
-                return True, ev
+        except Exception:  # noqa: BLE001
             ev = self.executor_log.find_event(self.dfi, args)
             if ev is None:
                 ev = ExecutorLogEvent(dfi=self.dfi,
@@ -574,17 +551,12 @@ class Bisector:
             return False, ev
 
         # success path: try to log completion but don't fail success if logging errors occur
-        try:
-            self.executor_log.log_end_col_group(self.dfi, args)
-        except Exception:
-            pass
+        self.executor_log.log_end_col_group(self.dfi, args)
         ev = self.executor_log.find_event(self.dfi, args)
+        # If the logger failed to record the success, treat it as an invariant
+        # violation rather than fabricating an event.
         if ev is None or not ev.completed:
-            ev = ExecutorLogEvent(dfi=self.dfi,
-                                  args=args,
-                                  start_time=now(),
-                                  end_time=now(),
-                                  completed=True)
+            raise RuntimeError("Bisector expected a completed log event after successful execute")
         return True, ev
 
     # Removed in favor of ExecutorLog.find_event
@@ -613,8 +585,8 @@ class Bisector:
             some_failure_found = False
             # Try each subset (reduce): if a subset fails, shrink to it
             for subset in subsets:
-                ok, _ = self.try_execute_by_indices(subset)
-                if not ok:
+                subset_succeeds, _ = self.try_execute_by_indices(subset)
+                if not subset_succeeds:
                     current = subset
                     n = 2
                     some_failure_found = True
@@ -628,8 +600,8 @@ class Bisector:
                 complement: list[int] = list(itertools.chain.from_iterable(subsets[:i] + subsets[i + 1:]))
                 if not complement:
                     continue
-                ok, _ = self.try_execute_by_indices(complement)
-                if not ok:
+                complement_succeeds, _ = self.try_execute_by_indices(complement)
+                if not complement_succeeds:
                     current = complement
                     n = max(n - 1, 2)
                     some_failure_found = True
@@ -645,6 +617,10 @@ class Bisector:
         return current
 
     def run(self) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
+        # If original event succeeded, nothing to bisect
+        if self.original_event.completed:
+            return self.original_event, self.original_event
+
         all_indices = list(range(len(self._base_expressions)))
         # Find minimal failing subset
         minimal_fail_idxs = self.minimize_failing_indices(all_indices)
@@ -655,30 +631,24 @@ class Bisector:
 
         # Build maximal success set as complement and verify; otherwise, greedy-build
         complement_idxs = [i for i in all_indices if i not in set(minimal_fail_idxs)]
-        ok, success_ev = self.try_execute_by_indices(complement_idxs)
-        if not ok:
+        complement_succeeds, success_ev = self.try_execute_by_indices(complement_idxs)
+        if not complement_succeeds:
             # Greedy build a large success set
             success_set: list[int] = []
             for i in all_indices:
                 candidate = success_set + [i]
-                ok2, _ = self.try_execute_by_indices(candidate)
-                if ok2:
+                candidate_succeeds, _ = self.try_execute_by_indices(candidate)
+                if candidate_succeeds:
                     success_set.append(i)
-            ok3, success_ev = self.try_execute_by_indices(success_set)
-            if not ok3:
+            final_succeeds, success_ev = self.try_execute_by_indices(success_set)
+            if not final_succeeds:
                 # As a last resort, empty set (should always succeed)
                 _, success_ev = self.try_execute_by_indices([])
 
         # Ensure we return the failing event corresponding to minimal failing subset
-        fail_ok, fail_ev = self.try_execute_by_indices(minimal_fail_idxs)
-        if fail_ok:
-            # Should not happen, but guard: force a constructed failed event
-            fail_args = self.build_args_with_expressions([self._base_expressions[i] for i in minimal_fail_idxs])
-            fail_ev = ExecutorLogEvent(dfi=self.dfi,
-                                       args=fail_args,
-                                       start_time=now(),
-                                       end_time=None,
-                                       completed=False)
+        minimal_subset_succeeds, fail_ev = self.try_execute_by_indices(minimal_fail_idxs)
+        if minimal_subset_succeeds:
+            raise RuntimeError("Bisector invariant violated: minimal failing subset unexpectedly succeeded")
 
         return fail_ev, success_ev
 
