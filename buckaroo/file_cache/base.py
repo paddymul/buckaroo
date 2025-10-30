@@ -323,11 +323,25 @@ class ExecutorLog(ABC):
         ...
 
     @abstractmethod
-    def get_log_events(self) -> list[ExecutorArgs]:
+    def get_log_events(self) -> list[ExecutorLogEvent]:
         """
-          get the logged events
+          Get the logged events for this executor.
           """
         ...
+
+    def find_event(self, dfi: DFIdentifier, args: ExecutorArgs) -> Optional[ExecutorLogEvent]:
+        """
+        Locate the log event for the given dataframe identifier and execution args.
+        Matches args by identity to avoid issues comparing polars expressions.
+        """
+        try:
+            events = self.get_log_events()
+        except Exception:
+            return None
+        for ev in events:
+            if ev.dfi == dfi and ev.args is args:
+                return ev
+        return None
 
 class SimpleExecutorLog(ExecutorLog):
 
@@ -349,21 +363,15 @@ class SimpleExecutorLog(ExecutorLog):
 
     def log_end_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         # Mark the aggregated event as completed when the first column group finishes
-        ev = self._get_log(dfi, args)
+        ev = self.find_event(dfi, args)
         if ev:
             ev.end_time = dtdt.now()
             ev.completed = True
 
-    def _get_log(self, dfi:DFIdentifier, args:ExecutorArgs) -> Optional[ExecutorLogEvent]:
-        for ev in self._events:
-            # Compare by identity to avoid problematic equality on pl.Expr within args
-            if ev.args is args and ev.dfi == dfi:
-                return ev
-
         
     def check_log_for_previous_failure(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
         # Return True if there is an incomplete event with matching args
-        ev = self._get_log(dfi, args)
+        ev = self.find_event(dfi, args)
         if ev:
             return not ev.completed
         return False
@@ -487,10 +495,15 @@ Goals:
 
 class Bisector:
     """
-    Perform a delta-debugging style bisection over ExecutorArgs.expressions to
-    identify a minimal failing set of expressions and a maximal successful set.
+    Delta-debug the expression list in ExecutorArgs to:
+    - find the minimal subset that reproduces the original failure
+    - find the maximal subset that still succeeds
 
-    Only ColumnExecutor.execute is invoked; get_execution_args is never called.
+    Notes:
+    - Only calls ColumnExecutor.execute (never get_execution_args).
+    - Compares exceptions by type to distinguish the target failure from
+      incidental errors (e.g., missing dependent expressions during search).
+    - Works on stable indices rather than comparing polars expressions.
     """
 
     def __init__(self,
@@ -512,7 +525,8 @@ class Bisector:
             baseline_exc = type(e)
         self._baseline_exc_type: Optional[type[BaseException]] = baseline_exc
 
-    def _make_args_with_expressions(self, expressions: list[pl.Expr]) -> ExecutorArgs:
+    def build_args_with_expressions(self, expressions: list[pl.Expr]) -> ExecutorArgs:
+        """Clone original args, replacing only expressions with the provided list."""
         src = self.original_event.args
         return ExecutorArgs(
             columns=list(src.columns),
@@ -524,9 +538,14 @@ class Bisector:
             extra=src.extra,
         )
 
-    def _attempt(self, expressions: list[pl.Expr]) -> tuple[bool, ExecutorLogEvent]:
-        args = self._make_args_with_expressions(expressions)
-        # start log entry
+    def try_execute_with_expressions(self, expressions: list[pl.Expr]) -> tuple[bool, ExecutorLogEvent]:
+        """
+        Try running execute for the given expressions, logging start/end and
+        returning (success, log_event). Success means either no exception or an
+        exception that is not the same type as the baseline failure.
+        """
+        args = self.build_args_with_expressions(expressions)
+        # Log a start so we have a record even on failure
         self.executor_log.log_start_col_group(self.dfi, args)
         try:
             self.column_executor.execute(self.ldf, args)
@@ -537,7 +556,7 @@ class Bisector:
                     self.executor_log.log_end_col_group(self.dfi, args)
                 except Exception:  # noqa: BLE001
                     pass
-                ev = self._find_event(args)
+                ev = self.executor_log.find_event(self.dfi, args)
                 if ev is None or not ev.completed:
                     ev = ExecutorLogEvent(dfi=self.dfi,
                                           args=args,
@@ -545,7 +564,7 @@ class Bisector:
                                           end_time=now(),
                                           completed=True)
                 return True, ev
-            ev = self._find_event(args)
+            ev = self.executor_log.find_event(self.dfi, args)
             if ev is None:
                 ev = ExecutorLogEvent(dfi=self.dfi,
                                       args=args,
@@ -559,7 +578,7 @@ class Bisector:
             self.executor_log.log_end_col_group(self.dfi, args)
         except Exception:
             pass
-        ev = self._find_event(args)
+        ev = self.executor_log.find_event(self.dfi, args)
         if ev is None or not ev.completed:
             ev = ExecutorLogEvent(dfi=self.dfi,
                                   args=args,
@@ -568,23 +587,19 @@ class Bisector:
                                   completed=True)
         return True, ev
 
-    def _find_event(self, args: ExecutorArgs) -> Optional[ExecutorLogEvent]:
-        try:
-            events = self.executor_log.get_log_events()
-        except Exception:
-            return None
-        for ev in events:
-            if isinstance(ev, ExecutorLogEvent) and ev.dfi == self.dfi and ev.args is args:
-                return ev
-        return None
+    # Removed in favor of ExecutorLog.find_event
 
-    def _attempt_indices(self, idxs: list[int]) -> tuple[bool, ExecutorLogEvent]:
-        exprs = [self._base_expressions[i] for i in idxs]
-        return self._attempt(exprs)
+    def try_execute_by_indices(self, indices: list[int]) -> tuple[bool, ExecutorLogEvent]:
+        """Run execute for expressions referenced by the provided indices."""
+        exprs = [self._base_expressions[i] for i in indices]
+        return self.try_execute_with_expressions(exprs)
 
-    def _ddmin_indices(self, all_indices: list[int]) -> list[int]:
-        # Ensure the overall set actually fails; if not, return empty (no failing subset)
-        overall_ok, _ = self._attempt_indices(all_indices)
+    def minimize_failing_indices(self, all_indices: list[int]) -> list[int]:
+        """
+        Delta-debug to compute a 1-minimal failing subset of indices.
+        Returns [] if the overall set doesn't reproduce the baseline failure.
+        """
+        overall_ok, _ = self.try_execute_by_indices(all_indices)
         if overall_ok:
             return []
 
@@ -598,7 +613,7 @@ class Bisector:
             some_failure_found = False
             # Try each subset (reduce): if a subset fails, shrink to it
             for subset in subsets:
-                ok, _ = self._attempt_indices(subset)
+                ok, _ = self.try_execute_by_indices(subset)
                 if not ok:
                     current = subset
                     n = 2
@@ -613,7 +628,7 @@ class Bisector:
                 complement: list[int] = list(itertools.chain.from_iterable(subsets[:i] + subsets[i + 1:]))
                 if not complement:
                     continue
-                ok, _ = self._attempt_indices(complement)
+                ok, _ = self.try_execute_by_indices(complement)
                 if not ok:
                     current = complement
                     n = max(n - 1, 2)
@@ -632,33 +647,33 @@ class Bisector:
     def run(self) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
         all_indices = list(range(len(self._base_expressions)))
         # Find minimal failing subset
-        minimal_fail_idxs = self._ddmin_indices(all_indices)
+        minimal_fail_idxs = self.minimize_failing_indices(all_indices)
         if not minimal_fail_idxs:
             # No failure induced by expressions; treat original as success and return it with itself
-            _, success_ev = self._attempt_indices(all_indices)
+            _, success_ev = self.try_execute_by_indices(all_indices)
             return success_ev, success_ev
 
         # Build maximal success set as complement and verify; otherwise, greedy-build
         complement_idxs = [i for i in all_indices if i not in set(minimal_fail_idxs)]
-        ok, success_ev = self._attempt_indices(complement_idxs)
+        ok, success_ev = self.try_execute_by_indices(complement_idxs)
         if not ok:
             # Greedy build a large success set
             success_set: list[int] = []
             for i in all_indices:
                 candidate = success_set + [i]
-                ok2, _ = self._attempt_indices(candidate)
+                ok2, _ = self.try_execute_by_indices(candidate)
                 if ok2:
                     success_set.append(i)
-            ok3, success_ev = self._attempt_indices(success_set)
+            ok3, success_ev = self.try_execute_by_indices(success_set)
             if not ok3:
                 # As a last resort, empty set (should always succeed)
-                _, success_ev = self._attempt_indices([])
+                _, success_ev = self.try_execute_by_indices([])
 
         # Ensure we return the failing event corresponding to minimal failing subset
-        fail_ok, fail_ev = self._attempt_indices(minimal_fail_idxs)
+        fail_ok, fail_ev = self.try_execute_by_indices(minimal_fail_idxs)
         if fail_ok:
             # Should not happen, but guard: force a constructed failed event
-            fail_args = self._make_args_with_expressions([self._base_expressions[i] for i in minimal_fail_idxs])
+            fail_args = self.build_args_with_expressions([self._base_expressions[i] for i in minimal_fail_idxs])
             fail_ev = ExecutorLogEvent(dfi=self.dfi,
                                        args=fail_args,
                                        start_time=now(),
