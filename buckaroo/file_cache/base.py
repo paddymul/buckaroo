@@ -290,8 +290,10 @@ class ExecutorArgs:
 @dataclass
 class ExecutorLogEvent:
 
+    dfi: DFIdentifier
     args: ExecutorArgs
-    time: Optional[timedelta]
+    start_time: dtdt
+    end_time: Optional[dtdt]
     completed: bool
     
 
@@ -332,32 +334,40 @@ class SimpleExecutorLog(ExecutorLog):
 
     
     def __init__(self) -> None:
-        self._started_for_dfi: set[DFIdentifier] = set()
         self._events: list[ExecutorLogEvent] = []
 
 
     def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
-        # Only create a single aggregated event per DFIdentifier
-        if dfi not in self._started_for_dfi:
-            self._started_for_dfi.add(dfi)
-            # The test currently expects `ev.args` to equal a placeholder `None`
-            # so we store None here to satisfy that assertion.
-            ev = ExecutorLogEvent(
-                args=None,  # type: ignore[arg-type]
-                time=None,
-                completed=False,
-            )
-            self._events.append(ev)
+        #what happens if we try to start the same dfi, args twice???
+        ev = ExecutorLogEvent(
+            dfi=dfi,
+            args=args,
+            completed=False,
+            start_time=dtdt.now(),
+            end_time=None)
+        self._events.append(ev)
 
     def log_end_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         # Mark the aggregated event as completed when the first column group finishes
-        if self._events:
-            self._events[0].completed = True
+        ev = self._get_log(dfi, args)
+        if ev:
+            ev.end_time = dtdt.now()
+            ev.completed = True
 
+    def _get_log(self, dfi:DFIdentifier, args:ExecutorArgs) -> Optional[ExecutorLogEvent]:
+        for ev in self._events:
+            if ev.args == args and ev.dfi == dfi:
+                return ev
+
+        
     def check_log_for_previous_failure(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
+        # Return True if there is an incomplete event with matching args
+        ev = self._get_log(dfi, args)
+        if ev:
+            return not ev.completed
         return False
 
-    def get_log_events(self) -> list[ExecutorArgs]:
+    def get_log_events(self) -> list[ExecutorLogEvent]:
         """
           get the logged events
           """
@@ -379,8 +389,12 @@ class Executor:
 
     def run(self) -> None:
 
+        had_failure = False
+        last_ex_args: ExecutorArgs | None = None
+
         for col_group in self.get_column_chunks():
             ex_args = self.get_executor_args(col_group)
+            last_ex_args = ex_args
             if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
                 return # not sure what to do here or what progress notification to send back
             
@@ -402,18 +416,21 @@ class Executor:
                     self.fc.upsert_key(col_result.series_hash, col_result.result)
 
                 self.listener(notification)
-                self.executor_log.log_end_col_group(self.dfi, ex_args)
+                self.executor_log.log_end_col_group(self.dfi, last_ex_args)    
             except Exception as e:
                 t3 = now()
                 notification = ProgressNotification(
-                    success=True,
+                    success=False,
                     col_group=col_group,
                     execution_args=[], #FIXME
                     result=None,
                     execution_time=t3-t1,
                     failure_message=str(e))
-                print("e", e)
-                raise
+                self.listener(notification)
+                had_failure = True
+                # continue to next column group without marking completion
+                continue
+
                 
     def get_column_raw_results(self, columns:ColumnGroup) -> ColumnRawResults:
         hashes_for_cols: dict[str,int]= {} # how are we getting the hashes for this ldf?
@@ -463,16 +480,6 @@ Goals:
 
   this implementation is synchronous and simple
 
-  Future implementtions will work out of process.  Hoepfully multiprocessing works
-  
 
   """
         
-        
-
-    
-# key ((4695495808, 0, 3), (0, 0, 0), (0, 0, 0)) 
-# [((4695495808, 0, 3), (0, 0, 0), (0, 0, 0)), ((5182046224, 0, 9), (0, 0, 0), (4695495904, 0, 4))] in True
-
-# key ((4966039552, 0, 9), (0, 0, 0), (4695495904, 0, 4)) 
-# existing [((4695495808, 0, 3), (0, 0, 0), (0, 0, 0)), ((5182046224, 0, 9), (0, 0, 0), (4695495904, 0, 4))] in False
