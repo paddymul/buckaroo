@@ -121,6 +121,27 @@ def test_simple_executor():
     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
     assert fc.get_series_results(1505513022777147474) == {'len':3}
 
+def test_simple_executor_log():
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        print("here58", progress.success, progress.result)
+
+
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    exc.run()
+    evs = exc.executor_log.get_log_events() 
+
+    assert evs.length == 1
+    ev = evs[0]
+
+    assert ev.completed == True
+
+    expected_executor_args = None # don't know what this should be, please fill in
+    assert expected_executor_args == ev.args
+    
+    #verify that series are saved to cache, and that we can retrieve them with expected result
+    assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
+    assert fc.get_series_results(1505513022777147474) == {'len':3}
 
 def test_simple_executor_listener_calls():
     fc = FileCache()
@@ -165,10 +186,6 @@ def test_in_memory_cache():
     assert fc.check_series(df['b2']) == False
 
     fc.add_df(df)
-    # print(fc.check_series(df['a1']))
-    # print(fc.check_series(df['b2']))
-    # print(fc._get_buffer_key(df['b2']))
-    # print(list(fc.series_hash_cache.keys()))
     assert fc.check_series(df['a1']) == True
 
     # buffer info for string series is unreliable commented out for now

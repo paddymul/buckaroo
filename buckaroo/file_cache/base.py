@@ -287,7 +287,13 @@ class ExecutorArgs:
     extra: Any
 
 
+@dataclass
+class ExecutorLogEvent:
 
+    args: ExecutorArgs
+    time: Optional[TimeDelta]
+    completed: bool
+    
 
 class ExecutorLog(ABC):
 
@@ -314,8 +320,17 @@ class ExecutorLog(ABC):
           """
         ...
 
+    @abstractmethod
+    def get_log_events(self) -> list[ExecutorArgs]:
+        """
+          get the logged events
+          """
+        ...
+
 class SimpleExecutorLog(ExecutorLog):
 
+
+    
     def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         pass
 
@@ -324,6 +339,12 @@ class SimpleExecutorLog(ExecutorLog):
 
     def check_log_for_previous_failure(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
         return False
+
+    def get_log_events(self) -> list[ExecutorArgs]:
+        """
+          get the logged events
+          """
+        return []
 
 
 class Executor:
@@ -344,14 +365,7 @@ class Executor:
         for col_group in self.get_column_chunks():
             ex_args = self.get_executor_args(col_group)
             if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
-                pass # not sure what to do here or what progress notification to send back
-                
-                # for col in col_group:
-                #     log_fail_result[col] = ColumnResult(
-                #         series_hash=0, #it's unclear if we can get a series hash in failure case
-                #         column_name=col,
-                #         expressions=[], # FIXME
-                #         result=dict())
+                return # not sure what to do here or what progress notification to send back
             
             self.executor_log.log_start_col_group(self.dfi, ex_args)
             t1 = now()
