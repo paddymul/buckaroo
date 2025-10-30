@@ -8,6 +8,7 @@ from buckaroo.file_cache.base import (
     Executor,
     ProgressNotification,
     Bisector,
+    get_columns_from_args,
 )
 import polars as pl
 import polars.selectors as cs
@@ -196,6 +197,18 @@ df = pl.DataFrame({
     })
 ldf = df.lazy()
         
+def _expr_labels(exprs:list[pl.Expr]) -> set[str]:
+    labels:set[str] = set()
+    for e in exprs:
+        s = str(e)
+        if 'sum()' in s:
+            labels.add('sum')
+        elif 'count()' in s:
+            labels.add('len')
+        elif 'hash_series' in s or 'hash_xx' in s:
+            labels.add('hash')
+    return labels
+
 def test_simple_executor():
 
     fc = FileCache()
@@ -269,13 +282,15 @@ def test_bisect():
     assert fail_ev.completed == False
     assert len(fail_ev.args.expressions) == 1
     # verify the failing expr is the sum expression (column name ends with _sum)
-    fail_cols = pl.DataFrame(ldf.select(*fail_ev.args.columns).collect()).lazy().select(*fail_ev.args.expressions).collect().columns
+    fail_cols = get_columns_from_args(ldf, fail_ev.args)
     assert fail_cols == ['a1_sum']
+    assert _expr_labels(fail_ev.args.expressions) == {'sum'}
 
     assert success_ev.completed == True
     # verify the success exprs are hash and len
-    succ_cols = set(pl.DataFrame(ldf.select(*success_ev.args.columns).collect()).lazy().select(*success_ev.args.expressions).collect().columns)
+    succ_cols = set(get_columns_from_args(ldf, success_ev.args))
     assert succ_cols == {'a1_hash', 'a1_len'}
+    assert _expr_labels(success_ev.args.expressions) == {'hash','len'}
 
 
 def test_bisector_multiple_failing_expressions():
@@ -296,14 +311,16 @@ def test_bisector_multiple_failing_expressions():
     # minimal failing set should be one expression (either hash or sum)
     assert fail_ev.completed == False
     assert len(fail_ev.args.expressions) == 1
-    fail_cols = set(pl.DataFrame(ldf.select(*fail_ev.args.columns).collect()).lazy().select(*fail_ev.args.expressions).collect().columns)
+    fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
     assert fail_cols in ({'a1_hash'}, {'a1_sum'})
+    assert _expr_labels(fail_ev.args.expressions) in ({'hash'}, {'sum'})
 
     # maximal success should then be the remaining safe expression(s); given both hash and sum fail,
     # only len should remain
     assert success_ev.completed == True
-    succ_cols = set(pl.DataFrame(ldf.select(*success_ev.args.columns).collect()).lazy().select(*success_ev.args.expressions).collect().columns)
+    succ_cols = set(get_columns_from_args(ldf, success_ev.args))
     assert succ_cols == {'a1_len'}
+    assert _expr_labels(success_ev.args.expressions) == {'len'}
 
 
 def test_bisector_on_success_event_noop():
@@ -323,10 +340,12 @@ def test_bisector_on_success_event_noop():
     # when starting from a success event, both returned events should be success
     assert success_ev.completed == True
     assert fail_ev.completed == True
-    succ_cols = set(pl.DataFrame(ldf.select(*success_ev.args.columns).collect()).lazy().select(*success_ev.args.expressions).collect().columns)
-    fail_cols = set(pl.DataFrame(ldf.select(*fail_ev.args.columns).collect()).lazy().select(*fail_ev.args.expressions).collect().columns)
+    succ_cols = set(get_columns_from_args(ldf, success_ev.args))
+    fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
     assert succ_cols == {'a1_hash', 'a1_sum', 'a1_len'}
     assert fail_cols == {'a1_hash', 'a1_sum', 'a1_len'}
+    assert _expr_labels(success_ev.args.expressions) == {'hash','sum','len'}
+    assert _expr_labels(fail_ev.args.expressions) == {'hash','sum','len'}
 
 def test_simple_executor_listener_calls():
     fc = FileCache()

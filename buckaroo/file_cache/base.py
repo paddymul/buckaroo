@@ -667,3 +667,16 @@ class Bisector:
 
         return fail_ev, success_ev
 
+
+def get_columns_from_args(ldf: pl.LazyFrame, args: ExecutorArgs) -> list[str]:
+    """
+    Compute the output column names produced by applying the given ExecutorArgs
+    to the provided LazyFrame.
+
+    This mirrors the execution flow used by ColumnExecutor implementations that
+    first select the target columns, then apply the expressions.
+    """
+    only_cols = ldf.select(args.columns)
+    res = only_cols.select(*args.expressions).collect()
+    return list(res.columns)
+
