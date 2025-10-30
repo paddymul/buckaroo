@@ -185,9 +185,9 @@ version = "0.11.3"
 source = { editable = "." }
 dependencies = [
     { name = "anywidget" },
+    { name = "cloudpickle" },
     { name = "fastparquet" },
     { name = "graphlib-backport" },
-    { name = "joblib" },
     { name = "maturin" },
     { name = "mypy" },
     { name = "pl-series-hash" },
@@ -264,12 +264,12 @@ requires-dist = [
     { name = "anywidget", specifier = ">=0.9.0" },
     { name = "anywidget", marker = "extra == 'test'" },
     { name = "anywidget", extras = ["dev"], marker = "extra == 'dev'", specifier = ">=0.9.0" },
+    { name = "cloudpickle", specifier = ">=3.1.1" },
     { name = "fastparquet" },
     { name = "graphlib-backport", specifier = ">=1.0.0" },
     { name = "graphviz", marker = "extra == 'dev'", specifier = ">=0.20.1" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.88.1" },
     { name = "hypothesis", marker = "extra == 'test'", specifier = ">=6.88.1" },
-    { name = "joblib", specifier = ">=1.5.2" },
     { name = "jupyterlab", marker = "extra == 'dev'", specifier = ">=4.2.5" },
     { name = "jupyterlab", marker = "extra == 'jupyterlab'", specifier = ">=3.6.0" },
     { name = "maturin", specifier = ">=1.9.6" },
@@ -500,6 +500,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593, upload_time = "2024-12-21T18:38:44.339Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/d4/7ebdbd03970677812aac39c869717059dbb71a4cfc033ca6e5221787892c/click-8.1.8-py3-none-any.whl", hash = "sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2", size = 98188, upload_time = "2024-12-21T18:38:41.666Z" },
+]
+
+[[package]]
+name = "cloudpickle"
+version = "3.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/52/39/069100b84d7418bc358d81669d5748efb14b9cceacd2f9c75f550424132f/cloudpickle-3.1.1.tar.gz", hash = "sha256:b216fa8ae4019d5482a8ac3c95d8f6346115d8835911fd4aefd1a445e4242c64", size = 22113, upload_time = "2025-01-14T17:02:05.085Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/e8/64c37fadfc2816a7701fa8a6ed8d87327c7d54eacfbfb6edab14a2f2be75/cloudpickle-3.1.1-py3-none-any.whl", hash = "sha256:c8c5a44295039331ee9dad40ba100a9c7297b6f988e50e87ccdf3765a668350e", size = 20992, upload_time = "2025-01-14T17:02:02.417Z" },
 ]
 
 [[package]]
@@ -1218,15 +1227,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/af/92/b3130cbbf5591acf9ade8708c365f3238046ac7cb8ccba6e81abccb0ccff/jinja2-3.1.5.tar.gz", hash = "sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb", size = 244674, upload_time = "2024-12-21T18:30:22.828Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bd/0f/2ba5fbcd631e3e88689309dbe978c5769e883e4b84ebfe7da30b43275c5a/jinja2-3.1.5-py3-none-any.whl", hash = "sha256:aba0f4dc9ed8013c424088f68a5c226f7d6097ed89b246d7749c2ec4175c6adb", size = 134596, upload_time = "2024-12-21T18:30:19.133Z" },
-]
-
-[[package]]
-name = "joblib"
-version = "1.5.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e8/5d/447af5ea094b9e4c4054f82e223ada074c552335b9b4b2d14bd9b35a67c4/joblib-1.5.2.tar.gz", hash = "sha256:3faa5c39054b2f03ca547da9b2f52fde67c06240c31853f306aea97f13647b55", size = 331077, upload_time = "2025-08-27T12:15:46.575Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/e8/685f47e0d754320684db4425a0967f7d3fa70126bffd76110b7009a0090f/joblib-1.5.2-py3-none-any.whl", hash = "sha256:4e1f0bdbb987e6d843c70cf43714cb276623def372df3c22fe5266b2670bc241", size = 308396, upload_time = "2025-08-27T12:15:45.188Z" },
 ]
 
 [[package]]
