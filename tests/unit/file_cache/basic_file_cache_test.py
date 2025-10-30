@@ -7,6 +7,7 @@ from buckaroo.file_cache.base import (
     FileCache,
     Executor,
     ProgressNotification,
+    Bisector,
 )
 import polars as pl
 import polars.selectors as cs
@@ -101,6 +102,65 @@ class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
 
 
 
+class FailOnHashExecutor(SimpleColumnExecutor):
+    """
+      fails if any resulting column ends with _hash
+      """
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        cols = execution_args.columns
+        only_cols_ldf = ldf.select(cols)
+        res = only_cols_ldf.select(*execution_args.expressions).collect()
+        for col in res.columns:
+            if col.endswith("_hash"):
+                1/0
+        col_results: ColumnResults = {}
+        # compute a fallback length if not present
+        fallback_len = only_cols_ldf.select(pl.len().alias("n")).collect()["n"][0]
+        for col in cols:
+            hash_val = res[col+"_hash"][0] if col+"_hash" in res.columns else 0
+            len_val = res[col+"_len"][0] if col+"_len" in res.columns else fallback_len
+            actual_result = {"len": len_val}
+            if col+"_sum" in res.columns:
+                actual_result["sum"] = res[col+"_sum"][0]
+            cr = ColumnResult(
+                series_hash=int(hash_val),
+                column_name=col,
+                expressions=[],
+                result=actual_result,
+            )
+            col_results[col] = cr
+        return col_results
+
+
+class FailOnHashOrSumExecutor(SimpleColumnExecutor):
+    """
+      fails if any resulting column ends with _hash or _sum
+      """
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        cols = execution_args.columns
+        only_cols_ldf = ldf.select(cols)
+        res = only_cols_ldf.select(*execution_args.expressions).collect()
+        for col in res.columns:
+            if col.endswith("_sum") or col.endswith("_hash"):
+                1/0
+        col_results: ColumnResults = {}
+        fallback_len = only_cols_ldf.select(pl.len().alias("n")).collect()["n"][0]
+        for col in cols:
+            hash_val = res[col+"_hash"][0] if col+"_hash" in res.columns else 0
+            len_val = res[col+"_len"][0] if col+"_len" in res.columns else fallback_len
+            actual_result = {"len": len_val}
+            if col+"_sum" in res.columns:
+                actual_result["sum"] = res[col+"_sum"][0]
+            cr = ColumnResult(
+                series_hash=int(hash_val),
+                column_name=col,
+                expressions=[],
+                result=actual_result,
+            )
+            col_results[col] = cr
+        return col_results
+
+
 class FailOnSumExecutor(SimpleColumnExecutor):
     """
       used for testing to test bisect for failures
@@ -167,8 +227,6 @@ def test_simple_executor_log():
 
     assert ev.completed == True
 
-    #expected_executor_args = None # don't know what this should be, please fill in
-    #assert expected_executor_args == ev.args
     
     #verify that series are saved to cache, and that we can retrieve them with expected result
     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
@@ -190,6 +248,76 @@ def test_simple_executor_on_fail():
     assert ev.completed == False
 
     assert exc.executor_log.check_log_for_previous_failure(exc.dfi, ev.args) == True
+
+def test_bisect():
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        pass
+
+    # produce a failure event (on _sum)
+    exc = Executor(ldf, FailOnSumExecutor(), listener, fc)
+    exc.run()
+    evs = exc.executor_log.get_log_events()
+    failing_events = [ev for ev in evs if ev.completed == False]
+    assert len(failing_events) >= 1
+    fail_input = failing_events[0]
+
+    # run bisector to minimize failing expressions and maximize success
+    bi = Bisector(fail_input, exc.executor_log, FailOnSumExecutor(), ldf)
+    fail_ev, success_ev = bi.run()
+
+    assert fail_ev.completed == False
+    assert len(fail_ev.args.expressions) == 1
+
+    assert success_ev.completed == True
+    assert len(success_ev.args.expressions) == 2
+
+
+def test_bisector_multiple_failing_expressions():
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        pass
+
+    exc = Executor(ldf, FailOnHashOrSumExecutor(), listener, fc)
+    exc.run()
+    evs = exc.executor_log.get_log_events()
+    failing_events = [ev for ev in evs if ev.completed == False]
+    assert len(failing_events) >= 1
+    fail_input = failing_events[0]
+
+    bi = Bisector(fail_input, exc.executor_log, FailOnHashOrSumExecutor(), ldf)
+    fail_ev, success_ev = bi.run()
+
+    # minimal failing set should be one expression (either hash or sum)
+    assert fail_ev.completed == False
+    assert len(fail_ev.args.expressions) == 1
+
+    # maximal success should then be the remaining safe expression(s); given both hash and sum fail,
+    # only len should remain
+    assert success_ev.completed == True
+    assert len(success_ev.args.expressions) == 1
+
+
+def test_bisector_on_success_event_noop():
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        pass
+
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    exc.run()
+    evs = exc.executor_log.get_log_events()
+    # pick a completed event
+    success_input = [ev for ev in evs if ev.completed == True][0]
+
+    bi = Bisector(success_input, exc.executor_log, SimpleColumnExecutor(), ldf)
+    fail_ev, success_ev = bi.run()
+
+    # when starting from a success event, both returned events should be success
+    assert success_ev.completed == True
+    assert fail_ev.completed == True
+    assert len(success_ev.args.expressions) == 3
+    assert len(fail_ev.args.expressions) == 3
+
 def test_simple_executor_listener_calls():
     fc = FileCache()
     call_args = []

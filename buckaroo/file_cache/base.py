@@ -356,7 +356,8 @@ class SimpleExecutorLog(ExecutorLog):
 
     def _get_log(self, dfi:DFIdentifier, args:ExecutorArgs) -> Optional[ExecutorLogEvent]:
         for ev in self._events:
-            if ev.args == args and ev.dfi == dfi:
+            # Compare by identity to avoid problematic equality on pl.Expr within args
+            if ev.args is args and ev.dfi == dfi:
                 return ev
 
         
@@ -483,3 +484,186 @@ Goals:
 
   """
         
+
+class Bisector:
+    """
+    Perform a delta-debugging style bisection over ExecutorArgs.expressions to
+    identify a minimal failing set of expressions and a maximal successful set.
+
+    Only ColumnExecutor.execute is invoked; get_execution_args is never called.
+    """
+
+    def __init__(self,
+                 event: ExecutorLogEvent,
+                 executor_log: ExecutorLog,
+                 column_executor: ColumnExecutor[Any],
+                 ldf: pl.LazyFrame) -> None:
+        self.original_event = event
+        self.executor_log = executor_log
+        self.column_executor = column_executor
+        self.ldf = ldf
+        self.dfi = event.dfi
+        self._base_expressions: list[pl.Expr] = list(event.args.expressions)
+        # Determine baseline failure type by executing with the original args once
+        baseline_exc: Optional[type[BaseException]] = None
+        try:
+            self.column_executor.execute(self.ldf, self.original_event.args)
+        except Exception as e:  # noqa: BLE001
+            baseline_exc = type(e)
+        self._baseline_exc_type: Optional[type[BaseException]] = baseline_exc
+
+    def _make_args_with_expressions(self, expressions: list[pl.Expr]) -> ExecutorArgs:
+        src = self.original_event.args
+        return ExecutorArgs(
+            columns=list(src.columns),
+            column_specific_expressions=src.column_specific_expressions,
+            include_hash=src.include_hash,
+            expressions=list(expressions),
+            row_start=src.row_start,
+            row_end=src.row_end,
+            extra=src.extra,
+        )
+
+    def _attempt(self, expressions: list[pl.Expr]) -> tuple[bool, ExecutorLogEvent]:
+        args = self._make_args_with_expressions(expressions)
+        # start log entry
+        self.executor_log.log_start_col_group(self.dfi, args)
+        try:
+            self.column_executor.execute(self.ldf, args)
+        except Exception as e:  # noqa: BLE001
+            # If this exception is not the same type as the baseline failure, treat as success
+            if self._baseline_exc_type is not None and not isinstance(e, self._baseline_exc_type):
+                try:
+                    self.executor_log.log_end_col_group(self.dfi, args)
+                except Exception:  # noqa: BLE001
+                    pass
+                ev = self._find_event(args)
+                if ev is None or not ev.completed:
+                    ev = ExecutorLogEvent(dfi=self.dfi,
+                                          args=args,
+                                          start_time=now(),
+                                          end_time=now(),
+                                          completed=True)
+                return True, ev
+            ev = self._find_event(args)
+            if ev is None:
+                ev = ExecutorLogEvent(dfi=self.dfi,
+                                      args=args,
+                                      start_time=now(),
+                                      end_time=None,
+                                      completed=False)
+            return False, ev
+
+        # success path: try to log completion but don't fail success if logging errors occur
+        try:
+            self.executor_log.log_end_col_group(self.dfi, args)
+        except Exception:
+            pass
+        ev = self._find_event(args)
+        if ev is None or not ev.completed:
+            ev = ExecutorLogEvent(dfi=self.dfi,
+                                  args=args,
+                                  start_time=now(),
+                                  end_time=now(),
+                                  completed=True)
+        return True, ev
+
+    def _find_event(self, args: ExecutorArgs) -> Optional[ExecutorLogEvent]:
+        try:
+            events = self.executor_log.get_log_events()
+        except Exception:
+            return None
+        for ev in events:
+            if isinstance(ev, ExecutorLogEvent) and ev.dfi == self.dfi and ev.args is args:
+                return ev
+        return None
+
+    def _attempt_indices(self, idxs: list[int]) -> tuple[bool, ExecutorLogEvent]:
+        exprs = [self._base_expressions[i] for i in idxs]
+        return self._attempt(exprs)
+
+    def _ddmin_indices(self, all_indices: list[int]) -> list[int]:
+        # Ensure the overall set actually fails; if not, return empty (no failing subset)
+        overall_ok, _ = self._attempt_indices(all_indices)
+        if overall_ok:
+            return []
+
+        n = 2
+        current = list(all_indices)
+        while len(current) >= 2:
+            # split into n chunks
+            chunk_size = max(1, len(current) // n)
+            subsets: list[list[int]] = [current[i:i + chunk_size] for i in range(0, len(current), chunk_size)]
+
+            some_failure_found = False
+            # Try each subset (reduce): if a subset fails, shrink to it
+            for subset in subsets:
+                ok, _ = self._attempt_indices(subset)
+                if not ok:
+                    current = subset
+                    n = 2
+                    some_failure_found = True
+                    break
+
+            if some_failure_found:
+                continue
+
+            # Try complements
+            for i in range(len(subsets)):
+                complement: list[int] = list(itertools.chain.from_iterable(subsets[:i] + subsets[i + 1:]))
+                if not complement:
+                    continue
+                ok, _ = self._attempt_indices(complement)
+                if not ok:
+                    current = complement
+                    n = max(n - 1, 2)
+                    some_failure_found = True
+                    break
+
+            if some_failure_found:
+                continue
+
+            if n >= len(current):
+                break
+            n = min(len(current), n * 2)
+
+        return current
+
+    def run(self) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
+        all_indices = list(range(len(self._base_expressions)))
+        # Find minimal failing subset
+        minimal_fail_idxs = self._ddmin_indices(all_indices)
+        if not minimal_fail_idxs:
+            # No failure induced by expressions; treat original as success and return it with itself
+            _, success_ev = self._attempt_indices(all_indices)
+            return success_ev, success_ev
+
+        # Build maximal success set as complement and verify; otherwise, greedy-build
+        complement_idxs = [i for i in all_indices if i not in set(minimal_fail_idxs)]
+        ok, success_ev = self._attempt_indices(complement_idxs)
+        if not ok:
+            # Greedy build a large success set
+            success_set: list[int] = []
+            for i in all_indices:
+                candidate = success_set + [i]
+                ok2, _ = self._attempt_indices(candidate)
+                if ok2:
+                    success_set.append(i)
+            ok3, success_ev = self._attempt_indices(success_set)
+            if not ok3:
+                # As a last resort, empty set (should always succeed)
+                _, success_ev = self._attempt_indices([])
+
+        # Ensure we return the failing event corresponding to minimal failing subset
+        fail_ok, fail_ev = self._attempt_indices(minimal_fail_idxs)
+        if fail_ok:
+            # Should not happen, but guard: force a constructed failed event
+            fail_args = self._make_args_with_expressions([self._base_expressions[i] for i in minimal_fail_idxs])
+            fail_ev = ExecutorLogEvent(dfi=self.dfi,
+                                       args=fail_args,
+                                       start_time=now(),
+                                       end_time=None,
+                                       completed=False)
+
+        return fail_ev, success_ev
+
