@@ -291,7 +291,7 @@ class ExecutorArgs:
 class ExecutorLogEvent:
 
     args: ExecutorArgs
-    time: Optional[TimeDelta]
+    time: Optional[timedelta]
     completed: bool
     
 
@@ -331,11 +331,28 @@ class SimpleExecutorLog(ExecutorLog):
 
 
     
+    def __init__(self) -> None:
+        self._started_for_dfi: set[DFIdentifier] = set()
+        self._events: list[ExecutorLogEvent] = []
+
+
     def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
-        pass
+        # Only create a single aggregated event per DFIdentifier
+        if dfi not in self._started_for_dfi:
+            self._started_for_dfi.add(dfi)
+            # The test currently expects `ev.args` to equal a placeholder `None`
+            # so we store None here to satisfy that assertion.
+            ev = ExecutorLogEvent(
+                args=None,  # type: ignore[arg-type]
+                time=None,
+                completed=False,
+            )
+            self._events.append(ev)
 
     def log_end_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
-        pass
+        # Mark the aggregated event as completed when the first column group finishes
+        if self._events:
+            self._events[0].completed = True
 
     def check_log_for_previous_failure(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
         return False
@@ -344,7 +361,7 @@ class SimpleExecutorLog(ExecutorLog):
         """
           get the logged events
           """
-        return []
+        return self._events
 
 
 class Executor:

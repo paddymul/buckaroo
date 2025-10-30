@@ -99,6 +99,37 @@ class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
             col_results[col] = cr
         return col_results
 
+
+
+class FailOnSumExecutor(SimpleColumnExecutor):
+    """
+      used for testing to test bisect for failures
+      """
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        cols = execution_args.columns
+        only_cols_ldf = ldf.select(cols)
+        res = only_cols_ldf.select(*execution_args.expressions).collect()
+        for col in columns:
+            if col.endswith("_sum"):
+                1/0
+                
+        col_results: ColumnResults = {}
+        for col in cols:
+            hash_: int = cast(int, res[col+"_hash"][0])
+            if col+"_sum" in res.columns:
+                actual_result = {"len": res[col+"_len"][0], "sum": res[col+"_sum"][0]}
+            else:
+                actual_result = {"len": res[col+"_len"][0]}
+            cr = ColumnResult(
+                series_hash=hash_,
+                column_name=col,
+                expressions=[],
+                result=actual_result,
+            )
+            col_results[col] = cr
+        return col_results
+
+    
 df = pl.DataFrame({
     'a1': [10,20,30],
     'b2': ["foo", "bar", "baz"]
@@ -131,7 +162,7 @@ def test_simple_executor_log():
     exc.run()
     evs = exc.executor_log.get_log_events() 
 
-    assert evs.length == 1
+    assert len(evs) == 1
     ev = evs[0]
 
     assert ev.completed == True
@@ -142,6 +173,28 @@ def test_simple_executor_log():
     #verify that series are saved to cache, and that we can retrieve them with expected result
     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
     assert fc.get_series_results(1505513022777147474) == {'len':3}
+
+# def test_simple_executor_on_fail():
+#     fc = FileCache()
+#     def listener(progress:ProgressNotification) -> None:
+#         print("here58", progress.success, progress.result)
+
+
+#     exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+#     exc.run()
+#     evs = exc.executor_log.get_log_events() 
+
+#     assert evs.length == 1
+#     ev = evs[0]
+
+#     assert ev.completed == True
+
+#     expected_executor_args = None # don't know what this should be, please fill in
+#     assert expected_executor_args == ev.args
+    
+#     #verify that series are saved to cache, and that we can retrieve them with expected result
+#     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
+#     assert fc.get_series_results(1505513022777147474) == {'len':3}
 
 def test_simple_executor_listener_calls():
     fc = FileCache()
