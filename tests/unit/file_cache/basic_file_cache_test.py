@@ -7,13 +7,15 @@ from buckaroo.file_cache.base import (
     FileCache,
     Executor,
     ProgressNotification,
-    Bisector,
+    ExpressionBisector,
+    ColumnBisector,
     get_columns_from_args,
+    ExecutorLogEvent,
 )
 import polars as pl
 import polars.selectors as cs
 from typing import cast
-from datetime import timedelta
+from datetime import timedelta, datetime as dtdt
 # fc = FileCache()    
 
 # def pseudo(fname:str) -> None:
@@ -278,7 +280,7 @@ def test_bisect():
     fail_input = failing_events[0]
 
     # run bisector to minimize failing expressions and maximize success
-    bi = Bisector(fail_input, exc.executor_log, FailOnSumExecutor(), ldf)
+    bi = ExpressionBisector(fail_input, exc.executor_log, FailOnSumExecutor(), ldf)
     fail_ev, success_ev = bi.run()
 
     assert fail_ev.completed == False
@@ -307,7 +309,7 @@ def test_bisector_multiple_failing_expressions():
     assert len(failing_events) >= 1
     fail_input = failing_events[0]
 
-    bi = Bisector(fail_input, exc.executor_log, FailOnHashOrSumExecutor(), ldf)
+    bi = ExpressionBisector(fail_input, exc.executor_log, FailOnHashOrSumExecutor(), ldf)
     fail_ev, success_ev = bi.run()
 
     # minimal failing set should be one expression (either hash or sum)
@@ -331,12 +333,17 @@ def test_bisector_on_success_event_noop():
         pass
 
     exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
-    exc.run()
-    evs = exc.executor_log.get_log_events()
-    # pick a completed event
-    success_input = [ev for ev in evs if ev.completed == True][0]
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    success_input = ExecutorLogEvent(
+        dfi=exc.dfi,
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=dtdt.now(),
+        completed=True,
+    )
 
-    bi = Bisector(success_input, exc.executor_log, SimpleColumnExecutor(), ldf)
+    bi = ExpressionBisector(success_input, exc.executor_log, SimpleColumnExecutor(), ldf)
     fail_ev, success_ev = bi.run()
 
     # when starting from a success event, both returned events should be success
@@ -344,8 +351,8 @@ def test_bisector_on_success_event_noop():
     assert fail_ev.completed == True
     succ_cols = set(get_columns_from_args(ldf, success_ev.args))
     fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
-    assert succ_cols == {'a1_hash', 'a1_sum', 'a1_len'}
-    assert fail_cols == {'a1_hash', 'a1_sum', 'a1_len'}
+    assert succ_cols == {'a1_hash', 'a1_sum', 'a1_len', 'b2_hash', 'b2_len'}
+    assert fail_cols == {'a1_hash', 'a1_sum', 'a1_len', 'b2_hash', 'b2_len'}
     assert _expr_labels(success_ev.args.expressions) == {'hash','sum','len'}
     assert _expr_labels(fail_ev.args.expressions) == {'hash','sum','len'}
 
@@ -438,3 +445,61 @@ def test_in_memory_cache():
   test how the file cache bits work, at least for in memory (not SQLITE).  
 
   """
+
+class FailOnColumnExecutor(SimpleColumnExecutor):
+    """
+      fails if a specific column is present in args.columns
+      """
+    def __init__(self, bad_col: str) -> None:
+        super().__init__()
+        self.bad_col = bad_col
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        if self.bad_col in execution_args.columns:
+            1/0
+        # behave like parent when not failing
+        return super().execute(ldf, execution_args)
+
+
+def test_column_bisector():
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        pass
+    exc = Executor(ldf, FailOnColumnExecutor('a1'), listener, fc)
+    # construct a starting failing event with both columns
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=exc.dfi,
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=None,
+        completed=False,
+    )
+    bi = ColumnBisector(starting_ev, exc.executor_log, FailOnColumnExecutor('a1'), ldf)
+    fail_ev, success_ev = bi.run()
+    assert fail_ev.completed == False
+    assert success_ev.completed == True
+    assert fail_ev.args.columns == ['a1']
+    assert success_ev.args.columns == ['b2']
+
+
+def test_column_bisector_on_success_event_noop():
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        pass
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=exc.dfi,
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=dtdt.now(),
+        completed=True,
+    )
+    bi = ColumnBisector(starting_ev, exc.executor_log, SimpleColumnExecutor(), ldf)
+    fail_ev, success_ev = bi.run()
+    assert fail_ev.completed == True
+    assert success_ev.completed == True
+    assert fail_ev.args.columns == ['a1','b2']
+    assert success_ev.args.columns == ['a1','b2']

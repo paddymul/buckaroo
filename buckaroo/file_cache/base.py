@@ -493,15 +493,12 @@ Goals:
   """
         
 
-class Bisector:
+class BaseBisector(ABC):
     """
-    Delta-debug the expression list in ExecutorArgs to:
-    - find the minimal subset that reproduces the original failure
-    - find the maximal subset that still succeeds
+    Shared delta-debugging logic over a sequence of items (by index).
 
-    Notes:
-    - Only calls ColumnExecutor.execute (never get_execution_args).
-    - Works on stable indices rather than comparing polars expressions.
+    Subclasses must provide how to build ExecutorArgs from selected indices and
+    how many base items exist.
     """
 
     def __init__(self,
@@ -514,29 +511,17 @@ class Bisector:
         self.column_executor = column_executor
         self.ldf = ldf
         self.dfi = event.dfi
-        self._base_expressions: list[pl.Expr] = list(event.args.expressions)
 
-    def build_args_with_expressions(self, expressions: list[pl.Expr]) -> ExecutorArgs:
-        """Clone original args, replacing only expressions with the provided list."""
-        src = self.original_event.args
-        return ExecutorArgs(
-            columns=list(src.columns),
-            column_specific_expressions=src.column_specific_expressions,
-            include_hash=src.include_hash,
-            expressions=list(expressions),
-            row_start=src.row_start,
-            row_end=src.row_end,
-            extra=src.extra,
-        )
+    @abstractmethod
+    def base_size(self) -> int:
+        ...
 
-    def try_execute_with_expressions(self, expressions: list[pl.Expr]) -> tuple[bool, ExecutorLogEvent]:
-        """
-        Try running execute for the given expressions, logging start/end and
-        returning (success, log_event). Success means either no exception or an
-        exception that is not the same type as the baseline failure.
-        """
-        args = self.build_args_with_expressions(expressions)
-        # Log a start so we have a record even on failure
+    @abstractmethod
+    def build_args_from_indices(self, indices: list[int]) -> ExecutorArgs:
+        ...
+
+    def try_execute_by_indices(self, indices: list[int]) -> tuple[bool, ExecutorLogEvent]:
+        args = self.build_args_from_indices(indices)
         self.executor_log.log_start_col_group(self.dfi, args)
         try:
             self.column_executor.execute(self.ldf, args)
@@ -549,28 +534,13 @@ class Bisector:
                                       end_time=None,
                                       completed=False)
             return False, ev
-
-        # success path: try to log completion but don't fail success if logging errors occur
         self.executor_log.log_end_col_group(self.dfi, args)
         ev = self.executor_log.find_event(self.dfi, args)
-        # If the logger failed to record the success, treat it as an invariant
-        # violation rather than fabricating an event.
         if ev is None or not ev.completed:
             raise RuntimeError("Bisector expected a completed log event after successful execute")
         return True, ev
 
-    # Removed in favor of ExecutorLog.find_event
-
-    def try_execute_by_indices(self, indices: list[int]) -> tuple[bool, ExecutorLogEvent]:
-        """Run execute for expressions referenced by the provided indices."""
-        exprs = [self._base_expressions[i] for i in indices]
-        return self.try_execute_with_expressions(exprs)
-
     def minimize_failing_indices(self, all_indices: list[int]) -> list[int]:
-        """
-        Delta-debug to compute a 1-minimal failing subset of indices.
-        Returns [] if the overall set doesn't reproduce the baseline failure.
-        """
         overall_ok, _ = self.try_execute_by_indices(all_indices)
         if overall_ok:
             return []
@@ -621,6 +591,89 @@ class Bisector:
         if self.original_event.completed:
             return self.original_event, self.original_event
 
+        all_indices = list(range(self.base_size()))
+        # Find minimal failing subset
+        minimal_fail_idxs = self.minimize_failing_indices(all_indices)
+        if not minimal_fail_idxs:
+            # No failure induced by items; treat original as success and return it with itself
+            _, success_ev = self.try_execute_by_indices(all_indices)
+            return success_ev, success_ev
+
+        # Build maximal success set as complement and verify; otherwise, greedy-build
+        complement_idxs = [i for i in all_indices if i not in set(minimal_fail_idxs)]
+        complement_succeeds, success_ev = self.try_execute_by_indices(complement_idxs)
+        if not complement_succeeds:
+            # Greedy build a large success set
+            success_set: list[int] = []
+            for i in all_indices:
+                candidate = success_set + [i]
+                candidate_succeeds, _ = self.try_execute_by_indices(candidate)
+                if candidate_succeeds:
+                    success_set.append(i)
+            final_succeeds, success_ev = self.try_execute_by_indices(success_set)
+            if not final_succeeds:
+                # As a last resort, empty set (should always succeed)
+                _, success_ev = self.try_execute_by_indices([])
+
+        # Ensure we return the failing event corresponding to minimal failing subset
+        minimal_subset_succeeds, fail_ev = self.try_execute_by_indices(minimal_fail_idxs)
+        if minimal_subset_succeeds:
+            raise RuntimeError("Bisector invariant violated: minimal failing subset unexpectedly succeeded")
+
+        return fail_ev, success_ev
+
+
+class ExpressionBisector(BaseBisector):
+    """
+    Delta-debug the expression list in ExecutorArgs to:
+    - find the minimal subset that reproduces the original failure
+    - find the maximal subset that still succeeds
+
+    Notes:
+    - Only calls ColumnExecutor.execute (never get_execution_args).
+    - Works on stable indices rather than comparing polars expressions.
+    """
+
+    def __init__(self,
+                 event: ExecutorLogEvent,
+                 executor_log: ExecutorLog,
+                 column_executor: ColumnExecutor[Any],
+                 ldf: pl.LazyFrame) -> None:
+        super().__init__(event, executor_log, column_executor, ldf)
+        self._base_expressions: list[pl.Expr] = list(event.args.expressions)
+
+    def build_args_with_expressions(self, expressions: list[pl.Expr]) -> ExecutorArgs:
+        """Clone original args, replacing only expressions with the provided list."""
+        src = self.original_event.args
+        return ExecutorArgs(
+            columns=list(src.columns),
+            column_specific_expressions=src.column_specific_expressions,
+            include_hash=src.include_hash,
+            expressions=list(expressions),
+            row_start=src.row_start,
+            row_end=src.row_end,
+            extra=src.extra,
+        )
+
+    def try_execute_with_expressions(self, expressions: list[pl.Expr]) -> tuple[bool, ExecutorLogEvent]:
+        expr_to_index = {id(expr): idx for idx, expr in enumerate(self._base_expressions)}
+        indices = [expr_to_index[id(e)] for e in expressions]
+        return self.try_execute_by_indices(indices)
+
+    # Removed in favor of ExecutorLog.find_event
+
+    def build_args_from_indices(self, indices: list[int]) -> ExecutorArgs:
+        exprs = [self._base_expressions[i] for i in indices]
+        return self.build_args_with_expressions(exprs)
+
+    def base_size(self) -> int:
+        return len(self._base_expressions)
+
+    def run(self) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
+        # If original event succeeded, nothing to bisect
+        if self.original_event.completed:
+            return self.original_event, self.original_event
+
         all_indices = list(range(len(self._base_expressions)))
         # Find minimal failing subset
         minimal_fail_idxs = self.minimize_failing_indices(all_indices)
@@ -664,4 +717,48 @@ def get_columns_from_args(ldf: pl.LazyFrame, args: ExecutorArgs) -> list[str]:
     only_cols = ldf.select(args.columns)
     res = only_cols.select(*args.expressions).collect()
     return list(res.columns)
+
+
+class ColumnBisector(BaseBisector):
+    """
+    Delta-debug the columns in ExecutorArgs.columns to:
+    - find the minimal subset of columns that reproduces the failure
+    - find the maximal subset that still succeeds
+
+    Only calls ColumnExecutor.execute and uses the provided ExecutorLog.
+    """
+
+    def __init__(self,
+                 event: ExecutorLogEvent,
+                 executor_log: ExecutorLog,
+                 column_executor: ColumnExecutor[Any],
+                 ldf: pl.LazyFrame) -> None:
+        super().__init__(event, executor_log, column_executor, ldf)
+        self._base_columns: list[str] = list(event.args.columns)
+
+    def build_args_with_columns(self, columns: list[str]) -> ExecutorArgs:
+        src = self.original_event.args
+        return ExecutorArgs(
+            columns=list(columns),
+            column_specific_expressions=src.column_specific_expressions,
+            include_hash=src.include_hash,
+            expressions=list(src.expressions),
+            row_start=src.row_start,
+            row_end=src.row_end,
+            extra=src.extra,
+        )
+
+    def try_execute_with_columns(self, columns: list[str]) -> tuple[bool, ExecutorLogEvent]:
+        index_map = {col: idx for idx, col in enumerate(self._base_columns)}
+        indices = [index_map[c] for c in columns]
+        return self.try_execute_by_indices(indices)
+
+    def build_args_from_indices(self, indices: list[int]) -> ExecutorArgs:
+        cols = [self._base_columns[i] for i in indices]
+        return self.build_args_with_columns(cols)
+
+    def base_size(self) -> int:
+        return len(self._base_columns)
+
+    # run() inherited from BaseBisector
 
