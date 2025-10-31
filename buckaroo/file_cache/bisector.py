@@ -11,6 +11,7 @@ from .base import (
     ColumnExecutor,
     ExecutorArgs,
     now,
+    SimpleExecutorLog,
 )
 
 
@@ -449,5 +450,119 @@ class SamplingRowBisector(BaseBisector):
             raise RuntimeError("SamplingRowBisector invariant violated: minimal failing subset unexpectedly succeeded")
 
         return fail_ev, success_ev
+
+
+def full_bisect_pipeline(ldf: pl.LazyFrame,
+                         column_executor: ColumnExecutor[Any]) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
+    """
+    Orchestrate a multi-stage diagnosis to answer two questions when a large select fails:
+    1) What is the largest successful set of expressions I can run on the original dataframe?
+    2) What is the most reduced failure I can produce (minimal repro)?
+
+    Approach:
+    - Column stage: Use ColumnBisector to identify a minimal set of failing columns and a maximal set of successful columns.
+    - Expression stage: On the failing column set, use ExpressionBisector to split failing and succeeding expressions.
+    - Build success: Combine all successful columns plus the failing column set using only the successful expressions to form a maximal success args; execute on the original dataframe to get the success event.
+    - Build minimal failure: Start with the minimal failing expressions on the failing columns, then reduce rows using RowRangeBisector and finally SamplingRowBisector to produce a minimal failure event.
+
+    Notes and caveats:
+    - If multiple columns interact to cause the failure, ColumnBisector may return multiple columns in the minimal failing set. This pipeline will use that set as the failing group for the expression bisect. If truly higher-order interactions exist, the expression-level split may not isolate a single expression.
+    - Expressions can be column-global in some executors (applied to all columns). To avoid expressions that reference removed columns, ColumnBisector recomputes execution args via get_execution_args for each candidate column set; this pipeline uses the successful expression subset from the expression stage for the final success run.
+    - LazyFrame.sample is not available; row sampling is handled by DataFrame.sample with deterministic seeds in SamplingRowBisector.
+
+    """
+    # Initial executor log and starting args constructed from current columns
+    log = SimpleExecutorLog()
+    all_columns = list(ldf.columns)
+    # Recompute args via get_execution_args for the full set
+    existing_stats_full = {col: {} for col in all_columns}
+    starting_args = column_executor.get_execution_args(existing_stats_full)
+    starting_event = ExecutorLogEvent(dfi=(id(ldf), ''), args=starting_args, start_time=now(), end_time=None, completed=False)
+
+    # 1) Split columns
+    cb = ColumnBisector(starting_event, log, column_executor, ldf)
+    col_fail_ev, col_success_ev = cb.run()
+
+    failing_columns = col_fail_ev.args.columns
+    success_columns = col_success_ev.args.columns
+
+    # 2) Split expressions on the failing columns set
+    failing_stats = {col: {} for col in failing_columns}
+    failing_args = column_executor.get_execution_args(failing_stats)
+    expr_start_event = ExecutorLogEvent(dfi=(id(ldf), ''), args=failing_args, start_time=now(), end_time=None, completed=False)
+    eb = ExpressionBisector(expr_start_event, log, column_executor, ldf)
+    expr_fail_ev, expr_success_ev = eb.run()
+
+    # Build maximal success event: run on original dataframe with (success_columns + failing_columns) and success expressions
+    combined_columns = list(dict.fromkeys(success_columns + failing_columns))
+    total_rows = ldf.collect().height
+    success_args = ExecutorArgs(
+        columns=combined_columns,
+        column_specific_expressions=False,
+        include_hash=starting_args.include_hash,
+        expressions=list(expr_success_ev.args.expressions),
+        row_start=0,
+        row_end=total_rows,
+        extra={},
+    )
+    log.log_start_col_group((id(ldf), ''), success_args)
+    try:
+        column_executor.execute(ldf, success_args)
+        log.log_end_col_group((id(ldf), ''), success_args)
+        success_event = log.find_event((id(ldf), ''), success_args)
+        if success_event is None or not success_event.completed:
+            raise RuntimeError("Expected success event after executing maximal success args")
+    except Exception:
+        # Likely a row-dependent failure: compute minimal failing window first, then
+        # execute success on the larger of the two complementary success windows.
+        failing_expr_args = ExecutorArgs(
+            columns=list(failing_columns),
+            column_specific_expressions=False,
+            include_hash=starting_args.include_hash,
+            expressions=list(expr_fail_ev.args.expressions),
+            row_start=None,
+            row_end=None,
+            extra={},
+        )
+        row_event_for_success = ExecutorLogEvent(dfi=(id(ldf), ''), args=failing_expr_args, start_time=now(), end_time=None, completed=False)
+        rrb0 = RowRangeBisector(row_event_for_success, log, column_executor, ldf)
+        rr_fail_ev0, _ = rrb0.run()
+        s0, e0 = rr_fail_ev0.args.row_start or 0, rr_fail_ev0.args.row_end or total_rows
+        left_size = s0
+        right_size = total_rows - e0
+        if left_size >= right_size:
+            success_args.row_start, success_args.row_end = 0, s0
+        else:
+            success_args.row_start, success_args.row_end = e0, total_rows
+        try:
+            column_executor.execute(ldf, success_args)
+            log.log_end_col_group((id(ldf), ''), success_args)
+            success_event = log.find_event((id(ldf), ''), success_args)
+            if success_event is None or not success_event.completed:
+                success_event = col_success_ev
+        except Exception:
+            success_event = col_success_ev
+    # If success_event still not set for any reason, fall back to column-level success
+    if success_event is None:
+        success_event = col_success_ev
+
+    # Build minimal failure: reduce rows via RowRangeBisector then SamplingRowBisector
+    minimal_fail_expr_args = ExecutorArgs(
+        columns=list(failing_columns),
+        column_specific_expressions=False,
+        include_hash=starting_args.include_hash,
+        expressions=list(expr_fail_ev.args.expressions),
+        row_start=None,
+        row_end=None,
+        extra={},
+    )
+    row_event = ExecutorLogEvent(dfi=(id(ldf), ''), args=minimal_fail_expr_args, start_time=now(), end_time=None, completed=False)
+    rrb = RowRangeBisector(row_event, log, column_executor, ldf)
+    rr_fail_ev, _ = rrb.run()
+
+    srb = SamplingRowBisector(rr_fail_ev, log, column_executor, ldf)
+    final_fail_ev, _ = srb.run()
+
+    return success_event, final_fail_ev
 
 

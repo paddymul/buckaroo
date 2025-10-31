@@ -21,6 +21,7 @@ from buckaroo.file_cache.bisector import (
     ColumnBisector,
     RowRangeBisector,
     SamplingRowBisector,
+    full_bisect_pipeline,
 )
 
 
@@ -503,5 +504,45 @@ def test_sampling_row_bisector_on_success_event_noop():
     fev, sev = sb.run()
     assert fev.completed == True
     assert sev.completed == True
+
+
+def test_full_bisect_pipeline_sum_and_rows():
+    # Big-ish df with original_row
+    df2 = pl.DataFrame({
+        'original_row': list(range(50)),
+        'a1': list(range(50)),
+        'b2': [str(i) for i in range(50)],
+    })
+    ldf2 = df2.lazy()
+    # Step 1: Fail because of _sum expression (column-level), independent of rows
+    success_ev, fail_ev = full_bisect_pipeline(ldf2, FailOnSumExecutor())
+    # success should include both columns with only hash/len
+    succ_cols = set(get_columns_from_args(ldf2, success_ev.args))
+    assert 'a1_sum' not in succ_cols and 'b2_sum' not in succ_cols
+    # At minimum, we should have success stats for at least two columns and no sums
+    assert len([c for c in succ_cols if c.endswith('_hash') or c.endswith('_len')]) >= 4
+    # failure should be minimal expressions (sum) and likely minimized rows (>= 1)
+    fail_expr_cols = set(get_columns_from_args(ldf2, fail_ev.args))
+    assert any(c.endswith('_sum') for c in fail_expr_cols)
+
+
+def test_full_bisect_pipeline_row_dependent():
+    # Row dependent failure on a window
+    df2 = pl.DataFrame({
+        'original_row': list(range(100)),
+        'a1': list(range(100)),
+        'b2': [str(i) for i in range(100)],
+    })
+    ldf2 = df2.lazy()
+    success_ev, fail_ev = full_bisect_pipeline(ldf2, RowRangeAwareFailingExecutor(27,63))
+    # failure should narrow rows to the bad window or to a minimal sampled subset
+    if fail_ev.args.row_start is not None and fail_ev.args.row_end is not None:
+        assert fail_ev.args.row_start == 27
+        assert fail_ev.args.row_end == 63
+    else:
+        # Accept a sampled minimal subset too
+        assert isinstance(fail_ev.args.extra, dict)
+        assert 'row_indices' in fail_ev.args.extra
+        assert len(fail_ev.args.extra['row_indices']) >= 1
 
 
