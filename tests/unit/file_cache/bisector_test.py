@@ -20,6 +20,7 @@ from buckaroo.file_cache.bisector import (
     ExpressionBisector,
     ColumnBisector,
     RowRangeBisector,
+    SamplingRowBisector,
 )
 
 
@@ -151,12 +152,17 @@ class FailOnColumnExecutor(SimpleColumnExecutor):
 
 
 class RowRangeAwareFailingExecutor(SimpleColumnExecutor):
+    def __init__(self, start_bad: int=3, end_bad:int=7) -> None:
+        super().__init__()
+        self.start_bad = start_bad
+        self.end_bad = end_bad
+
     def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
         rs = execution_args.row_start
         re = execution_args.row_end
         if rs is None or re is None:
             1/0
-        if rs <= 3 and re >= 7:
+        if rs <= self.start_bad and re >= self.end_bad:
             1/0
         return super().execute(ldf, execution_args)
 
@@ -331,6 +337,76 @@ def test_row_range_bisector_minimal_and_success():
     assert fail_ev.args.row_end == 7
     assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,3), (7,10)]
 
+def test_row_range_bisector_minimal_and_successB():
+    df2 = pl.DataFrame({
+        'a1': list(range(10)),
+        'b2': [str(i) for i in range(10)],
+    })
+    ldf2 = df2.lazy()
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = RowRangeAwareFailingExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=None,
+        completed=False,
+    )
+    rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
+    fail_ev, success_ev = rr.run()
+    assert fail_ev.completed == False
+    assert success_ev.completed == True
+    assert fail_ev.args.row_start == 3
+    assert fail_ev.args.row_end == 7
+    assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,3), (7,10)]
+
+def test_row_range_bisector_minimal_and_success2():
+    df2 = pl.DataFrame({
+        'a1': list(range(100)),
+        'b2': [str(i) for i in range(100)],
+    })
+    ldf2 = df2.lazy()
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=None,
+        completed=False,
+    )
+    rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(27, 63), ldf2)  # type: ignore
+    fail_ev, success_ev = rr.run()
+    assert fail_ev.completed == False
+    assert success_ev.completed == True
+    assert fail_ev.args.row_start == 27
+    assert fail_ev.args.row_end == 63
+    assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,27), (63,100)]
+
+def test_row_range_bisector_minimal_and_success3():
+    df2 = pl.DataFrame({
+        'a1': list(range(100)),
+        'b2': [str(i) for i in range(100)],
+    })
+    ldf2 = df2.lazy()
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=None,
+        completed=False,
+    )
+    rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(0, 33), ldf2)  # type: ignore
+    fail_ev, success_ev = rr.run()
+    assert fail_ev.completed == False
+    assert success_ev.completed == True
+    assert fail_ev.args.row_start == 0
+    assert fail_ev.args.row_end == 33
+    assert (success_ev.args.row_start, success_ev.args.row_end) == (33,100)
+
+    
 
 def test_row_range_bisector_on_success_event_noop():
     df2 = pl.DataFrame({
@@ -349,6 +425,78 @@ def test_row_range_bisector_on_success_event_noop():
     )
     rr = RowRangeBisector(success_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
     fev, sev = rr.run()
+    assert fev.completed == True
+    assert sev.completed == True
+
+
+class RowSetAwareFailingExecutor(SimpleColumnExecutor):
+    """
+      Fails only when both rows 0 and 6 are included in args.extra['row_indices'].
+      If 'row_indices' not provided, treat as full set present (fail).
+      """
+
+    def __init__(self, bad_rows: list[int]) -> None:
+        super().__init__()
+        self.bad_rows = bad_rows
+
+
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        indices = []
+        if isinstance(execution_args.extra, dict) and 'row_indices' in execution_args.extra:
+            indices = list(execution_args.extra['row_indices'])
+        else:
+            1/0
+        for i in indices:
+            if i in self.bad_rows:
+                1/0
+        return super().execute(ldf, execution_args)
+
+
+def test_sampling_row_bisector_minimal_pair():
+    df2 = pl.DataFrame({
+        'a1': list(range(10)),
+        'b2': [str(i) for i in range(10)],
+    })
+    ldf2 = df2.lazy()
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=None,
+        completed=False,
+    )
+    sb = SamplingRowBisector(starting_ev, SimpleExecutorLog(), RowSetAwareFailingExecutor([0,6]), ldf2)  # type: ignore
+    fail_ev, success_ev = sb.run()
+    assert fail_ev.completed == False
+    assert success_ev.completed == True
+    # minimal failing set should be exactly rows {0,6}
+    row_indices = set(fail_ev.args.extra['row_indices'])  # type: ignore
+    assert row_indices == {0,6}
+    # success set should not contain both 0 and 6
+    succ_indices = set(success_ev.args.extra['row_indices'])  # type: ignore
+    assert not ({0,6}.issubset(succ_indices))
+    assert len(succ_indices) < 10
+
+
+def test_sampling_row_bisector_on_success_event_noop():
+    df2 = pl.DataFrame({
+        'a1': list(range(10)),
+        'b2': [str(i) for i in range(10)],
+    })
+    ldf2 = df2.lazy()
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    success_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=dtdt.now(),
+        completed=True,
+    )
+    sb = SamplingRowBisector(success_ev, SimpleExecutorLog(), RowSetAwareFailingExecutor([0,6]), ldf2)  # type: ignore
+    fev, sev = sb.run()
     assert fev.completed == True
     assert sev.completed == True
 

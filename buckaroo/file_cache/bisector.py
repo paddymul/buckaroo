@@ -325,3 +325,41 @@ class RowRangeBisector:
             return fail_ev, success_ev
 
 
+class SamplingRowBisector(BaseBisector):
+    """
+    Delta-debug over arbitrary row indices (non-contiguous) to:
+    - find a minimal set of row indices that reproduces the failure
+    - find a maximal set of row indices that succeeds
+
+    Selected rows are communicated via ExecutorArgs.extra['row_indices'].
+    """
+
+    def __init__(self,
+                 event: ExecutorLogEvent,
+                 executor_log: ExecutorLog,
+                 column_executor: ColumnExecutor[Any],
+                 ldf: pl.LazyFrame) -> None:
+        super().__init__(event, executor_log, column_executor, ldf)
+        self._total_rows: int = self.ldf.collect().height
+
+    def build_args_with_row_indices(self, row_indices: list[int]) -> ExecutorArgs:
+        src = self.original_event.args
+        extra = dict(src.extra) if isinstance(src.extra, dict) else {}
+        extra['row_indices'] = list(row_indices)
+        return ExecutorArgs(
+            columns=list(src.columns),
+            column_specific_expressions=src.column_specific_expressions,
+            include_hash=src.include_hash,
+            expressions=list(src.expressions),
+            row_start=None,
+            row_end=None,
+            extra=extra,
+        )
+
+    def build_args_from_indices(self, indices: list[int]) -> ExecutorArgs:
+        return self.build_args_with_row_indices(indices)
+
+    def base_size(self) -> int:
+        return self._total_rows
+
+
