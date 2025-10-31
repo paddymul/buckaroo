@@ -9,8 +9,10 @@ from buckaroo.file_cache.base import (
     ProgressNotification,
     ExpressionBisector,
     ColumnBisector,
+    RowRangeBisector,
     get_columns_from_args,
     ExecutorLogEvent,
+    SimpleExecutorLog,
 )
 import polars as pl
 import polars.selectors as cs
@@ -503,3 +505,71 @@ def test_column_bisector_on_success_event_noop():
     assert success_ev.completed == True
     assert fail_ev.args.columns == ['a1','b2']
     assert success_ev.args.columns == ['a1','b2']
+
+
+class RowRangeAwareFailingExecutor(SimpleColumnExecutor):
+    """
+      Fails if the row range includes [3,7) in terms of args.row_start/row_end
+      (row_end exclusive). If row_start/row_end are None, treat as full range (failing).
+      """
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        rs = execution_args.row_start
+        re = execution_args.row_end
+        if rs is None or re is None:
+            # consider full window, fail if it includes [3,7)
+            1/0
+        if rs <= 3 and re >= 7:
+            1/0
+        return super().execute(ldf, execution_args)
+
+
+def test_row_range_bisector_minimal_and_success():
+    # Build a larger dataframe for row-range tests
+    df2 = pl.DataFrame({
+        'a1': list(range(10)),
+        'b2': [str(i) for i in range(10)],
+    })
+    ldf2 = df2.lazy()
+    fc = FileCache()
+    def listener(progress:ProgressNotification) -> None:
+        pass
+
+    # starting failing event with both columns and no row range
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    starting_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=None,
+        completed=False,
+    )
+    rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
+    fail_ev, success_ev = rr.run()
+    assert fail_ev.completed == False
+    assert success_ev.completed == True
+    assert fail_ev.args.row_start == 3
+    assert fail_ev.args.row_end == 7
+    # success should be the larger of [0,3) and [7,10)
+    assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,3), (7,10)]
+
+
+def test_row_range_bisector_on_success_event_noop():
+    df2 = pl.DataFrame({
+        'a1': list(range(10)),
+        'b2': [str(i) for i in range(10)],
+    })
+    ldf2 = df2.lazy()
+    existing_stats = {'a1':{}, 'b2':{}}
+    starting_args = SimpleColumnExecutor().get_execution_args(existing_stats)  # type: ignore
+    success_ev = ExecutorLogEvent(
+        dfi=(id(ldf2), ''),
+        args=starting_args,
+        start_time=dtdt.now(),
+        end_time=dtdt.now(),
+        completed=True,
+    )
+    rr = RowRangeBisector(success_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
+    fev, sev = rr.run()
+    assert fev.completed == True
+    assert sev.completed == True

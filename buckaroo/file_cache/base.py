@@ -760,3 +760,109 @@ class ColumnBisector(BaseBisector):
 
     # run() inherited from BaseBisector
 
+
+class RowRangeBisector:
+    """
+    Find a minimal contiguous row range [row_start, row_end) that reproduces a failure,
+    and a maximal contiguous row range that succeeds.
+
+    Notes:
+    - Only calls ColumnExecutor.execute (never get_execution_args).
+    - Uses row_start/row_end on ExecutorArgs; other args are preserved.
+    - Assumes row_end is exclusive.
+    """
+
+    def __init__(self,
+                 event: ExecutorLogEvent,
+                 executor_log: ExecutorLog,
+                 column_executor: ColumnExecutor[Any],
+                 ldf: pl.LazyFrame) -> None:
+        self.original_event = event
+        self.executor_log = executor_log
+        self.column_executor = column_executor
+        self.ldf = ldf
+        self.dfi = event.dfi
+
+        # Determine total rows for this LazyFrame
+        self._total_rows: int = self.ldf.collect().height
+
+    def build_args_with_range(self, row_start: int | None, row_end: int | None) -> ExecutorArgs:
+        src = self.original_event.args
+        return ExecutorArgs(
+            columns=list(src.columns),
+            column_specific_expressions=src.column_specific_expressions,
+            include_hash=src.include_hash,
+            expressions=list(src.expressions),
+            row_start=row_start,
+            row_end=row_end,
+            extra=src.extra,
+        )
+
+    def _try_execute(self, row_start: int | None, row_end: int | None) -> tuple[bool, ExecutorLogEvent]:
+        args = self.build_args_with_range(row_start, row_end)
+        self.executor_log.log_start_col_group(self.dfi, args)
+        try:
+            self.column_executor.execute(self.ldf, args)
+        except Exception:  # noqa: BLE001
+            ev = self.executor_log.find_event(self.dfi, args)
+            if ev is None:
+                ev = ExecutorLogEvent(dfi=self.dfi,
+                                      args=args,
+                                      start_time=now(),
+                                      end_time=None,
+                                      completed=False)
+            return False, ev
+        self.executor_log.log_end_col_group(self.dfi, args)
+        ev = self.executor_log.find_event(self.dfi, args)
+        if ev is None or not ev.completed:
+            raise RuntimeError("RowRangeBisector expected a completed log event after successful execute")
+        return True, ev
+
+    def _find_minimal_failing_window(self) -> tuple[int, int]:
+        # Brute-force increasing window size to guarantee finding a minimal contiguous window
+        n = self._total_rows
+        for window in range(1, n + 1):
+            for start in range(0, n - window + 1):
+                end = start + window
+                ok, _ = self._try_execute(start, end)
+                if not ok:
+                    return start, end
+        # If no window fails, raise
+        raise RuntimeError("RowRangeBisector could not find a failing window; original event may not be a failure")
+
+    def run(self) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
+        # If original event succeeded, nothing to bisect
+        if self.original_event.completed:
+            return self.original_event, self.original_event
+
+        # Verify that full range fails (or at least current args) and then find minimal failing
+        full_ok, _ = self._try_execute(None, None)
+        if full_ok:
+            # If full succeeds, return success twice
+            _, success_ev = self._try_execute(None, None)
+            return success_ev, success_ev
+
+        s, e = self._find_minimal_failing_window()
+        # Failing event for minimal window
+        _, fail_ev = self._try_execute(s, e)
+
+        # Maximal success: choose the larger of the two success windows that avoid [s,e)
+        left_size = s
+        right_size = self._total_rows - e
+        if left_size >= right_size:
+            success_ok, success_ev = self._try_execute(0, s)
+            if not success_ok:
+                # If left unexpectedly fails, try right
+                success_ok, success_ev = self._try_execute(e, self._total_rows)
+                if not success_ok:
+                    # As a safeguard, empty window should succeed
+                    success_ok, success_ev = self._try_execute(0, 0)
+            return fail_ev, success_ev
+        else:
+            success_ok, success_ev = self._try_execute(e, self._total_rows)
+            if not success_ok:
+                success_ok, success_ev = self._try_execute(0, s)
+                if not success_ok:
+                    success_ok, success_ev = self._try_execute(0, 0)
+            return fail_ev, success_ev
+
