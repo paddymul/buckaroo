@@ -491,6 +491,17 @@ Goals:
 
 
   """
+def get_columns_from_args(ldf: pl.LazyFrame, args: ExecutorArgs) -> list[str]:
+    """
+    Compute the output column names produced by applying the given ExecutorArgs
+    to the provided LazyFrame.
+
+    This mirrors the execution flow used by ColumnExecutor implementations that
+    first select the target columns, then apply the expressions.
+    """
+    only_cols = ldf.select(args.columns)
+    res = only_cols.select(*args.expressions).collect()
+    return list(res.columns)
         
 
 class BaseBisector(ABC):
@@ -660,8 +671,6 @@ class ExpressionBisector(BaseBisector):
         indices = [expr_to_index[id(e)] for e in expressions]
         return self.try_execute_by_indices(indices)
 
-    # Removed in favor of ExecutorLog.find_event
-
     def build_args_from_indices(self, indices: list[int]) -> ExecutorArgs:
         exprs = [self._base_expressions[i] for i in indices]
         return self.build_args_with_expressions(exprs)
@@ -706,17 +715,6 @@ class ExpressionBisector(BaseBisector):
         return fail_ev, success_ev
 
 
-def get_columns_from_args(ldf: pl.LazyFrame, args: ExecutorArgs) -> list[str]:
-    """
-    Compute the output column names produced by applying the given ExecutorArgs
-    to the provided LazyFrame.
-
-    This mirrors the execution flow used by ColumnExecutor implementations that
-    first select the target columns, then apply the expressions.
-    """
-    only_cols = ldf.select(args.columns)
-    res = only_cols.select(*args.expressions).collect()
-    return list(res.columns)
 
 
 class ColumnBisector(BaseBisector):
