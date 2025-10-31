@@ -290,6 +290,12 @@ def test_column_bisector():
     assert success_ev.completed == True
     assert fail_ev.args.columns == ['a1']
     assert success_ev.args.columns == ['b2']
+    # Expressions should be recomputed for the chosen columns only
+    fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
+    succ_cols = set(get_columns_from_args(ldf, success_ev.args))
+    assert fail_cols == {'a1_hash', 'a1_len'} or fail_cols == {'a1_hash', 'a1_len', 'a1_sum'}
+    assert 'b2_hash' not in fail_cols and 'b2_len' not in fail_cols
+    assert succ_cols == {'b2_hash', 'b2_len'} or succ_cols == {'b2_hash', 'b2_len', 'b2_sum'}
 
 
 def test_column_bisector_on_success_event_noop():

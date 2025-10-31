@@ -200,16 +200,9 @@ class ColumnBisector(BaseBisector):
         self._base_columns: list[str] = list(event.args.columns)
 
     def build_args_with_columns(self, columns: list[str]) -> ExecutorArgs:
-        src = self.original_event.args
-        return ExecutorArgs(
-            columns=list(columns),
-            column_specific_expressions=src.column_specific_expressions,
-            include_hash=src.include_hash,
-            expressions=list(src.expressions),
-            row_start=src.row_start,
-            row_end=src.row_end,
-            extra=src.extra,
-        )
+        # Recompute execution args using the executor for the selected columns
+        existing_stats = {col: {} for col in columns}
+        return self.column_executor.get_execution_args(existing_stats)
 
     def try_execute_with_columns(self, columns: list[str]) -> tuple[bool, ExecutorLogEvent]:
         index_map = {col: idx for idx, col in enumerate(self._base_columns)}
