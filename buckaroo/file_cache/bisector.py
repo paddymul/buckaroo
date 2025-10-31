@@ -343,6 +343,7 @@ class SamplingRowBisector(BaseBisector):
         self._total_rows: int = self.ldf.collect().height
 
     def build_args_with_row_indices(self, row_indices: list[int]) -> ExecutorArgs:
+        
         src = self.original_event.args
         extra = dict(src.extra) if isinstance(src.extra, dict) else {}
         extra['row_indices'] = list(row_indices)
@@ -361,5 +362,99 @@ class SamplingRowBisector(BaseBisector):
 
     def base_size(self) -> int:
         return self._total_rows
+
+    seeds = [42, 1337, 7, 99, 2025]
+    fracs = [0.75, 0.5, 0.25, 0.125]
+    min_size = 16
+    def try_execute_by_indices(self, indices: list[int]) -> tuple[bool, ExecutorLogEvent]:
+        args = self.build_args_from_indices(indices)
+        # Build a filtered LazyFrame including only the requested original_row indices
+        # Assumes a column named 'original_row' exists in the input LazyFrame
+        filtered_ldf = self.ldf.filter(pl.col('original_row').is_in(indices))
+        self.executor_log.log_start_col_group(self.dfi, args)
+        try:
+            self.column_executor.execute(filtered_ldf, args)
+        except Exception:  # noqa: BLE001
+            ev = self.executor_log.find_event(self.dfi, args)
+            if ev is None:
+                ev = ExecutorLogEvent(dfi=self.dfi,
+                                      args=args,
+                                      start_time=now(),
+                                      end_time=None,
+                                      completed=False)
+            return False, ev
+        self.executor_log.log_end_col_group(self.dfi, args)
+        ev = self.executor_log.find_event(self.dfi, args)
+        if ev is None or not ev.completed:
+            raise RuntimeError("SamplingRowBisector expected a completed log event after successful execute")
+        return True, ev
+
+    def run(self) -> tuple[ExecutorLogEvent, ExecutorLogEvent]:
+        if self.original_event.completed:
+            return self.original_event, self.original_event
+
+        # Initial downsampling using deterministic sampling to shrink the search space
+        ldf_current = self.ldf
+
+        for frac in self.fracs: 
+            found = False
+            for seed in self.seeds:
+                # LazyFrame may not support sample; collect then sample deterministically using seed
+                current_df = ldf_current.collect()
+                candidate_df = current_df.sample(fraction=frac, with_replacement=False, shuffle=True, seed=seed)
+                candidate = candidate_df.lazy()
+                # If candidate still fails, accept and continue shrinking
+                args = self.build_args_from_indices(list(range(self._total_rows)))
+                self.executor_log.log_start_col_group(self.dfi, args)
+                try:
+                    self.column_executor.execute(candidate, args)
+                except Exception:
+                    ldf_current = candidate
+                    found = True
+                    break
+                finally:
+                    # We don't mark completion for this probe as it's not a real ddmin step
+                    pass
+            if found:
+                # Update total rows based on the new sampled data
+                self.ldf = ldf_current
+                self._total_rows = self.ldf.collect().height
+                if self._total_rows <= self.min_size:
+                    break
+            else:
+                # Could not find a failing sample at this fraction; stop shrinking
+                break
+
+        # Prepare the set of available original_row indices from current ldf
+        rows_df = self.ldf.select(pl.col('original_row')).collect()
+        all_indices = list(map(int, rows_df['original_row'].to_list()))
+
+        # Use BaseBisector logic on the explicit row id set
+        minimal_fail_idxs = self.minimize_failing_indices(all_indices)
+        if not minimal_fail_idxs:
+            # If nothing fails, consider full current set as success
+            _, success_ev = self.try_execute_by_indices(all_indices)
+            return success_ev, success_ev
+
+        # Build maximal success as complement
+        complement_idxs = [i for i in all_indices if i not in set(minimal_fail_idxs)]
+        complement_succeeds, success_ev = self.try_execute_by_indices(complement_idxs)
+        if not complement_succeeds:
+            # Greedy build a large success set
+            success_set: list[int] = []
+            for i in all_indices:
+                candidate = success_set + [i]
+                candidate_succeeds, _ = self.try_execute_by_indices(candidate)
+                if candidate_succeeds:
+                    success_set.append(i)
+            final_succeeds, success_ev = self.try_execute_by_indices(success_set)
+            if not final_succeeds:
+                _, success_ev = self.try_execute_by_indices([])
+
+        minimal_subset_succeeds, fail_ev = self.try_execute_by_indices(minimal_fail_idxs)
+        if minimal_subset_succeeds:
+            raise RuntimeError("SamplingRowBisector invariant violated: minimal failing subset unexpectedly succeeded")
+
+        return fail_ev, success_ev
 
 

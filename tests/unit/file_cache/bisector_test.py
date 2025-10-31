@@ -316,6 +316,7 @@ def test_column_bisector_on_success_event_noop():
 
 def test_row_range_bisector_minimal_and_success():
     df2 = pl.DataFrame({
+        'original_row': list(range(10)),
         'a1': list(range(10)),
         'b2': [str(i) for i in range(10)],
     })
@@ -410,6 +411,7 @@ def test_row_range_bisector_minimal_and_success3():
 
 def test_row_range_bisector_on_success_event_noop():
     df2 = pl.DataFrame({
+        'original_row': list(range(10)),
         'a1': list(range(10)),
         'b2': [str(i) for i in range(10)],
     })
@@ -441,21 +443,17 @@ class RowSetAwareFailingExecutor(SimpleColumnExecutor):
 
 
     def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
-        indices = []
-        if isinstance(execution_args.extra, dict) and 'row_indices' in execution_args.extra:
-            indices = list(execution_args.extra['row_indices'])
-        else:
+        present_rows = set(pl.DataFrame(ldf.select(pl.col('original_row')).collect())['original_row'].to_list())
+        if set(self.bad_rows).issubset(present_rows):
             1/0
-        for i in indices:
-            if i in self.bad_rows:
-                1/0
         return super().execute(ldf, execution_args)
 
 
 def test_sampling_row_bisector_minimal_pair():
     df2 = pl.DataFrame({
-        'a1': list(range(10)),
-        'b2': [str(i) for i in range(10)],
+        'original_row': list(range(100)),
+        'a1': list(range(100)),
+        'b2': [str(i) for i in range(100)],
     })
     ldf2 = df2.lazy()
     existing_stats = {'a1':{}, 'b2':{}}
@@ -474,16 +472,16 @@ def test_sampling_row_bisector_minimal_pair():
     # minimal failing set should be exactly rows {0,6}
     row_indices = set(fail_ev.args.extra['row_indices'])  # type: ignore
     assert row_indices == {0,6}
-    # success set should not contain both 0 and 6
     succ_indices = set(success_ev.args.extra['row_indices'])  # type: ignore
     assert not ({0,6}.issubset(succ_indices))
-    assert len(succ_indices) < 10
+    assert len(succ_indices) < 100
 
 
 def test_sampling_row_bisector_on_success_event_noop():
     df2 = pl.DataFrame({
-        'a1': list(range(10)),
-        'b2': [str(i) for i in range(10)],
+        'original_row': list(range(100)),
+        'a1': list(range(100)),
+        'b2': [str(i) for i in range(100)],
     })
     ldf2 = df2.lazy()
     existing_stats = {'a1':{}, 'b2':{}}
