@@ -323,7 +323,6 @@ def test_column_bisector_on_success_event_noop():
 
 def test_row_range_bisector_minimal_and_success():
     df2 = pl.DataFrame({
-        'original_row': list(range(10)),
         'a1': list(range(10)),
         'b2': [str(i) for i in range(10)],
     })
@@ -418,7 +417,6 @@ def test_row_range_bisector_minimal_and_success3():
 
 def test_row_range_bisector_on_success_event_noop():
     df2 = pl.DataFrame({
-        'original_row': list(range(10)),
         'a1': list(range(10)),
         'b2': [str(i) for i in range(10)],
     })
@@ -450,7 +448,12 @@ class RowSetAwareFailingExecutor(SimpleColumnExecutor):
 
 
     def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
-        present_rows = set(pl.DataFrame(ldf.select(pl.col('original_row')).collect())['original_row'].to_list())
+        if 'original_row' in ldf.columns:
+            present_rows = set(pl.DataFrame(ldf.select(pl.col('original_row')).collect())['original_row'].to_list())
+        elif '_row_ix' in ldf.columns:
+            present_rows = set(pl.DataFrame(ldf.select(pl.col('_row_ix')).collect())['_row_ix'].to_list())
+        else:
+            present_rows = set(pl.DataFrame(ldf.with_row_index('_row_ix').select(pl.col('_row_ix')).collect())['_row_ix'].to_list())
         if set(self.bad_rows).issubset(present_rows):
             1/0
         return super().execute(ldf, execution_args)
@@ -458,7 +461,6 @@ class RowSetAwareFailingExecutor(SimpleColumnExecutor):
 
 def test_sampling_row_bisector_minimal_pair():
     df2 = pl.DataFrame({
-        'original_row': list(range(100)),
         'a1': list(range(100)),
         'b2': [str(i) for i in range(100)],
     })
@@ -486,7 +488,6 @@ def test_sampling_row_bisector_minimal_pair():
 
 def test_sampling_row_bisector_on_success_event_noop():
     df2 = pl.DataFrame({
-        'original_row': list(range(100)),
         'a1': list(range(100)),
         'b2': [str(i) for i in range(100)],
     })
@@ -507,11 +508,15 @@ def test_sampling_row_bisector_on_success_event_noop():
 
 
 def test_full_bisect_pipeline_sum_and_rows():
-    # Big-ish df with original_row
+    # Big-ish, "big hairy dataframe" with many columns
+    N = 50
     df2 = pl.DataFrame({
-        'original_row': list(range(50)),
-        'a1': list(range(50)),
-        'b2': [str(i) for i in range(50)],
+        'a1': list(range(N)),
+        'b2': list(range(N, 2*N)),
+        'c3': [i * 0.5 for i in range(N)],
+        'd4': [i % 7 for i in range(N)],
+        's1': [f"s{i}" for i in range(N)],
+        's2': [f"t{i%3}" for i in range(N)],
     })
     ldf2 = df2.lazy()
     # Step 1: Fail because of _sum expression (column-level), independent of rows
@@ -519,19 +524,27 @@ def test_full_bisect_pipeline_sum_and_rows():
     # success should include both columns with only hash/len
     succ_cols = set(get_columns_from_args(ldf2, success_ev.args))
     assert 'a1_sum' not in succ_cols and 'b2_sum' not in succ_cols
-    # At minimum, we should have success stats for at least two columns and no sums
-    assert len([c for c in succ_cols if c.endswith('_hash') or c.endswith('_len')]) >= 4
+    # We should see at least hash/len for most columns, and no _sum present
+    num_hash = len([c for c in succ_cols if c.endswith('_hash')])
+    num_len = len([c for c in succ_cols if c.endswith('_len')])
+    assert num_hash >= 2
+    assert num_len >= 2
+    assert not any(col.endswith('_sum') for col in succ_cols)
     # failure should be minimal expressions (sum) and likely minimized rows (>= 1)
     fail_expr_cols = set(get_columns_from_args(ldf2, fail_ev.args))
     assert any(c.endswith('_sum') for c in fail_expr_cols)
 
 
 def test_full_bisect_pipeline_row_dependent():
-    # Row dependent failure on a window
+    # Row dependent failure on a window using a larger, multi-column df
+    N = 100
     df2 = pl.DataFrame({
-        'original_row': list(range(100)),
-        'a1': list(range(100)),
-        'b2': [str(i) for i in range(100)],
+        'a1': list(range(N)),
+        'b2': list(range(N, 2*N)),
+        'c3': [i * 0.25 for i in range(N)],
+        'd4': [i % 5 for i in range(N)],
+        's1': [f"s{i}" for i in range(N)],
+        's2': [f"t{i%4}" for i in range(N)],
     })
     ldf2 = df2.lazy()
     success_ev, fail_ev = full_bisect_pipeline(ldf2, RowRangeAwareFailingExecutor(27,63))

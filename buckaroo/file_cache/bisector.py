@@ -362,9 +362,16 @@ class SamplingRowBisector(BaseBisector):
     min_size = 16
     def try_execute_by_indices(self, indices: list[int]) -> tuple[bool, ExecutorLogEvent]:
         args = self.build_args_from_indices(indices)
-        # Build a filtered LazyFrame including only the requested original_row indices
-        # Assumes a column named 'original_row' exists in the input LazyFrame
-        filtered_ldf = self.ldf.filter(pl.col('original_row').is_in(indices))
+        # Filter rows by an identifier: prefer 'original_row' if present, else use a temporary row index
+        if 'original_row' in self.ldf.columns:
+            filtered_ldf = self.ldf.filter(pl.col('original_row').is_in(indices))
+        else:
+            # Keep the temporary index column so downstream executors can detect which original rows are present
+            filtered_ldf = (
+                self.ldf
+                .with_row_index('_row_ix')
+                .filter(pl.col('_row_ix').is_in(indices))
+            )
         self.executor_log.log_start_col_group(self.dfi, args)
         try:
             self.column_executor.execute(filtered_ldf, args)
@@ -420,8 +427,12 @@ class SamplingRowBisector(BaseBisector):
                 break
 
         # Prepare the set of available original_row indices from current ldf
-        rows_df = self.ldf.select(pl.col('original_row')).collect()
-        all_indices = list(map(int, rows_df['original_row'].to_list()))
+        if 'original_row' in self.ldf.columns:
+            rows_df = self.ldf.select(pl.col('original_row')).collect()
+            all_indices = list(map(int, rows_df['original_row'].to_list()))
+        else:
+            rows_df = self.ldf.with_row_index('_row_ix').select(pl.col('_row_ix')).collect()
+            all_indices = list(map(int, rows_df['_row_ix'].to_list()))
 
         # Use BaseBisector logic on the explicit row id set
         minimal_fail_idxs = self.minimize_failing_indices(all_indices)
