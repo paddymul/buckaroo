@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import itertools
-from typing import Any
+from typing import Any, Optional, Callable
 import polars as pl
 
 from .base import (
@@ -196,13 +196,15 @@ class ColumnBisector(BaseBisector):
                  event: ExecutorLogEvent,
                  executor_log: ExecutorLog,
                  column_executor: ColumnExecutor[Any],
-                 ldf: pl.LazyFrame) -> None:
+                 ldf: pl.LazyFrame,
+                 existing_stats_provider: Optional[Callable[[list[str]], dict[str, dict[str, Any]]]] = None) -> None:
         super().__init__(event, executor_log, column_executor, ldf)
         self._base_columns: list[str] = list(event.args.columns)
+        self._existing_stats_provider = existing_stats_provider or (lambda cols: {c: {} for c in cols})
 
     def build_args_with_columns(self, columns: list[str]) -> ExecutorArgs:
-        # Recompute execution args using the executor for the selected columns
-        existing_stats = {col: {} for col in columns}
+        # Recompute execution args using the executor and provided priors for the selected columns
+        existing_stats = self._existing_stats_provider(columns)
         return self.column_executor.get_execution_args(existing_stats)
 
     def try_execute_with_columns(self, columns: list[str]) -> tuple[bool, ExecutorLogEvent]:

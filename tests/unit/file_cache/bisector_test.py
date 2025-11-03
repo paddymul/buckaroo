@@ -140,6 +140,59 @@ class FailOnSumExecutor(SimpleColumnExecutor):
             )
             col_results[col] = cr
         return col_results
+class PriorsAwareFailOnSumExecutor(SimpleColumnExecutor):
+    """
+      get_execution_args respects priors: if existing_stats[col]['avoid_sum'] is True,
+      omit the sum expression for that column; otherwise include it.
+      Execute fails if any *_sum result is present, like FailOnSumExecutor.
+      """
+    def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
+        columns = list(existing_stats.keys())
+        # Always include hash and len; optionally include numeric sum
+        exprs: list[pl.Expr] = [
+            pl.all().pl_series_hash.hash_xx().name.suffix("_hash"),
+            pl.all().len().name.suffix("_len"),
+        ]
+        # Add numeric sum only if no avoid_sum flag is set for any column
+        # We cannot target column-specific expressions easily in this executor, so
+        # when any column is allowed to sum, include numeric sum globally.
+        allow_sum_any = any(not (existing_stats.get(col, {}).get('avoid_sum', False)) for col in columns)
+        if allow_sum_any:
+            exprs.append(cs.numeric().sum().name.suffix("_sum"))
+        return ExecutorArgs(
+            columns=columns,
+            column_specific_expressions=False,
+            include_hash=True,
+            expressions=exprs,
+            row_start=None,
+            row_end=None,
+            extra=None,
+        )
+
+    def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
+        # Same failure behavior as FailOnSumExecutor
+        cols = execution_args.columns
+        only_cols_ldf = ldf.select(cols)
+        res = only_cols_ldf.select(*execution_args.expressions).collect()
+        for col in res.columns:
+            if col.endswith("_sum"):
+                1/0
+        col_results: ColumnResults = {}
+        for col in cols:
+            hash_val = res[col+"_hash"][0] if col+"_hash" in res.columns else 0
+            len_val = res[col+"_len"][0]
+            actual_result = {"len": len_val}
+            if col+"_sum" in res.columns:
+                actual_result["sum"] = res[col+"_sum"][0]
+            cr = ColumnResult(
+                series_hash=int(hash_val),
+                column_name=col,
+                expressions=[],
+                result=actual_result,
+            )
+            col_results[col] = cr
+        return col_results
+
 
 
 class FailOnColumnExecutor(SimpleColumnExecutor):
@@ -297,6 +350,34 @@ def test_column_bisector():
     assert fail_cols == {'a1_hash', 'a1_len'} or fail_cols == {'a1_hash', 'a1_len', 'a1_sum'}
     assert 'b2_hash' not in fail_cols and 'b2_len' not in fail_cols
     assert succ_cols == {'b2_hash', 'b2_len'} or succ_cols == {'b2_hash', 'b2_len', 'b2_sum'}
+
+
+def test_column_bisector_with_priors_provider():
+    # Two numeric columns; priors dictate avoid_sum for a1 only
+    df = pl.DataFrame({'a1': list(range(10)), 'b2': list(range(10,20))})
+    ldf = df.lazy()
+    priors = {'a1': {'avoid_sum': True}, 'b2': {}}
+
+    def provider(cols:list[str]) -> dict[str,dict[str,object]]:
+        return {c: dict(priors.get(c, {})) for c in cols}
+
+    exec_ = PriorsAwareFailOnSumExecutor()
+    start_args = exec_.get_execution_args({c:{} for c in ldf.columns})  # type: ignore
+    start_ev = ExecutorLogEvent(dfi=(id(ldf), ''), args=start_args, start_time=dtdt.now(), end_time=None, completed=False)
+    cb = ColumnBisector(start_ev, SimpleExecutorLog(), exec_, ldf, existing_stats_provider=provider)  # type: ignore
+    fail_ev, succ_ev = cb.run()
+
+    # Failing subset should be ['b2'] because priors allowed sum there
+    assert fail_ev.completed == False
+    assert fail_ev.args.columns == ['b2']
+    fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
+    assert 'b2_sum' in fail_cols
+
+    # Success subset should include a1 only, with no sum due to avoid_sum prior
+    assert succ_ev.completed == True
+    assert succ_ev.args.columns == ['a1']
+    succ_cols = set(get_columns_from_args(ldf, succ_ev.args))
+    assert 'a1_hash' in succ_cols and 'a1_len' in succ_cols and 'a1_sum' not in succ_cols
 
 
 def test_column_bisector_on_success_event_noop():
