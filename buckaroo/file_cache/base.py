@@ -387,12 +387,13 @@ class Executor:
 
     def __init__(self,
         ldf:pl.LazyFrame, column_executor:ColumnExecutor,
-        listener:ProgressListener, fc:FileCache) -> None:
+        listener:ProgressListener, fc:FileCache,
+        executor_log: ExecutorLog | None = None) -> None:
         self.ldf = ldf
         self.column_executor = column_executor
         self.listener = listener
         self.fc = fc
-        self.executor_log = SimpleExecutorLog()
+        self.executor_log = executor_log or SimpleExecutorLog()
 
         self.dfi = (id(self.ldf),"",)
 
