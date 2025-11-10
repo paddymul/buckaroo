@@ -36,7 +36,6 @@ dependencies = [
     "fastparquet",
     "pl-series-hash",
     "polars",
-    "mypy>=1.18.2",
     "cloudpickle>=3.1.1",
 ]
 
