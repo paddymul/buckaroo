@@ -1,5 +1,4 @@
 import polars as pl
-import polars.selectors as cs
 from polars import functions as F
 
 from buckaroo.file_cache.base import Executor, FileCache, ProgressNotification

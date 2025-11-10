@@ -3,14 +3,11 @@ from __future__ import annotations
 from typing import Any, List, Type
 
 import polars as pl
-import polars.selectors as cs
 
 from buckaroo.file_cache.base import ColumnExecutor, ColumnResults, ColumnResult, ExecutorArgs
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_produce_series_df,
 )
-from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
-from buckaroo.pluggable_analysis_framework.utils import json_postfix
 
 
 class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):

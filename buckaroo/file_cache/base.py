@@ -4,11 +4,9 @@ from datetime import datetime as dtdt, timedelta
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
-    Any, Optional, TypeAlias, Callable, cast, List, Dict, Tuple,
-    Literal,
+    Any, Optional, TypeAlias, Callable, Dict, Literal,
     Generic, TypeVar)
 import polars as pl
-from pl_series_hash import hash_xx # type:ignore
 import itertools
 
 now = dtdt.now

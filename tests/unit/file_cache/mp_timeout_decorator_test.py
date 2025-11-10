@@ -6,7 +6,7 @@ import polars as pl  # type: ignore
 from pl_series_hash import crash  # type: ignore
 
 from buckaroo.file_cache.mp_timeout_decorator import (
-    mp_simple, mp_sleep1, mp_sys_exit, mp_crash_exit, mp_polars_longread, mp_polars_crash,
+    mp_simple, mp_sleep1, mp_crash_exit, mp_polars_longread, mp_polars_crash,
     TimeoutException, ExecutionFailed, mp_timeout
 )
 

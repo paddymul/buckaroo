@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime as dtdt
+from datetime import datetime as dtdt
 from typing import cast
 
 import polars as pl

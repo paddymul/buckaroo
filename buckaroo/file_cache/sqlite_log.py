@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 import json
-from typing import Any, Optional
+from typing import Optional
 from datetime import datetime as dtdt
 
 from .base import ExecutorLog, ExecutorLogEvent, ExecutorArgs, DFIdentifier
