@@ -89,7 +89,8 @@ def _execute_and_report(func_bytes, args, kwargs, queue) -> None:
         except Exception:
             pass
 
-
+#ctx = multiprocessing.get_context("forkserver")
+ctx = multiprocessing.get_context("fork")
 def mp_timeout(timeout_secs: float):
 
     def inner_timeout(f):
@@ -97,7 +98,9 @@ def mp_timeout(timeout_secs: float):
         # is still running, raise TimeoutException. If the worker exits without delivering
         # a result (non-zero exit or dies before queue message), raise ExecutionFailed.
         def actual_func(*args, **kwargs):
-            ctx = multiprocessing.get_context("spawn")
+            #ctx = multiprocessing.get_context("spawn")
+            #ctx = multiprocessing.get_context("fork")
+
             result_queue = ctx.Queue(maxsize=1)
             func_bytes = _cloudpickle.dumps(f)
 
@@ -170,7 +173,7 @@ def mp_sleep1():
     return 5
 
 
-@mp_timeout(.8)
+@mp_timeout(.5)
 def mp_crash_exit():
     # intentionally crash the process
     ctypes.string_at(0)
@@ -181,7 +184,7 @@ def mp_sys_exit():
     sys.exit()
 
 
-@mp_timeout(1.0)
+@mp_timeout(0.5)
 def mp_polars_crash():
     try:
         import polars as pl  # type: ignore

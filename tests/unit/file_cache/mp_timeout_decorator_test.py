@@ -23,7 +23,7 @@ def mp_sleep1_2():
     return 5
 
 
-@mp_timeout(1)
+@mp_timeout(.5)
 def mp_crash_exit_2():
     # intentionally crash the process
     ctypes.string_at(0)
@@ -49,7 +49,7 @@ def test_mp_crash_exit():
         mp_crash_exit()
     assert 1==1
 
-@mp_timeout(1.0)
+@mp_timeout(.5)
 def mp_polars_crash2():
     df_1 = pl.DataFrame({"u64": pl.Series([5, 3, 20], dtype=pl.UInt64)})
     df_1.select(hash_col=crash("u64"))
@@ -84,7 +84,7 @@ def test_normal_exception():
     with pytest.raises(ZeroDivisionError):
         1/0
 
-@mp_timeout(1)
+@mp_timeout(.3)
 def zero_div():
     5/0
 
@@ -136,7 +136,7 @@ def test_jupyter_simulate():
 
     assert f(1) == 1
 
-    wrapped_f = mp_timeout(.7)(f)
+    wrapped_f = mp_timeout(.5)(f)
 
     assert wrapped_f(1) == 1
 
@@ -159,7 +159,7 @@ class UnpicklableError(Exception):
         self.fh = fh
 
 
-@mp_timeout(1)
+@mp_timeout(.5)
 def raise_unpicklable_exc(tmp_path):
     fh = open(tmp_path / "x", "w")
     raise UnpicklableError(fh)
