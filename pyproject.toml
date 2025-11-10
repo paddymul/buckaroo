@@ -37,8 +37,6 @@ dependencies = [
     "pl-series-hash",
     "polars",
     "mypy>=1.18.2",
-    "maturin>=1.9.6",
-    "pytest-xdist>=3.8.0",
     "cloudpickle>=3.1.1",
 ]
 
