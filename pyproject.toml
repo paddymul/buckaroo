@@ -255,7 +255,7 @@ dev = [
     "hypothesis>=6.88.1",
     "nbval>=0.9",
     #"pytest-playwright",
-    "solara",
+    #"solara",
     #"solara[pytest]",
     "sphinx>=1.5",
     "graphviz>=0.20.1",
