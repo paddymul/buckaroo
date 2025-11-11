@@ -261,7 +261,7 @@ dev = [
     "graphviz>=0.20.1",
     "pytest-check-links",
     "toml",
-    "watchfiles", 
+    #"watchfiles", 
     "graphviz>=0.20.1",
     "pytest-check-links",
     "toml",
