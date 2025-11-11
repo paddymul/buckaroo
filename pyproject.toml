@@ -259,7 +259,7 @@ dev = [
     #"solara[pytest]",
     "sphinx>=1.5",
     "graphviz>=0.20.1",
-    "pytest-check-links",
+    #"pytest-check-links",
     "toml",
     #"watchfiles", 
     "graphviz>=0.20.1",
