@@ -1,0 +1,55 @@
+import sys
+import ctypes
+import time
+from buckaroo.file_cache.mp_timeout_decorator import mp_timeout
+
+"""
+multiprocessing  an behave differently when a function is defined in an imported module vs defined in the smae module or in an interpreter.
+
+  This module provides examples of functions that are defined in a module
+  """
+
+
+@mp_timeout(0.3)
+def mp_polars_longread(i=0):
+    if i == 0:
+        try:
+            import polars as pl  # type: ignore
+            pl.read_csv("~/3m_july.csv")
+        except Exception:
+            # Any failure should be treated as a worker failure by the decorator
+            raise
+    return 5
+
+
+@mp_timeout(3)
+def mp_simple():
+    return 5
+
+
+@mp_timeout(0.2)
+def mp_sleep1():
+    time.sleep(1)
+    return 5
+
+
+@mp_timeout(.5)
+def mp_crash_exit():
+    # intentionally crash the process
+    ctypes.string_at(0)
+
+
+@mp_timeout(.8)
+def mp_sys_exit():
+    sys.exit()
+
+
+@mp_timeout(0.5)
+def mp_polars_crash():
+    try:
+        import polars as pl  # type: ignore
+        from pl_series_hash import crash  # type: ignore
+        df_1 = pl.DataFrame({"u64": pl.Series([5, 3, 20], dtype=pl.UInt64)})
+        df_1.select(hash_col=crash("u64"))
+    except Exception:
+        raise

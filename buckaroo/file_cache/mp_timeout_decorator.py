@@ -1,6 +1,3 @@
-import ctypes
-import sys
-import time
 import multiprocessing
 from typing import Any
 import cloudpickle as _cloudpickle  # type: ignore
@@ -149,47 +146,3 @@ def mp_timeout(timeout_secs: float):
 
     return inner_timeout
 
-
-@mp_timeout(0.3)
-def mp_polars_longread(i=0):
-    if i == 0:
-        try:
-            import polars as pl  # type: ignore
-            pl.read_csv("~/3m_july.csv")
-        except Exception:
-            # Any failure should be treated as a worker failure by the decorator
-            raise
-    return 5
-
-
-@mp_timeout(3)
-def mp_simple():
-    return 5
-
-
-@mp_timeout(0.2)
-def mp_sleep1():
-    time.sleep(1)
-    return 5
-
-
-@mp_timeout(.5)
-def mp_crash_exit():
-    # intentionally crash the process
-    ctypes.string_at(0)
-
-
-@mp_timeout(.8)
-def mp_sys_exit():
-    sys.exit()
-
-
-@mp_timeout(0.5)
-def mp_polars_crash():
-    try:
-        import polars as pl  # type: ignore
-        from pl_series_hash import crash  # type: ignore
-        df_1 = pl.DataFrame({"u64": pl.Series([5, 3, 20], dtype=pl.UInt64)})
-        df_1.select(hash_col=crash("u64"))
-    except Exception:
-        raise
