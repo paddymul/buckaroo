@@ -33,8 +33,8 @@ jobs:
       matrix:
         python-version:
           # - "3.8" #other conflicts
-          - "3.9"
-          #- "3.10"
+          #- "3.9"
+          - "3.10"
           #- "3.11"
           #- "3.12"
     steps:
