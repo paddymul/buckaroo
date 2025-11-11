@@ -27,7 +27,7 @@ DFIdentifier: TypeAlias = FileDFIdentifier | MemoryDFIdentifer
 
 
 def flatten(*lists):
-    list(itertools.chain(*nested_list))
+    list(itertools.chain(*lists))
     
 class FileCache:
     """
@@ -143,7 +143,7 @@ class FileCache:
 
           """
         key = self._get_buffer_key(series)
-        existing = list(self.series_hash_cache.keys())
+        #existing = list(self.series_hash_cache.keys())
         #print("key", key, "existing", existing, "in", key in existing)
         return key in self.series_hash_cache
 
@@ -397,7 +397,7 @@ class Executor:
 
     def run(self) -> None:
 
-        had_failure = False
+        #had_failure = False
         last_ex_args: ExecutorArgs | None = None
 
         for col_group in self.get_column_chunks():
@@ -435,7 +435,7 @@ class Executor:
                     execution_time=t3-t1,
                     failure_message=str(e))
                 self.listener(notification)
-                had_failure = True
+                #had_failure = True
                 # continue to next column group without marking completion
                 continue
 

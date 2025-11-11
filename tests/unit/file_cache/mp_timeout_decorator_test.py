@@ -2,6 +2,8 @@ import pytest
 import textwrap
 import sys
 import threading
+import ctypes
+import time
 import polars as pl  # type: ignore
 from pl_series_hash import crash  # type: ignore
 

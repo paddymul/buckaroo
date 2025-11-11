@@ -249,20 +249,20 @@ def test_bisect():
     exc = Executor(ldf, FailOnSumExecutor(), listener, fc)
     exc.run()
     evs = exc.executor_log.get_log_events()
-    failing_events = [ev for ev in evs if ev.completed == False]
+    failing_events = [ev for ev in evs if not ev.completed]
     assert len(failing_events) >= 1
     fail_input = failing_events[0]
 
     bi = ExpressionBisector(fail_input, exc.executor_log, FailOnSumExecutor(), ldf)
     fail_ev, success_ev = bi.run()
 
-    assert fail_ev.completed == False
+    assert not fail_ev.completed
     assert len(fail_ev.args.expressions) == 1
     fail_cols = get_columns_from_args(ldf, fail_ev.args)
     assert fail_cols == ['a1_sum']
     assert _expr_labels(fail_ev.args.expressions) == {'sum'}
 
-    assert success_ev.completed == True
+    assert success_ev.completed
     succ_cols = set(get_columns_from_args(ldf, success_ev.args))
     assert succ_cols == {'a1_hash', 'a1_len'}
     assert _expr_labels(success_ev.args.expressions) == {'hash','len'}
@@ -276,20 +276,20 @@ def test_bisector_multiple_failing_expressions():
     exc = Executor(ldf, FailOnHashOrSumExecutor(), listener, fc)
     exc.run()
     evs = exc.executor_log.get_log_events()
-    failing_events = [ev for ev in evs if ev.completed == False]
+    failing_events = [ev for ev in evs if not ev.completed]
     assert len(failing_events) >= 1
     fail_input = failing_events[0]
 
     bi = ExpressionBisector(fail_input, exc.executor_log, FailOnHashOrSumExecutor(), ldf)
     fail_ev, success_ev = bi.run()
 
-    assert fail_ev.completed == False
+    assert not fail_ev.completed
     assert len(fail_ev.args.expressions) == 1
     fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
     assert fail_cols in ({'a1_hash'}, {'a1_sum'})
     assert _expr_labels(fail_ev.args.expressions) in ({'hash'}, {'sum'})
 
-    assert success_ev.completed == True
+    assert success_ev.completed
     succ_cols = set(get_columns_from_args(ldf, success_ev.args))
     assert succ_cols == {'a1_len'}
     assert _expr_labels(success_ev.args.expressions) == {'len'}
@@ -314,8 +314,8 @@ def test_bisector_on_success_event_noop():
     bi = ExpressionBisector(success_input, exc.executor_log, SimpleColumnExecutor(), ldf)
     fail_ev, success_ev = bi.run()
 
-    assert success_ev.completed == True
-    assert fail_ev.completed == True
+    assert success_ev.completed
+    assert fail_ev.completed
     succ_cols = set(get_columns_from_args(ldf, success_ev.args))
     fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
     assert succ_cols == {'a1_hash', 'a1_sum', 'a1_len', 'b2_hash', 'b2_len'}
@@ -340,8 +340,8 @@ def test_column_bisector():
     )
     bi = ColumnBisector(starting_ev, exc.executor_log, FailOnColumnExecutor('a1'), ldf)
     fail_ev, success_ev = bi.run()
-    assert fail_ev.completed == False
-    assert success_ev.completed == True
+    assert not fail_ev.completed
+    assert success_ev.completed
     assert fail_ev.args.columns == ['a1']
     assert success_ev.args.columns == ['b2']
     # Expressions should be recomputed for the chosen columns only
@@ -368,13 +368,13 @@ def test_column_bisector_with_priors_provider():
     fail_ev, succ_ev = cb.run()
 
     # Failing subset should be ['b2'] because priors allowed sum there
-    assert fail_ev.completed == False
+    assert not fail_ev.completed
     assert fail_ev.args.columns == ['b2']
     fail_cols = set(get_columns_from_args(ldf, fail_ev.args))
     assert 'b2_sum' in fail_cols
 
     # Success subset should include a1 only, with no sum due to avoid_sum prior
-    assert succ_ev.completed == True
+    assert succ_ev.completed
     assert succ_ev.args.columns == ['a1']
     succ_cols = set(get_columns_from_args(ldf, succ_ev.args))
     assert 'a1_hash' in succ_cols and 'a1_len' in succ_cols and 'a1_sum' not in succ_cols
@@ -396,8 +396,8 @@ def test_column_bisector_on_success_event_noop():
     )
     bi = ColumnBisector(starting_ev, exc.executor_log, SimpleColumnExecutor(), ldf)
     fail_ev, success_ev = bi.run()
-    assert fail_ev.completed == True
-    assert success_ev.completed == True
+    assert fail_ev.completed
+    assert success_ev.completed
     assert fail_ev.args.columns == ['a1','b2']
     assert success_ev.args.columns == ['a1','b2']
 
@@ -419,8 +419,8 @@ def test_row_range_bisector_minimal_and_success():
     )
     rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
     fail_ev, success_ev = rr.run()
-    assert fail_ev.completed == False
-    assert success_ev.completed == True
+    assert not fail_ev.completed
+    assert success_ev.completed
     assert fail_ev.args.row_start == 3
     assert fail_ev.args.row_end == 7
     assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,3), (7,10)]
@@ -442,8 +442,8 @@ def test_row_range_bisector_minimal_and_successB():
     )
     rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
     fail_ev, success_ev = rr.run()
-    assert fail_ev.completed == False
-    assert success_ev.completed == True
+    assert not fail_ev.completed
+    assert success_ev.completed
     assert fail_ev.args.row_start == 3
     assert fail_ev.args.row_end == 7
     assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,3), (7,10)]
@@ -465,8 +465,8 @@ def test_row_range_bisector_minimal_and_success2():
     )
     rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(27, 63), ldf2)  # type: ignore
     fail_ev, success_ev = rr.run()
-    assert fail_ev.completed == False
-    assert success_ev.completed == True
+    assert not fail_ev.completed
+    assert success_ev.completed
     assert fail_ev.args.row_start == 27
     assert fail_ev.args.row_end == 63
     assert (success_ev.args.row_start, success_ev.args.row_end) in [(0,27), (63,100)]
@@ -488,8 +488,8 @@ def test_row_range_bisector_minimal_and_success3():
     )
     rr = RowRangeBisector(starting_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(0, 33), ldf2)  # type: ignore
     fail_ev, success_ev = rr.run()
-    assert fail_ev.completed == False
-    assert success_ev.completed == True
+    assert not fail_ev.completed
+    assert success_ev.completed
     assert fail_ev.args.row_start == 0
     assert fail_ev.args.row_end == 33
     assert (success_ev.args.row_start, success_ev.args.row_end) == (33,100)
@@ -513,8 +513,8 @@ def test_row_range_bisector_on_success_event_noop():
     )
     rr = RowRangeBisector(success_ev, SimpleExecutorLog(), RowRangeAwareFailingExecutor(), ldf2)  # type: ignore
     fev, sev = rr.run()
-    assert fev.completed == True
-    assert sev.completed == True
+    assert fev.completed
+    assert sev.completed
 
 
 class RowSetAwareFailingExecutor(SimpleColumnExecutor):
@@ -557,8 +557,8 @@ def test_sampling_row_bisector_minimal_pair():
     )
     sb = SamplingRowBisector(starting_ev, SimpleExecutorLog(), RowSetAwareFailingExecutor([0,6]), ldf2)  # type: ignore
     fail_ev, success_ev = sb.run()
-    assert fail_ev.completed == False
-    assert success_ev.completed == True
+    assert not fail_ev.completed
+    assert success_ev.completed
     # minimal failing set should be exactly rows {0,6}
     row_indices = set(fail_ev.args.extra['row_indices'])  # type: ignore
     assert row_indices == {0,6}
@@ -584,9 +584,8 @@ def test_sampling_row_bisector_on_success_event_noop():
     )
     sb = SamplingRowBisector(success_ev, SimpleExecutorLog(), RowSetAwareFailingExecutor([0,6]), ldf2)  # type: ignore
     fev, sev = sb.run()
-    assert fev.completed == True
-    assert sev.completed == True
-
+    assert fev.completed
+    assert sev.completed
 
 def test_full_bisect_pipeline_sum_and_rows():
     # Big-ish, "big hairy dataframe" with many columns

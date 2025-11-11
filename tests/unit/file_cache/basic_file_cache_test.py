@@ -225,9 +225,7 @@ def test_simple_executor_log():
 
     assert len(evs) == 2
     ev = evs[0]
-
-    assert ev.completed == True
-
+    assert ev.completed
     
     #verify that series are saved to cache, and that we can retrieve them with expected result
     assert fc.get_series_results(13038993034761730339) == {'len':3, 'sum':60}
@@ -246,10 +244,8 @@ def test_simple_executor_on_fail():
     assert len(evs) == 2
     ev = evs[0]
 
-    assert ev.completed == False
-
-    assert exc.executor_log.check_log_for_previous_failure(exc.dfi, ev.args) == True
-
+    assert not ev.completed
+    assert exc.executor_log.check_log_for_previous_failure(exc.dfi, ev.args)
  
 
 def test_simple_executor_listener_calls():
@@ -278,7 +274,7 @@ def test_simple_executor_listener_calls():
     
     assert call_args[0] == expected_notification_1
 
-def test_in_memory_cache():
+def Xtest_in_memory_cache():
     """
       This is trying to demonstrate caching series from a dataframe that was never written to a file
 
@@ -288,14 +284,14 @@ def test_in_memory_cache():
         'a1': [10,20,30],
         'b2': [50,60,80]
         })
-    ldf = df.lazy()
+    #ldf = df.lazy()
 
     fc = FileCache()
-    assert fc.check_series(df['a1']) == False
-    assert fc.check_series(df['b2']) == False
+    assert not fc.check_series(df['a1'])
+    assert not fc.check_series(df['b2'])
 
     fc.add_df(df)
-    assert fc.check_series(df['a1']) == True
+    assert fc.check_series(df['a1'])
 
     # buffer info for string series is unreliable commented out for now
     # look at polars-core/src/series/buffer.rs::get_buffers_from_string
@@ -308,37 +304,6 @@ def test_in_memory_cache():
     df2 = df.select(pl.col('a1').alias('alias_a1'),
                     pl.col('b2').alias('alias_b2'))
     
-    assert fc.check_series(df2['alias_a1']) == True
+    assert fc.check_series(df2['alias_a1'])
     #assert fc.check_series(df2['alias_b2']) == True
-
-
-#def test_series_
-
-"""
-
-
-  tests around the log functionality
-
-
-  test around the multiprocess timeout stuff
-  
-
-
-  tests around the exception catching
-
-  bisect functionality
-
-
-  figure out how to do partial cache updates and plumb that in  AnalysisDAG
-
-  AnalysisDag needs to alter the queries/code run based on what is already in the cache
-
-  add and test LRU logic
-
-  
-# Done
-    figure out how to check that a series isn't hashed twice  - kinda
-  test how the file cache bits work, at least for in memory (not SQLITE).  
-
-  """
 

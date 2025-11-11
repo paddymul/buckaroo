@@ -115,7 +115,7 @@ def mp_timeout(timeout_secs: float):
             payload: Any = None
             try:
                 status, payload = result_queue.get(timeout=timeout_secs)
-            except Exception as e:
+            except Exception:
                 # No message received within timeout.
                 # If the process is still alive, it's a timeout.
                 if process.is_alive():

@@ -79,7 +79,7 @@ class SQLiteFileCache:
         cur = self._conn.execute("SELECT mtime, metadata_json FROM files WHERE path=?", (str(path),))
         row = cur.fetchone()
         if row:
-            cached_mtime = float(row[0])
+            #cached_mtime = float(row[0])
             md = json.loads(row[1])
             md.update(extra_metadata)
             self._conn.execute(
