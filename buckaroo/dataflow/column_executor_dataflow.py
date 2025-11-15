@@ -11,7 +11,7 @@ from .styling_core import merge_sds
 from buckaroo.df_util import old_col_new_col
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.customizations.polars_analysis import PL_Analysis_Klasses
-from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressListener, Executor, SimpleExecutorLog
+from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressListener, Executor, SimpleExecutorLog, ColumnExecutor as ColumnExecutorBase
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from .abc_dataflow import ABCDataflow
 
@@ -61,12 +61,16 @@ class ColumnExecutorDataflow(ABCDataflow):
 
     # Analysis classes (extendable, like CustomizableDataflow)
     analysis_klasses: List[Type[PolarsAnalysis]] = PL_Analysis_Klasses.copy()
+    # Column executor class (overridable for testing or custom behavior)
+    ColumnExecutorKlass: Type[ColumnExecutorBase] = PAFColumnExecutor
 
-    def __init__(self, ldf: pl.LazyFrame, analysis_klasses: Optional[List[Type[PolarsAnalysis]]] = None) -> None:
+    def __init__(self, ldf: pl.LazyFrame, analysis_klasses: Optional[List[Type[PolarsAnalysis]]] = None,
+                 column_executor_class: Optional[Type[ColumnExecutorBase]] = None) -> None:
         super().__init__()
         self.raw_ldf = ldf
         if analysis_klasses is not None:
             self.analysis_klasses = list(analysis_klasses)
+        self._column_executor_class: Type[ColumnExecutorBase] = column_executor_class or self.ColumnExecutorKlass
         self._initialize_df_meta()
         self.widget_args_tuple = (id(None), None, self.merged_sd)
 
@@ -111,7 +115,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         - Sets summary_sd and populates merged_sd.
         """
         fc = file_cache or FileCache()
-        column_executor = PAFColumnExecutor(self.analysis_klasses)
+        column_executor = self._column_executor_class(self.analysis_klasses)
 
         # Build rewritten name mapping using an empty frame with the same columns
         empty_pl_df = pl.DataFrame({c: [] for c in self.raw_ldf.columns})
