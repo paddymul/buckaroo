@@ -42,9 +42,15 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
                                  df: pl.DataFrame,
                                  cols: list[str],
                                  series_stats: dict[str, dict[str, Any]]) -> ColumnResults:
-        # Compute hashes for requested columns
-        hash_exprs = [pl.col(c).pl_series_hash.hash_xx().alias(c+"_hash") for c in cols]
-        hashes_df = df.select(hash_exprs).collect()
+        # Compute hashes for requested columns in a version-agnostic way
+        hash_values: dict[str, int] = {}
+        for c in cols:
+            try:
+                seq = df[c].to_list()
+                hv = hash(tuple(seq))
+            except Exception:
+                hv = 0
+            hash_values[c] = int(hv & 0xFFFFFFFFFFFFFFFF)
 
         # Map rewritten entries back to original columns
         orig_to_stats: dict[str, dict[str, Any]] = {}
@@ -59,7 +65,7 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
 
         results: ColumnResults = {}
         for c in cols:
-            hash_val = int(hashes_df[c+"_hash"][0])
+            hash_val = hash_values.get(c, 0)
             per_col_stats = orig_to_stats.get(c, {})
             results[c] = ColumnResult(
                 series_hash=hash_val,

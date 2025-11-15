@@ -127,9 +127,9 @@ class ColumnExecutorDataflow(HasTraits):
         ex = Executor(self.raw_ldf, column_executor, _listener, fc, executor_log=SimpleExecutorLog())
         ex.run()
 
-        # Save and merge
+        # Save and merge (no helper method; set properties directly)
         self.summary_sd = aggregated_summary
-        self.populate_merged_sd()
+        self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
         return aggregated_summary
 
 
