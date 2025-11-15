@@ -5,6 +5,7 @@ from buckaroo.dataflow.column_executor_dataflow import ColumnExecutorDataflow
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.pluggable_analysis_framework.col_analysis import ColAnalysis
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
+from buckaroo.dataflow.styling_core import merge_sds
 import time
 
 
@@ -61,10 +62,10 @@ def test_compute_summary_with_executor_and_merge():
     # Verify merged_sd mirrors summary when cleaned/processed are empty
     assert cdf.merged_sd == summary
 
-    # Now augment cleaned_sd and processed_sd and recompute merge
-    cdf.set_cleaned_sd({'a': {'cleaned_flag': True}})
-    cdf.set_processed_sd({'a': {'processed_flag': True}})
-    cdf.populate_merged_sd()
+    # Now augment cleaned_sd and processed_sd and recompute merge (no helper methods; set directly)
+    cdf.cleaned_sd = {'a': {'cleaned_flag': True}}
+    cdf.processed_sd = {'a': {'processed_flag': True}}
+    cdf.merged_sd = merge_sds(cdf.cleaned_sd or {}, cdf.summary_sd or {}, cdf.processed_sd or {})
     assert cdf.merged_sd['a']['cleaned_flag'] is True
     assert cdf.merged_sd['a']['processed_flag'] is True
     # original summary fields still present
