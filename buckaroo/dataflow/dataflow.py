@@ -1,4 +1,4 @@
-from typing import List, Literal, Tuple, Type, TypedDict, Dict as TDict, Any as TAny, Union, Int
+from typing import List, Literal, Tuple, Type, TypedDict, Dict as TDict, Any as TAny, Union
 from typing_extensions import override
 import six
 import warnings
@@ -64,7 +64,7 @@ class DataFlow(ABCDataflow):
     sampled_df = Any('')
 
     cleaning_method = Unicode('')
-    quick_command_args = Int({})
+    quick_command_args = Dict({})
 
     # we put an operation here that will be stripped out, this assures
     # us that the interpeter is run through at least once
