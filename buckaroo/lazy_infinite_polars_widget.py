@@ -96,6 +96,15 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         }
 
         import threading
+        # Hook dataflow listener to update this widget's df_data_dict incrementally
+        def _progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
+            try:
+                summary_rows = self._summary_to_rows(aggregated_summary)
+                self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
+            except Exception:
+                pass
+        self._df.progress_update_callback = _progress_update
+
         def _bg():
             summary_sd = self._df.compute_summary_with_executor(progress_listener=_listener)
             summary_rows = self._summary_to_rows(summary_sd)
@@ -180,7 +189,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         if start is None or end is None:
             return
         try:
-            base = self._ldf
+            # create a derived lazyframe to avoid borrowing conflicts with background tasks
+            base = self._ldf.select(pl.all())
             sort = new_payload_args.get('sort')
             if sort:
                 orig_sort_col = self._rw_to_orig.get(sort, sort)
@@ -202,6 +212,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         except Exception as e:
             import traceback
             stack_trace = traceback.format_exc()
-            self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'error_info': stack_trace, 'length': 0})
+            self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'error_info': stack_trace, 'length': 0}, [])
 
 

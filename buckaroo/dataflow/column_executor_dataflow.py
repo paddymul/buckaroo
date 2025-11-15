@@ -2,7 +2,7 @@
 # coding: utf-8
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Callable
 
 import polars as pl
 from traitlets import Dict as TDict, Any as TAny, Unicode, observe
@@ -14,6 +14,8 @@ from buckaroo.customizations.polars_analysis import PL_Analysis_Klasses
 from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressListener, Executor, SimpleExecutorLog, ColumnExecutor as ColumnExecutorBase
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from .abc_dataflow import ABCDataflow
+from buckaroo.serialization_utils import pd_to_obj
+import pandas as pd
 
 
 class ColumnExecutorDataflow(ABCDataflow):
@@ -58,6 +60,8 @@ class ColumnExecutorDataflow(ABCDataflow):
     cleaned_sd = TAny({})
     processed_sd = TAny({})
     merged_sd = TAny({})
+    # Optional callback to stream progress summary updates
+    progress_update_callback: Optional[Callable[[Dict[str, Dict[str, Any]]], None]] = None
 
     # Analysis classes (extendable, like CustomizableDataflow)
     analysis_klasses: List[Type[PolarsAnalysis]] = PL_Analysis_Klasses.copy()
@@ -141,6 +145,17 @@ class ColumnExecutorDataflow(ABCDataflow):
                     entry = {'orig_col_name': orig_col, 'rewritten_col_name': rw}
                     aggregated_summary[rw] = entry
                 entry.update(stats)
+            # Stream partial updates via callback and local df_data_dict for consumers
+            try:
+                if self.progress_update_callback:
+                    self.progress_update_callback(aggregated_summary)
+                # keep local df_data_dict updated too
+                if isinstance(aggregated_summary, dict) and len(aggregated_summary) > 0:
+                    rows = pd_to_obj(pd.DataFrame(aggregated_summary))
+                    self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
+            except Exception:
+                # do not interrupt execution on progress update failures
+                pass
 
         ex = Executor(self.raw_ldf, column_executor, _listener, fc, executor_log=SimpleExecutorLog())
         ex.run()
