@@ -69,12 +69,14 @@ class ColumnExecutorDataflow(ABCDataflow):
     ColumnExecutorKlass: Type[ColumnExecutorBase] = PAFColumnExecutor
 
     def __init__(self, ldf: pl.LazyFrame, analysis_klasses: Optional[List[Type[PolarsAnalysis]]] = None,
-                 column_executor_class: Optional[Type[ColumnExecutorBase]] = None) -> None:
+                 column_executor_class: Optional[Type[ColumnExecutorBase]] = None,
+                 executor_class: Optional[Type[Executor]] = None) -> None:
         super().__init__()
         self.raw_ldf = ldf
         if analysis_klasses is not None:
             self.analysis_klasses = list(analysis_klasses)
         self._column_executor_class: Type[ColumnExecutorBase] = column_executor_class or self.ColumnExecutorKlass
+        self._executor_class: Type[Executor] = executor_class or Executor
         self._initialize_df_meta()
         self.widget_args_tuple = (id(None), None, self.merged_sd)
 
@@ -157,7 +159,7 @@ class ColumnExecutorDataflow(ABCDataflow):
                 # do not interrupt execution on progress update failures
                 pass
 
-        ex = Executor(self.raw_ldf, column_executor, _listener, fc, executor_log=SimpleExecutorLog())
+        ex = self._executor_class(self.raw_ldf, column_executor, _listener, fc, executor_log=SimpleExecutorLog())
         ex.run()
 
         # Save and merge (no helper method; set properties directly)

@@ -80,11 +80,13 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'message': note.failure_message or ''
             }
 
-        # Background by default: start with empty all_stats and minimal column config
-        self.df_data_dict = {'main': [], 'all_stats': [], 'empty': []}
+        # Synchronous summary stats computation (executor may be threaded internally)
+        summary_sd = self._df.compute_summary_with_executor(progress_listener=_listener)
+        summary_rows = self._summary_to_rows(summary_sd)
+        self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
         df_viewer_config = {
             "pinned_rows": [],
-            "column_config": self._build_column_config_from_schema(),
+            "column_config": self._build_column_config(summary_sd),
             "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],
         }
         self.df_display_args = {
@@ -94,26 +96,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'summary_stats_key': 'all_stats'
             }
         }
-
-        import threading
-        # Hook dataflow listener to update this widget's df_data_dict incrementally
-        def _progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
-            try:
-                summary_rows = self._summary_to_rows(aggregated_summary)
-                self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
-            except Exception:
-                pass
-        self._df.progress_update_callback = _progress_update
-
-        def _bg():
-            summary_sd = self._df.compute_summary_with_executor(progress_listener=_listener)
-            summary_rows = self._summary_to_rows(summary_sd)
-            self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
-            # update column config after summary (headers from summary)
-            new_dfvc = dict(self.df_display_args['main']['df_viewer_config'])
-            new_dfvc['column_config'] = self._build_column_config(summary_sd)
-            self.df_display_args = {'main': dict(self.df_display_args['main'], df_viewer_config=new_dfvc)}
-        threading.Thread(target=_bg, daemon=True).start()
 
         self.df_id = str(id(ldf))
 
@@ -137,15 +119,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             })
         return column_config
 
-    def _build_column_config_from_schema(self) -> List[Dict[str, Any]]:
-        column_config: List[Dict[str, Any]] = []
-        for orig, rw in self._orig_to_rw.items():
-            column_config.append({
-                "col_name": rw,
-                "header_name": str(orig),
-                "displayer_args": {"displayer": "obj"},
-            })
-        return column_config
+    # no schema-only column config helper needed for sync path
 
     def _summary_to_rows(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         import pandas as pd
