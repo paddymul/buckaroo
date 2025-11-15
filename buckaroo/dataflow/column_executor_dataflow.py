@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Type
 
 import polars as pl
-from traitlets import HasTraits, Dict as TDict, Any as TAny, Unicode
+from traitlets import Dict as TDict, Any as TAny, Unicode, observe
 
 from .styling_core import merge_sds
 from buckaroo.df_util import old_col_new_col
@@ -13,9 +13,10 @@ from buckaroo.pluggable_analysis_framework.polars_analysis_management import Pol
 from buckaroo.customizations.polars_analysis import PL_Analysis_Klasses
 from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressListener, Executor, SimpleExecutorLog
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
+from .abc_dataflow import ABCDataflow
 
 
-class ColumnExecutorDataflow(HasTraits):
+class ColumnExecutorDataflow(ABCDataflow):
     """A minimal DataFlow focused on column-executor-driven summary stats for Polars LazyFrames.
 
     - Works with a LazyFrame and avoids materializing the dataframe on load.
@@ -44,6 +45,14 @@ class ColumnExecutorDataflow(HasTraits):
     cleaning_method = Unicode('').tag(sync=True)
     post_processing_method = Unicode('').tag(sync=True)
 
+    # Additional fields for widget compatibility
+    buckaroo_options = TDict({}).tag(sync=True)
+    operations = TAny([]).tag(sync=True)
+    operation_results = TDict({'transformed_df': None, 'generated_py_code': ""}).tag(sync=True)
+    df_display_args = TDict({}).tag(sync=True)
+    df_data_dict = TDict({'empty': []}).tag(sync=True)
+    widget_args_tuple = TAny()
+
     # Summary/processed/merged stats dictionaries (external code sets these)
     summary_sd = TAny({})
     cleaned_sd = TAny({})
@@ -59,6 +68,7 @@ class ColumnExecutorDataflow(HasTraits):
         if analysis_klasses is not None:
             self.analysis_klasses = list(analysis_klasses)
         self._initialize_df_meta()
+        self.widget_args_tuple = (id(None), None, self.merged_sd)
 
     def _initialize_df_meta(self) -> None:
         """
@@ -84,6 +94,10 @@ class ColumnExecutorDataflow(HasTraits):
         existing = {ak.cname(): ak for ak in self.analysis_klasses}
         existing[analysis_klass.cname()] = analysis_klass
         self.analysis_klasses = list(existing.values())
+
+    # Implement abstract method with local naming to match ABC
+    def populate_df_meta(self) -> None:
+        self._initialize_df_meta()
 
     def compute_summary_with_executor(
         self,
@@ -131,5 +145,13 @@ class ColumnExecutorDataflow(HasTraits):
         self.summary_sd = aggregated_summary
         self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
         return aggregated_summary
+
+    @property
+    def processed_df(self) -> Any:
+        return None
+
+    @observe('merged_sd')
+    def _on_merged_sd(self, _change) -> None:
+        self.widget_args_tuple = (id(self.processed_df), self.processed_df, self.merged_sd)
 
 

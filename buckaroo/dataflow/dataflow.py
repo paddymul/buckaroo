@@ -1,4 +1,4 @@
-from typing import List, Literal, Tuple, Type, TypedDict, Dict as TDict, Any as TAny, Union
+from typing import List, Literal, Tuple, Type, TypedDict, Dict as TDict, Any as TAny, Union, Int
 from typing_extensions import override
 import six
 import warnings
@@ -20,8 +20,9 @@ from .styling_core import (
     merge_sds, merge_column_config, StylingAnalysis)
 
 
-
-class DataFlow(HasTraits):
+from .abc_dataflow import ABCDataflow
+    
+class DataFlow(ABCDataflow):
     """This class is meant to only represent the dataflow through
     buckaroo with no accomodation for widget particulars
 
@@ -63,7 +64,7 @@ class DataFlow(HasTraits):
     sampled_df = Any('')
 
     cleaning_method = Unicode('')
-    quick_command_args = Dict({})
+    quick_command_args = Int({})
 
     # we put an operation here that will be stripped out, this assures
     # us that the interpeter is run through at least once
