@@ -202,3 +202,42 @@ def test_background_is_default_and_populates():
         time.sleep(0.01)
     assert w.df_data_dict['all_stats'] != []
 
+
+def test_column_by_column_progress_updates():
+    """
+    Verify that summary stats arrive column-by-column via the progress listener hookup.
+    We check the 'orig_col_name' row grows from 1 -> 2 -> 3 columns as executor processes chunks.
+    """
+    df = pl.DataFrame({'c1': [1, 2, 3], 'c2': [10, 20, 30], 'c3': [7, 8, 9]})
+    ldf = df.lazy()
+    from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
+    import time as _time
+    class SlowPAFColumnExecutor(PAFColumnExecutor):
+        def execute(self, ldf, execution_args):
+            # small sleep per column-chunk to allow polling
+            _time.sleep(0.15)
+            return super().execute(ldf, execution_args)
+
+    w = LazyInfinitePolarsBuckarooWidget(ldf, column_executor_class=SlowPAFColumnExecutor)
+    # helper to count how many columns are present in the 'orig_col_name' row
+    def count_present_cols():
+        rows = w.df_data_dict['all_stats']
+        if not rows:
+            return 0
+        ocn_rows = [r for r in rows if r.get('index') == 'orig_col_name']
+        if not ocn_rows:
+            return 0
+        row = ocn_rows[0]
+        # exclude index and level_0 keys
+        return len([k for k in row.keys() if k not in ('index', 'level_0')])
+
+    # Initially 0
+    assert count_present_cols() == 0
+    # Wait for 1, then 2, then 3 progressively
+    for target in (1, 2, 3):
+        for _ in range(300):  # up to ~3s
+            if count_present_cols() >= target:
+                break
+            time.sleep(0.01)
+        assert count_present_cols() >= target, f"expected at least {target} columns summarized"
+
