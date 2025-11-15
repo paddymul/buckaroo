@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 name = "buckaroo"
 description = "Buckaroo - GUI Data wrangling for pandas"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [
     { name = "Paddy Mullen" },
 ]
