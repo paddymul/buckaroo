@@ -2,6 +2,7 @@ import polars as pl
 
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
 import pytest
+import time
 
 
 def _capture_sends(widget):
@@ -15,16 +16,32 @@ def _capture_sends(widget):
 def test_lazy_infinite_widget_init_and_summary():
     df = pl.DataFrame({'normal_int_series': [1, 2, 3, 4]})
     ldf = df.lazy()
-    w = LazyInfinitePolarsBuckarooWidget(ldf)
+    # Use slow executor to make the background transition observable
+    from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
+    import time as _time
+    class SlowPAFColumnExecutor(PAFColumnExecutor):
+        def execute(self, ldf, execution_args):
+            _time.sleep(0.2)
+            return super().execute(ldf, execution_args)
+
+    w = LazyInfinitePolarsBuckarooWidget(ldf, column_executor_class=SlowPAFColumnExecutor)
 
     # df_meta should reflect lazy row and column counts
     assert w.df_meta['columns'] == 1
     assert w.df_meta['total_rows'] == 4
 
-    # All stats should include orig/rewritten indicators
+    # Initially empty because summary computes in the background
+    assert w.df_data_dict['all_stats'] == []
+
+    # Wait for background compute to populate
+    for _ in range(200):  # up to ~2 seconds
+        if w.df_data_dict['all_stats']:
+            break
+        time.sleep(0.01)
+    assert w.df_data_dict['all_stats'] != []
+
+    # All stats should include orig/rewritten indicators after populated
     all_stats = w.df_data_dict['all_stats']
-    assert isinstance(all_stats, list)
-    # verify expected rows exist
     idx_keys = [row['index'] for row in all_stats]
     assert 'orig_col_name' in idx_keys
     assert 'rewritten_col_name' in idx_keys
@@ -164,4 +181,24 @@ def test_handle_payload_never_collects_base(monkeypatch):
     payload, buffers = captured[0]
     out_df = pl.read_parquet(buffers[0])
     assert out_df.shape[0] == 10
+
+
+def test_background_is_default_and_populates():
+    df = pl.DataFrame({'v': [1, 2, 3]})
+    ldf = df.lazy()
+    # Make it slow to assert background behavior
+    from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
+    import time as _time
+    class SlowPAFColumnExecutor(PAFColumnExecutor):
+        def execute(self, ldf, execution_args):
+            _time.sleep(0.2)
+            return super().execute(ldf, execution_args)
+
+    w = LazyInfinitePolarsBuckarooWidget(ldf, column_executor_class=SlowPAFColumnExecutor)
+    assert w.df_data_dict['all_stats'] == []
+    for _ in range(200):
+        if w.df_data_dict['all_stats']:
+            break
+        time.sleep(0.01)
+    assert w.df_data_dict['all_stats'] != []
 
