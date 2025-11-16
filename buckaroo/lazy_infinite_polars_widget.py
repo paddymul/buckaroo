@@ -18,7 +18,7 @@ from .serialization_utils import pd_to_obj
 from .customizations.polars_analysis import HistogramAnalysis as _H
 from buckaroo.file_cache.base import Executor as _SyncExec  # type: ignore            
 from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
-                from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
+from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
 
 
 
@@ -55,7 +55,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         analysis_klasses: Optional[List[Type[PolarsAnalysis]]] = None,
         debug: bool = False,
         column_executor_class: Optional[type] = None,
-        #fixme these shouldn't be __init args, they should be class attributes
         file_path: Optional[str] = None,
         file_cache: Optional["FileCache"] = None,
         sync_executor_class: Optional[type] = None,
@@ -89,14 +88,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         num_cols = len(all_cols)
 
         # Choose executor class
-
-        chosen_sync_exec = sync_executor_class or _SyncExec
-        chosen_par_exec = parallel_executor_class or _ParExec
-
-        use_parallel = (total_rows >= 100_000) or (num_cols >= 50)
+        chosen_sync_exec, chosen_par_exec, exec_class = self._select_executor_classes(
+            total_rows, num_cols, sync_executor_class, parallel_executor_class
+        )
 
         # Dataflow for summary stats with chosen executor
-        exec_class = chosen_par_exec if use_parallel else chosen_sync_exec
         self._df = ColumnExecutorDataflow(
             ldf,
             analysis_klasses=self._analyses,
@@ -113,32 +109,10 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'message': note.failure_message or ''
             }
 
-        #fixme put this into a method
-        # Synchronous summary stats computation (with fallback to parallel on failure)
-        failure_seen = {'val': False}
-        def _detect(note):
-            _listener(note)
-            if not note.success:
-                failure_seen['val'] = True
-
-        if cached_merged_sd is not None:
-            summary_sd = cached_merged_sd
-        else:
-            try:
-                #fixme compute_summary_with_executor shouldn't return anything, return values come from the progress listener
-                
-                summary_sd = self._df.compute_summary_with_executor(progress_listener=_detect)
-            except Exception:
-                failure_seen['val'] = True
-                summary_sd = {}
-            if failure_seen['val'] and exec_class is not chosen_par_exec:
-                # fallback: rerun with parallel executor
-                self._df = ColumnExecutorDataflow(
-                    ldf,
-                    analysis_klasses=self._analyses,
-                    column_executor_class=column_executor_class,
-                    executor_class=chosen_par_exec)
-                summary_sd = self._df.compute_summary_with_executor(progress_listener=_listener)
+        # Compute summary (cache → sync try → fallback to parallel on failure)
+        summary_sd = self._compute_summary_with_fallback(
+            ldf, column_executor_class, chosen_par_exec, exec_class, cached_merged_sd, _listener
+        )
         summary_rows = self._summary_to_rows(summary_sd)
         self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
         df_viewer_config = {
@@ -163,18 +137,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 self._handle_payload_args(payload_args)
         self.on_msg(payload_bridge)
 
-    def _build_column_config(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
-        column_config: List[Dict[str, Any]] = []
-        for rw, meta in summary.items():
-            col_name = rw
-            header_name = str(meta.get('orig_col_name', rw))
-            # Minimal displayers; could be improved using dtype if available
-            column_config.append({
-                "col_name": col_name,
-                "header_name": header_name,
-                "displayer_args": {"displayer": "obj"},
-            })
-        return column_config
 
     # no schema-only column config helper needed for sync path
 
@@ -185,6 +147,53 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         df = pd.DataFrame(summary)
         return pd_to_obj(df)
 
+    def _select_executor_classes(
+        self,
+        total_rows: int,
+        num_cols: int,
+        sync_executor_class: Optional[type],
+        parallel_executor_class: Optional[type],
+    ) -> tuple[type, type, type]:
+        chosen_sync_exec = sync_executor_class or _SyncExec
+        chosen_par_exec = parallel_executor_class or _ParExec
+        use_parallel = (total_rows >= 100_000) or (num_cols >= 50)
+        exec_class = chosen_par_exec if use_parallel else chosen_sync_exec
+        return chosen_sync_exec, chosen_par_exec, exec_class
+
+    def _compute_summary_with_fallback(
+        self,
+        ldf: pl.LazyFrame,
+        column_executor_class: Optional[type],
+        chosen_par_exec: type,
+        exec_class: type,
+        cached_merged_sd: Optional[Dict[str, Dict[str, Any]]],
+        base_listener,
+    ) -> Dict[str, Dict[str, Any]]:
+        if cached_merged_sd is not None:
+            return cached_merged_sd
+
+        failure_seen = {'val': False}
+
+        def _detect(note):
+            base_listener(note)
+            if not note.success:
+                failure_seen['val'] = True
+
+        try:
+            summary_sd = self._df.compute_summary_with_executor(progress_listener=_detect)
+        except Exception:
+            failure_seen['val'] = True
+            summary_sd = {}
+
+        if failure_seen['val'] and not (exec_class is chosen_par_exec):
+            # fallback: rerun with parallel executor
+            self._df = ColumnExecutorDataflow(
+                ldf,
+                analysis_klasses=self._analyses,
+                column_executor_class=column_executor_class,
+                executor_class=chosen_par_exec)
+            summary_sd = self._df.compute_summary_with_executor(progress_listener=base_listener)
+        return summary_sd
     def _build_column_config(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         column_config: List[Dict[str, Any]] = []
         for rw, meta in summary.items():
