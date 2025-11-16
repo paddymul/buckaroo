@@ -1,8 +1,11 @@
 import polars as pl
 
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
+from buckaroo.file_cache.base import FileCache
+from pathlib import Path
 import pytest
 import time
+from buckaroo.file_cache.base import Executor as _Exec
 
 
 def _capture_sends(widget):
@@ -30,14 +33,7 @@ def test_lazy_infinite_widget_init_and_summary():
     assert w.df_meta['columns'] == 1
     assert w.df_meta['total_rows'] == 4
 
-    # Initially empty because summary computes in the background
-    assert w.df_data_dict['all_stats'] == []
-
-    # Wait for background compute to populate
-    for _ in range(200):  # up to ~2 seconds
-        if w.df_data_dict['all_stats']:
-            break
-        time.sleep(0.01)
+    # Synchronous path: populated immediately
     assert w.df_data_dict['all_stats'] != []
 
     # All stats should include orig/rewritten indicators after populated
@@ -183,7 +179,7 @@ def test_handle_payload_never_collects_base(monkeypatch):
     assert out_df.shape[0] == 10
 
 
-def test_background_is_default_and_populates():
+def test_synchronous_populates_immediately():
     df = pl.DataFrame({'v': [1, 2, 3]})
     ldf = df.lazy()
     # Make it slow to assert background behavior
@@ -195,19 +191,70 @@ def test_background_is_default_and_populates():
             return super().execute(ldf, execution_args)
 
     w = LazyInfinitePolarsBuckarooWidget(ldf, column_executor_class=SlowPAFColumnExecutor)
-    assert w.df_data_dict['all_stats'] == []
-    for _ in range(200):
-        if w.df_data_dict['all_stats']:
-            break
-        time.sleep(0.01)
     assert w.df_data_dict['all_stats'] != []
 
+def test_cache_short_circuit_populates_immediately(tmp_path):
+    # Prepare a fake cached merged_sd
+    cached_sd = {
+        'a': {'orig_col_name': 'v', 'rewritten_col_name': 'a', 'mean': 2.0, 'null_count': 0}
+    }
+    fc = FileCache()
+    fpath = tmp_path / "fake.parq"
+    fpath.write_text("placeholder")
+    fc.upsert_file_metadata(Path(fpath), {'merged_sd': cached_sd})
 
-def test_column_by_column_progress_updates():
-    """
-    Verify that summary stats arrive column-by-column via the progress listener hookup.
-    We check the 'orig_col_name' row grows from 1 -> 2 -> 3 columns as executor processes chunks.
-    """
+    df = pl.DataFrame({'v': [1, 2, 3]})
+    ldf = df.lazy()
+    # Use a failing sync executor to ensure we did not run compute if cache is present
+    from buckaroo.file_cache.base import Executor as _Exec
+    class FailingExec(_Exec):
+        def run(self):  # type: ignore[override]
+            raise RuntimeError("should not be called due to cache hit")
+
+    w = LazyInfinitePolarsBuckarooWidget(ldf, file_path=str(fpath), file_cache=fc, sync_executor_class=FailingExec)
+    assert w.df_data_dict['all_stats'] != []
+    idx_keys = [row['index'] for row in w.df_data_dict['all_stats']]
+    assert 'orig_col_name' in idx_keys and 'mean' in idx_keys
+
+def test_executor_selection_thresholds_and_fallback():
+    # 51 columns triggers parallel selection
+    data = {f'c{i}': [i] for i in range(51)}
+    df = pl.DataFrame(data)
+    ldf = df.lazy()
+
+    # Track which executor path was used
+
+    class TrackingSync(_Exec):
+        used = False
+        def run(self):  # type: ignore[override]
+            TrackingSync.used = True
+            return super().run()
+    class TrackingPar(_Exec):
+        used = False
+        def run(self):  # type: ignore[override]
+            TrackingPar.used = True
+            return super().run()
+
+    w = LazyInfinitePolarsBuckarooWidget(ldf, sync_executor_class=TrackingSync, parallel_executor_class=TrackingPar)
+    assert TrackingPar.used is True
+
+    # Now test fallback: small df chooses sync, but sync fails, fallback to parallel
+    small_df = pl.DataFrame({'x': [1, 2, 3]})
+    small_ldf = small_df.lazy()
+    class FailingSync(_Exec):
+        def run(self):  # type: ignore[override]
+            raise RuntimeError("fail sync")
+    class WorkingPar(_Exec):
+        used = False
+        def run(self):  # type: ignore[override]
+            WorkingPar.used = True
+            return super().run()
+
+    w2 = LazyInfinitePolarsBuckarooWidget(small_ldf, sync_executor_class=FailingSync, parallel_executor_class=WorkingPar)
+    assert WorkingPar.used is True
+    assert w2.df_data_dict['all_stats'] != []
+
+def test_full_summary_present_immediately():
     df = pl.DataFrame({'c1': [1, 2, 3], 'c2': [10, 20, 30], 'c3': [7, 8, 9]})
     ldf = df.lazy()
     from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
@@ -219,25 +266,11 @@ def test_column_by_column_progress_updates():
             return super().execute(ldf, execution_args)
 
     w = LazyInfinitePolarsBuckarooWidget(ldf, column_executor_class=SlowPAFColumnExecutor)
-    # helper to count how many columns are present in the 'orig_col_name' row
-    def count_present_cols():
-        rows = w.df_data_dict['all_stats']
-        if not rows:
-            return 0
-        ocn_rows = [r for r in rows if r.get('index') == 'orig_col_name']
-        if not ocn_rows:
-            return 0
-        row = ocn_rows[0]
-        # exclude index and level_0 keys
-        return len([k for k in row.keys() if k not in ('index', 'level_0')])
-
-    # Initially 0
-    assert count_present_cols() == 0
-    # Wait for 1, then 2, then 3 progressively
-    for target in (1, 2, 3):
-        for _ in range(300):  # up to ~3s
-            if count_present_cols() >= target:
-                break
-            time.sleep(0.01)
-        assert count_present_cols() >= target, f"expected at least {target} columns summarized"
+    rows = w.df_data_dict['all_stats']
+    assert rows != []
+    ocn_rows = [r for r in rows if r.get('index') == 'orig_col_name']
+    assert ocn_rows
+    row = ocn_rows[0]
+    present_cols = [k for k in row.keys() if k not in ('index', 'level_0')]
+    assert len(present_cols) == 3
 
