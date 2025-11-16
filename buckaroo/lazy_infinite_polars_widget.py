@@ -16,6 +16,9 @@ from .pluggable_analysis_framework.polars_analysis_management import PolarsAnaly
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
 from .customizations.polars_analysis import HistogramAnalysis as _H
+from buckaroo.file_cache.base import Executor as _SyncExec  # type: ignore            
+from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
+                from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
 
 
 
@@ -52,6 +55,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         analysis_klasses: Optional[List[Type[PolarsAnalysis]]] = None,
         debug: bool = False,
         column_executor_class: Optional[type] = None,
+        #fixme these shouldn't be __init args, they should be class attributes
+        file_path: Optional[str] = None,
+        file_cache: Optional["FileCache"] = None,
+        sync_executor_class: Optional[type] = None,
+        parallel_executor_class: Optional[type] = None,
     ) -> None:
         super().__init__()
         self._debug = debug
@@ -66,10 +74,35 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._orig_to_rw = dict(old_col_new_col(empty_pl_df))
         self._rw_to_orig = {v: k for k, v in self._orig_to_rw.items()}
 
-        # Dataflow for summary stats
-        self._df = ColumnExecutorDataflow(ldf, analysis_klasses=self._analyses,
-                                          column_executor_class=column_executor_class)
-        self.df_meta = self._df.df_meta
+        # Optional cache short-circuit
+        cached_merged_sd = None
+        if file_path:
+            md = file_cache.get_file_metadata(Path(file_path))  # type: ignore[arg-type]
+            if md and 'merged_sd' in md:
+                cached_merged_sd = md['merged_sd']
+
+        # First-pass meta from polars directly (avoid constructing dataflow solely for meta)
+        try:
+            total_rows = int(ldf.select(pl.len().alias("__len")).collect().item())
+        except Exception:
+            total_rows = 0
+        num_cols = len(all_cols)
+
+        # Choose executor class
+
+        chosen_sync_exec = sync_executor_class or _SyncExec
+        chosen_par_exec = parallel_executor_class or _ParExec
+
+        use_parallel = (total_rows >= 100_000) or (num_cols >= 50)
+
+        # Dataflow for summary stats with chosen executor
+        exec_class = chosen_par_exec if use_parallel else chosen_sync_exec
+        self._df = ColumnExecutorDataflow(
+            ldf,
+            analysis_klasses=self._analyses,
+            column_executor_class=column_executor_class,
+            executor_class=exec_class)
+        self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
         # Compute summary stats and wire progress to a trait
         def _listener(note):
@@ -80,8 +113,32 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'message': note.failure_message or ''
             }
 
-        # Synchronous summary stats computation (executor may be threaded internally)
-        summary_sd = self._df.compute_summary_with_executor(progress_listener=_listener)
+        #fixme put this into a method
+        # Synchronous summary stats computation (with fallback to parallel on failure)
+        failure_seen = {'val': False}
+        def _detect(note):
+            _listener(note)
+            if not note.success:
+                failure_seen['val'] = True
+
+        if cached_merged_sd is not None:
+            summary_sd = cached_merged_sd
+        else:
+            try:
+                #fixme compute_summary_with_executor shouldn't return anything, return values come from the progress listener
+                
+                summary_sd = self._df.compute_summary_with_executor(progress_listener=_detect)
+            except Exception:
+                failure_seen['val'] = True
+                summary_sd = {}
+            if failure_seen['val'] and exec_class is not chosen_par_exec:
+                # fallback: rerun with parallel executor
+                self._df = ColumnExecutorDataflow(
+                    ldf,
+                    analysis_klasses=self._analyses,
+                    column_executor_class=column_executor_class,
+                    executor_class=chosen_par_exec)
+                summary_sd = self._df.compute_summary_with_executor(progress_listener=_listener)
         summary_rows = self._summary_to_rows(summary_sd)
         self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
         df_viewer_config = {
