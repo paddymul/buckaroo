@@ -113,7 +113,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         self,
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> None:
         """
         Execute the PAF column executor over the LazyFrame to compute summary stats.
         - Avoids materializing the entire dataframe; executes per-column selections lazily.
@@ -165,7 +165,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Save and merge (no helper method; set properties directly)
         self.summary_sd = aggregated_summary
         self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
-        return aggregated_summary
+        return None
 
     @property
     def processed_df(self) -> Any:

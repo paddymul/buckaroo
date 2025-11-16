@@ -180,7 +180,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 failure_seen['val'] = True
 
         try:
-            summary_sd = self._df.compute_summary_with_executor(progress_listener=_detect)
+            self._df.compute_summary_with_executor(progress_listener=_detect)
+            summary_sd = self._df.merged_sd or {}
         except Exception:
             failure_seen['val'] = True
             summary_sd = {}
@@ -192,7 +193,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 analysis_klasses=self._analyses,
                 column_executor_class=column_executor_class,
                 executor_class=chosen_par_exec)
-            summary_sd = self._df.compute_summary_with_executor(progress_listener=base_listener)
+            self._df.compute_summary_with_executor(progress_listener=base_listener)
+            summary_sd = self._df.merged_sd or {}
         return summary_sd
     def _build_column_config(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         column_config: List[Dict[str, Any]] = []
