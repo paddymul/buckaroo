@@ -90,7 +90,7 @@ class ColumnExecutorDataflow(ABCDataflow):
             total_rows = int(self.raw_ldf.select(pl.len().alias("__len")).collect().item())  # aggregate only
         except Exception:
             total_rows = 0
-        cols = list(self.raw_ldf.columns)
+        cols = list(self.raw_ldf.collect_schema().names())
         self.df_meta = {
             'columns': len(cols),
             'rows_shown': 0,
@@ -126,7 +126,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         column_executor = self._column_executor_class(self.analysis_klasses)
 
         # Build rewritten name mapping using an empty frame with the same columns
-        empty_pl_df = pl.DataFrame({c: [] for c in self.raw_ldf.columns})
+        empty_pl_df = pl.DataFrame({c: [] for c in self.raw_ldf.collect_schema().names()})
         orig_to_rw = dict(old_col_new_col(empty_pl_df))
 
         aggregated_summary: Dict[str, Dict[str, Any]] = {}

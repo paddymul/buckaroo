@@ -365,7 +365,7 @@ class SamplingRowBisector(BaseBisector):
     def try_execute_by_indices(self, indices: list[int]) -> tuple[bool, ExecutorLogEvent]:
         args = self.build_args_from_indices(indices)
         # Filter rows by an identifier: prefer 'original_row' if present, else use a temporary row index
-        if 'original_row' in self.ldf.columns:
+        if 'original_row' in self.ldf.collect_schema().names():
             filtered_ldf = self.ldf.filter(pl.col('original_row').is_in(indices))
         else:
             # Keep the temporary index column so downstream executors can detect which original rows are present
@@ -429,7 +429,7 @@ class SamplingRowBisector(BaseBisector):
                 break
 
         # Prepare the set of available original_row indices from current ldf
-        if 'original_row' in self.ldf.columns:
+        if 'original_row' in self.ldf.collect_schema().names():
             rows_df = self.ldf.select(pl.col('original_row')).collect()
             all_indices = list(map(int, rows_df['original_row'].to_list()))
         else:
@@ -486,7 +486,7 @@ def full_bisect_pipeline(ldf: pl.LazyFrame,
     """
     # Initial executor log and starting args constructed from current columns
     log = SimpleExecutorLog()
-    all_columns = list(ldf.columns)
+    all_columns = list(ldf.collect_schema().names())
     # Recompute args via get_execution_args for the full set
     existing_stats_full = {col: {} for col in all_columns}
     starting_args = column_executor.get_execution_args(existing_stats_full)
