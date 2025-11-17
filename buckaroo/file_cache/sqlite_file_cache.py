@@ -8,10 +8,10 @@ from typing import Any, Optional
 import polars as pl
 from io import BytesIO
 
-from .base import SummaryStats
+from .base import SummaryStats, AbstractFileCache
 
 
-class SQLiteFileCache:
+class SQLiteFileCache(AbstractFileCache):
     """
     SQLite-backed implementation of a simple file/series cache.
 
@@ -121,6 +121,21 @@ class SQLiteFileCache:
         if not row:
             return None
         return self._parquet_bytes_to_dict(row[0])
+
+    # New: file-level series hashes helpers
+    def get_file_series_hashes(self, path: Path) -> Optional[dict[str, int]]:
+        md = self.get_file_metadata(path)
+        if not md:
+            return None
+        return md.get('series_hashes')
+
+    def upsert_file_series_hashes(self, path: Path, hashes: dict[str, int]) -> None:
+        md = self.get_file_metadata(path) or {}
+        current = dict(md.get('series_hashes') or {})
+        current.update({str(k): int(v) for k, v in hashes.items()})
+        merged = dict(md)
+        merged['series_hashes'] = current
+        self.upsert_file_metadata(path, merged)
 
     # Helpers ---------------------------------------------------------------
     def _dict_to_parquet_bytes(self, d: dict[str, Any]) -> bytes:

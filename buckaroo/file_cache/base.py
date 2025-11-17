@@ -29,7 +29,42 @@ DFIdentifier: TypeAlias = FileDFIdentifier | MemoryDFIdentifer
 def flatten(*lists):
     list(itertools.chain(*lists))
     
-class FileCache:
+class AbstractFileCache(ABC):
+    """
+    Abstract interface for a file/series cache.
+    Concrete implementations include an in-memory cache (MemoryFileCache)
+    and a SQLite-backed cache (SQLiteFileCache).
+    """
+    @abstractmethod
+    def add_file(self, path:Path, metadata:dict[str, Any]) -> None: ...
+
+    @abstractmethod
+    def add_metadata(self, path:Path, metadata:dict[str, Any]) -> None: ...
+
+    @abstractmethod
+    def check_file(self, path:Path) -> bool: ...
+
+    @abstractmethod
+    def get_file_metadata(self, path:Path) -> Optional[dict[str, Any]]: ...
+
+    @abstractmethod
+    def upsert_file_metadata(self, path:Path, extra_metadata:dict[str, Any]) -> None: ...
+
+    @abstractmethod
+    def upsert_key(self, series_hash:int, result:SummaryStats) -> None: ...
+
+    @abstractmethod
+    def get_series_results(self, series_hash:int) -> SummaryStats|None: ...
+
+    # New: file-level series hash helpers
+    @abstractmethod
+    def get_file_series_hashes(self, path: Path) -> Optional[dict[str, int]]: ...
+
+    @abstractmethod
+    def upsert_file_series_hashes(self, path: Path, hashes: dict[str, int]) -> None: ...
+
+
+class MemoryFileCache(AbstractFileCache):
     """
       acutally as written this is more like an in memory cache
       """
@@ -111,6 +146,20 @@ class FileCache:
     def get_series_results(self, series_hash:int) -> SummaryStats|None:
         return self.summary_stats_cache.get(series_hash, None)
 
+    def get_file_series_hashes(self, path: Path) -> Optional[dict[str, int]]:
+        md = self.get_file_metadata(path)
+        if not md:
+            return None
+        hashes = md.get('series_hashes')
+        return {str(k): int(v) for k, v in hashes.items()}
+
+    def upsert_file_series_hashes(self, path: Path, hashes: dict[str, int]) -> None:
+        md = self.get_file_metadata(path) or {}
+        cur = dict(md.get('series_hashes') or {})
+        cur.update({str(k): int(v) for k, v in hashes.items()})
+        merged = dict(md)
+        merged['series_hashes'] = cur
+        self.upsert_file_metadata(path, merged)
     def _get_buffer_key(self, series:pl.Series) -> BufferKey:
         """
 
@@ -166,6 +215,9 @@ class FileCache:
             self.add_series(df[col], col)
         
 
+
+# Backwards-compat alias for existing imports/tests
+FileCache = MemoryFileCache
 
         
 class AnnotatedFile:
