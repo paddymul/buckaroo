@@ -472,7 +472,7 @@ class Executor:
         """
           dumb impl
           """
-        return [[column] for column in self.ldf.columns]
+        return [[column] for column in self.ldf.collect_schema().names()]
 
     
 # fc = FileCache()    
