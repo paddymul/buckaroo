@@ -520,10 +520,7 @@ class Executor:
                         if c in res and res[c].series_hash:
                             new_hashes[c] = int(res[c].series_hash)
                     if new_hashes:
-                        try:
-                            self.fc.upsert_file_series_hashes(self.file_path, new_hashes)
-                        except Exception:
-                            pass
+                        self.fc.upsert_file_series_hashes(self.file_path, new_hashes)
 
                 self.listener(notification)
                 self.executor_log.log_end_col_group(self.dfi, last_ex_args)    

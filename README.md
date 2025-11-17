@@ -160,6 +160,24 @@ npm install
 npm run dev
 ```
 
+### Storybook (JS core components)
+
+Run Storybook locally:
+```bash
+cd packages/buckaroo-js-core
+pnpm install
+pnpm storybook
+# open http://localhost:6006
+```
+
+Build a static Storybook site:
+```bash
+cd packages/buckaroo-js-core
+pnpm install
+pnpm build-storybook
+# output: packages/buckaroo-js-core/dist/storybook
+```
+
 
 ### UV Instructions
 ```sh
