@@ -23,10 +23,12 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
 
     def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
         columns = list(existing_stats.keys())
+        # include hash only if any column is marked missing via sentinel
+        include_hash = any(bool(stats.get('__missing_hash__')) for stats in existing_stats.values())
         return ExecutorArgs(
             columns=columns,
             column_specific_expressions=False,
-            include_hash=True,
+            include_hash=include_hash,
             expressions=[],
             row_start=None,
             row_end=None,
@@ -37,15 +39,19 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         cols = execution_args.columns
         df = ldf.select(cols).collect()
         series_stats, errs = polars_produce_series_df(df, self.analyses, 'paf_exec', debug=False)
-        return self._series_stats_to_results(df, cols, series_stats)
+        return self._series_stats_to_results(df, cols, series_stats, include_hash=bool(execution_args.include_hash))
 
     def _series_stats_to_results(self,
                                  df: pl.DataFrame,
                                  cols: list[str],
-                                 series_stats: dict[str, dict[str, Any]]) -> ColumnResults:
-        # Compute series-level hashes using pl_series_hash.hash_xx; failures are unrecoverable
-        hashed = df.select([pl.col(c).pl_series_hash.hash_xx().alias(c) for c in cols])  # type: ignore[attr-defined]
-        hash_values = {c: int(hashed[c][0]) for c in cols}
+                                 series_stats: dict[str, dict[str, Any]],
+                                 include_hash: bool) -> ColumnResults:
+        # Optionally compute series-level hashes using pl_series_hash.hash_xx
+        if include_hash:
+            hashed = df.select([pl.col(c).pl_series_hash.hash_xx().alias(c) for c in cols])  # type: ignore[attr-defined]
+            hash_values = {c: int(hashed[c][0]) for c in cols}
+        else:
+            hash_values = {c: 0 for c in cols}
 
         # Map rewritten entries back to original columns
         orig_to_stats: dict[str, dict[str, Any]] = {}
