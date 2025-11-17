@@ -58,6 +58,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         file_path: Optional[str] = None,
         file_cache: Optional["FileCache"] = None,
         sync_executor_class: Optional[type] = None,
+        #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
     ) -> None:
         super().__init__()
@@ -87,17 +88,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             total_rows = 0
         num_cols = len(all_cols)
 
-        # Choose executor class
-        chosen_sync_exec, chosen_par_exec, exec_class = self._select_executor_classes(
-            total_rows, num_cols, sync_executor_class, parallel_executor_class
-        )
-
         # Dataflow for summary stats with chosen executor
         self._df = ColumnExecutorDataflow(
             ldf,
             analysis_klasses=self._analyses,
-            column_executor_class=column_executor_class,
-            executor_class=exec_class)
+            column_executor_class=column_executor_class)
         self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
         # Compute summary stats and wire progress to a trait
@@ -109,11 +104,21 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'message': note.failure_message or ''
             }
 
-        # Compute summary (cache → sync try → fallback to parallel on failure)
-        summary_sd = self._compute_summary_with_fallback(
-            ldf, column_executor_class, chosen_par_exec, exec_class, cached_merged_sd, _listener
-        )
+        # Compute summary (cache → auto-select via dataflow using executor log)
+        if cached_merged_sd is not None:
+            summary_sd = cached_merged_sd
+        else:
+            chosen_sync_exec = sync_executor_class or _SyncExec
+            chosen_par_exec = parallel_executor_class or _ParExec
+            self._df.auto_compute_summary(
+                chosen_sync_exec,
+                chosen_par_exec,
+                progress_listener=_listener,
+            )
+            summary_sd = self._df.merged_sd or {}
         summary_rows = self._summary_to_rows(summary_sd)
+
+        #fixme maybe the cache checking should be done by dataflow.  
         self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
         df_viewer_config = {
             "pinned_rows": [],
@@ -147,55 +152,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         df = pd.DataFrame(summary)
         return pd_to_obj(df)
 
-    def _select_executor_classes(
-        self,
-        total_rows: int,
-        num_cols: int,
-        sync_executor_class: Optional[type],
-        parallel_executor_class: Optional[type],
-    ) -> tuple[type, type, type]:
-        chosen_sync_exec = sync_executor_class or _SyncExec
-        chosen_par_exec = parallel_executor_class or _ParExec
-        use_parallel = (total_rows >= 100_000) or (num_cols >= 50)
-        exec_class = chosen_par_exec if use_parallel else chosen_sync_exec
-        return chosen_sync_exec, chosen_par_exec, exec_class
-
-    def _compute_summary_with_fallback(
-        self,
-        ldf: pl.LazyFrame,
-        column_executor_class: Optional[type],
-        chosen_par_exec: type,
-        exec_class: type,
-        cached_merged_sd: Optional[Dict[str, Dict[str, Any]]],
-        base_listener,
-    ) -> Dict[str, Dict[str, Any]]:
-        if cached_merged_sd is not None:
-            return cached_merged_sd
-
-        failure_seen = {'val': False}
-
-        def _detect(note):
-            base_listener(note)
-            if not note.success:
-                failure_seen['val'] = True
-
-        try:
-            self._df.compute_summary_with_executor(progress_listener=_detect)
-            summary_sd = self._df.merged_sd or {}
-        except Exception:
-            failure_seen['val'] = True
-            summary_sd = {}
-
-        if failure_seen['val'] and not (exec_class is chosen_par_exec):
-            # fallback: rerun with parallel executor
-            self._df = ColumnExecutorDataflow(
-                ldf,
-                analysis_klasses=self._analyses,
-                column_executor_class=column_executor_class,
-                executor_class=chosen_par_exec)
-            self._df.compute_summary_with_executor(progress_listener=base_listener)
-            summary_sd = self._df.merged_sd or {}
-        return summary_sd
+    # selection and retry now delegated to dataflow
     def _build_column_config(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         column_config: List[Dict[str, Any]] = []
         for rw, meta in summary.items():

@@ -293,12 +293,13 @@ class ExecutorLogEvent:
     start_time: dtdt
     end_time: Optional[dtdt]
     completed: bool
+    executor_class_name: str = ""
     
 
 class ExecutorLog(ABC):
 
     @abstractmethod
-    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs, executor_class_name:str = "") -> None:
         """
           used so we know that we started execution of a col_group even if it crashes
           """
@@ -349,11 +350,12 @@ class SimpleExecutorLog(ExecutorLog):
         self._events: list[ExecutorLogEvent] = []
 
 
-    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs, executor_class_name:str = "") -> None:
         #what happens if we try to start the same dfi, args twice???
         ev = ExecutorLogEvent(
             dfi=dfi,
             args=args,
+            executor_class_name=executor_class_name,
             completed=False,
             start_time=dtdt.now(),
             end_time=None)
@@ -380,6 +382,12 @@ class SimpleExecutorLog(ExecutorLog):
           """
         return self._events
 
+    def has_incomplete_for_executor(self, dfi:DFIdentifier, executor_class_name:str) -> bool:
+        for ev in self._events:
+            if ev.dfi == dfi and ev.executor_class_name == executor_class_name and not ev.completed:
+                return True
+        return False
+
 
 class Executor:
 
@@ -394,6 +402,7 @@ class Executor:
         self.executor_log = executor_log or SimpleExecutorLog()
 
         self.dfi = (id(self.ldf),"",)
+        self.executor_class_name = self.__class__.__name__
 
     def run(self) -> None:
 
@@ -406,7 +415,7 @@ class Executor:
             if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
                 return # not sure what to do here or what progress notification to send back
             
-            self.executor_log.log_start_col_group(self.dfi, ex_args)
+            self.executor_log.log_start_col_group(self.dfi, ex_args, self.executor_class_name)
             t1 = now()
 
             try:
