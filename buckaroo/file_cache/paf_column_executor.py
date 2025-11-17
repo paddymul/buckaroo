@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, List, Type
 
 import polars as pl
+import pl_series_hash  # required to register pl.Expr.pl_series_hash
 
 from buckaroo.file_cache.base import ColumnExecutor, ColumnResults, ColumnResult, ExecutorArgs
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
@@ -42,15 +43,9 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
                                  df: pl.DataFrame,
                                  cols: list[str],
                                  series_stats: dict[str, dict[str, Any]]) -> ColumnResults:
-        # Compute hashes for requested columns in a version-agnostic way
-        hash_values: dict[str, int] = {}
-        for c in cols:
-            try:
-                seq = df[c].to_list()
-                hv = hash(tuple(seq))
-            except Exception:
-                hv = 0
-            hash_values[c] = int(hv & 0xFFFFFFFFFFFFFFFF)
+        # Compute series-level hashes using pl_series_hash.hash_xx; failures are unrecoverable
+        hashed = df.select([pl.col(c).pl_series_hash.hash_xx().alias(c) for c in cols])  # type: ignore[attr-defined]
+        hash_values = {c: int(hashed[c][0]) for c in cols}
 
         # Map rewritten entries back to original columns
         orig_to_stats: dict[str, dict[str, Any]] = {}

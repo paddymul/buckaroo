@@ -70,13 +70,15 @@ class ColumnExecutorDataflow(ABCDataflow):
 
     def __init__(self, ldf: pl.LazyFrame, analysis_klasses: Optional[List[Type[PolarsAnalysis]]] = None,
                  column_executor_class: Optional[Type[ColumnExecutorBase]] = None,
-                 executor_class: Optional[Type[Executor]] = None) -> None:
+                 executor_class: Optional[Type[Executor]] = None,
+                 executor_log: Optional[SimpleExecutorLog] = None) -> None:
         super().__init__()
         self.raw_ldf = ldf
         if analysis_klasses is not None:
             self.analysis_klasses = list(analysis_klasses)
         self._column_executor_class: Type[ColumnExecutorBase] = column_executor_class or self.ColumnExecutorKlass
         self._executor_class: Type[Executor] = executor_class or Executor
+        self.executor_log = executor_log or SimpleExecutorLog()
         self._initialize_df_meta()
         self.widget_args_tuple = (id(None), None, self.merged_sd)
 
@@ -159,13 +161,47 @@ class ColumnExecutorDataflow(ABCDataflow):
                 # do not interrupt execution on progress update failures
                 pass
 
-        ex = self._executor_class(self.raw_ldf, column_executor, _listener, fc, executor_log=SimpleExecutorLog())
+        ex = self._executor_class(self.raw_ldf, column_executor, _listener, fc, executor_log=self.executor_log)
         ex.run()
 
         # Save and merge (no helper method; set properties directly)
         self.summary_sd = aggregated_summary
         self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
         return None
+
+    def auto_compute_summary(
+        self,
+        sync_executor_class: Type[Executor],
+        parallel_executor_class: Type[Executor],
+        num_rows_threshold: int = 100_000,
+        num_cols_threshold: int = 50,
+        file_cache: Optional[FileCache] = None,
+        progress_listener: Optional[ProgressListener] = None,
+    ) -> None:
+        # Determine shape
+        try:
+            total_rows = int(self.raw_ldf.select(pl.len().alias("__len")).collect().item())
+        except Exception:
+            total_rows = 0
+        num_cols = len(self.raw_ldf.collect_schema().names())
+        use_parallel = (total_rows >= num_rows_threshold) or (num_cols >= num_cols_threshold)
+        # If sync was tried before and incomplete, force parallel
+        dfi = (id(self.raw_ldf), "",)
+        if self.executor_log.has_incomplete_for_executor(dfi, sync_executor_class.__name__):
+            use_parallel = True
+        exec_class = parallel_executor_class if use_parallel else sync_executor_class
+        # Run
+        self._executor_class = exec_class
+        try:
+            self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener)
+        except Exception:
+            #FIXME this is a place we want to send a progress notification about the failure or the different approach
+
+            
+            # fallback to parallel on sync failure
+            if exec_class is sync_executor_class:
+                self._executor_class = parallel_executor_class
+                self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener)
 
     @property
     def processed_df(self) -> Any:

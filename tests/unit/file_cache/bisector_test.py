@@ -238,7 +238,7 @@ def _expr_labels(exprs:list[pl.Expr]) -> set[str]:
             labels.add('sum')
         elif 'count()' in s:
             labels.add('len')
-        elif 'hash_series' in s or 'hash_xx' in s:
+        elif 'hash_series' in s or 'hash_xx' in s or 'hash()' in s:
             labels.add('hash')
     return labels
 

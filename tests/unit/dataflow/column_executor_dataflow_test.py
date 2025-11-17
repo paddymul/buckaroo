@@ -48,10 +48,10 @@ def test_compute_summary_with_executor_and_merge():
     ldf = test_df.lazy()
     cdf = ColumnExecutorDataflow(ldf, analysis_klasses=[SelectOnlyAnalysis])
 
-    summary = cdf.compute_summary_with_executor()
+    cdf.compute_summary_with_executor()
     # Expect rewritten key 'a' with our measures plus orig/rewritten names
-    assert 'a' in summary
-    a_meta = summary['a']
+    assert 'a' in cdf.summary_sd
+    a_meta = cdf.summary_sd['a']
     assert a_meta['orig_col_name'] == 'normal_int_series'
     assert a_meta['rewritten_col_name'] == 'a'
     # Measures provided by SelectOnlyAnalysis
@@ -60,7 +60,7 @@ def test_compute_summary_with_executor_and_merge():
     assert a_meta['quin99'] == 4.0
 
     # Verify merged_sd mirrors summary when cleaned/processed are empty
-    assert cdf.merged_sd == summary
+    assert cdf.merged_sd == cdf.summary_sd
 
     # Now augment cleaned_sd and processed_sd and recompute merge (no helper methods; set directly)
     cdf.cleaned_sd = {'a': {'cleaned_flag': True}}
