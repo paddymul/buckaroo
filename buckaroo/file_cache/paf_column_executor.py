@@ -7,7 +7,7 @@ import pl_series_hash  # required to register pl.Expr.pl_series_hash
 
 from buckaroo.file_cache.base import ColumnExecutor, ColumnResults, ColumnResult, ExecutorArgs
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    PolarsAnalysis, polars_produce_series_df,
+    PolarsAnalysis, polars_select_expressions, polars_series_stats_from_select_result,
 )
 
 
@@ -25,11 +25,17 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         columns = list(existing_stats.keys())
         # include hash only if any column is marked missing via sentinel
         include_hash = any(bool(stats.get('__missing_hash__')) for stats in existing_stats.values())
+
+        #FIXME PAF currently has no provision to map individual expressions to values, so we always have to run all of th eexpressions.  I want to make aew iteration of PAF
+        # that is based on beartype and dictionaries... I have it described in a bug report somewhere 
+
+
+        expressions: list[pl.Expr] = polars_select_expressions(self.analyses)
         return ExecutorArgs(
             columns=columns,
             column_specific_expressions=False,
             include_hash=include_hash,
-            expressions=[],
+            expressions=expressions,
             row_start=None,
             row_end=None,
             extra=None,
@@ -37,22 +43,29 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
 
     def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
         cols = execution_args.columns
-        df = ldf.select(cols).collect()
-        series_stats, errs = polars_produce_series_df(df, self.analyses, 'paf_exec', debug=False)
-        return self._series_stats_to_results(df, cols, series_stats, include_hash=bool(execution_args.include_hash))
+        only_cols = ldf.select(cols)
+        # Execute provided expressions directly (single collect)
+        res = only_cols.select(*execution_args.expressions).collect()
+        # Build series stats from the selection result without re-executing expressions
+        schema_df = pl.DataFrame({c: [] for c in cols})
+        series_stats, errs = polars_series_stats_from_select_result(res, schema_df, self.analyses, 'paf_exec', debug=False)
+        # Extract hash values from result if present
+        hash_values: dict[str, int] = {}
+        for c in cols:
+            hcol = f"{c}_hash"
+            if hcol in res.columns:
+                try:
+                    hash_values[c] = int(res[hcol][0])
+                except Exception:
+                    hash_values[c] = 0
+            else:
+                hash_values[c] = 0
+        return self._series_stats_to_results(cols, series_stats, hash_values)
 
     def _series_stats_to_results(self,
-                                 df: pl.DataFrame,
                                  cols: list[str],
                                  series_stats: dict[str, dict[str, Any]],
-                                 include_hash: bool) -> ColumnResults:
-        # Optionally compute series-level hashes using pl_series_hash.hash_xx
-        if include_hash:
-            hashed = df.select([pl.col(c).pl_series_hash.hash_xx().alias(c) for c in cols])  # type: ignore[attr-defined]
-            hash_values = {c: int(hashed[c][0]) for c in cols}
-        else:
-            hash_values = {c: 0 for c in cols}
-
+                                 hash_values: dict[str, int]) -> ColumnResults:
         # Map rewritten entries back to original columns
         orig_to_stats: dict[str, dict[str, Any]] = {}
         for _rw, stat in series_stats.items():
