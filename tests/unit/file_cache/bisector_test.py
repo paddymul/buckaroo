@@ -3,6 +3,7 @@ from typing import cast
 
 import polars as pl
 import polars.selectors as cs
+import pl_series_hash  # type: ignore
 
 from buckaroo.file_cache.base import (
     ColumnExecutor,
@@ -28,15 +29,19 @@ from buckaroo.file_cache.bisector import (
 class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
     def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
         columns = list(existing_stats.keys())
+        # Determine whether we need to compute series hashes in this run.
+        # Default to True for tests unless an executor provides prior knowledge.
+        include_hash = any(bool(stats.get('__missing_hash__')) for stats in existing_stats.values()) or True
+
+        expressions = [pl.all().pl_series_hash.hash_xx().name.suffix("_hash"),
+                    cs.numeric().sum().name.suffix("_sum")]
+        if include_hash:
+            expressions.append(pl.all().len().name.suffix("_len"))
         return ExecutorArgs(
             columns=columns,
             column_specific_expressions=False,
-            include_hash=True,
-            expressions=[
-                pl.all().pl_series_hash.hash_xx().name.suffix("_hash"),
-                cs.numeric().sum().name.suffix("_sum"),
-                pl.all().len().name.suffix("_len"),
-            ],
+            include_hash=include_hash,
+            expressions=expressions,
             row_start=None,
             row_end=None,
             extra=None,
