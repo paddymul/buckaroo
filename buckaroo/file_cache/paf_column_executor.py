@@ -27,8 +27,10 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         # include hash only if any column is marked missing via sentinel
         include_hash = any(bool(stats.get('__missing_hash__')) for stats in existing_stats.values())
 
+        #FIXME: the below known_metric_builders is crap  it works for now to get around the mp failure but something more robust needs to be built
         #FIXME PAF currently has no provision to map individual expressions to values, so we always have to run all of th eexpressions.  I want to make aew iteration of PAF
         # that is based on beartype and dictionaries... I have it described in a bug report somewhere 
+
 
 
         base_expressions: list[pl.Expr] = polars_select_expressions(self.analyses)
