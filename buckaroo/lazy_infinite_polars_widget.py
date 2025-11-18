@@ -8,6 +8,7 @@ from pathlib import Path
 
 import anywidget
 import polars as pl
+import logging
 from traitlets import Dict as TDict, Unicode, observe
 
 from .dataflow.column_executor_dataflow import ColumnExecutorDataflow
@@ -20,6 +21,13 @@ from buckaroo.file_cache.base import Executor as _SyncExec  # type: ignore
 from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
 from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
 
+
+logger = logging.getLogger("buckaroo.widget")
+if not logger.handlers:
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("[buckaroo] %(message)s"))
+    logger.addHandler(_h)
+logger.setLevel(logging.INFO)
 
 
 class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
@@ -139,6 +147,18 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         def payload_bridge(_unused_self, msg, _unused_buffers):
             if msg.get('type') == 'infinite_request':
                 payload_args = msg['payload_args']
+                try:
+                    logger.info(
+                        "infinite_request key=%s-%s-%s start=%s end=%s origEnd=%s",
+                        payload_args.get('sourceName'),
+                        payload_args.get('sort'),
+                        payload_args.get('sort_direction'),
+                        payload_args.get('start'),
+                        payload_args.get('end'),
+                        payload_args.get('origEnd'),
+                    )
+                except Exception:
+                    logger.exception("error logging infinite_request")
                 self._handle_payload_args(payload_args)
         self.on_msg(payload_bridge)
 
@@ -188,6 +208,14 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         if start is None or end is None:
             return
         try:
+            logger.info(
+                "_handle_payload_args start=%s end=%s origEnd=%s sort=%s sort_direction=%s",
+                start,
+                end,
+                new_payload_args.get('origEnd'),
+                new_payload_args.get('sort'),
+                new_payload_args.get('sort_direction'),
+            )
             # create a derived lazyframe to avoid borrowing conflicts with background tasks
             base = self._ldf.select(pl.all())
             sort = new_payload_args.get('sort')
@@ -197,7 +225,16 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 ascending = (sort_dir == 'asc')
                 base = base.sort(orig_sort_col, descending=not ascending)
             slice_len = max(int(end) - int(start), 0)
-            slice_df = base.slice(int(start), slice_len).with_row_index(name='index').collect()
+            # Use a global, non-repeating index by offsetting with the slice start
+            slice_df = (
+                base.slice(int(start), slice_len)
+                .with_row_index(name='index', offset=int(start))
+                .collect()
+            )
+            logger.info(
+                "sending slice [%s,%s) rows=%s total=%s",
+                start, end, len(slice_df), self.df_meta['total_rows']
+            )
             self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'length': self.df_meta['total_rows']},
                       [self._to_parquet(slice_df)])
 
@@ -205,12 +242,21 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             if second_pa:
                 s2, e2 = second_pa.get('start'), second_pa.get('end')
                 if s2 is not None and e2 is not None:
-                    slice2 = base.slice(int(s2), max(int(e2) - int(s2), 0)).with_row_index(name='index').collect()
+                    slice2 = (
+                        base.slice(int(s2), max(int(e2) - int(s2), 0))
+                        .with_row_index(name='index', offset=int(s2))
+                        .collect()
+                    )
+                    logger.info(
+                        "sending second slice [%s,%s) rows=%s total=%s",
+                        s2, e2, len(slice2), self.df_meta['total_rows']
+                    )
                     self.send({"type": "infinite_resp", 'key': second_pa, 'data': [], 'length': self.df_meta['total_rows']},
                               [self._to_parquet(slice2)])
         except Exception as e:
             import traceback
             stack_trace = traceback.format_exc()
             self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'error_info': stack_trace, 'length': 0}, [])
+            logger.exception("error handling payload args: %s", e)
 
 
