@@ -12,7 +12,8 @@ import logging
 from traitlets import Dict as TDict, Unicode, observe
 
 from .dataflow.column_executor_dataflow import ColumnExecutorDataflow
-from .customizations.polars_analysis import PL_Analysis_Klasses
+from .customizations.polars_analysis import PL_Analysis_Klasses, ComputedDefaultSummaryStats, NOT_STRUCTS
+from buckaroo.pluggable_analysis_framework.utils import json_postfix
 from .pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
@@ -22,6 +23,9 @@ from buckaroo.file_cache.base import Executor as _SyncExec  # type: ignore
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
 from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
 
+import polars.selectors as cs
+from polars import functions as F
+
 
 logger = logging.getLogger("buckaroo.widget")
 if not logger.handlers:
@@ -30,6 +34,15 @@ if not logger.handlers:
     logger.addHandler(_h)
 logger.setLevel(logging.INFO)
 
+class SimpleAnalysis(PolarsAnalysis):
+
+
+    provides_defaults = {'length':0, 'null_count':0, 'unique_count':0}
+    select_clauses = [
+        (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count')),
+        F.all().len().name.map(json_postfix('length')),
+        F.all().null_count().name.map(json_postfix('null_count'))]
+    
 
 class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
     """
@@ -73,7 +86,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         super().__init__()
         self._debug = debug
         self._ldf = ldf
-        default_analyses = PL_Analysis_Klasses
+        #default_analyses = PL_Analysis_Klasses
+        default_analyses = [SimpleAnalysis]
 
         self._analyses = list(analysis_klasses) if analysis_klasses is not None else default_analyses
 
@@ -143,8 +157,13 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
 
         #fixme maybe the cache checking should be done by dataflow.
         self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
+
+        #FIXME,  this isn't showing any pinned rows
         df_viewer_config = {
-            "pinned_rows": [],
+            "pinned_rows": [
+                {'primary_key_val': 'unique_count',     'displayer_args': {'displayer': 'obj' } },
+                {'primary_key_val': 'null_count',     'displayer_args': {'displayer': 'obj' } },
+            ],
             "column_config": initial_col_config,
             "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],
         }
