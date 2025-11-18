@@ -173,7 +173,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         self,
         sync_executor_class: Type[Executor],
         parallel_executor_class: Type[Executor],
-        num_rows_threshold: int = 100_000,
+        num_rows_threshold: int = 300,
         num_cols_threshold: int = 50,
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,

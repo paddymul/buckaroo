@@ -88,8 +88,40 @@ def _execute_and_report(func_bytes, args_bytes, queue) -> None:
         except Exception:
             pass
 
-#ctx = multiprocessing.get_context("forkserver")
-ctx = multiprocessing.get_context("fork")
+def _execute_and_report_fork(func, args, kwargs, queue) -> None:
+    """
+    Fork-only path: avoid pickling func/args; call directly in child process and
+    communicate back via a queue.
+    """
+    try:
+        result = func(*args, **kwargs)
+    except SystemExit:
+        try:
+            queue.put(("system_exit", None))
+        except Exception:
+            pass
+        return
+    except BaseException as e:
+        try:
+            exc_bytes = _cloudpickle.dumps(e)
+            queue.put(("exception", exc_bytes))
+        except Exception:
+            try:
+                queue.put(("exception", None))
+            except Exception:
+                pass
+        return
+    try:
+        queue.put(("ok", result))
+    except Exception:
+        try:
+            queue.put(("error", None))
+        except Exception:
+            pass
+
+ctx = multiprocessing.get_context("forkserver")
+#ctx = multiprocessing.get_context("fork")
+#ctx = multiprocessing.get_context("spawn")
 def mp_timeout(timeout_secs: float):
 
     def inner_timeout(f):
@@ -97,16 +129,22 @@ def mp_timeout(timeout_secs: float):
         # is still running, raise TimeoutException. If the worker exits without delivering
         # a result (non-zero exit or dies before queue message), raise ExecutionFailed.
         def actual_func(*args, **kwargs):
-            # Use fork path for performance and to avoid pickling failures.
             result_queue = ctx.Queue(maxsize=1)
-            func_bytes = _cloudpickle.dumps(f)
-            args_bytes = _cloudpickle.dumps((args, kwargs))
-
-            process = ctx.Process(
-                target=_execute_and_report,
-                args=(func_bytes, args_bytes, result_queue),
-                daemon=True,
-            )
+            use_fork_path = ctx.get_start_method() == "fork"
+            if use_fork_path:
+                process = ctx.Process(
+                    target=_execute_and_report_fork,
+                    args=(f, args, kwargs, result_queue),
+                    daemon=True,
+                )
+            else:
+                func_bytes = _cloudpickle.dumps(f)
+                args_bytes = _cloudpickle.dumps((args, kwargs))
+                process = ctx.Process(
+                    target=_execute_and_report,
+                    args=(func_bytes, args_bytes, result_queue),
+                    daemon=True,
+                )
             process.start()
 
             status: Any = None
