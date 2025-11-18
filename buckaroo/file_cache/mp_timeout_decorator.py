@@ -19,7 +19,7 @@ class ExecutionFailed(Exception):
       """
     pass
 
-def _execute_and_report(func_bytes, args, kwargs, queue) -> None:
+def _execute_and_report(func_bytes, args_bytes, queue) -> None:
     """Run func(*args, **kwargs) in a child process and report the outcome.
 
     Puts a tuple (status, payload) into the queue:
@@ -37,6 +37,8 @@ def _execute_and_report(func_bytes, args, kwargs, queue) -> None:
         return
 
     try:
+        # Unpack arguments (args, kwargs) that were cloudpickled in the parent.
+        ua, ukw = _cloudpickle.loads(args_bytes)
         # Heuristic: import any referenced name that resolves to an importable module
         try:
             code_obj = getattr(fn, "__code__", None)
@@ -60,7 +62,7 @@ def _execute_and_report(func_bytes, args, kwargs, queue) -> None:
                     pass
         except Exception:
             pass
-        result = fn(*args, **kwargs)
+        result = fn(*ua, **ukw)
     except SystemExit:
         try:
             queue.put(("system_exit", None))
@@ -95,15 +97,14 @@ def mp_timeout(timeout_secs: float):
         # is still running, raise TimeoutException. If the worker exits without delivering
         # a result (non-zero exit or dies before queue message), raise ExecutionFailed.
         def actual_func(*args, **kwargs):
-            #ctx = multiprocessing.get_context("spawn")
-            #ctx = multiprocessing.get_context("fork")
-
+            # Use fork path for performance and to avoid pickling failures.
             result_queue = ctx.Queue(maxsize=1)
             func_bytes = _cloudpickle.dumps(f)
+            args_bytes = _cloudpickle.dumps((args, kwargs))
 
             process = ctx.Process(
                 target=_execute_and_report,
-                args=(func_bytes, args, kwargs, result_queue),
+                args=(func_bytes, args_bytes, result_queue),
                 daemon=True,
             )
             process.start()
