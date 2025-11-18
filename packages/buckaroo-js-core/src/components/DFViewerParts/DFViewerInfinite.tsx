@@ -274,7 +274,8 @@ export function DFViewerInfiniteInner({
 
     const getRowId = useCallback(
         (params: GetRowIdParams) => {
-            const retVal = String(params?.data?.index) + params.context?.outside_df_params;
+            const outsideKey = JSON.stringify(params.context?.outside_df_params) || "";
+            const retVal = `${String(params?.data?.index)}-${outsideKey}`;
             return retVal;
         },
         [outside_df_params],
@@ -316,7 +317,7 @@ export function DFViewerInfiniteInner({
         getRowId,
         rowModelType: "clientSide"}
 
-    }, [styledColumns.length, JSON.stringify(styledColumns), hs, df_viewer_config.extra_grid_config, setActiveCol ]);
+    }, [styledColumns.length, JSON.stringify(styledColumns), hs, df_viewer_config.extra_grid_config, setActiveCol, getRowId, outside_df_params ]);
 
         const [finalGridOptions, datasource] = useMemo( () => {
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
@@ -324,6 +325,7 @@ export function DFViewerInfiniteInner({
         return (
 
                 <AgGridReact
+                    key={JSON.stringify(outside_df_params) || "no-outside-params"}
                     theme={myTheme}
                     loadThemeGoogleFonts
                     gridOptions={finalGridOptions}
