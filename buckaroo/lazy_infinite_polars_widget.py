@@ -18,7 +18,8 @@ from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
 from .customizations.polars_analysis import HistogramAnalysis as _H
 from buckaroo.file_cache.base import Executor as _SyncExec  # type: ignore            
-from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
+#from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
+from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
 from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
 
 
@@ -106,6 +107,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # Compute summary stats and wire progress to a trait
         def _listener(note):
             # Minimal progress surface; expand as needed
+
+            logger.info(
+                "ProgressNotification for %s  status %s message %s",
+                note.col_group, note.success, note.failure_message)
+
             self.executor_progress = {
                 'success': note.success,
                 'col_group': note.col_group,
@@ -126,13 +132,23 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             summary_sd = self._df.merged_sd or {}
         summary_rows = self._summary_to_rows(summary_sd)
 
-        #fixme maybe the cache checking should be done by dataflow.  
+        # Build initial column_config: fall back to schema so raw data appears immediately.
+        def _schema_column_config() -> list[dict[str, object]]:
+            return [{
+                "col_name": self._orig_to_rw.get(c, c),
+                "header_name": c,
+                "displayer_args": {"displayer": "obj"},
+            } for c in all_cols]
+        initial_col_config = self._build_column_config(summary_sd) if summary_sd else _schema_column_config()
+
+        #fixme maybe the cache checking should be done by dataflow.
         self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
         df_viewer_config = {
             "pinned_rows": [],
-            "column_config": self._build_column_config(summary_sd),
+            "column_config": initial_col_config,
             "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],
         }
+        logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", total_rows, [c.get("header_name") for c in initial_col_config])
         self.df_display_args = {
             'main': {
                 'data_key': 'main',

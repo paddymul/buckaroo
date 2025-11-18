@@ -105,6 +105,21 @@ def test_mp_timeout_fail2():
     with pytest.raises(TimeoutException):
         mp_sleep1_2()
 
+def test_polars_rename_unserializable_raises_execution_failed():
+    """
+    Reproduces a Polars serialization error path where a renaming function is not supported.
+    The worker should complete but result serialization fails, resulting in ExecutionFailed.
+    """
+    @mp_timeout(.5)
+    def make_unserializable_df():
+        df = pl.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
+        # Use a Python callable in a name-mapping context to trigger Polars BindingsError
+        return df.select(pl.all().name.map(lambda nm: nm + "_x"))
+    with pytest.raises(Exception) as ei:
+        make_unserializable_df()
+    if "serialization not supported for this renaming function" in str(ei.value):
+        raise Exception("Polars serialization error raised, expected failing triage test")
+
 def test_mp_crash_exit2():
     with pytest.raises(ExecutionFailed):
         mp_crash_exit_2()
