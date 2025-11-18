@@ -118,6 +118,25 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             column_executor_class=column_executor_class)
         self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
+        # Prepare initial defaults so pinned rows have placeholders immediately
+        def _initial_summary_defaults() -> Dict[str, Dict[str, Any]]:
+            base: Dict[str, Dict[str, Any]] = {}
+            for orig in all_cols:
+                rw = self._orig_to_rw.get(orig, orig)
+                entry: Dict[str, Any] = {
+                    'orig_col_name': orig,
+                    'rewritten_col_name': rw,
+                }
+                for ak in self._analyses:
+                    try:
+                        defaults = getattr(ak, 'provides_defaults', {}) or {}
+                        if isinstance(defaults, dict):
+                            entry.update(defaults)
+                    except Exception:
+                        continue
+                base[rw] = entry
+            return base
+        _initial_sd = _initial_summary_defaults()
         # Compute summary stats and wire progress to a trait
         def _listener(note):
             # Minimal progress surface; expand as needed
@@ -143,7 +162,14 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 chosen_par_exec,
                 progress_listener=_listener,
             )
-            summary_sd = self._df.merged_sd or {}
+            # Important: DFViewer renders pinned-top rows by extracting values from
+            # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
+            # "null_count"). If summary_stats_data is empty at first render (timeouts or
+            # background execution), AG‑Grid has nothing to pin and the pinned area will
+            # not appear. We seed summary_sd with _initial_sd (built from provides_defaults)
+            # so all_stats has placeholders immediately and the pinned rows render even
+            # before the background computation completes.
+            summary_sd = self._df.merged_sd or _initial_sd
         summary_rows = self._summary_to_rows(summary_sd)
 
         # Build initial column_config: fall back to schema so raw data appears immediately.
