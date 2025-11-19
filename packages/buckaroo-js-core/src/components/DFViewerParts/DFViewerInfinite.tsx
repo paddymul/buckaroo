@@ -327,7 +327,10 @@ export function DFViewerInfiniteInner({
             [data_wrapper, gridOptions, hs]);
         // Use grid API to set pinned rows imperatively, avoiding a full React prop update that can flash
         const gridRef = useRef<AgGridReact<any> | null>(null);
+        // Keep latest pinned rows in a ref so onGridReady can apply them once API is ready
+        const topRowsRef = useRef<DFDataRow[] | null>(null);
         useEffect(() => {
+            topRowsRef.current = topRowData;
             try {
                 gridRef.current?.api?.setGridOption('pinnedTopRowData', topRowData);
             } catch (_e) {
@@ -346,6 +349,12 @@ export function DFViewerInfiniteInner({
                     defaultColDef={defaultColDef}
                     datasource={datasource}
                     columnDefs={styledColumns}
+                    onGridReady={(params) => {
+                        try {
+                            // Ensure pinned rows are applied once API is ready
+                            params.api.setGridOption('pinnedTopRowData', topRowsRef.current || []);
+                        } catch (_e) {}
+                    }}
                     context={{ outside_df_params, ...extra_context }}
                 ></AgGridReact>
         );
