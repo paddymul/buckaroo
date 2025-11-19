@@ -273,6 +273,20 @@ export function DFViewerInfiniteInner({
     const topRowData = useMemo(() => {
         return extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
     }, [summary_stats_data, pinned_rows]);
+    useEffect(() => {
+        try {
+            const prKeys = (pinned_rows || []).map((p) => p.primary_key_val);
+            // eslint-disable-next-line no-console
+            console.info(
+                "[DFViewerInfinite][PinnedRows] extracted",
+                { pinnedKeys: prKeys, summaryLen: summary_stats_data?.length || 0, topLen: topRowData?.length || 0 },
+            );
+            if ((topRowData || []).length > 0) {
+                // eslint-disable-next-line no-console
+                console.debug("[DFViewerInfinite][PinnedRows] first row", topRowData[0]);
+            }
+        } catch (_e) {}
+    }, [summary_stats_data, pinned_rows, topRowData]);
 
 
     const getRowId = useCallback(
@@ -332,6 +346,8 @@ export function DFViewerInfiniteInner({
         useEffect(() => {
             topRowsRef.current = topRowData;
             try {
+                // eslint-disable-next-line no-console
+                console.info("[DFViewerInfinite][PinnedRows] applying via setGridOption len", topRowData?.length || 0);
                 gridRef.current?.api?.setGridOption('pinnedTopRowData', topRowData);
             } catch (_e) {
                 // ignore until grid ready
@@ -352,6 +368,8 @@ export function DFViewerInfiniteInner({
                     onGridReady={(params) => {
                         try {
                             // Ensure pinned rows are applied once API is ready
+                            // eslint-disable-next-line no-console
+                            console.info("[DFViewerInfinite][PinnedRows] onGridReady apply len", topRowsRef.current?.length || 0);
                             params.api.setGridOption('pinnedTopRowData', topRowsRef.current || []);
                         } catch (_e) {}
                     }}
