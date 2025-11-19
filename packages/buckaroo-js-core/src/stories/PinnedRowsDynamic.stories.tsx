@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { ShadowDomWrapper } from "./StoryUtils";
 import { DFViewerConfig, NormalColumnConfig } from "../components/DFViewerParts/DFWhole";
