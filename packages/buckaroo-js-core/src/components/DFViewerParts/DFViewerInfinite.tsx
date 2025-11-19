@@ -1,8 +1,8 @@
 import {
     useCallback,
     useMemo,
-//    useEffect,
-//    useRef,
+    useEffect,
+    useRef,
 } from "react";
 import _ from "lodash";
 import { DFData, DFDataRow, DFViewerConfig, SDFT } from "./DFWhole";
@@ -269,7 +269,10 @@ export function DFViewerInfiniteInner({
     }
 
     const pinned_rows = df_viewer_config.pinned_rows;
-    const topRowData = extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
+    // Memoize pinned top rows to avoid unnecessary recomputation and prop thrash
+    const topRowData = useMemo(() => {
+        return extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
+    }, [summary_stats_data, pinned_rows]);
 
 
     const getRowId = useCallback(
@@ -322,16 +325,26 @@ export function DFViewerInfiniteInner({
         const [finalGridOptions, datasource] = useMemo( () => {
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
+        // Use grid API to set pinned rows imperatively, avoiding a full React prop update that can flash
+        const gridRef = useRef<AgGridReact<any> | null>(null);
+        useEffect(() => {
+            try {
+                gridRef.current?.api?.setGridOption('pinnedTopRowData', topRowData);
+            } catch (_e) {
+                // ignore until grid ready
+            }
+        }, [topRowData]);
+
         return (
 
                 <AgGridReact
+                    ref={gridRef}
                     key={JSON.stringify(outside_df_params) || "no-outside-params"}
                     theme={myTheme}
                     loadThemeGoogleFonts
                     gridOptions={finalGridOptions}
                     defaultColDef={defaultColDef}
                     datasource={datasource}
-                    pinnedTopRowData={topRowData}
                     columnDefs={styledColumns}
                     context={{ outside_df_params, ...extra_context }}
                 ></AgGridReact>
