@@ -45,5 +45,6 @@ def test_lazy_widget_init_should_not_block_but_does_with_mp_and_slow_exec():
 
     # We want this to be fast if computations are backgrounded; set a tight bound that will fail now.
     assert elapsed < 0.3, f"Widget init blocked for {elapsed:.2f}s; should compute stats in background"
-
+    #FIXME: this took 53 seconds, it's a really simple DF.  something with the column analytics is broken
+    
 
