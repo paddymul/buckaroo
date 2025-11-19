@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { DFViewerInfinite } from "../components/DFViewerParts/DFViewerInfinite";
 import { ShadowDomWrapper } from "./StoryUtils";
 import {
@@ -121,5 +121,7 @@ type Story = StoryObj<typeof meta>;
 export const Primary: Story = {
   args: {},
 };
+//FIXME: add a playwright test for this.  tighten up the timing to 1 second delays.  add toggle in storybook UI to change to longer timeouts
+
 
 

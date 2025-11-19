@@ -37,7 +37,7 @@ logger.setLevel(logging.INFO)
 class SimpleAnalysis(PolarsAnalysis):
 
 
-    provides_defaults = {'length':0, 'null_count':0, 'unique_count':0, 'empty_count':8}
+    provides_defaults = {'length':2, 'null_count':3, 'unique_count':5, 'empty_count':8}
     select_clauses = [
         (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count')),
         F.all().len().name.map(json_postfix('length')),
@@ -123,9 +123,14 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
             try:
                 rows = self._summary_to_rows(aggregated_summary or {})
+                logger.info(
+                    "Progress rows update: all_stats len=%s sample=%s",
+                    len(rows),
+                    (rows[0] if rows else None),
+                )
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
             except Exception:
-                pass
+                logger.exception("error updating df_data_dict from progress")
         self._df.progress_update_callback = _on_progress_update
 
         # Prepare initial defaults so pinned rows have placeholders immediately
@@ -181,6 +186,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             # before the background computation completes.
             summary_sd = self._df.merged_sd or _initial_sd
         summary_rows = self._summary_to_rows(summary_sd)
+        logger.info(
+            "Initial all_stats prepared: len=%s sample=%s",
+            len(summary_rows),
+            (summary_rows[0] if summary_rows else None),
+        )
 
         # Build initial column_config: fall back to schema so raw data appears immediately.
         def _schema_column_config() -> list[dict[str, object]]:
@@ -205,6 +215,10 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],
         }
         logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", total_rows, [c.get("header_name") for c in initial_col_config])
+        logger.info(
+            "Setting df_display_args with pinned_rows=%s",
+            [pr.get("primary_key_val") for pr in df_viewer_config.get("pinned_rows", [])],
+        )
         self.df_display_args = {
             'main': {
                 'data_key': 'main',

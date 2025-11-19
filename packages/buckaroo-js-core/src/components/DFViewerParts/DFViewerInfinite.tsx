@@ -238,6 +238,14 @@ export function DFViewerInfiniteInner({
         return dfToAgrid(df_viewer_config);
     }, [df_viewer_config]);
 
+    // Log expected grid fields when column defs change
+    useEffect(() => {
+        try {
+            const fields = (styledColumns as any[]).map((c: any) => c?.field).filter(Boolean);
+            // eslint-disable-next-line no-console
+            console.info("[DFViewerInfinite][Cols] fields", fields);
+        } catch (_e) {}
+    }, [styledColumns]);
 
     const defaultColDef = useMemo( () => {
         return {
@@ -269,10 +277,8 @@ export function DFViewerInfiniteInner({
     }
 
     const pinned_rows = df_viewer_config.pinned_rows;
-    // Memoize pinned top rows to avoid unnecessary recomputation and prop thrash
-    const topRowData = useMemo(() => {
-        return extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
-    }, [summary_stats_data, pinned_rows]);
+    // Always re-extract; upstream may mutate summary in-place without changing identity
+    const topRowData = extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
     useEffect(() => {
         try {
             const prKeys = (pinned_rows || []).map((p) => p.primary_key_val);
@@ -281,9 +287,19 @@ export function DFViewerInfiniteInner({
                 "[DFViewerInfinite][PinnedRows] extracted",
                 { pinnedKeys: prKeys, summaryLen: summary_stats_data?.length || 0, topLen: topRowData?.length || 0 },
             );
+            // eslint-disable-next-line no-console
+            console.info(
+                "[DFViewerInfinite][PinnedRows] summary first row keys",
+                Object.keys((summary_stats_data && summary_stats_data[0]) ? summary_stats_data[0] : {}),
+            );
             if ((topRowData || []).length > 0) {
                 // eslint-disable-next-line no-console
                 console.debug("[DFViewerInfinite][PinnedRows] first row", topRowData[0]);
+                // eslint-disable-next-line no-console
+                console.info(
+                    "[DFViewerInfinite][PinnedRows] first row keys",
+                    Object.keys(topRowData[0] || {}),
+                );
             }
         } catch (_e) {}
     }, [summary_stats_data, pinned_rows, topRowData]);
@@ -343,16 +359,36 @@ export function DFViewerInfiniteInner({
         const gridRef = useRef<AgGridReact<any> | null>(null);
         // Keep latest pinned rows in a ref so onGridReady can apply them once API is ready
         const topRowsRef = useRef<DFDataRow[] | null>(null);
-        useEffect(() => {
-            topRowsRef.current = topRowData;
+        // Build a content signature based on visible fields and pinned values,
+        // so we react to content changes even if the array identity is stable.
+        const fieldsForSig = useMemo(() => {
             try {
+                return (styledColumns as any[]).map((c: any) => c?.field).filter(Boolean);
+            } catch {
+                return [];
+            }
+        }, [styledColumns]);
+        const pinnedSig = useMemo(() => {
+            const vals = (topRowData || []).map((r: any) => fieldsForSig.map((f: string) => r?.[f]));
+            const keys = (pinned_rows || []).map((p) => p.primary_key_val);
+            return JSON.stringify({ k: keys, f: fieldsForSig, v: vals });
+        }, [topRowData, fieldsForSig, pinned_rows]);
+        useEffect(() => {
+            try {
+                const rows = (topRowData || []).map((r) => ({ ...r })); // force new refs
+                topRowsRef.current = rows;
                 // eslint-disable-next-line no-console
-                console.info("[DFViewerInfinite][PinnedRows] applying via setGridOption len", topRowData?.length || 0);
-                gridRef.current?.api?.setGridOption('pinnedTopRowData', topRowData);
+                console.info("[DFViewerInfinite][PinnedRows] applying via setGridOption len", rows?.length || 0);
+                gridRef.current?.api?.setGridOption('pinnedTopRowData', rows);
+                // Read back state
+                const cnt = gridRef.current?.api?.getPinnedTopRowCount?.();
+                const first = gridRef.current?.api?.getPinnedTopRow?.(0)?.data;
+                // eslint-disable-next-line no-console
+                console.info("[DFViewerInfinite][PinnedRows] after apply count", cnt, "first", first);
             } catch (_e) {
                 // ignore until grid ready
             }
-        }, [topRowData]);
+        }, [pinnedSig]);
 
         return (
 
@@ -371,6 +407,19 @@ export function DFViewerInfiniteInner({
                             // eslint-disable-next-line no-console
                             console.info("[DFViewerInfinite][PinnedRows] onGridReady apply len", topRowsRef.current?.length || 0);
                             params.api.setGridOption('pinnedTopRowData', topRowsRef.current || []);
+                            // Read back state
+                            const cnt = params.api.getPinnedTopRowCount?.();
+                            const first = params.api.getPinnedTopRow?.(0)?.data;
+                            // eslint-disable-next-line no-console
+                            console.info("[DFViewerInfinite][PinnedRows] onGridReady current count", cnt, "first", first);
+                        } catch (_e) {}
+                    }}
+                    onFirstDataRendered={(params: any) => {
+                        try {
+                            const cnt = params.api.getPinnedTopRowCount?.();
+                            const first = params.api.getPinnedTopRow?.(0)?.data;
+                            // eslint-disable-next-line no-console
+                            console.info("[DFViewerInfinite][PinnedRows] onFirstDataRendered pinned count", cnt, "first", first);
                         } catch (_e) {}
                     }}
                     context={{ outside_df_params, ...extra_context }}
