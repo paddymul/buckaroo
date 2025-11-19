@@ -37,10 +37,11 @@ logger.setLevel(logging.INFO)
 class SimpleAnalysis(PolarsAnalysis):
 
 
-    provides_defaults = {'length':0, 'null_count':0, 'unique_count':0}
+    provides_defaults = {'length':0, 'null_count':0, 'unique_count':0, 'empty_count':8}
     select_clauses = [
         (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count')),
         F.all().len().name.map(json_postfix('length')),
+        F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
         F.all().null_count().name.map(json_postfix('null_count'))]
     
 
@@ -118,6 +119,15 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             column_executor_class=column_executor_class)
         self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
+        # Stream progress updates into df_data_dict so the UI reflects new stats as they arrive.
+        def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
+            try:
+                rows = self._summary_to_rows(aggregated_summary or {})
+                self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
+            except Exception:
+                pass
+        self._df.progress_update_callback = _on_progress_update
+
         # Prepare initial defaults so pinned rows have placeholders immediately
         def _initial_summary_defaults() -> Dict[str, Dict[str, Any]]:
             base: Dict[str, Dict[str, Any]] = {}
@@ -189,6 +199,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             "pinned_rows": [
                 {'primary_key_val': 'unique_count',     'displayer_args': {'displayer': 'obj' } },
                 {'primary_key_val': 'null_count',     'displayer_args': {'displayer': 'obj' } },
+                {'primary_key_val': 'empty_count',     'displayer_args': {'displayer': 'obj' } },
             ],
             "column_config": initial_col_config,
             "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],
