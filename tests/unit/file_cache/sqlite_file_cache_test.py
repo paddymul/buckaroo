@@ -29,11 +29,11 @@ def test_sqlite_filecache_metadata_and_upsert():
 
     # change file contents -> mtime increases -> cache invalid
     path_1.write_text("world")
-    time.sleep(.4) #Delay for CI
+    time.sleep(3) #Delay for CI
     assert not fc.check_file(path_1)
 
 
-def Xtest_sqlite_filecache_executor_integration():
+def test_sqlite_filecache_executor_integration():
     # Run executor and verify series results persisted in sqlite
     df = pl.DataFrame({'a1': [10,20,30], 'b2': [1,2,3]})
     ldf = df.lazy()

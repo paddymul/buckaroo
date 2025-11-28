@@ -76,24 +76,24 @@ class SQLiteFileCache:
         return json.loads(row[0])
 
     def upsert_file_metadata(self, path:Path, extra_metadata:dict[str, Any]) -> None:
+        try:
+            current_mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            return
         cur = self._conn.execute("SELECT mtime, metadata_json FROM files WHERE path=?", (str(path),))
         row = cur.fetchone()
         if row:
-            #cached_mtime = float(row[0])
             md = json.loads(row[1])
             md.update(extra_metadata)
+            # Update both metadata and mtime to reflect current file state
             self._conn.execute(
-                "UPDATE files SET metadata_json=? WHERE path=?",
-                (json.dumps(md), str(path))
+                "UPDATE files SET mtime=?, metadata_json=? WHERE path=?",
+                (current_mtime, json.dumps(md), str(path))
             )
         else:
-            try:
-                mtime = path.stat().st_mtime
-            except FileNotFoundError:
-                return
             self._conn.execute(
                 "INSERT INTO files(path, mtime, metadata_json) VALUES (?,?,?)",
-                (str(path), mtime, json.dumps(extra_metadata))
+                (str(path), current_mtime, json.dumps(extra_metadata))
             )
         self._conn.commit()
 

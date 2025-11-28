@@ -94,11 +94,11 @@ class FileCache:
         except FileNotFoundError:
             return
         if key in self.file_cache:
-            cached_mtime, existing_md = self.file_cache[key]
+            _, existing_md = self.file_cache[key]
             merged_md: dict[str, Any] = dict(existing_md)
             merged_md.update(extra_metadata)
-            # Keep the original cached mtime to represent when metadata was valid
-            self.file_cache[key] = (cached_mtime, merged_md)
+            # Update mtime to current file mtime to reflect current file state
+            self.file_cache[key] = (current_mtime, merged_md)
         else:
             # If not present, behave like add_file with provided metadata
             self.file_cache[key] = (current_mtime, dict(extra_metadata))
