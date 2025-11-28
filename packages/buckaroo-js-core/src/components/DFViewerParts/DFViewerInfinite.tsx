@@ -278,7 +278,11 @@ export function DFViewerInfiniteInner({
 
     const pinned_rows = df_viewer_config.pinned_rows;
     // Always re-extract; upstream may mutate summary in-place without changing identity
-    const topRowData = extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[];
+    // Memoize to ensure it updates when summary_stats_data changes
+    const topRowData = useMemo(
+        () => extractPinnedRows(summary_stats_data, pinned_rows ? pinned_rows : []) as DFDataRow[],
+        [summary_stats_data, pinned_rows]
+    );
     useEffect(() => {
         try {
             const prKeys = (pinned_rows || []).map((p) => p.primary_key_val);
