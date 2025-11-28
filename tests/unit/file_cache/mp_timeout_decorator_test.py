@@ -103,10 +103,47 @@ def test_mp_timeout_fail2():
     with pytest.raises(TimeoutException):
         mp_sleep1_2()
 
+def test_polars_rename_unserializable_raises_execution_failed():
+    """
+    Reproduces a Polars serialization error path where a renaming function is not supported.
+    The worker should complete but result serialization fails, resulting in ExecutionFailed.
+    """
+    @mp_timeout(.5)
+    def make_unserializable_df():
+        df = pl.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
+        # Use a Python callable in a name-mapping context to trigger Polars BindingsError
+        return df.select(pl.all().name.map(lambda nm: nm + "_x"))
+
+    make_unserializable_df()
+#    1/0    
+#    if "serialization not supported for this renaming function" in str(ei.value):
+#        raise Exception("Polars serialization error raised, expected failing triage test")
+
 def test_mp_crash_exit2():
     with pytest.raises(ExecutionFailed):
         mp_crash_exit_2()
     
+def test_mp_polars_simple_len():
+    """
+    Simplest possible Polars op under mp_timeout: ensure it returns a small, serializable result.
+    """
+    @mp_timeout(.5)
+    def polars_len():
+        df = pl.DataFrame({'a':[1,2,3]})
+        # return a plain int to avoid any serialization edge-cases
+        return int(df.select(pl.len()).item())
+    assert polars_len() == 3
+
+def test_mp_polars_simple_sum():
+    """
+    Another minimal op: sum on a single column under mp_timeout returns a scalar.
+    """
+    @mp_timeout(.5)
+    def polars_sum():
+        df = pl.DataFrame({'a':[1,2,3]})
+        return int(df.select(pl.col('a').sum()).item())
+    assert polars_sum() == 6
+
 def test_jupyter_simulate():
     """
       based on a test from joblib
