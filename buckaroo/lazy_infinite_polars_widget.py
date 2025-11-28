@@ -123,11 +123,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
             try:
                 rows = self._summary_to_rows(aggregated_summary or {})
-                logger.info(
-                    "Progress rows update: all_stats len=%s sample=%s",
-                    len(rows),
-                    (rows[0] if rows else None),
-                )
+                # logger.info(
+                #     "Progress rows update: all_stats len=%s sample=%s",
+                #     len(rows),
+                #     (rows[0] if rows else None),
+                # )
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
             except Exception:
                 logger.exception("error updating df_data_dict from progress")
@@ -156,9 +156,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         def _listener(note):
             # Minimal progress surface; expand as needed
 
-            logger.info(
-                "ProgressNotification for %s  status %s message %s",
-                note.col_group, note.success, note.failure_message)
+            # logger.info(
+            #     "ProgressNotification for %s  status %s message %s",
+            #     note.col_group, note.success, note.failure_message)
 
             self.executor_progress = {
                 'success': note.success,
