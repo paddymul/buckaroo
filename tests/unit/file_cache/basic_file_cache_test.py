@@ -1,6 +1,11 @@
 #from buckaroo.file_cache import base
 import socket
 import time
+from tempfile import NamedTemporaryFile
+from pathlib import Path
+from typing import cast
+from datetime import timedelta
+
 from buckaroo.file_cache.base import (
     ColumnExecutor,
     ExecutorArgs,
@@ -12,27 +17,8 @@ from buckaroo.file_cache.base import (
 )
 import polars as pl
 import polars.selectors as cs
-from typing import cast
-from datetime import timedelta
 IS_RUNNING_LOCAL = "Paddy" in socket.gethostname()
-# fc = FileCache()    
 
-# def pseudo(fname:str) -> None:
-#     fpath = Path(fname)
-#     lazy_df = pl.scan_parquet(fpath)
-#     if fc.check_file(Path(fname)):
-#         summary_stats = fc.get_hashes(fpath)
-#         #PolarsBuckaroo(lazy_df, summary_stats)
-#     else:
-#         #PolarsBuckarooTableOnly(lazy_df, None)
-#         def listener(progress:ProgressNotification) -> None:
-#             print(progress.success, progress.result)
-
-#         exc = Executor(lazy_df, simple_column_func, [], listener, fc)
-#         exc.run()
-
-from tempfile import NamedTemporaryFile
-from pathlib import Path
 
 def create_tempfile_with_text(text: str) -> Path:
     # File persists after this function (delete=False). Caller should unlink() when done.
