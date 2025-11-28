@@ -3,7 +3,6 @@ from typing import cast
 
 import polars as pl
 import polars.selectors as cs
-import pl_series_hash  # type: ignore
 
 from buckaroo.file_cache.base import (
     ColumnExecutor,
