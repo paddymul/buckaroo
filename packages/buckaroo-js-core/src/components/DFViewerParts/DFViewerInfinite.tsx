@@ -356,7 +356,18 @@ export function DFViewerInfiniteInner({
 
     }, [styledColumns.length, JSON.stringify(styledColumns), hs, df_viewer_config.extra_grid_config, setActiveCol, getRowId, outside_df_params ]);
 
-        const [finalGridOptions, datasource] = useMemo( () => {
+        // Extract datasource separately to ensure it updates when data_wrapper changes
+        const datasource = useMemo(() => {
+            return data_wrapper.data_type === "DataSource" ? data_wrapper.datasource : {
+                rowCount: data_wrapper.length,
+                getRows: (_params: any) => {
+                    console.debug("fake datasource getRows called, unexpected");
+                    throw new Error("fake datasource getRows called, unexpected");
+                }
+            };
+        }, [data_wrapper]);
+
+        const finalGridOptions = useMemo( () => {
             return getFinalGridOptions(data_wrapper, gridOptions, hs);},
             [data_wrapper, gridOptions, hs]);
         // Use grid API to set pinned rows imperatively, avoiding a full React prop update that can flash
@@ -436,25 +447,17 @@ export function DFViewerInfiniteInner({
 // Raw is used, so the component properly swaps over.
 // Otherwise pinnedRows appear above the last scrolled position
 // of the InfiniteRowSource vs having an empty data set.
-const getFinalGridOptions =( 
-    data_wrapper: DatasourceOrRaw, gridOptions:GridOptions, hs: HeightStyleI,
-     ): [GridOptions, IDatasource] => {
+const getFinalGridOptions = ( 
+    data_wrapper: DatasourceOrRaw, gridOptions:GridOptions, hs: HeightStyleI
+     ): GridOptions => {
     if (data_wrapper.data_type === "Raw") {
-        const fakeDatasource:IDatasource = {
-            rowCount:data_wrapper.data.length,
-            getRows: (_params: any) => {
-                console.debug("fake datasource get rows called, unexpected");
-                throw new Error("fake datasource get rows called, unexpected");
-            }
-        }
-        return [{
+        return {
             ...gridOptions,
             rowData: data_wrapper.data,
             suppressNoRowsOverlay: true,
-
-        }, fakeDatasource];
+        };
     } else if (data_wrapper.data_type === "DataSource") {
-        return [getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling ), data_wrapper.datasource];
+        return getDsGridOptions(gridOptions, hs.maxRowsWithoutScrolling);
     } else {
         throw new Error(`Unexpected data_wrapper.data_type on  ${data_wrapper}`)
     }
