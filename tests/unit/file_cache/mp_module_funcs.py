@@ -24,6 +24,7 @@ TIMEOUT = LOCAL_TIMEOUT if IS_RUNNING_LOCAL else CI_TIMEOUT
 @mp_timeout(TIMEOUT)
 def mp_polars_longread(i=0):
     if not IS_RUNNING_LOCAL:
+        time.sleep(TIMEOUT * 1.5)
         return 5
     if i == 0:
         try:
