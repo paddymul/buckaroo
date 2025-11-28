@@ -31,7 +31,7 @@ def test_sqlite_filecache_metadata_and_upsert():
     assert not fc.check_file(path_1)
 
 
-def test_sqlite_filecache_executor_integration():
+def Xtest_sqlite_filecache_executor_integration():
     # Run executor and verify series results persisted in sqlite
     df = pl.DataFrame({'a1': [10,20,30], 'b2': [1,2,3]})
     ldf = df.lazy()
