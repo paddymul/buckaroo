@@ -29,42 +29,7 @@ DFIdentifier: TypeAlias = FileDFIdentifier | MemoryDFIdentifer
 def flatten(*lists):
     list(itertools.chain(*lists))
     
-class AbstractFileCache(ABC):
-    """
-    Abstract interface for a file/series cache.
-    Concrete implementations include an in-memory cache (MemoryFileCache)
-    and a SQLite-backed cache (SQLiteFileCache).
-    """
-    @abstractmethod
-    def add_file(self, path:Path, metadata:dict[str, Any]) -> None: ...
-
-    @abstractmethod
-    def add_metadata(self, path:Path, metadata:dict[str, Any]) -> None: ...
-
-    @abstractmethod
-    def check_file(self, path:Path) -> bool: ...
-
-    @abstractmethod
-    def get_file_metadata(self, path:Path) -> Optional[dict[str, Any]]: ...
-
-    @abstractmethod
-    def upsert_file_metadata(self, path:Path, extra_metadata:dict[str, Any]) -> None: ...
-
-    @abstractmethod
-    def upsert_key(self, series_hash:int, result:SummaryStats) -> None: ...
-
-    @abstractmethod
-    def get_series_results(self, series_hash:int) -> SummaryStats|None: ...
-
-    # New: file-level series hash helpers
-    @abstractmethod
-    def get_file_series_hashes(self, path: Path) -> Optional[dict[str, int]]: ...
-
-    @abstractmethod
-    def upsert_file_series_hashes(self, path: Path, hashes: dict[str, int]) -> None: ...
-
-
-class MemoryFileCache(AbstractFileCache):
+class FileCache:
     """
       acutally as written this is more like an in memory cache
       """
@@ -146,20 +111,6 @@ class MemoryFileCache(AbstractFileCache):
     def get_series_results(self, series_hash:int) -> SummaryStats|None:
         return self.summary_stats_cache.get(series_hash, None)
 
-    def get_file_series_hashes(self, path: Path) -> Optional[dict[str, int]]:
-        md = self.get_file_metadata(path)
-        if not md:
-            return None
-        hashes = md.get('series_hashes')
-        return {str(k): int(v) for k, v in hashes.items()}
-
-    def upsert_file_series_hashes(self, path: Path, hashes: dict[str, int]) -> None:
-        md = self.get_file_metadata(path) or {}
-        cur = dict(md.get('series_hashes') or {})
-        cur.update({str(k): int(v) for k, v in hashes.items()})
-        merged = dict(md)
-        merged['series_hashes'] = cur
-        self.upsert_file_metadata(path, merged)
     def _get_buffer_key(self, series:pl.Series) -> BufferKey:
         """
 
@@ -214,8 +165,7 @@ class MemoryFileCache(AbstractFileCache):
         for col in df.columns:
             self.add_series(df[col], col)
         
-# Backwards-compat alias for existing imports/tests
-FileCache = MemoryFileCache
+
 
         
 class AnnotatedFile:
@@ -343,13 +293,12 @@ class ExecutorLogEvent:
     start_time: dtdt
     end_time: Optional[dtdt]
     completed: bool
-    executor_class_name: str = ""
     
 
 class ExecutorLog(ABC):
 
     @abstractmethod
-    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs, executor_class_name:str = "") -> None:
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         """
           used so we know that we started execution of a col_group even if it crashes
           """
@@ -400,12 +349,11 @@ class SimpleExecutorLog(ExecutorLog):
         self._events: list[ExecutorLogEvent] = []
 
 
-    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs, executor_class_name:str = "") -> None:
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         #what happens if we try to start the same dfi, args twice???
         ev = ExecutorLogEvent(
             dfi=dfi,
             args=args,
-            executor_class_name=executor_class_name,
             completed=False,
             start_time=dtdt.now(),
             end_time=None)
@@ -432,31 +380,20 @@ class SimpleExecutorLog(ExecutorLog):
           """
         return self._events
 
-    def has_incomplete_for_executor(self, dfi:DFIdentifier, executor_class_name:str) -> bool:
-        for ev in self._events:
-            if ev.dfi == dfi and ev.executor_class_name == executor_class_name and not ev.completed:
-                return True
-        return False
-
 
 class Executor:
 
     def __init__(self,
         ldf:pl.LazyFrame, column_executor:ColumnExecutor,
-        listener:ProgressListener, fc:AbstractFileCache,
-        executor_log: ExecutorLog | None = None,
-        file_path: str | Path | None = None) -> None:
+        listener:ProgressListener, fc:FileCache,
+        executor_log: ExecutorLog | None = None) -> None:
         self.ldf = ldf
         self.column_executor = column_executor
         self.listener = listener
         self.fc = fc
         self.executor_log = executor_log or SimpleExecutorLog()
 
-        #FIXME wtf is this.  it's either none or a path.  why not just use the path?
-        self.file_path: Path | None = Path(file_path) if isinstance(file_path, (str, Path)) else None
-
-        self.dfi = (id(self.ldf), str(self.file_path) if self.file_path else "",)
-        self.executor_class_name = self.__class__.__name__
+        self.dfi = (id(self.ldf),"",)
 
     def run(self) -> None:
 
@@ -464,38 +401,12 @@ class Executor:
         last_ex_args: ExecutorArgs | None = None
 
         for col_group in self.get_column_chunks():
-            # Build existing stats by consulting file cache using per-file series hashes if available
-            file_hashes: dict[str, int] = {}
-            if self.file_path and self.fc.check_file(self.file_path):
-                fh = self.fc.get_file_series_hashes(self.file_path) or {}
-                file_hashes = {str(k): int(v) for k, v in fh.items()}
-
-            existing_cached: dict[str, Any] = {}
-            missing_hash_columns: list[str] = []
-            for col in col_group:
-                h = file_hashes.get(col)
-                if h:
-                    existing_cached[col] = self.fc.get_series_results(h) or {}
-                else:
-                    # mark explicitly that this column is missing a file-level series hash
-                    existing_cached[col] = {'__missing_hash__': True}
-                    missing_hash_columns.append(col)
-
-            ex_args = self.column_executor.get_execution_args(existing_cached)
-            # annotate args with missing-hash info so executors can act accordingly
-            try:
-                extra_map: dict[str, Any] = dict(ex_args.extra) if isinstance(ex_args.extra, dict) else {}
-                extra_map['missing_hash_columns'] = list(missing_hash_columns)
-                if self.file_path:
-                    extra_map['file_path'] = str(self.file_path)
-                ex_args.extra = extra_map
-            except Exception:
-                pass
+            ex_args = self.get_executor_args(col_group)
             last_ex_args = ex_args
             if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
                 return # not sure what to do here or what progress notification to send back
             
-            self.executor_log.log_start_col_group(self.dfi, ex_args, self.executor_class_name)
+            self.executor_log.log_start_col_group(self.dfi, ex_args)
             t1 = now()
 
             try:
@@ -511,16 +422,6 @@ class Executor:
 
                 for col, col_result in res.items():
                     self.fc.upsert_key(col_result.series_hash, col_result.result)
-
-                #FIXME,  make sure this means that the spurious 0s generated by PAFcolumnexecutor for series hashes aren't inserted    
-                # If file hashes were missing and we have a file path, persist newly discovered hashes
-                if self.file_path and missing_hash_columns:
-                    new_hashes: dict[str, int] = {}
-                    for c in missing_hash_columns:
-                        if c in res and res[c].series_hash:
-                            new_hashes[c] = int(res[c].series_hash)
-                    if new_hashes:
-                        self.fc.upsert_file_series_hashes(self.file_path, new_hashes)
 
                 self.listener(notification)
                 self.executor_log.log_end_col_group(self.dfi, last_ex_args)    
@@ -562,7 +463,7 @@ class Executor:
         """
           dumb impl
           """
-        return [[column] for column in self.ldf.collect_schema().names()]
+        return [[column] for column in self.ldf.columns]
 
     
 # fc = FileCache()    

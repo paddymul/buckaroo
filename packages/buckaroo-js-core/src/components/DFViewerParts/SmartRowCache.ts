@@ -427,10 +427,6 @@ export class SmartRowCache {
 	    return this.hasRows(newSeg)
 	}
         this.lastRequest = needSeg;
-        // debug visibility
-        try {
-            console.log("[SmartRowCache.hasRows] need", needSeg, "extents", this.safeGetExtents(), "lastRequest", this.lastRequest);
-        } catch (_e) {}
         for (const ourSeg of this.segments) {
             if (segmentsOverlap(ourSeg, needSeg)) {
                 return minimumFillArgs(ourSeg, needSeg)
@@ -440,9 +436,6 @@ export class SmartRowCache {
     }
 
     public getRows(range: Segment): DFData {
-        try {
-            console.log("[SmartRowCache.getRows] range", range, "extents", this.safeGetExtents(), "segments", this.segments);
-        } catch (_e) {}
         if (this.hasRows(range) === true) {
             if(range[0] === 0 && range[1] === 0) {
                 console.log("unexpected setting lastRequest to [0,0] in getRows")
@@ -453,7 +446,6 @@ export class SmartRowCache {
 	    const fullSeg: Segment = [0, this.sentLength];
 	    return getRange(this.segments, this.dfs, fullSeg)
 	}
-        console.error("[SmartRowCache.getRows] Missing rows error. range", range, "extents", this.safeGetExtents(), "segments", this.segments, "sentLength", this.sentLength);
         throw new Error(`Missing rows for {range}`)
     }
 }
@@ -586,15 +578,10 @@ export class KeyAwareSmartRowCache {
         //@ts-ignore
         const reqTime = (new Date()) - 1 as number
         pa.request_time = reqTime;
-        try {
-            console.log("[KeyAware.getRequestRows] pa", pa, "cbKey", cbKey, "extents", src.safeGetExtents(), "sentLength", src.sentLength);
-        } catch (_e) {}
+        
         if (this.hasRows(pa)) {
             console.log(`request for ${[pa.start, pa.origEnd, pa.end]} in cache, extents ${src.getExtents()}`)
-            // Only return rows guaranteed in cache: [start, origEnd].
-            // Do NOT expand to [start, sentLength] here, as sentLength is dataset size, not cache extent.
-            const seg: Segment = [pa.start, pa.origEnd];
-            cb(src.getRows(seg), src.sentLength);
+            cb(this.getRows(pa), src.sentLength);
             const cbKey = getPayloadKey(pa)
             delete this.waitingCallbacks[cbKey]
             this.maybeMakeLeadingRequest(pa)
