@@ -12,7 +12,7 @@ multiprocessing  an behave differently when a function is defined in an imported
 
 
 LOCAL_TIMEOUT = 1
-CI_TIMEOUT = 2
+CI_TIMEOUT = 10
 
 
 IS_RUNNING_LOCAL = "Paddy" in socket.gethostname()
