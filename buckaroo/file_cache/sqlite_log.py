@@ -48,7 +48,7 @@ class SQLiteExecutorLog(ExecutorLog):
         expr_count = len(args.expressions)
         return cols, include_hash, row_start, row_end, expr_count
 
-    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs, executor_class_name:str = "") -> None:
+    def log_start_col_group(self, dfi: DFIdentifier, args:ExecutorArgs) -> None:
         dfi_k = _dfi_key(dfi)
         cols, include_hash, row_start, row_end, expr_count = self._args_key_parts(args)
         self._conn.execute(
