@@ -24,6 +24,8 @@ from buckaroo.file_cache.bisector import (
     full_bisect_pipeline,
 )
 
+#the following line is necessary so pl_series_hash is available on the expression object
+from pl_series_hash import crash  # noqa: F401  
 
 class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
     def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
