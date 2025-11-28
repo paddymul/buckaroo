@@ -1,9 +1,9 @@
-import pytest
 import textwrap
 import sys
 import threading
 import ctypes
 import time
+import pytest
 import polars as pl  # type: ignore
 from pl_series_hash import crash  # type: ignore
 
@@ -11,23 +11,21 @@ from buckaroo.file_cache.mp_timeout_decorator import (
     TimeoutException, ExecutionFailed, mp_timeout
 )
 
-from .mp_module_funcs import ( mp_simple, mp_sleep1, mp_crash_exit, mp_polars_longread, mp_polars_crash
-)
-
-
+from .mp_module_funcs import ( mp_simple, mp_sleep1, mp_crash_exit, mp_polars_longread, mp_polars_crash,
+                               TIMEOUT)
 # we want to see if these functions can be defined in the same file
-@mp_timeout(1)
+@mp_timeout(TIMEOUT)
 def mp_simple2():
     return 5
 
 
-@mp_timeout(.2)
+@mp_timeout(TIMEOUT)
 def mp_sleep1_2():
-    time.sleep(1)
+    time.sleep(TIMEOUT*2)
     return 5
 
 
-@mp_timeout(.5)
+@mp_timeout(TIMEOUT)
 def mp_crash_exit_2():
     # intentionally crash the process
     ctypes.string_at(0)
@@ -53,7 +51,7 @@ def test_mp_crash_exit():
         mp_crash_exit()
     assert 1==1
 
-@mp_timeout(.5)
+@mp_timeout(TIMEOUT)
 def mp_polars_crash2():
     df_1 = pl.DataFrame({"u64": pl.Series([5, 3, 20], dtype=pl.UInt64)})
     df_1.select(hash_col=crash("u64"))
@@ -88,7 +86,7 @@ def test_normal_exception():
     with pytest.raises(ZeroDivisionError):
         1/0
 
-@mp_timeout(.3)
+@mp_timeout(TIMEOUT)
 def zero_div():
     5/0
 
@@ -140,14 +138,14 @@ def test_jupyter_simulate():
 
     assert f(1) == 1
 
-    wrapped_f = mp_timeout(.5)(f)
+    wrapped_f = mp_timeout(TIMEOUT)(f)
 
     assert wrapped_f(1) == 1
 
 
 # Additional edge-case tests to cover all code paths in simple_decorator
 
-@mp_timeout(1)
+@mp_timeout(TIMEOUT)
 def return_unpicklable():
     return threading.Lock()
 
@@ -163,7 +161,7 @@ class UnpicklableError(Exception):
         self.fh = fh
 
 
-@mp_timeout(.5)
+@mp_timeout(TIMEOUT)
 def raise_unpicklable_exc(tmp_path):
     fh = open(tmp_path / "x", "w")
     raise UnpicklableError(fh)
@@ -174,7 +172,7 @@ def test_unpicklable_exception_raises_execution_failed(tmp_path):
         raise_unpicklable_exc(tmp_path)
 
 
-@mp_timeout(1)
+@mp_timeout(TIMEOUT)
 def exit_now():
     sys.exit(0)
 

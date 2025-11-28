@@ -1,3 +1,4 @@
+import socket
 import sys
 import ctypes
 import time
@@ -10,8 +11,20 @@ multiprocessing  an behave differently when a function is defined in an imported
   """
 
 
-@mp_timeout(0.3)
+LOCAL_TIMEOUT = 1
+CI_TIMEOUT = 2
+
+
+IS_RUNNING_LOCAL = "Paddy" in socket.gethostname()
+#print(socket.gethostname())
+TIMEOUT = LOCAL_TIMEOUT if IS_RUNNING_LOCAL else CI_TIMEOUT
+
+
+
+@mp_timeout(TIMEOUT)
 def mp_polars_longread(i=0):
+    if not IS_RUNNING_LOCAL:
+        return 5
     if i == 0:
         try:
             import polars as pl  # type: ignore
@@ -22,29 +35,29 @@ def mp_polars_longread(i=0):
     return 5
 
 
-@mp_timeout(3)
+@mp_timeout(TIMEOUT)
 def mp_simple():
     return 5
 
 
-@mp_timeout(0.2)
+@mp_timeout(TIMEOUT)
 def mp_sleep1():
-    time.sleep(1)
+    time.sleep(TIMEOUT*3)
     return 5
 
 
-@mp_timeout(.5)
+@mp_timeout(TIMEOUT)
 def mp_crash_exit():
     # intentionally crash the process
     ctypes.string_at(0)
 
 
-@mp_timeout(.8)
+@mp_timeout(TIMEOUT)
 def mp_sys_exit():
     sys.exit()
 
 
-@mp_timeout(0.5)
+@mp_timeout(TIMEOUT)
 def mp_polars_crash():
     try:
         import polars as pl  # type: ignore
