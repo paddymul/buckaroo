@@ -9,21 +9,18 @@ from pathlib import Path
 import anywidget
 import polars as pl
 import logging
-from traitlets import Dict as TDict, Unicode, observe
+from traitlets import Dict as TDict, Unicode
 
 from .dataflow.column_executor_dataflow import ColumnExecutorDataflow
-from .customizations.polars_analysis import PL_Analysis_Klasses, ComputedDefaultSummaryStats, NOT_STRUCTS
+from .customizations.polars_analysis import NOT_STRUCTS
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
 from .pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
-from .customizations.polars_analysis import HistogramAnalysis as _H
 from buckaroo.file_cache.base import Executor as _SyncExec  # type: ignore            
 #from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
-from buckaroo.file_cache.base import FileCache as _FC  # type: ignore
 
-import polars.selectors as cs
 from polars import functions as F
 
 
@@ -79,7 +76,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         debug: bool = False,
         column_executor_class: Optional[type] = None,
         file_path: Optional[str] = None,
-        file_cache: Optional["FileCache"] = None,
+        #file_cache: Optional["FileCache"] = None,
         sync_executor_class: Optional[type] = None,
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
@@ -101,7 +98,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # Optional cache short-circuit
         cached_merged_sd = None
         if file_path:
-            md = file_cache.get_file_metadata(Path(file_path))  # type: ignore[arg-type]
+            md = self.file_cache.get_file_metadata(Path(file_path))  # type: ignore[arg-type]
             if md and 'merged_sd' in md:
                 cached_merged_sd = md['merged_sd']
 
