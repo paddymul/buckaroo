@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -28,6 +29,7 @@ def test_sqlite_filecache_metadata_and_upsert():
 
     # change file contents -> mtime increases -> cache invalid
     path_1.write_text("world")
+    time.sleep(.4) #Delay for CI
     assert not fc.check_file(path_1)
 
 
