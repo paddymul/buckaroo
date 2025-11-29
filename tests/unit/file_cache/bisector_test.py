@@ -263,7 +263,7 @@ def _expr_labels(exprs:list[pl.Expr]) -> set[str]:
         s = str(e)
         if 'sum()' in s:
             labels.add('sum')
-        elif 'count()' in s:
+        elif 'count()' in s or '.len()' in s:
             labels.add('len')
         elif 'hash_series' in s or 'hash_xx' in s or 'hash()' in s:
             labels.add('hash')
