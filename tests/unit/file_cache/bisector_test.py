@@ -55,7 +55,7 @@ class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
         # Try to execute all expressions together first (like polars_produce_series_df and PAFColumnExecutor)
         try:
             res = only_cols_ldf.select(*execution_args.expressions).collect()
-        except Exception as e:
+        except Exception:
             # Fallback: Execute expressions individually and combine horizontally
             # This matches the behavior of polars_produce_series_df and PAFColumnExecutor
             individual_results = []
@@ -63,7 +63,7 @@ class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
                 try:
                     expr_result = only_cols_ldf.select(expr).collect()
                     individual_results.append(expr_result)
-                except Exception as clause_error:
+                except Exception:
                     # Skip failed expression, continue with others
                     continue
             

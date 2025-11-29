@@ -7,9 +7,8 @@ from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
     ComputedDefaultSummaryStats)
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
-    PolarsAnalysisPipeline, polars_produce_series_df)
+    polars_produce_series_df)
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
-from buckaroo.file_cache.base import FileCache
 
 HA_CLASSES = [VCAnalysis, PlTyping, BasicAnalysis, ComputedDefaultSummaryStats, HistogramAnalysis]
 
@@ -44,7 +43,7 @@ def test_full_pipeline_error_handling():
                 try:
                     vc_exploded = vc.explode()
                     print(f"  value_counts length: {len(vc_exploded)}")
-                except:
+                except Exception:
                     pass
 
 
@@ -68,10 +67,10 @@ def test_paf_executor_error_handling():
         print("PAF executor: SUCCESS")
         print(f"Results keys: {list(results.keys()) if results else 'None'}")
     except Exception as e:
-        print(f"PAF executor: FAILED")
+        print("PAF executor: FAILED")
         print(f"  Error type: {type(e).__name__}")
         print(f"  Error message: {e}")
-        print(f"  DIAGNOSIS: PAF executor does NOT catch errors - execution fails completely")
+        print("  DIAGNOSIS: PAF executor does NOT catch errors - execution fails completely")
 
 
 def test_expression_execution_directly():
@@ -91,7 +90,7 @@ def test_expression_execution_directly():
     print("\n--- Executing all expressions together ---")
     try:
         result_all = ldf.select(*all_expressions).collect()
-        print(f"SUCCESS: All expressions executed together")
+        print("SUCCESS: All expressions executed together")
         print(f"Result columns: {result_all.columns[:5]}...")
     except Exception as e:
         print(f"FAILED: {type(e).__name__}: {e}")
@@ -139,7 +138,7 @@ def test_full_pipeline_vs_paf_expressions():
     
     # Check if PAF has expressions that full pipeline doesn't
     full_expr_strs = [str(e) for e in full_expressions]
-    paf_expr_strs = [str(e) for e in paf_expressions]
+    #paf_expr_strs = [str(e) for e in paf_expressions]
     
     paf_only = [e for e in paf_expressions if str(e) not in full_expr_strs]
     print(f"PAF-only expressions: {len(paf_only)}")

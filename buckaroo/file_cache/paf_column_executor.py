@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Type, Dict, Callable
-import json
+from typing import Any, List, Type
 
 import polars as pl
 
@@ -26,78 +25,13 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         # include hash only if any column is marked missing via sentinel
         include_hash = any(bool(stats.get('__missing_hash__')) for stats in existing_stats.values())
 
-        #FIXME: the below known_metric_builders is crap  it works for now to get around the mp failure but something more robust needs to be built
-        #FIXME PAF currently has no provision to map individual expressions to values, so we always have to run all of th eexpressions.  I want to make aew iteration of PAF
-        # that is based on beartype and dictionaries... I have it described in a bug report somewhere 
-
-
-
-        base_expressions: list[pl.Expr] = polars_select_expressions(self.analyses)
-
-        # Build safe per-column expressions based on provided defaults from analyses,
-        # avoiding any .name.map(lambda ...) constructs entirely.
-        known_metric_builders: Dict[str, Callable[[pl.Expr], pl.Expr]] = {
-            'null_count': lambda e: e.null_count(),
-            'mean': lambda e: e.mean(),
-            'min': lambda e: e.min(),
-            'max': lambda e: e.max(),
-            'median': lambda e: e.median(),
-            'std': lambda e: e.std(),
-            'len': lambda e: e.len(),
-            'length': lambda e: e.len(),
-            'sum': lambda e: e.sum(),
-        }
-
-        provided_measures: List[str] = []
-        for ak in self.analyses:
-            try:
-                for k in getattr(ak, "provides_defaults", {}).keys():
-                    if k not in provided_measures:
-                        provided_measures.append(str(k))
-            except Exception:
-                pass
-
-        # If we have any recognized measures from analyses, prefer the safe per-column plan.
-        safe_rewritten: list[pl.Expr] = []
-        recognized = [m for m in provided_measures if m in known_metric_builders]
-        #FIXME, I don't like any of this special casing
-        #FIXME write tests with arbitrary metric names
-        
-        # value_counts probably could take some special casing though,
-        # it can end up being a pretty large array for most stats
-        # display, we only need the unique count, longtail_count, and
-        # 10 most frequent values there are more stats that could be
-        # calced off of value counts faster, but the analytics aren't
-        # implemented that way
-        
-        needs_value_counts = 'value_counts' in provided_measures and 'value_counts' not in known_metric_builders
-        
-        if recognized:
-            for col in columns:
-                base = pl.col(col)
-                for m in recognized:
-                    safe_rewritten.append(
-                        known_metric_builders[m](base).alias(json.dumps([col, m]))
-                    )
-                # Add value_counts expression for this column if needed
-                # VCAnalysis uses: NOT_STRUCTS.exclude("count").value_counts(sort=True).implode()
-                # For a specific column, we check if it's not a struct type and add value_counts
-                if needs_value_counts:
-                    # Check if column is not numeric, string, temporal, or boolean (i.e., not a struct-like type)
-                    # We'll add value_counts for all columns and let Polars handle type checking
-                    safe_rewritten.append(
-                        base.value_counts(sort=True).implode().alias(json.dumps([col, 'value_counts']))
-                    )
-            expressions = safe_rewritten
-            column_specific = True
-        else:
-            # Fallback to original expressions if nothing recognized
-            expressions = base_expressions
-            column_specific = False
+        # Use the EXACT same expressions as regular PAF to ensure identical results
+        # This ensures PAFColumnExecutor is a drop-in replacement for regular PAF
+        expressions: list[pl.Expr] = polars_select_expressions(self.analyses)
 
         return ExecutorArgs(
             columns=columns,
-            column_specific_expressions=column_specific,
+            column_specific_expressions=False,  # Using same expressions as regular PAF (not per-column)
             include_hash=include_hash,
             expressions=expressions,
             row_start=None,
@@ -112,7 +46,7 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         # Try to execute all expressions together first (like polars_produce_series_df)
         try:
             res = only_cols.select(*execution_args.expressions).collect()
-        except Exception as e:
+        except Exception:
             # Fallback: Execute expressions individually and combine horizontally
             # This matches the behavior of polars_produce_series_df (lines 46-82)
             # to handle cases where some expressions fail (e.g., mean() on string columns)
@@ -121,17 +55,57 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
                 try:
                     expr_result = only_cols.select(expr).collect()
                     individual_results.append(expr_result)
-                except Exception as clause_error:
+                except Exception:
                     # Skip failed expression, continue with others
                     # This allows value_counts and other valid expressions to succeed
                     # even if mean() or other operations fail on string columns
                     continue
             
-            # Combine results horizontally
+            # Try to combine results horizontally
             if individual_results:
-                res = individual_results[0]
-                for additional_result in individual_results[1:]:
-                    res = res.hstack(additional_result)
+                try:
+                    res = individual_results[0]
+                    for additional_result in individual_results[1:]:
+                        res = res.hstack(additional_result)
+                except Exception as hstack_error:
+                    # If hstack fails (e.g., height mismatches), extract values from each
+                    # result separately and merge them, then reconstruct a DataFrame
+                    # This ensures we get all available values even when heights don't match
+                    # split_to_dicts only reads the first row, so we can put all values in row 0
+                    from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
+                    from collections import defaultdict
+                    
+                    merged_dict = defaultdict(dict)
+                    for individual_result in individual_results:
+                        result_dict = split_to_dicts(individual_result)
+                        for orig_col, measures in result_dict.items():
+                            merged_dict[orig_col].update(measures)
+                    
+                    # Reconstruct DataFrame from merged dict
+                    # split_to_dicts only reads stat_df[col][0], so we put all values in row 0
+                    # For value_counts, we need to preserve the Series structure
+                    # For other measures, extract scalar values
+                    reconstructed_cols = {}
+                    for orig_col, measures in merged_dict.items():
+                        for measure, value in measures.items():
+                            col_name = json.dumps([orig_col, measure])
+                            if measure == 'value_counts' and isinstance(value, pl.Series):
+                                # Preserve the Series for value_counts (it's a Series of structs)
+                                reconstructed_cols[col_name] = [value]
+                            elif isinstance(value, pl.Series):
+                                # For other Series, extract first element
+                                scalar_val = value[0] if value.len() > 0 else None
+                                reconstructed_cols[col_name] = [scalar_val]
+                            elif isinstance(value, list):
+                                scalar_val = value[0] if value else None
+                                reconstructed_cols[col_name] = [scalar_val]
+                            else:
+                                reconstructed_cols[col_name] = [value]
+                    
+                    if reconstructed_cols:
+                        res = pl.DataFrame(reconstructed_cols)
+                    else:
+                        res = pl.DataFrame()
             else:
                 # If no expressions worked, create empty result with correct schema
                 # This should rarely happen, but handle it gracefully
@@ -140,7 +114,11 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         # Collect the original column data for column_ops execution
         original_data = only_cols.collect()
         # Build series stats from the selection result, passing actual data so column_ops can execute
-        series_stats, errs = polars_series_stats_from_select_result(res, original_data, self.analyses, 'paf_exec', debug=False)
+        # Use run_computed_summary=True so computed_summary runs here (PAFColumnExecutor doesn't
+        # call polars_produce_summary_df separately)
+        series_stats, errs = polars_series_stats_from_select_result(
+            res, original_data, self.analyses, 'paf_exec', debug=False, run_computed_summary=True
+        )
         # Extract hash values from result if present
         hash_values: dict[str, int] = {}
         for c in cols:

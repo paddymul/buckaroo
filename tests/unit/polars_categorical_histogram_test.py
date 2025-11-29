@@ -6,7 +6,6 @@ These tests compare categorical_histogram results from both paths
 to identify which side is correct and what the differences are.
 """
 import polars as pl
-import numpy as np
 from buckaroo.customizations.polars_analysis import (
     VCAnalysis, PlTyping, BasicAnalysis, HistogramAnalysis,
     ComputedDefaultSummaryStats)
@@ -33,7 +32,7 @@ def test_simple_categorical_two_values():
     ced.compute_summary_with_executor(file_cache=FileCache())
     paf_summary = ced.merged_sd
     
-    print(f"\n=== Simple Two Values Test ===")
+    print("\n=== Simple Two Values Test ===")
     print(f"Full pipeline summary keys: {list(full_summary.keys())}")
     print(f"PAF path summary keys: {list(paf_summary.keys())}")
     
@@ -102,7 +101,7 @@ def test_simple_categorical_three_values():
     paf_summary = ced.merged_sd
     paf_cat_hist = paf_summary.get('a', {}).get('categorical_histogram', {})
     
-    print(f"\n=== Simple Three Values Test ===")
+    print("\n=== Simple Three Values Test ===")
     print(f"Full pipeline categorical_histogram: {full_cat_hist}")
     print(f"PAF path categorical_histogram: {paf_cat_hist}")
     print(f"Match: {full_cat_hist == paf_cat_hist}")
@@ -131,7 +130,7 @@ def test_categorical_with_longtail():
     paf_summary = ced.merged_sd
     paf_cat_hist = paf_summary.get('a', {}).get('categorical_histogram', {})
     
-    print(f"\n=== Longtail Test ===")
+    print("\n=== Longtail Test ===")
     print(f"Full pipeline categorical_histogram: {full_cat_hist}")
     print(f"PAF path categorical_histogram: {paf_cat_hist}")
     print(f"Match: {full_cat_hist == paf_cat_hist}")
@@ -213,7 +212,7 @@ def test_categorical_small_categories_filtered():
     paf_summary = ced.merged_sd
     paf_cat_hist = paf_summary.get('a', {}).get('categorical_histogram', {})
     
-    print(f"\n=== Small Categories Filtered Test ===")
+    print("\n=== Small Categories Filtered Test ===")
     print(f"Full pipeline categorical_histogram: {full_cat_hist}")
     print(f"PAF path categorical_histogram: {paf_cat_hist}")
     print(f"Match: {full_cat_hist == paf_cat_hist}")
