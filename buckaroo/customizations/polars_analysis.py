@@ -249,15 +249,24 @@ class HistogramAnalysis(PolarsAnalysis):
         cd = categorical_dict_from_vc(vc)
         is_numeric = summary_dict.get('is_numeric', False)
         nan_per = summary_dict['null_count']
-        if is_numeric and len(vc.explode()) > 5:
+        # Prefer numeric histograms when:
+        #   - the column is numeric, and
+        #   - either value_counts indicates many distinct values, OR
+        #   - histogram_args is present (e.g., on the PAF/ColumnExecutor path where
+        #     value_counts may not be fully populated but histogram_args is).
+        if is_numeric and (
+            len(vc.explode()) > 5 or summary_dict.get('histogram_args')
+        ):
             histogram_args = summary_dict['histogram_args']
-            min_, max_, nan_per = summary_dict['min'], summary_dict['max'], summary_dict['nan_per']
-            temp_histo =  numeric_histogram(histogram_args, min_, max_, nan_per)
-            if len(temp_histo) > 5:
-                #if we had basically a categorical variable encoded into an integer.. don't return it
-                return {'histogram': temp_histo,
-                        'histogram_bins': summary_dict['histogram_args']['meat_histogram'][1]
-                        }
+            if histogram_args:
+                min_, max_, nan_per = summary_dict['min'], summary_dict['max'], summary_dict['nan_per']
+                temp_histo = numeric_histogram(histogram_args, min_, max_, nan_per)
+                if len(temp_histo) > 5:
+                    # if we had basically a categorical variable encoded into an integer.. don't return it
+                    return {
+                        'histogram': temp_histo,
+                        'histogram_bins': summary_dict['histogram_args']['meat_histogram'][1],
+                    }
         return {'categorical_histogram': cd, 'histogram' : categorical_histogram_from_cd(cd, nan_per),
                 'histogram_bins': ['faked']
                 }

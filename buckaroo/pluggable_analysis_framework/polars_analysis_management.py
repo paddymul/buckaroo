@@ -202,10 +202,10 @@ def polars_series_stats_from_select_result(
             summary_dict[rw_col].update(measures)
 
     # column_ops may require original series; execute them if data is available.
-    # If original_df_for_schema has data (height > 0), execute column_ops similar to polars_produce_series_df.
-    # If it's empty (schema-only), skip column_ops for backward compatibility.
+    # If original_df_for_schema has data (height > 0), execute column_ops similar
+    # to polars_produce_series_df. If it's empty (schema-only), skip column_ops
+    # for backward compatibility.
     if original_df_for_schema.height > 0:
-        # We have actual data, so we can execute column_ops
         for pa in unordered_objs:
             for measure_name, action_tuple in pa.column_ops.items():
                 col_selector, func = action_tuple
@@ -215,12 +215,15 @@ def polars_series_stats_from_select_result(
                     else:
                         # col_selector is a list of data types (e.g., NUMERIC_POLARS_DTYPES)
                         # Filter columns by matching dtype
-                        matching_cols = [c for c in original_df_for_schema.columns 
-                                         if original_df_for_schema[c].dtype in col_selector]
+                        matching_cols = [
+                            c
+                            for c in original_df_for_schema.columns
+                            if original_df_for_schema[c].dtype in col_selector
+                        ]
                         if not matching_cols:
                             continue
                         sub_df = original_df_for_schema.select(matching_cols)
-                    
+
                     for col in sub_df.columns:
                         rw_col = orig_col_to_rewritten.get(col, col)
                         if rw_col in summary_dict:
@@ -229,10 +232,39 @@ def polars_series_stats_from_select_result(
                     if debug:
                         print(f"Error in column_ops for {measure_name}: {e}")
                     continue
-    else:
-        # Empty schema - skip column_ops (backward compatibility)
-        # This maintains the existing behavior when only schema is provided
-        pass
+
+    # After base measures + column_ops, run computed_summary for each analysis,
+    # mirroring polars_produce_summary_df so that derived fields such as
+    # histogram, histogram_bins, categorical_histogram, etc. are populated.
+    #
+    # Note: we intentionally iterate over original_df_for_schema so that
+    # old_col_new_col provides a stable mapping from original -> rewritten names.
+    for orig_ser_name, rewritten_col_name in old_col_new_col(original_df_for_schema):
+        base_summary_dict = summary_dict.get(rewritten_col_name, {})
+
+        # Handle case where the entry is an error string instead of a dict
+        if isinstance(base_summary_dict, str):
+            base_summary_dict = {}
+
+        for a_kls in unordered_objs:
+            try:
+                if a_kls.quiet or a_kls.quiet_warnings:
+                    if debug is False:
+                        warnings.filterwarnings('ignore')
+                    summary_res = a_kls.computed_summary(base_summary_dict)
+                    warnings.filterwarnings('default')
+                else:
+                    summary_res = a_kls.computed_summary(base_summary_dict)
+                base_summary_dict.update(summary_res)
+            except Exception as e:
+                # Mirror behaviour of polars_produce_summary_df: record/log errors
+                # via debug prints only; callers that need structured errs should
+                # extend this function to surface them.
+                if debug:
+                    print(f"Error in {a_kls.__name__}.computed_summary: {e}")
+                continue
+
+        summary_dict[rewritten_col_name] = base_summary_dict
 
     return summary_dict, errs
 

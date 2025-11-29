@@ -251,7 +251,61 @@ def test_pl_typing():
               [AdaptingStylingAnalysis, PlTyping, HistogramAnalysis,
                BasicAnalysis, VCAnalysis,
                ComputedDefaultSummaryStats])
-    
+
+
+def test_paf_histograms_match_full_polars_pipeline_head_500():
+    """
+    For the first 500 rows of the citibike parquet file, verify that the
+    histogram-related outputs (histogram and histogram_bins) from the
+    ColumnExecutor/PAF path match those produced by the full Polars
+    pluggable analysis pipeline.
+    """
+    from buckaroo.dataflow.column_executor_dataflow import ColumnExecutorDataflow
+    from buckaroo.file_cache.base import FileCache
+
+    citibike_df = pl.read_parquet("./docs/example-notebooks/citibike-trips-2016-04.parq")
+    head_df = citibike_df[:500]
+
+    # Baseline: full Polars pipeline (series + summary with computed_summary)
+    full_summary, full_errs = PolarsAnalysisPipeline.full_produce_summary_df(
+        head_df, HA_CLASSES, debug=False
+    )
+    assert full_errs == {}
+
+    # PAF / ColumnExecutor path used by LazyInfinitePolarsBuckarooWidget
+    ldf = head_df.lazy()
+    ced = ColumnExecutorDataflow(ldf, analysis_klasses=HA_CLASSES)
+    ced.compute_summary_with_executor(file_cache=FileCache())
+    paf_summary = ced.merged_sd
+
+    # For each rewritten column with a non-empty numeric histogram in the
+    # baseline summary, assert that (when present) the PAF path produces
+    # identical histogram and histogram_bins. We only compare columns that
+    # are present in both summaries, but require that at least one such
+    # column exists so this test meaningfully exercises the path.
+    compared_cols = []
+    for col_key, meta_full in full_summary.items():
+        hist_full = meta_full.get("histogram")
+        bins_full = meta_full.get("histogram_bins")
+        # Skip columns without a real histogram in the baseline
+        if not isinstance(hist_full, list) or len(hist_full) == 0:
+            continue
+        if not isinstance(bins_full, list) or len(bins_full) == 0:
+            continue
+
+        if col_key not in paf_summary:
+            # Column group may not have been executed yet on some paths; skip.
+            continue
+        meta_paf = paf_summary[col_key]
+
+        hist_paf = meta_paf.get("histogram")
+        bins_paf = meta_paf.get("histogram_bins")
+
+        assert hist_paf == hist_full, f"Histogram mismatch for column {col_key}"
+        assert bins_paf == bins_full, f"Histogram bins mismatch for column {col_key}"
+        compared_cols.append(col_key)
+
+    assert len(compared_cols) > 0, "No overlapping columns with non-empty histograms to compare"
 
 class PLLen(PolarsAnalysis):
 
