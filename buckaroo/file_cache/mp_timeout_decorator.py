@@ -1,6 +1,4 @@
 import multiprocessing
-import os
-import sys
 from typing import Any
 import cloudpickle as _cloudpickle  # type: ignore
 
@@ -124,11 +122,6 @@ def _execute_and_report_fork(func, args, kwargs, queue) -> None:
 ctx = multiprocessing.get_context("forkserver")
 #ctx = multiprocessing.get_context("fork")
 #ctx = multiprocessing.get_context("spawn")
-
-# Print diagnostic info about multiprocessing context when module is imported
-# (This will show in parent process, not in worker processes)
-print(f"[MP_TIMEOUT] Module loaded - Multiprocessing context: {ctx.get_start_method()}, Default: {multiprocessing.get_start_method()}, PID: {os.getpid()}", flush=True)
-
 def mp_timeout(timeout_secs: float):
 
     def inner_timeout(f):
@@ -152,41 +145,30 @@ def mp_timeout(timeout_secs: float):
                     args=(func_bytes, args_bytes, result_queue),
                     daemon=True,
                 )
-            print(f"[MP_TIMEOUT] Starting worker process: timeout={timeout_secs}s, parent_PID={os.getpid()}, use_fork_path={use_fork_path}", flush=True)
             process.start()
-            print(f"[MP_TIMEOUT] Worker process started: worker_PID={process.pid}, is_alive={process.is_alive()}, parent_PID={os.getpid()}", flush=True)
 
             status: Any = None
             payload: Any = None
             try:
-                print(f"[MP_TIMEOUT] Waiting for result from worker process (timeout={timeout_secs}s)...", flush=True)
                 status, payload = result_queue.get(timeout=timeout_secs)
-                print(f"[MP_TIMEOUT] Received result: status={status}", flush=True)
-            except Exception as e:
+            except Exception:
                 # No message received within timeout.
-                print(f"[MP_TIMEOUT] Exception while waiting for result: {type(e).__name__}: {e}, process.is_alive()={process.is_alive()}, exitcode={process.exitcode}", flush=True)
                 # If the process is still alive, it's a timeout.
                 if process.is_alive():
-                    print(f"[MP_TIMEOUT] Process still alive after timeout, terminating...", flush=True)
                     process.terminate()
                     process.join(0.25)
-                    print(f"[MP_TIMEOUT] Process terminated, exitcode={process.exitcode}", flush=True)
                     raise TimeoutException("Timeout fail")
                 # Process already exited: treat as execution failure (likely crash)
-                print(f"[MP_TIMEOUT] Process already exited (exitcode={process.exitcode}), treating as execution failure", flush=True)
                 process.join(0.25)
                 raise ExecutionFailed("Execution failed in worker")
 
             # Child reported a result or an error; ensure child exits
             process.join(0.25)
             exit_code = process.exitcode
-            print(f"[MP_TIMEOUT] Worker process finished: exitcode={exit_code}, status={status}", flush=True)
 
             if exit_code not in (0, None):
-                print(f"[MP_TIMEOUT] Worker process exited with non-zero code: {exit_code}", flush=True)
                 raise ExecutionFailed("Execution failed in worker")
             if status == "ok":
-                print(f"[MP_TIMEOUT] Worker process completed successfully", flush=True)
                 return payload
             if status == "exception" and payload is not None:
                 try:
