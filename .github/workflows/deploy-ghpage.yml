@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs/_output
+          path: ./packages/buckaroo-js-core/dist/storybook
 
   deploy:
     needs: build
