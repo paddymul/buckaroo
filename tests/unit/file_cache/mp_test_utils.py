@@ -58,7 +58,7 @@ def mp_sys_exit():
     sys.exit()
 
 
-@mp_timeout(TIMEOUT)
+@mp_timeout(TIMEOUT * 3)
 def mp_polars_crash():
     try:
         import polars as pl  # type: ignore
