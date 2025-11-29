@@ -244,7 +244,7 @@ class HistogramAnalysis(PolarsAnalysis):
     def computed_summary(summary_dict):
         if len(summary_dict.keys()) == 0:
             return {}
-        
+        #FIXME
         vc = summary_dict.get('value_counts')
         if vc is None or (hasattr(vc, 'len') and vc.len() == 0):
             # Return empty defaults if value_counts is missing or empty

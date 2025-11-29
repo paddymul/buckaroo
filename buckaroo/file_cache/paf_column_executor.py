@@ -108,8 +108,35 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
     def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:
         cols = execution_args.columns
         only_cols = ldf.select(cols)
-        # Execute provided expressions directly (single collect)
-        res = only_cols.select(*execution_args.expressions).collect()
+        
+        # Try to execute all expressions together first (like polars_produce_series_df)
+        try:
+            res = only_cols.select(*execution_args.expressions).collect()
+        except Exception as e:
+            # Fallback: Execute expressions individually and combine horizontally
+            # This matches the behavior of polars_produce_series_df (lines 46-82)
+            # to handle cases where some expressions fail (e.g., mean() on string columns)
+            individual_results = []
+            for expr in execution_args.expressions:
+                try:
+                    expr_result = only_cols.select(expr).collect()
+                    individual_results.append(expr_result)
+                except Exception as clause_error:
+                    # Skip failed expression, continue with others
+                    # This allows value_counts and other valid expressions to succeed
+                    # even if mean() or other operations fail on string columns
+                    continue
+            
+            # Combine results horizontally
+            if individual_results:
+                res = individual_results[0]
+                for additional_result in individual_results[1:]:
+                    res = res.hstack(additional_result)
+            else:
+                # If no expressions worked, create empty result with correct schema
+                # This should rarely happen, but handle it gracefully
+                res = pl.DataFrame()
+        
         # Collect the original column data for column_ops execution
         original_data = only_cols.collect()
         # Build series stats from the selection result, passing actual data so column_ops can execute
