@@ -12,13 +12,12 @@ This test suite narrows down the problem through the execution stack:
 5. MultiprocessingExecutor
 """
 import polars as pl
-import numpy as np
 from buckaroo.polars_buckaroo import PolarsBuckarooWidget
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
-from buckaroo.customizations.polars_analysis import HistogramAnalysis, PL_Analysis_Klasses
+from buckaroo.customizations.polars_analysis import PL_Analysis_Klasses
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from buckaroo.dataflow.column_executor_dataflow import ColumnExecutorDataflow
-from buckaroo.file_cache.base import Executor, FileCache, ProgressNotification
+from buckaroo.file_cache.base import FileCache, ProgressNotification
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 

@@ -4,7 +4,6 @@ from typing import Any, List, Type, Dict, Callable
 import json
 
 import polars as pl
-import pl_series_hash  # required to register pl.Expr.pl_series_hash
 
 from buckaroo.file_cache.base import ColumnExecutor, ColumnResults, ColumnResult, ExecutorArgs
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
