@@ -1,3 +1,4 @@
+import os
 import socket
 import time
 from pathlib import Path
@@ -37,23 +38,23 @@ def test_sqlite_filecache_metadata_and_upsert():
 
     # change file contents -> mtime increases -> cache invalid
     path_1.write_text("world")
-    time.sleep(3) #Delay for CI
+    # Explicitly set mtime to a future time to ensure it's different
+    # (filesystem timing can be imprecise in CI, especially on low-precision filesystems)
+    cached_mtime = float(fc._conn.execute("SELECT mtime FROM files WHERE path=?", (str(path_1),)).fetchone()[0])
+    future_mtime = max(time.time() + 1.0, cached_mtime + 1.0)
+    os.utime(path_1, (future_mtime, future_mtime))
+    current_mtime = path_1.stat().st_mtime
+    assert current_mtime > cached_mtime, f"mtime should increase: {current_mtime} > {cached_mtime}"
     assert not fc.check_file(path_1)
 
 
 def test_sqlite_filecache_upsert_should_refresh_mtime():
     """
-    Test that demonstrates the bug: upsert_file_metadata doesn't refresh mtime.
+    Test that upsert_file_metadata refreshes mtime to the current file mtime.
     
-    This test will FAIL because upsert_file_metadata keeps the old mtime instead
-    of refreshing it to the current file mtime. If a file is modified between
-    add_metadata and upsert_file_metadata, the cache will have a stale mtime.
+    When a file is modified between add_metadata and upsert_file_metadata,
+    upsert_file_metadata should update the cached mtime to match the current file mtime.
     """
-    #FIXME
-    # if not IS_RUNNING_LOCAL:
-    #     #I'm having trouble wit this test in CI, and I can't tell why
-    #     assert 1 == 1
-    #     return
     fc = SQLiteFileCache(":memory:")
     path_1 = create_tempfile_with_text("hello")
     
@@ -68,15 +69,19 @@ def test_sqlite_filecache_upsert_should_refresh_mtime():
     
     # Step 2: Modify the file - mtime becomes T2 (T2 > T1)
     path_1.write_text("world")
-    time.sleep(0.1)  # Ensure mtime increases
+    # Explicitly set mtime to a future time to ensure it's different
+    # (filesystem timing can be imprecise in CI, especially on low-precision filesystems)
+    future_mtime = max(time.time() + 1.0, mtime_after_add + 1.0)
+    os.utime(path_1, (future_mtime, future_mtime))
     mtime_after_modify = path_1.stat().st_mtime
-    assert mtime_after_modify > mtime_after_add, "File modification should increase mtime"
+    assert mtime_after_modify > mtime_after_add, (
+        f"File modification should increase mtime: {mtime_after_modify} > {mtime_after_add}"
+    )
     
-    # Step 3: Upsert metadata - should refresh mtime to T2, but currently keeps T1
+    # Step 3: Upsert metadata - should refresh mtime to T2
     fc.upsert_file_metadata(path_1, {'beta': 2})
     
     # Step 4: Verify the cached mtime was refreshed to current mtime (T2)
-    # This will FAIL because upsert_file_metadata doesn't update mtime
     cur = fc._conn.execute("SELECT mtime FROM files WHERE path=?", (str(path_1),))
     row = cur.fetchone()
     cached_mtime_after_upsert = float(row[0])
