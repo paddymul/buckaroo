@@ -60,12 +60,33 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         # If we have any recognized measures from analyses, prefer the safe per-column plan.
         safe_rewritten: list[pl.Expr] = []
         recognized = [m for m in provided_measures if m in known_metric_builders]
+        #FIXME, I don't like any of this special casing
+        #FIXME write tests with arbitrary metric names
+        
+        # value_counts probably could take some special casing though,
+        # it can end up being a pretty large array for most stats
+        # display, we only need the unique count, longtail_count, and
+        # 10 most frequent values there are more stats that could be
+        # calced off of value counts faster, but the analytics aren't
+        # implemented that way
+        
+        needs_value_counts = 'value_counts' in provided_measures and 'value_counts' not in known_metric_builders
+        
         if recognized:
             for col in columns:
                 base = pl.col(col)
                 for m in recognized:
                     safe_rewritten.append(
                         known_metric_builders[m](base).alias(json.dumps([col, m]))
+                    )
+                # Add value_counts expression for this column if needed
+                # VCAnalysis uses: NOT_STRUCTS.exclude("count").value_counts(sort=True).implode()
+                # For a specific column, we check if it's not a struct type and add value_counts
+                if needs_value_counts:
+                    # Check if column is not numeric, string, temporal, or boolean (i.e., not a struct-like type)
+                    # We'll add value_counts for all columns and let Polars handle type checking
+                    safe_rewritten.append(
+                        base.value_counts(sort=True).implode().alias(json.dumps([col, 'value_counts']))
                     )
             expressions = safe_rewritten
             column_specific = True
