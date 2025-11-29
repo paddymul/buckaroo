@@ -21,10 +21,10 @@ def create_tempfile_with_text(text: str) -> Path:
 
 def test_sqlite_filecache_metadata_and_upsert():
     #FIXME
-    if not IS_RUNNING_LOCAL:
-        #I'm having trouble wit this test in CI, and I can't tell why
-        assert 1 == 1
-        return
+    # if not IS_RUNNING_LOCAL:
+    #     #I'm having trouble wit this test in CI, and I can't tell why
+    #     assert 1 == 1
+    #     return
     fc = SQLiteFileCache(":memory:")
     path_1 = create_tempfile_with_text("hello")
     assert not fc.check_file(path_1)
@@ -50,10 +50,10 @@ def test_sqlite_filecache_upsert_should_refresh_mtime():
     add_metadata and upsert_file_metadata, the cache will have a stale mtime.
     """
     #FIXME
-    if not IS_RUNNING_LOCAL:
-        #I'm having trouble wit this test in CI, and I can't tell why
-        assert 1 == 1
-        return
+    # if not IS_RUNNING_LOCAL:
+    #     #I'm having trouble wit this test in CI, and I can't tell why
+    #     assert 1 == 1
+    #     return
     fc = SQLiteFileCache(":memory:")
     path_1 = create_tempfile_with_text("hello")
     
