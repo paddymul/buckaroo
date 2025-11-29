@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, List, Type
+import json
 
 import polars as pl
 
@@ -67,7 +68,7 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
                     res = individual_results[0]
                     for additional_result in individual_results[1:]:
                         res = res.hstack(additional_result)
-                except Exception as hstack_error:
+                except Exception:
                     # If hstack fails (e.g., height mismatches), extract values from each
                     # result separately and merge them, then reconstruct a DataFrame
                     # This ensures we get all available values even when heights don't match

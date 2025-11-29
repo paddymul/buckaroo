@@ -171,7 +171,7 @@ def test_categorical_from_test_histogram_analysis():
     paf_summary = ced.merged_sd
     paf_cat_hist = paf_summary.get('a', {}).get('categorical_histogram', {})
     
-    print(f"\n=== Test Histogram Analysis Data ===")
+    print("\n=== Test Histogram Analysis Data ===")
     print(f"Full pipeline categorical_histogram: {full_cat_hist}")
     print(f"PAF path categorical_histogram: {paf_cat_hist}")
     print(f"Match: {full_cat_hist == paf_cat_hist}")
@@ -239,7 +239,7 @@ def test_categorical_value_counts_structure():
     paf_summary = ced.merged_sd
     paf_vc = paf_summary.get('a', {}).get('value_counts')
     
-    print(f"\n=== Value Counts Structure Test ===")
+    print("\n=== Value Counts Structure Test ===")
     print(f"Full pipeline value_counts type: {type(full_vc)}")
     if hasattr(full_vc, 'name'):
         print(f"Full pipeline value_counts name: '{full_vc.name}'")

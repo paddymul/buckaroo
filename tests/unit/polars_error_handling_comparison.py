@@ -102,7 +102,7 @@ def test_expression_execution_directly():
     failed = []
     for expr in all_expressions:
         try:
-            result = ldf.select(expr).collect()
+            ldf.select(expr).collect()
             successful.append(expr)
         except Exception as e:
             failed.append((expr, e))
@@ -117,8 +117,6 @@ def test_expression_execution_directly():
 
 def test_full_pipeline_vs_paf_expressions():
     """Compare what expressions full pipeline uses vs PAF executor"""
-    df = pl.DataFrame({'cat_col': ['A', 'B'] * 50})
-    
     print("\n=== Expression Comparison ===")
     
     # Full pipeline expressions
