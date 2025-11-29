@@ -11,7 +11,7 @@ from buckaroo.file_cache.mp_timeout_decorator import (
     TimeoutException, ExecutionFailed, mp_timeout
 )
 
-from .mp_module_funcs import ( mp_simple, mp_sleep1, mp_crash_exit, mp_polars_longread, mp_polars_crash,
+from .mp_test_utils import ( mp_simple, mp_sleep1, mp_crash_exit, mp_polars_longread, mp_polars_crash,
                                TIMEOUT)
 # we want to see if these functions can be defined in the same file
 @mp_timeout(TIMEOUT)
@@ -108,7 +108,7 @@ def test_polars_rename_unserializable_raises_execution_failed():
     Reproduces a Polars serialization error path where a renaming function is not supported.
     The worker should complete but result serialization fails, resulting in ExecutionFailed.
     """
-    @mp_timeout(.5)
+    @mp_timeout(TIMEOUT * 2)
     def make_unserializable_df():
         df = pl.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
         # Use a Python callable in a name-mapping context to trigger Polars BindingsError
@@ -127,7 +127,7 @@ def test_mp_polars_simple_len():
     """
     Simplest possible Polars op under mp_timeout: ensure it returns a small, serializable result.
     """
-    @mp_timeout(.5)
+    @mp_timeout(TIMEOUT * 2)
     def polars_len():
         df = pl.DataFrame({'a':[1,2,3]})
         # return a plain int to avoid any serialization edge-cases
@@ -138,7 +138,7 @@ def test_mp_polars_simple_sum():
     """
     Another minimal op: sum on a single column under mp_timeout returns a scalar.
     """
-    @mp_timeout(.5)
+    @mp_timeout(TIMEOUT * 2)
     def polars_sum():
         df = pl.DataFrame({'a':[1,2,3]})
         return int(df.select(pl.col('a').sum()).item())

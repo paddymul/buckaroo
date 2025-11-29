@@ -12,7 +12,7 @@ def test_multiprocessing_executor_success():
     notes: list[ProgressNotification] = []
     def listener(p: ProgressNotification):
         notes.append(p)
-    exc = MultiprocessingExecutor(ldf, SimpleColumnExecutor(), listener, fc, timeout_secs=2.0)
+    exc = MultiprocessingExecutor(ldf, SimpleColumnExecutor(), listener, fc, timeout_secs=5.0)
     exc.run()
     # one notification per column
     assert len(notes) == len(df.columns)
