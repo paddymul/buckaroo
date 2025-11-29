@@ -201,21 +201,38 @@ def polars_series_stats_from_select_result(
             rw_col = orig_col_to_rewritten[orig_col]
             summary_dict[rw_col].update(measures)
 
-    # column_ops may require original series; we cannot recompute without data.
-    # Keep behavior consistent with polars_produce_series_df by attempting to
-    # compute from the original_df_for_schema when possible (schema-only path
-    # will typically skip due to missing data).
-    for pa in unordered_objs:
-        for measure_name, action_tuple in pa.column_ops.items():
-            col_selector, func = action_tuple
-            try:
-                # Without data, column_ops can't run; skip silently.
-                # If consumers need column_ops, they should pass a real df here.
-                continue
-            except Exception:
-                if debug:
-                    pass
-                continue
+    # column_ops may require original series; execute them if data is available.
+    # If original_df_for_schema has data (height > 0), execute column_ops similar to polars_produce_series_df.
+    # If it's empty (schema-only), skip column_ops for backward compatibility.
+    if original_df_for_schema.height > 0:
+        # We have actual data, so we can execute column_ops
+        for pa in unordered_objs:
+            for measure_name, action_tuple in pa.column_ops.items():
+                col_selector, func = action_tuple
+                try:
+                    if col_selector == "all":
+                        sub_df = original_df_for_schema.select(pl.all())
+                    else:
+                        # col_selector is a list of data types (e.g., NUMERIC_POLARS_DTYPES)
+                        # Filter columns by matching dtype
+                        matching_cols = [c for c in original_df_for_schema.columns 
+                                         if original_df_for_schema[c].dtype in col_selector]
+                        if not matching_cols:
+                            continue
+                        sub_df = original_df_for_schema.select(matching_cols)
+                    
+                    for col in sub_df.columns:
+                        rw_col = orig_col_to_rewritten.get(col, col)
+                        if rw_col in summary_dict:
+                            summary_dict[rw_col][measure_name] = func(original_df_for_schema[col])
+                except Exception as e:
+                    if debug:
+                        print(f"Error in column_ops for {measure_name}: {e}")
+                    continue
+    else:
+        # Empty schema - skip column_ops (backward compatibility)
+        # This maintains the existing behavior when only schema is provided
+        pass
 
     return summary_dict, errs
 

@@ -14,6 +14,7 @@ from traitlets import Dict as TDict, Unicode, observe
 from .dataflow.column_executor_dataflow import ColumnExecutorDataflow
 from .customizations.polars_analysis import PL_Analysis_Klasses, ComputedDefaultSummaryStats, NOT_STRUCTS
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
+from buckaroo.styling_helpers import obj_, float_, pinned_histogram
 from .pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
@@ -87,8 +88,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         super().__init__()
         self._debug = debug
         self._ldf = ldf
-        #default_analyses = PL_Analysis_Klasses
-        default_analyses = [SimpleAnalysis]
+        default_analyses = PL_Analysis_Klasses
+        #default_analyses = [SimpleAnalysis]
 
         self._analyses = list(analysis_klasses) if analysis_klasses is not None else default_analyses
 
@@ -207,13 +208,15 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         #FIXME,  this isn't showing any pinned rows
         df_viewer_config = {
             "pinned_rows": [
+                obj_('dtype'),
+                pinned_histogram(),
                 {'primary_key_val': 'unique_count',     'displayer_args': {'displayer': 'obj' } },
                 {'primary_key_val': 'null_count',     'displayer_args': {'displayer': 'obj' } },
                 {'primary_key_val': 'empty_count',     'displayer_args': {'displayer': 'obj' } },
             ],
             "column_config": initial_col_config,
-            "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],
-        }
+            "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],}
+        
         logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", total_rows, [c.get("header_name") for c in initial_col_config])
         logger.info(
             "Setting df_display_args with pinned_rows=%s",

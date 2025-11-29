@@ -90,9 +90,10 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         only_cols = ldf.select(cols)
         # Execute provided expressions directly (single collect)
         res = only_cols.select(*execution_args.expressions).collect()
-        # Build series stats from the selection result without re-executing expressions
-        schema_df = pl.DataFrame({c: [] for c in cols})
-        series_stats, errs = polars_series_stats_from_select_result(res, schema_df, self.analyses, 'paf_exec', debug=False)
+        # Collect the original column data for column_ops execution
+        original_data = only_cols.collect()
+        # Build series stats from the selection result, passing actual data so column_ops can execute
+        series_stats, errs = polars_series_stats_from_select_result(res, original_data, self.analyses, 'paf_exec', debug=False)
         # Extract hash values from result if present
         hash_values: dict[str, int] = {}
         for c in cols:
