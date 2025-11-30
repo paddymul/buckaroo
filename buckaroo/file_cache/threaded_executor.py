@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Dict
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import polars as pl
@@ -27,9 +28,10 @@ class ThreadedExecutor(BaseExecutor):
         listener: ProgressListener,
         fc: FileCache,
         executor_log: Optional[SimpleExecutorLog] = None,
+        file_path: str | Path | None = None,
         max_workers: Optional[int] = None,
     ) -> None:
-        super().__init__(ldf, column_executor, listener, fc, executor_log)
+        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path)
         self.max_workers = max_workers
 
     def run(self) -> None:

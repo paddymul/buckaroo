@@ -21,7 +21,7 @@ class SQLiteFileCache(AbstractFileCache):
     """
 
     def __init__(self, db_path: str = ":memory:") -> None:
-        self._conn = sqlite3.connect(db_path)
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS files (
@@ -140,7 +140,24 @@ class SQLiteFileCache(AbstractFileCache):
     # Helpers ---------------------------------------------------------------
     def _dict_to_parquet_bytes(self, d: dict[str, Any]) -> bytes:
         # Create a single-row DataFrame with dynamic columns
-        df = pl.DataFrame([d])
+        # Convert non-serializable values to strings to avoid parquet errors
+        serializable_dict = {}
+        for k, v in d.items():
+            if isinstance(v, (int, float, str, bool, type(None))):
+                serializable_dict[k] = v
+            elif isinstance(v, (list, tuple)):
+                # Try to keep lists/tuples if they're serializable, otherwise convert to string
+                try:
+                    # Test if it can be serialized by trying to create a DataFrame
+                    test_df = pl.DataFrame({k: [v]})
+                    serializable_dict[k] = v
+                except Exception:
+                    serializable_dict[k] = str(v)
+            else:
+                # For complex types (like dtype objects), convert to string
+                serializable_dict[k] = str(v)
+        
+        df = pl.DataFrame([serializable_dict])
         buf = BytesIO()
         df.write_parquet(buf)
         return buf.getvalue()

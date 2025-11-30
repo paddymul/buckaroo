@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Type, Callable
+from pathlib import Path
 
 import polars as pl
 from traitlets import Dict as TDict, Any as TAny, Unicode, observe
@@ -115,6 +116,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         self,
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
+        file_path: Optional[str | Path] = None,
     ) -> None:
         """
         Execute the PAF column executor over the LazyFrame to compute summary stats.
@@ -139,6 +141,12 @@ class ColumnExecutorDataflow(ABCDataflow):
                 except Exception:
                     pass
             if not note.success or note.result is None:
+                # Log failures so we can diagnose issues
+                import logging
+                logger = logging.getLogger("buckaroo.dataflow")
+                logger.warning(
+                    f"Column group {note.col_group} failed: {note.failure_message}"
+                )
                 return
             # note.result is ColumnResults: Dict[str, ColumnResult] keyed by ORIGINAL column names
             for orig_col, col_res in note.result.items():
@@ -157,14 +165,18 @@ class ColumnExecutorDataflow(ABCDataflow):
                 if isinstance(aggregated_summary, dict) and len(aggregated_summary) > 0:
                     rows = pd_to_obj(pd.DataFrame(aggregated_summary))
                     self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
+                    # Update merged_sd as stats come in (important for async executors)
+                    self.summary_sd = aggregated_summary
+                    self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
             except Exception:
                 # do not interrupt execution on progress update failures
                 pass
 
-        ex = self._executor_class(self.raw_ldf, column_executor, _listener, fc, executor_log=self.executor_log)
+        ex = self._executor_class(self.raw_ldf, column_executor, _listener, fc, executor_log=self.executor_log, file_path=file_path)
         ex.run()
 
         # Save and merge (no helper method; set properties directly)
+        # Note: For async executors, merged_sd may already be updated by the progress callback above
         self.summary_sd = aggregated_summary
         self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
         return None
@@ -177,6 +189,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         num_cols_threshold: int = 50,
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
+        file_path: Optional[str | Path] = None,
     ) -> None:
         # Determine shape
         try:
@@ -193,15 +206,21 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Run
         self._executor_class = exec_class
         try:
-            self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener)
-        except Exception:
+            self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path)
+        except Exception as e:
             #FIXME this is a place we want to send a progress notification about the failure or the different approach
-
+            import logging
+            logger = logging.getLogger("buckaroo.dataflow")
+            logger.warning(f"compute_summary_with_executor failed with {exec_class.__name__}: {e}", exc_info=True)
             
             # fallback to parallel on sync failure
             if exec_class is sync_executor_class:
                 self._executor_class = parallel_executor_class
-                self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener)
+                try:
+                    self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path)
+                except Exception as e2:
+                    logger.error(f"compute_summary_with_executor also failed with parallel executor: {e2}", exc_info=True)
+                    # Don't re-raise, let it fail silently and use defaults
 
     @property
     def processed_df(self) -> Any:

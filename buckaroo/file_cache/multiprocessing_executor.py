@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime as dtdt
 from typing import Optional
+from pathlib import Path
 import threading
 
 import polars as pl
@@ -33,10 +34,11 @@ class MultiprocessingExecutor(BaseExecutor):
         listener: ProgressListener,
         fc: FileCache,
         executor_log: Optional[SimpleExecutorLog] = None,
+        file_path: str | Path | None = None,
         timeout_secs: float = 30.0,
         async_mode: bool = True,
     ) -> None:
-        super().__init__(ldf, column_executor, listener, fc, executor_log)
+        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path)
         self.timeout_secs = timeout_secs
         self.async_mode = async_mode
 

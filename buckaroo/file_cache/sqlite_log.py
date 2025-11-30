@@ -21,7 +21,7 @@ class SQLiteExecutorLog(ExecutorLog):
     """
 
     def __init__(self, db_path: str = ":memory:") -> None:
-        self._conn = sqlite3.connect(db_path)
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS events (
@@ -113,5 +113,19 @@ class SQLiteExecutorLog(ExecutorLog):
             )
             res.append(ev)
         return res
+
+    def has_incomplete_for_executor(self, dfi: DFIdentifier, executor_class_name: str) -> bool:
+        """
+        Check if there are incomplete events for the given dataframe identifier and executor class.
+        """
+        dfi_k = _dfi_key(dfi)
+        # Note: executor_class_name is not stored in the SQLite schema currently,
+        # so we check for any incomplete events for this dfi
+        cur = self._conn.execute(
+            "SELECT COUNT(1) FROM events WHERE dfi=? AND completed=0",
+            (dfi_k,)
+        )
+        (cnt,) = cur.fetchone()
+        return cnt > 0
 
 

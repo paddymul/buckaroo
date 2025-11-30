@@ -18,9 +18,10 @@ from buckaroo.styling_helpers import obj_, pinned_histogram
 from .pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
-from buckaroo.file_cache.base import AbstractFileCache, Executor as _SyncExec  # type: ignore            
+from buckaroo.file_cache.base import AbstractFileCache, Executor as _SyncExec, ExecutorLog  # type: ignore            
 #from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
+from buckaroo.file_cache.cache_utils import get_global_file_cache, get_global_executor_log
 
 from polars import functions as F
 
@@ -78,6 +79,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         column_executor_class: Optional[type] = None,
         file_path: Optional[str] = None,
         file_cache: Optional["AbstractFileCache"] = None,
+        executor_log: Optional[ExecutorLog] = None,
         sync_executor_class: Optional[type] = None,
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
@@ -90,6 +92,12 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
 
         self._analyses = list(analysis_klasses) if analysis_klasses is not None else default_analyses
 
+        # Use global cache instances by default
+        if file_cache is None:
+            file_cache = get_global_file_cache()
+        if executor_log is None:
+            executor_log = get_global_executor_log()
+
         # Build stable rewrites
         all_cols = self._ldf.collect_schema().names()
         empty_pl_df = pl.DataFrame({c: [] for c in all_cols})
@@ -98,7 +106,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
 
         # Optional cache short-circuit
         cached_merged_sd = None
-        if file_path:
+        if file_path and file_cache:
             md = file_cache.get_file_metadata(Path(file_path))  # type: ignore[arg-type]
             if md and 'merged_sd' in md:
                 cached_merged_sd = md['merged_sd']
@@ -114,7 +122,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._df = ColumnExecutorDataflow(
             ldf,
             analysis_klasses=self._analyses,
-            column_executor_class=column_executor_class)
+            column_executor_class=column_executor_class,
+            executor_log=executor_log)
         self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
         # Stream progress updates into df_data_dict so the UI reflects new stats as they arrive.
@@ -173,7 +182,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             self._df.auto_compute_summary(
                 chosen_sync_exec,
                 chosen_par_exec,
+                file_cache=file_cache,
                 progress_listener=_listener,
+                file_path=file_path,
             )
             # Important: DFViewer renders pinned-top rows by extracting values from
             # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
@@ -182,7 +193,12 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             # not appear. We seed summary_sd with _initial_sd (built from provides_defaults)
             # so all_stats has placeholders immediately and the pinned rows render even
             # before the background computation completes.
-            summary_sd = self._df.merged_sd or _initial_sd
+            # Use merged_sd if it has content, otherwise fall back to initial defaults
+            if self._df.merged_sd and len(self._df.merged_sd) > 0:
+                summary_sd = self._df.merged_sd
+            else:
+                logger.warning(f"merged_sd is empty or None, using initial defaults. merged_sd: {self._df.merged_sd}")
+                summary_sd = _initial_sd
         summary_rows = self._summary_to_rows(summary_sd)
         logger.info(
             "Initial all_stats prepared: len=%s sample=%s",
