@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 import polars as pl
+import numpy as np
 from io import BytesIO
 
 from .base import SummaryStats, AbstractFileCache
@@ -31,6 +32,13 @@ class SQLiteFileCache(AbstractFileCache):
             )
             """
         )
+        # Add merged_sd_blob column if it doesn't exist (schema migration)
+        try:
+            self._conn.execute("ALTER TABLE files ADD COLUMN merged_sd_blob BLOB")
+            self._conn.commit()
+        except sqlite3.OperationalError:
+            # Column already exists, ignore
+            pass
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS series_results (
@@ -47,9 +55,21 @@ class SQLiteFileCache(AbstractFileCache):
             mtime = path.stat().st_mtime
         except FileNotFoundError:
             return
+        # Extract merged_sd if present
+        merged_sd_blob = None
+        metadata_without_merged_sd = {}
+        for k, v in metadata.items():
+            if k == 'merged_sd' and isinstance(v, dict) and len(v) > 0:
+                merged_sd_blob = self._merged_sd_to_parquet_blob(v)
+            else:
+                try:
+                    json.dumps(v)  # Test if serializable
+                    metadata_without_merged_sd[k] = v
+                except (TypeError, ValueError):
+                    metadata_without_merged_sd[k] = str(v)
         self._conn.execute(
-            "REPLACE INTO files(path, mtime, metadata_json) VALUES (?,?,?)",
-            (str(path), mtime, json.dumps(metadata))
+            "REPLACE INTO files(path, mtime, metadata_json, merged_sd_blob) VALUES (?,?,?,?)",
+            (str(path), mtime, json.dumps(metadata_without_merged_sd), merged_sd_blob)
         )
         self._conn.commit()
 
@@ -69,31 +89,134 @@ class SQLiteFileCache(AbstractFileCache):
         return current_mtime <= cached_mtime
 
     def get_file_metadata(self, path:Path) -> Optional[dict[str, Any]]:
-        cur = self._conn.execute("SELECT metadata_json FROM files WHERE path=?", (str(path),))
+        # Check if merged_sd_blob column exists
+        try:
+            cur = self._conn.execute("SELECT metadata_json, merged_sd_blob FROM files WHERE path=?", (str(path),))
+        except sqlite3.OperationalError:
+            # Column doesn't exist yet, use old schema
+            cur = self._conn.execute("SELECT metadata_json FROM files WHERE path=?", (str(path),))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return json.loads(row[0])
+        
         row = cur.fetchone()
         if not row:
             return None
-        return json.loads(row[0])
+        md = json.loads(row[0])
+        # Load merged_sd from parquet blob if present
+        merged_sd_blob = row[1] if len(row) > 1 else None
+        if merged_sd_blob:
+            try:
+                merged_sd = self._parquet_blob_to_merged_sd(merged_sd_blob)
+                if merged_sd:
+                    md['merged_sd'] = merged_sd
+            except Exception:
+                # If deserialization fails, continue without merged_sd
+                pass
+        return md
+
+    def _merged_sd_to_parquet_blob(self, merged_sd: dict[str, dict[str, Any]]) -> bytes:
+        """Convert merged_sd dict to parquet blob for storage."""
+        # Store merged_sd as a nested structure: one row per column, with stats as a struct/JSON
+        # This is simpler than trying to pivot by stat keys
+        rows = []
+        for col_name, col_stats in merged_sd.items():
+            if not isinstance(col_stats, dict):
+                continue
+            
+            # Convert each stat value to a serializable format
+            serialized_stats = {}
+            for stat_key, stat_val in col_stats.items():
+                if isinstance(stat_val, (pl.Series, pl.DataFrame, pl.LazyFrame)):
+                    serialized_stats[stat_key] = str(stat_val)
+                elif isinstance(stat_val, np.ndarray):
+                    serialized_stats[stat_key] = stat_val.tolist()
+                elif isinstance(stat_val, np.generic):
+                    serialized_stats[stat_key] = stat_val.item()
+                elif isinstance(stat_val, (int, float, str, bool, type(None), list, dict)):
+                    serialized_stats[stat_key] = stat_val
+                else:
+                    serialized_stats[stat_key] = str(stat_val)
+            
+            rows.append({
+                'col_name': str(col_name),
+                'stats_json': json.dumps(serialized_stats)
+            })
+        
+        if not rows:
+            # Return empty parquet if no data
+            df = pl.DataFrame()
+        else:
+            df = pl.DataFrame(rows)
+        
+        buf = BytesIO()
+        df.write_parquet(buf)
+        return buf.getvalue()
+    
+    def _parquet_blob_to_merged_sd(self, blob: bytes) -> Optional[dict[str, dict[str, Any]]]:
+        """Convert parquet blob back to merged_sd dict."""
+        if not blob:
+            return None
+        try:
+            buf = BytesIO(blob)
+            df = pl.read_parquet(buf)
+            if df.height == 0:
+                return {}
+            
+            # Reconstruct merged_sd from parquet rows
+            merged_sd: dict[str, dict[str, Any]] = {}
+            
+            for row in df.to_dicts():
+                col_name = row.get('col_name')
+                stats_json = row.get('stats_json')
+                if col_name and stats_json:
+                    try:
+                        stats = json.loads(stats_json)
+                        merged_sd[col_name] = stats
+                    except Exception:
+                        # If JSON parsing fails, skip this column
+                        pass
+            
+            return merged_sd
+        except Exception:
+            return None
 
     def upsert_file_metadata(self, path:Path, extra_metadata:dict[str, Any]) -> None:
         try:
             current_mtime = path.stat().st_mtime
         except FileNotFoundError:
             return
+        
+        # Extract merged_sd if present - store it separately as parquet blob
+        merged_sd_blob = None
+        metadata_without_merged_sd = {}
+        for k, v in extra_metadata.items():
+            if k == 'merged_sd' and isinstance(v, dict) and len(v) > 0:
+                # Store merged_sd as parquet blob
+                merged_sd_blob = self._merged_sd_to_parquet_blob(v)
+            else:
+                # For other metadata, serialize for JSON
+                try:
+                    json.dumps(v)  # Test if serializable
+                    metadata_without_merged_sd[k] = v
+                except (TypeError, ValueError):
+                    metadata_without_merged_sd[k] = str(v)
+        
         cur = self._conn.execute("SELECT mtime, metadata_json FROM files WHERE path=?", (str(path),))
         row = cur.fetchone()
         if row:
             md = json.loads(row[1])
-            md.update(extra_metadata)
-            # Update both metadata and mtime to reflect current file state
+            md.update(metadata_without_merged_sd)
+            # Update metadata, mtime, and merged_sd_blob
             self._conn.execute(
-                "UPDATE files SET mtime=?, metadata_json=? WHERE path=?",
-                (current_mtime, json.dumps(md), str(path))
+                "UPDATE files SET mtime=?, metadata_json=?, merged_sd_blob=? WHERE path=?",
+                (current_mtime, json.dumps(md), merged_sd_blob, str(path))
             )
         else:
             self._conn.execute(
-                "INSERT INTO files(path, mtime, metadata_json) VALUES (?,?,?)",
-                (str(path), current_mtime, json.dumps(extra_metadata))
+                "INSERT INTO files(path, mtime, metadata_json, merged_sd_blob) VALUES (?,?,?,?)",
+                (str(path), current_mtime, json.dumps(metadata_without_merged_sd), merged_sd_blob)
             )
         self._conn.commit()
 
@@ -149,7 +272,7 @@ class SQLiteFileCache(AbstractFileCache):
                 # Try to keep lists/tuples if they're serializable, otherwise convert to string
                 try:
                     # Test if it can be serialized by trying to create a DataFrame
-                    test_df = pl.DataFrame({k: [v]})
+                    pl.DataFrame({k: [v]})  # Just test, don't store
                     serializable_dict[k] = v
                 except Exception:
                     serializable_dict[k] = str(v)

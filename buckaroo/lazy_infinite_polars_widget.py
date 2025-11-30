@@ -107,9 +107,13 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # Optional cache short-circuit
         cached_merged_sd = None
         if file_path and file_cache:
-            md = file_cache.get_file_metadata(Path(file_path))  # type: ignore[arg-type]
-            if md and 'merged_sd' in md:
-                cached_merged_sd = md['merged_sd']
+            file_path_obj = Path(file_path)
+            # Check if file is in cache and hasn't been modified
+            if file_cache.check_file(file_path_obj):
+                md = file_cache.get_file_metadata(file_path_obj)
+                if md and 'merged_sd' in md:
+                    cached_merged_sd = md['merged_sd']
+                    logger.info(f"Using cached merged_sd for {file_path}")
 
         # First-pass meta from polars directly (avoid constructing dataflow solely for meta)
         try:
@@ -136,6 +140,12 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 #     (rows[0] if rows else None),
                 # )
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
+                # Save merged_sd to cache as stats come in (important for async executors)
+                if file_path and file_cache and aggregated_summary and len(aggregated_summary) > 0:
+                    try:
+                        file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': aggregated_summary})
+                    except Exception as e:
+                        logger.warning(f"Failed to save merged_sd to cache during progress update: {e}")
             except Exception:
                 logger.exception("error updating df_data_dict from progress")
         self._df.progress_update_callback = _on_progress_update
@@ -174,8 +184,12 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             }
 
         # Compute summary (cache → auto-select via dataflow using executor log)
-        if cached_merged_sd is not None:
+        if cached_merged_sd is not None and len(cached_merged_sd) > 0:
+            # Use cached merged_sd - set it in the dataflow so it's available
             summary_sd = cached_merged_sd
+            self._df.merged_sd = cached_merged_sd
+            self._df.summary_sd = cached_merged_sd  # For consistency
+            logger.info(f"Using cached merged_sd with {len(cached_merged_sd)} columns")
         else:
             chosen_sync_exec = sync_executor_class or _SyncExec
             chosen_par_exec = parallel_executor_class or _ParExec
@@ -196,6 +210,12 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             # Use merged_sd if it has content, otherwise fall back to initial defaults
             if self._df.merged_sd and len(self._df.merged_sd) > 0:
                 summary_sd = self._df.merged_sd
+                # Save merged_sd to cache for next time
+                if file_path and file_cache:
+                    try:
+                        file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': summary_sd})
+                    except Exception as e:
+                        logger.warning(f"Failed to save merged_sd to cache: {e}")
             else:
                 logger.warning(f"merged_sd is empty or None, using initial defaults. merged_sd: {self._df.merged_sd}")
                 summary_sd = _initial_sd

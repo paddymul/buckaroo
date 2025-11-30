@@ -179,6 +179,17 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Note: For async executors, merged_sd may already be updated by the progress callback above
         self.summary_sd = aggregated_summary
         self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
+        
+        # Save merged_sd to cache if we have a file_path and aggregated_summary has content
+        if file_path and fc and aggregated_summary and len(aggregated_summary) > 0:
+            try:
+                from pathlib import Path
+                fc.upsert_file_metadata(Path(file_path), {'merged_sd': self.merged_sd})
+            except Exception as e:
+                import logging
+                logger = logging.getLogger("buckaroo.dataflow")
+                logger.warning(f"Failed to save merged_sd to cache: {e}")
+        
         return None
 
     def auto_compute_summary(
