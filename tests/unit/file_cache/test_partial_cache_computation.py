@@ -4,7 +4,6 @@ continue computing missing columns in background.
 """
 # state:READONLY
 
-from pathlib import Path
 import polars as pl
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
 from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
@@ -144,7 +143,7 @@ def test_partial_cache_shows_cached_immediately_computes_rest(tmp_path):
             sync_executor_class=Executor,
             parallel_executor_class=Executor
         )
-        
+        assert w1
         time.sleep(1.0)  # Wait for some computation
         
         # Manually remove some columns from cache to simulate partial cache
@@ -240,7 +239,7 @@ def test_huge_dataframe_partial_cache_scenario(tmp_path):
             sync_executor_class=Executor,
             parallel_executor_class=Executor
         )
-        
+        assert w1
         time.sleep(1.0)  # Wait for some computation
         
         # Manually cache only first 5 columns

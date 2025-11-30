@@ -3,7 +3,6 @@ Test that cache prevents recomputation on re-execution.
 """
 # state:READONLY
 
-from pathlib import Path
 import polars as pl
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
 from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
