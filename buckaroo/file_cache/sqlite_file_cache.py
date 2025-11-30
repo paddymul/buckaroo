@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Optional
 
 import polars as pl
-import numpy as np
 from io import BytesIO
 
 from .base import SummaryStats, AbstractFileCache
@@ -118,37 +117,37 @@ class SQLiteFileCache(AbstractFileCache):
 
     def _merged_sd_to_parquet_blob(self, merged_sd: dict[str, dict[str, Any]]) -> bytes:
         """Convert merged_sd dict to parquet blob for storage."""
-        # Store merged_sd as a nested structure: one row per column, with stats as a struct/JSON
-        # This is simpler than trying to pivot by stat keys
+        # Store as parquet with one row per (column, stat_key) pair
+        # Store all values as JSON strings to avoid schema inference issues with mixed types
         rows = []
         for col_name, col_stats in merged_sd.items():
             if not isinstance(col_stats, dict):
                 continue
             
-            # Convert each stat value to a serializable format
-            serialized_stats = {}
             for stat_key, stat_val in col_stats.items():
-                if isinstance(stat_val, (pl.Series, pl.DataFrame, pl.LazyFrame)):
-                    serialized_stats[stat_key] = str(stat_val)
-                elif isinstance(stat_val, np.ndarray):
-                    serialized_stats[stat_key] = stat_val.tolist()
-                elif isinstance(stat_val, np.generic):
-                    serialized_stats[stat_key] = stat_val.item()
-                elif isinstance(stat_val, (int, float, str, bool, type(None), list, dict)):
-                    serialized_stats[stat_key] = stat_val
-                else:
-                    serialized_stats[stat_key] = str(stat_val)
-            
-            rows.append({
-                'col_name': str(col_name),
-                'stats_json': json.dumps(serialized_stats)
-            })
+                # Convert stat value to JSON string for consistent storage
+                try:
+                    # Try to JSON serialize the value
+                    val_json = json.dumps(stat_val, default=str)  # default=str handles non-serializable types
+                    rows.append({
+                        'col_name': str(col_name),
+                        'stat_key': str(stat_key),
+                        'val_json': val_json
+                    })
+                except Exception:
+                    # If JSON serialization fails, convert to string
+                    rows.append({
+                        'col_name': str(col_name),
+                        'stat_key': str(stat_key),
+                        'val_json': json.dumps(str(stat_val))
+                    })
         
         if not rows:
             # Return empty parquet if no data
             df = pl.DataFrame()
         else:
-            df = pl.DataFrame(rows)
+            # Create DataFrame with explicit schema to avoid inference issues
+            df = pl.DataFrame(rows, schema={'col_name': pl.String, 'stat_key': pl.String, 'val_json': pl.String})
         
         buf = BytesIO()
         df.write_parquet(buf)
@@ -169,14 +168,19 @@ class SQLiteFileCache(AbstractFileCache):
             
             for row in df.to_dicts():
                 col_name = row.get('col_name')
-                stats_json = row.get('stats_json')
-                if col_name and stats_json:
+                stat_key = row.get('stat_key')
+                val_json = row.get('val_json')
+                
+                if col_name and stat_key is not None and val_json is not None:
+                    if col_name not in merged_sd:
+                        merged_sd[col_name] = {}
+                    
+                    # Deserialize JSON string
                     try:
-                        stats = json.loads(stats_json)
-                        merged_sd[col_name] = stats
+                        merged_sd[col_name][stat_key] = json.loads(val_json)
                     except Exception:
-                        # If JSON parsing fails, skip this column
-                        pass
+                        # If JSON parsing fails, keep as string
+                        merged_sd[col_name][stat_key] = val_json
             
             return merged_sd
         except Exception:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -30,8 +30,10 @@ class ThreadedExecutor(BaseExecutor):
         executor_log: Optional[SimpleExecutorLog] = None,
         file_path: str | Path | None = None,
         max_workers: Optional[int] = None,
+        cached_merged_sd: dict[str, dict[str, Any]] | None = None,
+        orig_to_rw_map: dict[str, str] | None = None,
     ) -> None:
-        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path)
+        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path, cached_merged_sd=cached_merged_sd, orig_to_rw_map=orig_to_rw_map)
         self.max_workers = max_workers
 
     def run(self) -> None:

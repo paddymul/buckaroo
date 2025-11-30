@@ -445,7 +445,9 @@ class Executor:
         ldf:pl.LazyFrame, column_executor:ColumnExecutor,
         listener:ProgressListener, fc:AbstractFileCache,
         executor_log: ExecutorLog | None = None,
-        file_path: str | Path | None = None) -> None:
+        file_path: str | Path | None = None,
+        cached_merged_sd: dict[str, dict[str, Any]] | None = None,
+        orig_to_rw_map: dict[str, str] | None = None) -> None:
         self.ldf = ldf
         self.column_executor = column_executor
         self.listener = listener
@@ -457,6 +459,10 @@ class Executor:
 
         self.dfi = (id(self.ldf), str(self.file_path) if self.file_path else "",)
         self.executor_class_name = self.__class__.__name__
+        
+        # Store cached merged_sd and mapping for checking complete columns
+        self.cached_merged_sd = cached_merged_sd or {}
+        self.orig_to_rw_map = orig_to_rw_map or {}
 
     def run(self) -> None:
 
@@ -472,16 +478,52 @@ class Executor:
 
             existing_cached: dict[str, Any] = {}
             missing_hash_columns: list[str] = []
+            columns_to_compute: list[str] = []  # Columns that actually need computation
             for col in col_group:
+                # Check if column is already complete in cached merged_sd
+                rw_col = self.orig_to_rw_map.get(col, col)
+                if rw_col in self.cached_merged_sd:
+                    cached_entry = self.cached_merged_sd[rw_col]
+                    # Check if it has real stats (more than just basic fields)
+                    if isinstance(cached_entry, dict):
+                        keys = set(cached_entry.keys())
+                        basic_keys = {'orig_col_name', 'rewritten_col_name'}
+                        if keys > basic_keys and len(keys) > 2:
+                            # Column is complete in merged_sd, skip computation
+                            # But still check for series hash cache
+                            h = file_hashes.get(col)
+                            if h:
+                                existing_cached[col] = self.fc.get_series_results(h) or {}
+                            continue
+                
+                # Column needs computation - check series hash cache
                 h = file_hashes.get(col)
                 if h:
-                    existing_cached[col] = self.fc.get_series_results(h) or {}
+                    cached_results = self.fc.get_series_results(h)
+                    if cached_results and len(cached_results) > 0:
+                        # Column has cached results - check if it's complete (not just sentinel)
+                        # If it has real stats (more than just __missing_hash__), skip computation
+                        if not cached_results.get('__missing_hash__'):
+                            # Has complete cached results, skip this column
+                            existing_cached[col] = cached_results
+                            continue
+                    existing_cached[col] = cached_results or {}
                 else:
                     # mark explicitly that this column is missing a file-level series hash
                     existing_cached[col] = {'__missing_hash__': True}
                     missing_hash_columns.append(col)
+                
+                # Column needs computation
+                columns_to_compute.append(col)
 
-            ex_args = self.column_executor.get_execution_args(existing_cached)
+            # Skip this column group if all columns are already cached
+            if not columns_to_compute:
+                continue
+
+            # Only get execution args for columns that need computation
+            ex_args = self.column_executor.get_execution_args(
+                {col: existing_cached.get(col, {}) for col in columns_to_compute}
+            )
             # annotate args with missing-hash info so executors can act accordingly
             try:
                 extra_map: dict[str, Any] = dict(ex_args.extra) if isinstance(ex_args.extra, dict) else {}

@@ -131,7 +131,23 @@ class ColumnExecutorDataflow(ABCDataflow):
         empty_pl_df = pl.DataFrame({c: [] for c in self.raw_ldf.collect_schema().names()})
         orig_to_rw = dict(old_col_new_col(empty_pl_df))
 
+        # Check if we have cached merged_sd and pass it to executor for skipping complete columns
+        cached_merged_sd_for_executor = None
+        if file_path and fc:
+            from pathlib import Path
+            file_path_obj = Path(file_path)
+            if fc.check_file(file_path_obj):
+                md = fc.get_file_metadata(file_path_obj)
+                if md and 'merged_sd' in md:
+                    cached_merged_sd_for_executor = md.get('merged_sd', {})
+
+        # Start with cached merged_sd if available (so skipped columns are included in aggregated_summary)
         aggregated_summary: Dict[str, Dict[str, Any]] = {}
+        if cached_merged_sd_for_executor:
+            # Initialize with cached data so skipped columns are preserved
+            for rw_col, cached_stats in cached_merged_sd_for_executor.items():
+                if isinstance(cached_stats, dict):
+                    aggregated_summary[rw_col] = cached_stats.copy()
 
         def _listener(note: ProgressNotification) -> None:
             # Chain to upstream listener if provided
@@ -160,25 +176,47 @@ class ColumnExecutorDataflow(ABCDataflow):
             # Stream partial updates via callback and local df_data_dict for consumers
             try:
                 if self.progress_update_callback:
-                    self.progress_update_callback(aggregated_summary)
+                    # Merge with existing merged_sd so cached columns are preserved
+                    current_merged = self.merged_sd.copy() if self.merged_sd else {}
+                    merged_summary = current_merged.copy()
+                    merged_summary.update(aggregated_summary)
+                    self.progress_update_callback(merged_summary)
                 # keep local df_data_dict updated too
                 if isinstance(aggregated_summary, dict) and len(aggregated_summary) > 0:
-                    rows = pd_to_obj(pd.DataFrame(aggregated_summary))
+                    # Merge with existing to preserve cached columns
+                    current_summary = self.summary_sd.copy() if self.summary_sd else {}
+                    current_summary.update(aggregated_summary)
+                    self.summary_sd = current_summary
+                    rows = pd_to_obj(pd.DataFrame(current_summary))
                     self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
                     # Update merged_sd as stats come in (important for async executors)
-                    self.summary_sd = aggregated_summary
-                    self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
+                    # Merge with existing to preserve any cached columns
+                    current_merged = self.merged_sd.copy() if self.merged_sd else {}
+                    current_merged.update(merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {}))
+                    self.merged_sd = current_merged
             except Exception:
                 # do not interrupt execution on progress update failures
                 pass
 
-        ex = self._executor_class(self.raw_ldf, column_executor, _listener, fc, executor_log=self.executor_log, file_path=file_path)
+        ex = self._executor_class(
+            self.raw_ldf, 
+            column_executor, 
+            _listener, 
+            fc, 
+            executor_log=self.executor_log, 
+            file_path=file_path,
+            cached_merged_sd=cached_merged_sd_for_executor,
+            orig_to_rw_map=orig_to_rw
+        )
         ex.run()
 
         # Save and merge (no helper method; set properties directly)
         # Note: For async executors, merged_sd may already be updated by the progress callback above
-        self.summary_sd = aggregated_summary
-        self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
+        # aggregated_summary now includes cached columns (initialized above) + newly computed ones
+        if aggregated_summary and len(aggregated_summary) > 0:
+            self.summary_sd = aggregated_summary
+            self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
+        # Otherwise, keep existing merged_sd (which may have cached data)
         
         # Save merged_sd to cache if we have a file_path and aggregated_summary has content
         if file_path and fc and aggregated_summary and len(aggregated_summary) > 0:

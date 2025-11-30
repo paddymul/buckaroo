@@ -131,9 +131,16 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
         # Stream progress updates into df_data_dict so the UI reflects new stats as they arrive.
+        # Keep track of initial merged_sd to preserve cached columns
         def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
             try:
-                rows = self._summary_to_rows(aggregated_summary or {})
+                # Merge with existing merged_sd to preserve cached columns
+                # aggregated_summary may only contain newly computed columns
+                current_merged = self._df.merged_sd.copy() if self._df.merged_sd else {}
+                merged_for_display = current_merged.copy()
+                merged_for_display.update(aggregated_summary or {})
+                
+                rows = self._summary_to_rows(merged_for_display)
                 # logger.info(
                 #     "Progress rows update: all_stats len=%s sample=%s",
                 #     len(rows),
@@ -141,9 +148,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 # )
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
                 # Save merged_sd to cache as stats come in (important for async executors)
-                if file_path and file_cache and aggregated_summary and len(aggregated_summary) > 0:
+                if file_path and file_cache and merged_for_display and len(merged_for_display) > 0:
                     try:
-                        file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': aggregated_summary})
+                        file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': merged_for_display})
                     except Exception as e:
                         logger.warning(f"Failed to save merged_sd to cache during progress update: {e}")
             except Exception:
@@ -183,42 +190,73 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'message': note.failure_message or ''
             }
 
-        # Compute summary (cache → auto-select via dataflow using executor log)
+        chosen_sync_exec = sync_executor_class or _SyncExec
+        chosen_par_exec = parallel_executor_class or _ParExec
+        
+        # Start with initial defaults for all columns, then merge in cached data
+        # This ensures ALL columns are visible immediately (cached columns with real stats,
+        # uncached columns with defaults)
+        initial_summary_sd = _initial_sd.copy()
+        cached_cols_count = 0
         if cached_merged_sd is not None and len(cached_merged_sd) > 0:
-            # Use cached merged_sd - set it in the dataflow so it's available
-            summary_sd = cached_merged_sd
-            self._df.merged_sd = cached_merged_sd
-            self._df.summary_sd = cached_merged_sd  # For consistency
-            logger.info(f"Using cached merged_sd with {len(cached_merged_sd)} columns")
+            # Merge cached data into initial summary so all columns appear, with cached stats where available
+            for col_name, cached_stats in cached_merged_sd.items():
+                if col_name in initial_summary_sd:
+                    initial_summary_sd[col_name].update(cached_stats)
+                else:
+                    initial_summary_sd[col_name] = cached_stats.copy()
+            
+            # Count columns with real stats (not just defaults)
+            for rw_col, cached_entry in cached_merged_sd.items():
+                if isinstance(cached_entry, dict):
+                    keys = set(cached_entry.keys())
+                    basic_keys = {'orig_col_name', 'rewritten_col_name'}
+                    # Has real stats if more than just basic keys
+                    if keys > basic_keys and len(keys) > 2:
+                        cached_cols_count += 1
+            
+            if cached_cols_count > 0:
+                expected_cols = set(self._orig_to_rw.values())
+                logger.info(f"Loaded {cached_cols_count}/{len(expected_cols)} columns from cache, computing remaining columns in background")
+        
+        # Initialize dataflow with merged initial + cached summary so widget can render all columns immediately
+        # The executor will update this as it computes missing columns
+        self._df.merged_sd = initial_summary_sd.copy()
+        self._df.summary_sd = initial_summary_sd.copy()
+        
+        # Always run computation - executor will check per-column cache via series hashes
+        # and skip columns that are already computed. This allows:
+        # 1. Cached columns to appear immediately
+        # 2. Missing columns to compute in background
+        # 3. No need to wait for all columns before showing anything
+        # If all columns are cached AND have series hashes, executor will skip all (efficient)
+        self._df.auto_compute_summary(
+            chosen_sync_exec,
+            chosen_par_exec,
+            file_cache=file_cache,
+            progress_listener=_listener,
+            file_path=file_path,
+        )
+        
+        # Important: DFViewer renders pinned-top rows by extracting values from
+        # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
+        # "null_count"). If summary_stats_data is empty at first render (timeouts or
+        # background execution), AG‑Grid has nothing to pin and the pinned area will
+        # not appear. We seed summary_sd with _initial_sd (built from provides_defaults)
+        # so all_stats has placeholders immediately and the pinned rows render even
+        # before the background computation completes.
+        # Use merged_sd if it has content, otherwise fall back to initial defaults
+        if self._df.merged_sd and len(self._df.merged_sd) > 0:
+            summary_sd = self._df.merged_sd
+            # Save merged_sd to cache for next time
+            if file_path and file_cache:
+                try:
+                    file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': summary_sd})
+                except Exception as e:
+                    logger.warning(f"Failed to save merged_sd to cache: {e}")
         else:
-            chosen_sync_exec = sync_executor_class or _SyncExec
-            chosen_par_exec = parallel_executor_class or _ParExec
-            self._df.auto_compute_summary(
-                chosen_sync_exec,
-                chosen_par_exec,
-                file_cache=file_cache,
-                progress_listener=_listener,
-                file_path=file_path,
-            )
-            # Important: DFViewer renders pinned-top rows by extracting values from
-            # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
-            # "null_count"). If summary_stats_data is empty at first render (timeouts or
-            # background execution), AG‑Grid has nothing to pin and the pinned area will
-            # not appear. We seed summary_sd with _initial_sd (built from provides_defaults)
-            # so all_stats has placeholders immediately and the pinned rows render even
-            # before the background computation completes.
-            # Use merged_sd if it has content, otherwise fall back to initial defaults
-            if self._df.merged_sd and len(self._df.merged_sd) > 0:
-                summary_sd = self._df.merged_sd
-                # Save merged_sd to cache for next time
-                if file_path and file_cache:
-                    try:
-                        file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': summary_sd})
-                    except Exception as e:
-                        logger.warning(f"Failed to save merged_sd to cache: {e}")
-            else:
-                logger.warning(f"merged_sd is empty or None, using initial defaults. merged_sd: {self._df.merged_sd}")
-                summary_sd = _initial_sd
+            # Fall back to initial summary which includes cached data if available
+            summary_sd = initial_summary_sd
         summary_rows = self._summary_to_rows(summary_sd)
         logger.info(
             "Initial all_stats prepared: len=%s sample=%s",

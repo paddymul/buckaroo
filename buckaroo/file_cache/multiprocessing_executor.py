@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime as dtdt
-from typing import Optional
+from typing import Optional, Any
 from pathlib import Path
 import threading
 
@@ -37,8 +37,10 @@ class MultiprocessingExecutor(BaseExecutor):
         file_path: str | Path | None = None,
         timeout_secs: float = 30.0,
         async_mode: bool = True,
+        cached_merged_sd: dict[str, dict[str, Any]] | None = None,
+        orig_to_rw_map: dict[str, str] | None = None,
     ) -> None:
-        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path)
+        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path, cached_merged_sd=cached_merged_sd, orig_to_rw_map=orig_to_rw_map)
         self.timeout_secs = timeout_secs
         self.async_mode = async_mode
 
