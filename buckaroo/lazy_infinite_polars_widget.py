@@ -198,6 +198,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # uncached columns with defaults)
         initial_summary_sd = _initial_sd.copy()
         cached_cols_count = 0
+        all_columns_cached = False
+        expected_cols = set(self._orig_to_rw.values())
+        
         if cached_merged_sd is not None and len(cached_merged_sd) > 0:
             # Merge cached data into initial summary so all columns appear, with cached stats where available
             for col_name, cached_stats in cached_merged_sd.items():
@@ -216,27 +219,36 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                         cached_cols_count += 1
             
             if cached_cols_count > 0:
-                expected_cols = set(self._orig_to_rw.values())
                 logger.info(f"Loaded {cached_cols_count}/{len(expected_cols)} columns from cache, computing remaining columns in background")
+            
+            # Check if ALL columns are cached with complete stats - if so, skip executor entirely
+            all_columns_cached = (cached_cols_count == len(expected_cols))
+            if all_columns_cached:
+                logger.info(f"All {len(expected_cols)} columns are cached with complete stats, skipping computation entirely")
         
         # Initialize dataflow with merged initial + cached summary so widget can render all columns immediately
         # The executor will update this as it computes missing columns
         self._df.merged_sd = initial_summary_sd.copy()
         self._df.summary_sd = initial_summary_sd.copy()
         
-        # Always run computation - executor will check per-column cache via series hashes
-        # and skip columns that are already computed. This allows:
-        # 1. Cached columns to appear immediately
-        # 2. Missing columns to compute in background
-        # 3. No need to wait for all columns before showing anything
-        # If all columns are cached AND have series hashes, executor will skip all (efficient)
-        self._df.auto_compute_summary(
-            chosen_sync_exec,
-            chosen_par_exec,
-            file_cache=file_cache,
-            progress_listener=_listener,
-            file_path=file_path,
-        )
+        #FIXME, this logic belongs in PAFColumnExecutor.
+        #FIXME: also this should look at PAFColumnExecutor and analysis classes, and see that all required columns actually exist, otherwise only run the proper anaysis klasses
+        
+        # Only run computation if not all columns are cached
+        # If all columns are cached, skip executor entirely (most efficient)
+        if not all_columns_cached:
+            # Executor will check per-column cache via series hashes and merged_sd
+            # and skip columns that are already computed. This allows:
+            # 1. Cached columns to appear immediately
+            # 2. Missing columns to compute in background
+            # 3. No need to wait for all columns before showing anything
+            self._df.auto_compute_summary(
+                chosen_sync_exec,
+                chosen_par_exec,
+                file_cache=file_cache,
+                progress_listener=_listener,
+                file_path=file_path,
+            )
         
         # Important: DFViewer renders pinned-top rows by extracting values from
         # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
