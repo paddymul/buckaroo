@@ -1,0 +1,99 @@
+"""
+Test that cache prevents recomputation on re-execution.
+"""
+# state:READONLY
+
+from pathlib import Path
+import polars as pl
+from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
+from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
+from buckaroo.read_utils import read
+from buckaroo.file_cache.base import Executor
+
+
+def test_cache_prevents_recomputation_on_second_execution(tmp_path):
+    """Test that when a file is cached, second execution doesn't recompute stats."""
+    import os
+    # Reset global instances to use temp directory
+    import buckaroo.file_cache.cache_utils as cache_utils_module
+    cache_utils_module._file_cache = None
+    cache_utils_module._executor_log = None
+    
+    original_home = os.environ.get('HOME')
+    os.environ['HOME'] = str(tmp_path)
+    
+    try:
+        # Create test file
+        test_file = tmp_path / "test.csv"
+        df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+        df.write_csv(test_file)
+        
+        # Track if executor.run was called
+        executor_calls = []
+        original_run = Executor.run
+        
+        def tracked_run(self):
+            executor_calls.append('run')
+            return original_run(self)
+        
+        Executor.run = tracked_run
+        
+        try:
+            # First execution - should compute
+            clear_file_cache()
+            ldf1 = read(str(test_file))
+            w1 = LazyInfinitePolarsBuckarooWidget(
+                ldf1,
+                file_path=str(test_file),
+                sync_executor_class=Executor,
+                parallel_executor_class=Executor
+            )
+            
+            import time
+            time.sleep(0.5)  # Give it time to compute
+            
+            first_run_calls = len(executor_calls)
+            print(f"First run - executor.run called {first_run_calls} times")
+            assert first_run_calls > 0, "Executor should have been called on first run"
+            
+            # Verify stats were computed
+            assert len(w1._df.merged_sd) > 0, "Stats should be computed on first run"
+            
+            # Verify cache was populated
+            fc = get_global_file_cache()
+            assert fc.check_file(test_file), "File should be in cache after first run"
+            md = fc.get_file_metadata(test_file)
+            assert md is not None and 'merged_sd' in md, "merged_sd should be in cache"
+            
+            # Reset executor call counter
+            executor_calls.clear()
+            
+            # Second execution - should use cache, NOT recompute
+            ldf2 = read(str(test_file))
+            w2 = LazyInfinitePolarsBuckarooWidget(
+                ldf2,
+                file_path=str(test_file),
+                sync_executor_class=Executor,
+                parallel_executor_class=Executor
+            )
+            
+            time.sleep(0.1)  # Small delay to see if anything computes
+            
+            second_run_calls = len(executor_calls)
+            print(f"Second run - executor.run called {second_run_calls} times")
+            
+            # Executor should NOT be called on second run if cache is working
+            assert second_run_calls == 0, f"Executor should NOT be called on second run (cache should be used), but it was called {second_run_calls} times"
+            
+            # Verify stats are still available (from cache)
+            assert len(w2._df.merged_sd) > 0, "Stats should be available from cache on second run"
+            
+        finally:
+            # Restore original run method
+            Executor.run = original_run
+    finally:
+        # Reset global instances
+        cache_utils_module._file_cache = None
+        cache_utils_module._executor_log = None
+        if original_home:
+            os.environ['HOME'] = original_home
