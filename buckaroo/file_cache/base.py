@@ -333,6 +333,8 @@ class ExecutorArgs:
     row_start: int|None
     row_end: int|None
     extra: Any
+    # If True, skip execution - all columns are already cached with complete stats
+    no_exec: bool = False
 
 
 @dataclass
@@ -465,65 +467,93 @@ class Executor:
         self.orig_to_rw_map = orig_to_rw_map or {}
 
     def run(self) -> None:
-
+        """Execute column analysis, skipping cached columns.
+        
+        Calls ColumnExecutor.get_execution_args() for each column group with cached results.
+        ColumnExecutor sets no_exec flag if all columns in the group are complete.
+        If all column groups have no_exec=True, returns early without doing any work.
+        Otherwise, executes only groups that need execution.
+        """
         #had_failure = False
         last_ex_args: ExecutorArgs | None = None
-
+        
+        # First pass: call get_execution_args for all column groups to check if all columns are cached
+        import logging
+        logger = logging.getLogger("buckaroo.executor")
+        
+        logger.info(f"Executor.run() START - file_path={self.file_path}")
+        logger.debug(f"  cached_merged_sd keys: {list(self.cached_merged_sd.keys()) if self.cached_merged_sd else []}")
+        
+        all_execution_args: list[ExecutorArgs] = []
+        total_cols_checked = 0
+        total_cols_to_execute = 0
+        
         for col_group in self.get_column_chunks():
-            # Build existing stats by consulting file cache using per-file series hashes if available
+            # Build existing stats by consulting file cache using per-file series hashes
             file_hashes: dict[str, int] = {}
             if self.file_path and self.fc.check_file(self.file_path):
                 fh = self.fc.get_file_series_hashes(self.file_path) or {}
                 file_hashes = {str(k): int(v) for k, v in fh.items()}
 
+            # Build existing_cached dict with ALL columns in the group
+            # ColumnExecutor will filter out cached columns individually
             existing_cached: dict[str, Any] = {}
-            missing_hash_columns: list[str] = []
-            columns_to_compute: list[str] = []  # Columns that actually need computation
             for col in col_group:
-                # Check if column is already complete in cached merged_sd
-                rw_col = self.orig_to_rw_map.get(col, col)
-                if rw_col in self.cached_merged_sd:
-                    cached_entry = self.cached_merged_sd[rw_col]
-                    # Check if it has real stats (more than just basic fields)
-                    if isinstance(cached_entry, dict):
-                        keys = set(cached_entry.keys())
-                        basic_keys = {'orig_col_name', 'rewritten_col_name'}
-                        if keys > basic_keys and len(keys) > 2:
-                            # Column is complete in merged_sd, skip computation
-                            # But still check for series hash cache
-                            h = file_hashes.get(col)
-                            if h:
-                                existing_cached[col] = self.fc.get_series_results(h) or {}
-                            continue
-                
-                # Column needs computation - check series hash cache
+                total_cols_checked += 1
+                # Get cached results from series hash if available
                 h = file_hashes.get(col)
                 if h:
                     cached_results = self.fc.get_series_results(h)
-                    if cached_results and len(cached_results) > 0:
-                        # Column has cached results - check if it's complete (not just sentinel)
-                        # If it has real stats (more than just __missing_hash__), skip computation
-                        if not cached_results.get('__missing_hash__'):
-                            # Has complete cached results, skip this column
-                            existing_cached[col] = cached_results
-                            continue
                     existing_cached[col] = cached_results or {}
                 else:
-                    # mark explicitly that this column is missing a file-level series hash
+                    existing_cached[col] = {'__missing_hash__': True}
+            
+            # Call ColumnExecutor.get_execution_args - it will filter out cached columns
+            ex_args = self.column_executor.get_execution_args(existing_cached)
+            all_execution_args.append(ex_args)
+            total_cols_to_execute += len(ex_args.columns)
+        
+        logger.info(f"Executor.run() FIRST PASS: checked {total_cols_checked} columns across {len(all_execution_args)} groups")
+        logger.info(f"  Total columns to execute: {total_cols_to_execute}")
+        
+        # Check if ALL execution args have empty columns (all columns were filtered out)
+        # This means all columns across all groups are cached, so skip execution entirely
+        all_cached = all_execution_args and all(len(ex_args.columns) == 0 for ex_args in all_execution_args)
+        if all_cached:
+            logger.info(f"Executor.run() EARLY RETURN: All {total_cols_checked} columns are cached across {len(all_execution_args)} column groups, skipping execution entirely")
+            return
+        
+        logger.info(f"Executor.run() CONTINUING: {total_cols_to_execute} columns need execution, proceeding to second pass")
+        
+        # Second pass: execute only groups that need execution
+        for col_group in self.get_column_chunks():
+            # Build existing stats by consulting file cache using per-file series hashes
+            file_hashes: dict[str, int] = {}
+            if self.file_path and self.fc.check_file(self.file_path):
+                fh = self.fc.get_file_series_hashes(self.file_path) or {}
+                file_hashes = {str(k): int(v) for k, v in fh.items()}
+
+            # Build existing_cached dict with ALL columns in the group
+            existing_cached: dict[str, Any] = {}
+            missing_hash_columns: list[str] = []
+            for col in col_group:
+                h = file_hashes.get(col)
+                if h:
+                    cached_results = self.fc.get_series_results(h)
+                    existing_cached[col] = cached_results or {}
+                else:
                     existing_cached[col] = {'__missing_hash__': True}
                     missing_hash_columns.append(col)
-                
-                # Column needs computation
-                columns_to_compute.append(col)
-
-            # Skip this column group if all columns are already cached
-            if not columns_to_compute:
+            
+            # Get execution args - ColumnExecutor already filtered out cached columns
+            ex_args = self.column_executor.get_execution_args(existing_cached)
+            
+            # If no columns need execution (all were filtered out), skip this column group
+            if not ex_args.columns:
+                logger.debug(f"  Skipping column group {col_group} - all columns cached")
                 continue
-
-            # Only get execution args for columns that need computation
-            ex_args = self.column_executor.get_execution_args(
-                {col: existing_cached.get(col, {}) for col in columns_to_compute}
-            )
+            
+            logger.info(f"Executor.run() EXECUTING group {col_group} with {len(ex_args.columns)} columns: {ex_args.columns}")
             # annotate args with missing-hash info so executors can act accordingly
             try:
                 extra_map: dict[str, Any] = dict(ex_args.extra) if isinstance(ex_args.extra, dict) else {}

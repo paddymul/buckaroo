@@ -27,13 +27,23 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
         df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
         df.write_csv(test_file)
         
-        # Track if executor.run was called
-        executor_calls = []
+        # Track if executor.run was called and if execution actually happened
+        executor_run_calls = []
+        executor_execute_calls = []
         original_run = Executor.run
         
         def tracked_run(self):
-            executor_calls.append('run')
-            return original_run(self)
+            executor_run_calls.append('run')
+            # Track if column_executor.execute is called (actual computation)
+            original_execute = self.column_executor.execute
+            def tracked_execute(ldf, ex_args):
+                executor_execute_calls.append(('execute', ex_args.columns))
+                return original_execute(ldf, ex_args)
+            self.column_executor.execute = tracked_execute
+            try:
+                return original_run(self)
+            finally:
+                self.column_executor.execute = original_execute
         
         Executor.run = tracked_run
         
@@ -51,9 +61,11 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
             import time
             time.sleep(0.5)  # Give it time to compute
             
-            first_run_calls = len(executor_calls)
-            print(f"First run - executor.run called {first_run_calls} times")
-            assert first_run_calls > 0, "Executor should have been called on first run"
+            first_run_calls = len(executor_run_calls)
+            first_execute_calls = len(executor_execute_calls)
+            print(f"First run - executor.run called {first_run_calls} times, execute called {first_execute_calls} times")
+            assert first_run_calls > 0, "Executor.run should have been called on first run"
+            assert first_execute_calls > 0, "Executor should have actually executed computation on first run"
             
             # Verify stats were computed
             assert len(w1._df.merged_sd) > 0, "Stats should be computed on first run"
@@ -64,8 +76,9 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
             md = fc.get_file_metadata(test_file)
             assert md is not None and 'merged_sd' in md, "merged_sd should be in cache"
             
-            # Reset executor call counter
-            executor_calls.clear()
+            # Reset executor call counters
+            executor_run_calls.clear()
+            executor_execute_calls.clear()
             
             # Second execution - should use cache, NOT recompute
             ldf2 = read(str(test_file))
@@ -78,11 +91,13 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
             
             time.sleep(0.1)  # Small delay to see if anything computes
             
-            second_run_calls = len(executor_calls)
-            print(f"Second run - executor.run called {second_run_calls} times")
+            second_run_calls = len(executor_run_calls)
+            second_execute_calls = len(executor_execute_calls)
+            print(f"Second run - executor.run called {second_run_calls} times, execute called {second_execute_calls} times")
             
-            # Executor should NOT be called on second run if cache is working
-            assert second_run_calls == 0, f"Executor should NOT be called on second run (cache should be used), but it was called {second_run_calls} times"
+            # Executor.run() may be called but should return early without executing
+            # The important thing is that execute() should NOT be called (no actual computation)
+            assert second_execute_calls == 0, f"Executor should NOT execute computation on second run (cache should be used), but execute was called {second_execute_calls} times: {executor_execute_calls}"
             
             # Verify stats are still available (from cache)
             assert len(w2._df.merged_sd) > 0, "Stats should be available from cache on second run"

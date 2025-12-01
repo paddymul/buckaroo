@@ -125,13 +125,15 @@ class ColumnExecutorDataflow(ABCDataflow):
         - Sets summary_sd and populates merged_sd.
         """
         fc = file_cache or FileCache()
-        column_executor = self._column_executor_class(self.analysis_klasses)
-
+        
         # Build rewritten name mapping using an empty frame with the same columns
         empty_pl_df = pl.DataFrame({c: [] for c in self.raw_ldf.collect_schema().names()})
         orig_to_rw = dict(old_col_new_col(empty_pl_df))
-
-        # Check if we have cached merged_sd and pass it to executor for skipping complete columns
+        
+        # Check if we have cached merged_sd to pass to column executor
+        import logging
+        logger = logging.getLogger("buckaroo.dataflow")
+        
         cached_merged_sd_for_executor = None
         if file_path and fc:
             from pathlib import Path
@@ -140,6 +142,23 @@ class ColumnExecutorDataflow(ABCDataflow):
                 md = fc.get_file_metadata(file_path_obj)
                 if md and 'merged_sd' in md:
                     cached_merged_sd_for_executor = md.get('merged_sd', {})
+                    logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: loaded cached_merged_sd with {len(cached_merged_sd_for_executor)} columns from file_path={file_path}")
+                    logger.debug(f"  Cached columns: {list(cached_merged_sd_for_executor.keys())}")
+                else:
+                    logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: no merged_sd in cache for file_path={file_path}")
+            else:
+                logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: file not in cache: {file_path}")
+        else:
+            logger.info("ColumnExecutorDataflow.compute_summary_with_executor: no file_path or fc provided")
+        
+        logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: orig_to_rw map has {len(orig_to_rw)} columns: {list(orig_to_rw.keys())[:5]}...")
+        
+        # Pass cached_merged_sd and orig_to_rw_map to column executor so it can set no_exec flag
+        column_executor = self._column_executor_class(
+            self.analysis_klasses,
+            cached_merged_sd=cached_merged_sd_for_executor,
+            orig_to_rw_map=orig_to_rw
+        )
 
         # Start with cached merged_sd if available (so skipped columns are included in aggregated_summary)
         aggregated_summary: Dict[str, Dict[str, Any]] = {}
