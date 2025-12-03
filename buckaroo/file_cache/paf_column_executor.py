@@ -24,22 +24,23 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         self.orig_to_rw_map = orig_to_rw_map or {}
 
     def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
-        # Filter out columns that are already complete in cached_merged_sd
-        # PAFColumnExecutor only cares about individual columns, not all columns together
+        # Check if ALL columns in this group are cached - if so, set no_exec=True
+        # Otherwise, filter to only columns that need execution and set no_exec=False
         import logging
         logger = logging.getLogger("buckaroo.paf_column_executor")
         
         all_input_cols = list(existing_stats.keys())
         columns_to_execute = []
-        cached_cols = []
+        all_cached = True
         
-        logger.info(f"PAFColumnExecutor.get_execution_args: checking {len(all_input_cols)} columns")
+        logger.info(f"PAFColumnExecutor.get_execution_args: checking {len(all_input_cols)} columns in group")
         logger.debug(f"  Input columns: {all_input_cols}")
         logger.debug(f"  cached_merged_sd keys: {list(self.cached_merged_sd.keys())}")
         logger.debug(f"  orig_to_rw_map: {self.orig_to_rw_map}")
         
         for orig_col in all_input_cols:
             rw_col = self.orig_to_rw_map.get(orig_col, orig_col)
+            is_cached = False
             if rw_col in self.cached_merged_sd:
                 cached_entry = self.cached_merged_sd[rw_col]
                 if isinstance(cached_entry, dict):
@@ -48,22 +49,28 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
                     # Check if column has real stats (more than just basic keys)
                     extra_keys = keys - basic_keys
                     if len(extra_keys) > 0 and len(keys) > 2:
-                        # Column is complete, skip it
-                        cached_cols.append(orig_col)
+                        # Column is complete in cache
+                        is_cached = True
                         logger.debug(f"  Column {orig_col} (rw: {rw_col}) is CACHED - has {len(keys)} keys including {len(extra_keys)} extra")
-                        continue
-            # Column is not complete (or not in cache), include it for execution
-            columns_to_execute.append(orig_col)
-            logger.debug(f"  Column {orig_col} (rw: {rw_col}) needs EXECUTION")
+            
+            if not is_cached:
+                # Column needs execution
+                all_cached = False
+                columns_to_execute.append(orig_col)
+                logger.debug(f"  Column {orig_col} (rw: {rw_col}) needs EXECUTION")
         
-        logger.info(f"PAFColumnExecutor.get_execution_args: {len(cached_cols)} cached, {len(columns_to_execute)} to execute")
-        logger.debug(f"  Cached: {cached_cols}")
+        # If all columns in this group are cached, set no_exec=True
+        # Otherwise, filter to only columns that need execution
+        no_exec = all_cached and len(all_input_cols) > 0
+        
+        logger.info(f"PAFColumnExecutor.get_execution_args: group has {len(all_input_cols)} columns, "
+                   f"all_cached={all_cached}, no_exec={no_exec}, columns_to_execute={len(columns_to_execute)}")
         logger.debug(f"  To execute: {columns_to_execute}")
         
-        # include hash only if any remaining column is marked missing via sentinel
+        # include hash only if any column (including cached ones) is marked missing via sentinel
         include_hash = any(
             bool(existing_stats.get(col, {}).get('__missing_hash__'))
-            for col in columns_to_execute
+            for col in all_input_cols
         )
 
         # Use the EXACT same expressions as regular PAF to ensure identical results
@@ -71,14 +78,14 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         expressions: list[pl.Expr] = polars_select_expressions(self.analyses)
 
         return ExecutorArgs(
-            columns=columns_to_execute,  # Only columns that need execution
+            columns=columns_to_execute,  # Only columns that need execution (empty if all cached)
             column_specific_expressions=False,  # Using same expressions as regular PAF (not per-column)
             include_hash=include_hash,
             expressions=expressions,
             row_start=None,
             row_end=None,
             extra=None,
-            no_exec=False,  # PAFColumnExecutor doesn't decide about all columns, Executor does
+            no_exec=no_exec,  # True if all columns in this group are cached
         )
 
     def execute(self, ldf:pl.LazyFrame, execution_args:ExecutorArgs) -> ColumnResults:

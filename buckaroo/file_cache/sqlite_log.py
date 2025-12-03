@@ -85,6 +85,23 @@ class SQLiteExecutorLog(ExecutorLog):
         )
         (cnt,) = cur.fetchone()
         return cnt > 0
+    
+    def check_log_for_completed(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
+        """
+        Check if this column group was already completed successfully.
+        Returns True if there is a completed event with matching args.
+        """
+        dfi_k = _dfi_key(dfi)
+        cols, include_hash, row_start, row_end, expr_count = self._args_key_parts(args)
+        cur = self._conn.execute(
+            """
+            SELECT COUNT(1) FROM events
+            WHERE dfi=? AND columns_json=? AND include_hash=? AND IFNULL(row_start,-1)=IFNULL(?, -1) AND IFNULL(row_end,-1)=IFNULL(?, -1) AND completed=1
+            """,
+            (dfi_k, cols, include_hash, row_start, row_end)
+        )
+        (cnt,) = cur.fetchone()
+        return cnt > 0
 
     def get_log_events(self) -> list[ExecutorLogEvent]:
         res: list[ExecutorLogEvent] = []

@@ -40,3 +40,105 @@ def test_multiprocessing_executor_timeout():
     assert all("timeout" in (n.failure_message or "").lower() for n in notes)
 
 
+def test_multiprocessing_executor_skips_cached_columns(tmp_path):
+    """
+    Test that MultiprocessingExecutor skips already-computed columns on re-execution.
+    
+    This verifies the behavior shown in logs where all column groups are skipped
+    with "SKIPPING group [...] - no_exec=True (all columns cached)" on re-execution.
+    """
+    import os
+    from buckaroo.file_cache.cache_utils import clear_file_cache
+    from buckaroo.file_cache.sqlite_file_cache import SQLiteFileCache
+    from buckaroo.file_cache.sqlite_log import SQLiteExecutorLog
+    
+    # Reset global instances to use temp directory
+    import buckaroo.file_cache.cache_utils as cache_utils_module
+    cache_utils_module._file_cache = None
+    cache_utils_module._executor_log = None
+    
+    original_home = os.environ.get('HOME')
+    os.environ['HOME'] = str(tmp_path)
+    
+    try:
+        # Create test file
+        test_file = tmp_path / "test.csv"
+        df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+        df.write_csv(test_file)
+        
+        # Use SQLite cache and log (matching production)
+        fc = SQLiteFileCache(str(tmp_path / "file_cache.sqlite"))
+        executor_log = SQLiteExecutorLog(str(tmp_path / "executor_log.sqlite"))
+        
+        cache_utils_module._file_cache = fc
+        cache_utils_module._executor_log = executor_log
+        
+        clear_file_cache()
+        
+        ldf = df.lazy()
+        
+        # Track execution calls
+        execution_calls = []
+        original_execute = SimpleColumnExecutor().execute
+        
+        def tracked_execute(ldf, ex_args):
+            execution_calls.append(('execute', list(ex_args.columns)))
+            return original_execute(ldf, ex_args)
+        
+        column_executor = SimpleColumnExecutor()
+        column_executor.execute = tracked_execute
+        
+        notes: list[ProgressNotification] = []
+        def listener(p: ProgressNotification):
+            notes.append(p)
+        
+        # First execution - should compute
+        exc1 = MultiprocessingExecutor(
+            ldf, column_executor, listener, fc,
+            executor_log=executor_log,
+            file_path=test_file,
+            timeout_secs=5.0,
+            async_mode=False
+        )
+        exc1.run()
+        
+        first_execute_calls = len(execution_calls)
+        assert first_execute_calls == 2, f"First execution should compute 2 columns, got {first_execute_calls}"
+        assert len(notes) == 2, f"Should get 2 notifications, got {len(notes)}"
+        
+        # Verify cache was populated
+        assert fc.check_file(test_file), "File should be in cache"
+        
+        # Reset tracking
+        execution_calls.clear()
+        notes.clear()
+        
+        # Second execution - should skip all columns (no_exec=True)
+        column_executor2 = SimpleColumnExecutor()
+        column_executor2.execute = tracked_execute
+        
+        notes2: list[ProgressNotification] = []
+        def listener2(p: ProgressNotification):
+            notes2.append(p)
+        
+        exc2 = MultiprocessingExecutor(
+            ldf, column_executor2, listener2, fc,
+            executor_log=executor_log,
+            file_path=test_file,
+            timeout_secs=5.0,
+            async_mode=False
+        )
+        exc2.run()
+        
+        # Second execution should NOT call execute (columns are cached)
+        second_execute_calls = len(execution_calls)
+        assert second_execute_calls == 0, (
+            f"Second execution should skip all columns (no_exec=True), "
+            f"but execute was called {second_execute_calls} times: {execution_calls}"
+        )
+        
+    finally:
+        cache_utils_module._file_cache = None
+        cache_utils_module._executor_log = None
+        if original_home:
+            os.environ['HOME'] = original_home

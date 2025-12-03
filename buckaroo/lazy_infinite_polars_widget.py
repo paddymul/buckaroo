@@ -84,6 +84,15 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
     ) -> None:
+        import os
+        import logging
+        logger = logging.getLogger("buckaroo.lazy_widget")
+        widget_id = id(self)
+        widget_pid = os.getpid()
+        log_msg = f"LazyInfinitePolarsBuckarooWidget.__init__ START - widget_id={widget_id}, pid={widget_pid}, file_path={file_path}"
+        logger.info(log_msg)
+        print(f"[buckaroo] {log_msg}")  # Print for visibility
+        
         super().__init__()
         self._debug = debug
         self._ldf = ldf
@@ -140,7 +149,18 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
 
         # Stream progress updates into df_data_dict so the UI reflects new stats as they arrive.
         # Keep track of initial merged_sd to preserve cached columns
+        # Capture widget_id and widget_pid from outer scope for logging
+        original_widget_id = widget_id
+        original_widget_pid = widget_pid
+        logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: Widget instance ready - widget_id={original_widget_id}, pid={original_widget_pid}")
+        
         def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
+            import os
+            current_pid = os.getpid()
+            current_widget_id = id(self)
+            log_msg = f"LazyInfinitePolarsBuckarooWidget._on_progress_update: widget_id={current_widget_id}, pid={current_pid}, original_widget_id={original_widget_id}, original_pid={original_widget_pid}, columns_in_update={len(aggregated_summary) if aggregated_summary else 0}"
+            logger.info(log_msg)
+            print(f"[buckaroo] {log_msg}")  # Print for visibility
             try:
                 # Merge with existing merged_sd to preserve cached columns
                 # aggregated_summary may only contain newly computed columns

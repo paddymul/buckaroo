@@ -64,11 +64,12 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
             first_run_calls = len(executor_run_calls)
             first_execute_calls = len(executor_execute_calls)
             print(f"First run - executor.run called {first_run_calls} times, execute called {first_execute_calls} times")
-            assert first_run_calls > 0, "Executor.run should have been called on first run"
-            assert first_execute_calls > 0, "Executor should have actually executed computation on first run"
+            assert first_run_calls  == 1, "Executor.run should have been called on first run"
+            # With 2 columns, we get 2 execute calls (one per column group)
+            assert first_execute_calls == 2, f"Executor should have executed computation for 2 columns, got {first_execute_calls}"
             
-            # Verify stats were computed
-            assert len(w1._df.merged_sd) > 0, "Stats should be computed on first run"
+            # Verify stats were computed (2 columns = 2 entries in merged_sd)
+            assert len(w1._df.merged_sd) == 2, f"Stats should be computed for 2 columns on first run, got {len(w1._df.merged_sd)}"
             
             # Verify cache was populated
             fc = get_global_file_cache()

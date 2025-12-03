@@ -168,7 +168,22 @@ class ColumnExecutorDataflow(ABCDataflow):
                 if isinstance(cached_stats, dict):
                     aggregated_summary[rw_col] = cached_stats.copy()
 
+        dataflow_id = id(self)
+        import os
+        dataflow_pid = os.getpid()
+        log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Dataflow created - dataflow_id={dataflow_id}, pid={dataflow_pid}"
+        logger.info(log_msg)
+        print(f"[buckaroo] {log_msg}")  # Print for visibility
+        
         def _listener(note: ProgressNotification) -> None:
+            import os
+            import logging
+            listener_logger = logging.getLogger("buckaroo.dataflow")
+            current_pid = os.getpid()
+            current_dataflow_id = id(self)
+            log_msg = f"ColumnExecutorDataflow._listener: dataflow_id={current_dataflow_id}, pid={current_pid}, original_dataflow_id={dataflow_id}, original_pid={dataflow_pid}, col_group={note.col_group}, success={note.success}"
+            listener_logger.info(log_msg)
+            print(f"[buckaroo] {log_msg}")  # Print for visibility
             # Chain to upstream listener if provided
             if progress_listener:
                 try:
@@ -199,6 +214,9 @@ class ColumnExecutorDataflow(ABCDataflow):
                     current_merged = self.merged_sd.copy() if self.merged_sd else {}
                     merged_summary = current_merged.copy()
                     merged_summary.update(aggregated_summary)
+                    log_msg2 = f"ColumnExecutorDataflow._listener: Calling progress_update_callback - dataflow_id={current_dataflow_id}, pid={current_pid}, columns_in_summary={len(merged_summary)}"
+                    listener_logger.info(log_msg2)
+                    print(f"[buckaroo] {log_msg2}")  # Print for visibility
                     self.progress_update_callback(merged_summary)
                 # keep local df_data_dict updated too
                 if isinstance(aggregated_summary, dict) and len(aggregated_summary) > 0:
@@ -217,6 +235,7 @@ class ColumnExecutorDataflow(ABCDataflow):
                 # do not interrupt execution on progress update failures
                 pass
 
+        listener_id = id(_listener)
         ex = self._executor_class(
             self.raw_ldf, 
             column_executor, 
@@ -227,6 +246,12 @@ class ColumnExecutorDataflow(ABCDataflow):
             cached_merged_sd=cached_merged_sd_for_executor,
             orig_to_rw_map=orig_to_rw
         )
+        import os
+        executor_id = id(ex)
+        executor_pid = os.getpid()
+        log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Executor created - executor_id={executor_id}, executor_class={self._executor_class.__name__}, pid={executor_pid}, dataflow_id={dataflow_id}, dataflow_pid={dataflow_pid}, listener_id={listener_id}"
+        logger.info(log_msg)
+        print(f"[buckaroo] {log_msg}")  # Print for visibility
         ex.run()
 
         # Save and merge (no helper method; set properties directly)

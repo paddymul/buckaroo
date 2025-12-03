@@ -393,6 +393,17 @@ class ExecutorLog(ABC):
             if ev.dfi == dfi and ev.args is args:
                 return ev
         return None
+    
+    def check_log_for_completed(self, dfi: DFIdentifier, args: ExecutorArgs) -> bool:
+        """
+        Check if this column group was already completed successfully.
+        Returns True if there is a completed event with matching args.
+        This can be used to skip re-execution of work that's already been done.
+        """
+        ev = self.find_event(dfi, args)
+        if ev:
+            return ev.completed
+        return False
 
 class SimpleExecutorLog(ExecutorLog):
 
@@ -426,6 +437,17 @@ class SimpleExecutorLog(ExecutorLog):
         ev = self.find_event(dfi, args)
         if ev:
             return not ev.completed
+        return False
+    
+    def check_log_for_completed(self, dfi: DFIdentifier, args:ExecutorArgs) -> bool:
+        """
+        Check if this column group was already completed successfully.
+        Returns True if there is a completed event with matching args.
+        This can be used to skip re-execution of work that's already been done.
+        """
+        ev = self.find_event(dfi, args)
+        if ev:
+            return ev.completed
         return False
 
     def get_log_events(self) -> list[ExecutorLogEvent]:
@@ -547,6 +569,23 @@ class Executor:
             
             # Get execution args - ColumnExecutor already filtered out cached columns
             ex_args = self.column_executor.get_execution_args(existing_cached)
+            
+            # Check if original column group was already completed in executor log
+            # Create ExecutorArgs with original group columns to check completion
+            original_group_args = ExecutorArgs(
+                columns=list(col_group),
+                column_specific_expressions=ex_args.column_specific_expressions,
+                include_hash=ex_args.include_hash,
+                expressions=ex_args.expressions,
+                row_start=ex_args.row_start,
+                row_end=ex_args.row_end,
+                extra=ex_args.extra,
+                no_exec=False
+            )
+            
+            if self.executor_log.check_log_for_completed(self.dfi, original_group_args):
+                logger.info(f"Executor.run() SKIPPING group {col_group} - already completed (found in executor log)")
+                continue
             
             # If no columns need execution (all were filtered out), skip this column group
             if not ex_args.columns:

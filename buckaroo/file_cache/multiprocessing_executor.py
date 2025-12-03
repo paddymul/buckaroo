@@ -45,14 +45,72 @@ class MultiprocessingExecutor(BaseExecutor):
         self.async_mode = async_mode
 
     def run(self) -> None:
+        import os
+        import logging
+        logger = logging.getLogger("buckaroo.multiprocessing_executor")
+        executor_id = id(self)
+        executor_pid = os.getpid()
+        log_msg = f"MultiprocessingExecutor.run() START - executor_id={executor_id}, pid={executor_pid}, async_mode={self.async_mode}"
+        logger.info(log_msg)
+        print(f"[buckaroo] {log_msg}")  # Print for visibility
+        
         def _work():
+            import os
+            import threading
+            worker_pid = os.getpid()
+            worker_thread_id = threading.get_ident()
+            log_msg = f"MultiprocessingExecutor._work() START - executor_id={executor_id}, original_pid={executor_pid}, worker_pid={worker_pid}, worker_thread_id={worker_thread_id}"
+            logger.info(log_msg)
+            print(f"[buckaroo] {log_msg}")  # Print for visibility
             groups = self.get_column_chunks()
             if not groups:
                 return
             for group in groups:
                 ex_args = self.get_executor_args(group)
+                
+                # Check if already failed (don't retry)
                 if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
-                    return
+                    log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - previous failure detected"
+                    logger.info(log_msg)
+                    print(f"[buckaroo] {log_msg}")
+                    continue
+                
+                # Check if already completed - check using original group columns to catch completed work
+                # Create a temporary ExecutorArgs with original group to check completion
+                from buckaroo.file_cache.base import ExecutorArgs
+                original_group_args = ExecutorArgs(
+                    columns=list(group),
+                    column_specific_expressions=ex_args.column_specific_expressions,
+                    include_hash=ex_args.include_hash,
+                    expressions=ex_args.expressions,
+                    row_start=ex_args.row_start,
+                    row_end=ex_args.row_end,
+                    extra=ex_args.extra,
+                    no_exec=False
+                )
+                
+                # Check if original group was already completed
+                if self.executor_log.check_log_for_completed(self.dfi, original_group_args):
+                    # If already completed in executor log, skip execution - results should be in cache
+                    log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - already completed (found in executor log)"
+                    logger.info(log_msg)
+                    print(f"[buckaroo] {log_msg}")
+                    continue
+                
+                # Check if no_exec (all columns cached via merged_sd)
+                if ex_args.no_exec:
+                    log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - no_exec=True (all columns cached)"
+                    logger.info(log_msg)
+                    print(f"[buckaroo] {log_msg}")
+                    continue
+                
+                # No columns to execute (shouldn't happen if no_exec is correct, but check anyway)
+                if not ex_args.columns:
+                    log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - no columns to execute"
+                    logger.debug(log_msg)
+                    print(f"[buckaroo] {log_msg}")
+                    continue
+                
                 self.executor_log.log_start_col_group(self.dfi, ex_args, self.executor_class_name)
                 t1 = dtdt.now()
                 try:
@@ -63,6 +121,10 @@ class MultiprocessingExecutor(BaseExecutor):
                         self.fc.upsert_key(col_result.series_hash, col_result.result)
                     t2 = dtdt.now()
 
+                    listener_id = id(self.listener)
+                    log_msg = f"MultiprocessingExecutor._work() CALLING LISTENER - executor_id={executor_id}, worker_pid={worker_pid}, listener_id={listener_id}, col_group={group}, columns_computed={len(res)}"
+                    logger.info(log_msg)
+                    print(f"[buckaroo] {log_msg}")  # Print for visibility
                     self.listener(ProgressNotification(
                         success=True,
                         col_group=group,
@@ -110,8 +172,16 @@ class MultiprocessingExecutor(BaseExecutor):
                     continue
 
         if self.async_mode:
+            listener_id = id(self.listener)
+            log_msg = f"MultiprocessingExecutor.run() STARTING BACKGROUND THREAD - executor_id={executor_id}, pid={executor_pid}, listener_id={listener_id}, async_mode=True"
+            logger.info(log_msg)
+            print(f"[buckaroo] {log_msg}")  # Print for visibility
             t = threading.Thread(target=_work, daemon=True)
             t.start()
+            thread_id = t.ident
+            log_msg = f"MultiprocessingExecutor.run() THREAD STARTED - executor_id={executor_id}, thread_id={thread_id}, listener_id={listener_id}, returning immediately (async_mode=True)"
+            logger.info(log_msg)
+            print(f"[buckaroo] {log_msg}")  # Print for visibility
             return
         else:
             _work()
