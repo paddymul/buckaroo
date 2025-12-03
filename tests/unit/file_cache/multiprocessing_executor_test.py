@@ -131,3 +131,6 @@ def test_multiprocessing_executor_skips_cached_columns(tmp_path):
         cache_utils_module._executor_log = None
         if original_home:
             os.environ['HOME'] = original_home
+
+
+            

@@ -37,7 +37,27 @@ class ThreadedExecutor(BaseExecutor):
         self.max_workers = max_workers
 
     def run(self) -> None:
-        groups = self.get_column_chunks()
+        # Collect all column groups first (threaded executor needs them all upfront)
+        # Use a set to avoid duplicates in case of planning issues
+        seen_groups: set[tuple[str, ...]] = set()
+        groups: list[ColumnGroup] = []
+        max_iterations = 1000  # Safety limit to prevent infinite loops
+        iteration = 0
+        
+        while iteration < max_iterations:
+            iteration += 1
+            group = self.get_next_column_chunk()
+            if group is None:
+                break
+            # Avoid duplicates
+            group_key = tuple(sorted(group))
+            if group_key in seen_groups:
+                # Planning returned duplicate - update state and break to avoid infinite loop
+                self._update_planning_state_after_execution(list(group))
+                break
+            seen_groups.add(group_key)
+            groups.append(group)
+        
         if not groups:
             return
         workers = self.max_workers or min(8, len(groups))

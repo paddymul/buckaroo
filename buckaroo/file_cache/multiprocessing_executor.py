@@ -19,6 +19,7 @@ from .base import (
     SimpleExecutorLog,
 )
 from .mp_timeout_decorator import mp_timeout, TimeoutException, ExecutionFailed
+from .batch_planning import PlanningFunction, default_planning_function, simple_one_column_planning
 
 
 def _execute_column(column_executor: ColumnExecutor, ldf: pl.LazyFrame, ex_args):
@@ -42,8 +43,14 @@ class MultiprocessingExecutor(BaseExecutor):
         async_mode: bool = True,
         cached_merged_sd: dict[str, dict[str, Any]] | None = None,
         orig_to_rw_map: dict[str, str] | None = None,
+        planning_function: Optional[PlanningFunction] = None,
     ) -> None:
-        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path, cached_merged_sd=cached_merged_sd, orig_to_rw_map=orig_to_rw_map)
+        # Use simple_one_column_planning by default for backward compatibility
+        # Can be overridden with default_planning_function for batch optimization
+        planning_func = planning_function or simple_one_column_planning
+        super().__init__(ldf, column_executor, listener, fc, executor_log, file_path=file_path, 
+                        cached_merged_sd=cached_merged_sd, orig_to_rw_map=orig_to_rw_map,
+                        planning_function=planning_func)
         self.timeout_secs = timeout_secs
         self.async_mode = async_mode
 
@@ -61,10 +68,12 @@ class MultiprocessingExecutor(BaseExecutor):
             log_msg = f"MultiprocessingExecutor._work() START - executor_id={executor_id}, original_pid={executor_pid}, worker_pid={worker_pid}, worker_thread_id={worker_thread_id}"
             logger.info(log_msg)
             print(f"[buckaroo] {log_msg}")  # Print for visibility
-            groups = self.get_column_chunks()
-            if not groups:
-                return
-            for group in groups:
+            
+            # Use get_next_column_chunk() to get batches one at a time
+            while True:
+                group = self.get_next_column_chunk()
+                if group is None:
+                    break
                 ex_args = self.get_executor_args(group)
                 
                 # Check if already failed (don't retry)
@@ -72,10 +81,10 @@ class MultiprocessingExecutor(BaseExecutor):
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - previous failure detected"
                     logger.info(log_msg)
                     print(f"[buckaroo] {log_msg}")
+                    self._update_planning_state_after_execution(list(group))
                     continue
                 
-                # Check if already completed - check using original group columns to catch completed work
-                # Create a temporary ExecutorArgs with original group to check completion
+                # Check if already completed
                 original_group_args = ExecutorArgs(
                     columns=list(group),
                     column_specific_expressions=ex_args.column_specific_expressions,
@@ -87,12 +96,11 @@ class MultiprocessingExecutor(BaseExecutor):
                     no_exec=False
                 )
                 
-                # Check if original group was already completed
                 if self.executor_log.check_log_for_completed(self.dfi, original_group_args):
-                    # If already completed in executor log, skip execution - results should be in cache
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - already completed (found in executor log)"
                     logger.info(log_msg)
                     print(f"[buckaroo] {log_msg}")
+                    self._update_planning_state_after_execution(list(group))
                     continue
                 
                 # Check if no_exec (all columns cached via merged_sd)
@@ -100,13 +108,15 @@ class MultiprocessingExecutor(BaseExecutor):
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - no_exec=True (all columns cached)"
                     logger.info(log_msg)
                     print(f"[buckaroo] {log_msg}")
+                    self._update_planning_state_after_execution(list(group))
                     continue
                 
-                # No columns to execute (shouldn't happen if no_exec is correct, but check anyway)
+                # No columns to execute
                 if not ex_args.columns:
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - no columns to execute"
                     logger.debug(log_msg)
                     print(f"[buckaroo] {log_msg}")
+                    self._update_planning_state_after_execution(list(group))
                     continue
                 
                 self.executor_log.log_start_col_group(self.dfi, ex_args, self.executor_class_name)
@@ -132,6 +142,9 @@ class MultiprocessingExecutor(BaseExecutor):
                         failure_message=None
                     ))
                     self.executor_log.log_end_col_group(self.dfi, ex_args)
+                    # Update planning state after successful execution
+                    executed_columns = list(res.keys())
+                    self._update_planning_state_after_execution(executed_columns)
                 except TimeoutException:
                     t2 = dtdt.now()
                     self.listener(ProgressNotification(
@@ -142,6 +155,8 @@ class MultiprocessingExecutor(BaseExecutor):
                         execution_time=t2-t1,  # timedelta
                         failure_message=f"timeout after {self.timeout_secs}s",
                     ))
+                    # Update planning state to prevent infinite loop
+                    self._update_planning_state_after_execution(list(group))
                     continue
                 except ExecutionFailed:
                     t2 = dtdt.now()
@@ -156,6 +171,8 @@ class MultiprocessingExecutor(BaseExecutor):
                         execution_time=t2-t1,  # timedelta
                         failure_message="execution failed in worker",
                     ))
+                    # Update planning state to prevent infinite loop
+                    self._update_planning_state_after_execution(list(group))
                     continue
                 except Exception as e:
                     t2 = dtdt.now()
@@ -167,6 +184,8 @@ class MultiprocessingExecutor(BaseExecutor):
                         execution_time=t2-t1,  # timedelta
                         failure_message=str(e),
                     ))
+                    # Update planning state to prevent infinite loop
+                    self._update_planning_state_after_execution(list(group))
                     continue
 
         if self.async_mode:

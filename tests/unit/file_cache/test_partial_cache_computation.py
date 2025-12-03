@@ -161,10 +161,20 @@ def test_partial_cache_shows_cached_immediately_computes_rest(tmp_path):
         original_run = Executor.run
         
         def tracked_run(self):
-            for col_group in self.get_column_chunks():
+            # Reset planning state so we can track columns
+            self._planning_state = None
+            # Track columns by calling get_next_column_chunk() and resetting state
+            temp_state = []
+            while True:
+                col_group = self.get_next_column_chunk()
+                if col_group is None:
+                    break
+                temp_state.append(col_group)
                 for col in col_group:
                     if col not in computed_columns:
                         computed_columns.append(col)
+            # Reset planning state so original_run can start fresh
+            self._planning_state = None
             return original_run(self)
         
         Executor.run = tracked_run
