@@ -7,7 +7,7 @@ continue computing missing columns in background.
 import polars as pl
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
 from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
-from buckaroo.read_utils import read
+from buckaroo.read_utils import read_df
 from buckaroo.file_cache.base import Executor
 import os
 import time
@@ -64,7 +64,7 @@ def test_partial_cache_loads_immediately_and_continues_computing(tmp_path):
         try:
             # First run - compute all columns
             clear_file_cache()
-            ldf1 = read(str(test_file))
+            ldf1 = read_df(str(test_file))
             w1 = LazyInfinitePolarsBuckarooWidget(
                 ldf1,
                 file_path=str(test_file),
@@ -82,7 +82,7 @@ def test_partial_cache_loads_immediately_and_continues_computing(tmp_path):
             computed_columns.clear()
             
             # Second run - should load from cache immediately, no computation
-            ldf2 = read(str(test_file))
+            ldf2 = read_df(str(test_file))
             w2 = LazyInfinitePolarsBuckarooWidget(
                 ldf2,
                 file_path=str(test_file),
@@ -136,7 +136,7 @@ def test_partial_cache_shows_cached_immediately_computes_rest(tmp_path):
         # First: Compute and cache only first 3 columns
         # (Simulate by manually caching only some columns)
         clear_file_cache()
-        ldf1 = read(str(test_file))
+        ldf1 = read_df(str(test_file))
         w1 = LazyInfinitePolarsBuckarooWidget(
             ldf1,
             file_path=str(test_file),
@@ -171,7 +171,7 @@ def test_partial_cache_shows_cached_immediately_computes_rest(tmp_path):
         
         try:
             # Second run: Should load 3 cached columns immediately, compute 2 missing ones
-            ldf2 = read(str(test_file))
+            ldf2 = read_df(str(test_file))
             w2 = LazyInfinitePolarsBuckarooWidget(
                 ldf2,
                 file_path=str(test_file),
@@ -232,7 +232,7 @@ def test_huge_dataframe_partial_cache_scenario(tmp_path):
         clear_file_cache()
         
         # First run: Compute and cache only first 5 columns
-        ldf1 = read(str(test_file))
+        ldf1 = read_df(str(test_file))
         w1 = LazyInfinitePolarsBuckarooWidget(
             ldf1,
             file_path=str(test_file),
@@ -252,7 +252,7 @@ def test_huge_dataframe_partial_cache_scenario(tmp_path):
         
         # Second run: Should show 5 cached columns immediately
         # Then compute remaining 5 in background
-        ldf2 = read(str(test_file))
+        ldf2 = read_df(str(test_file))
         start_time = time.time()
         w2 = LazyInfinitePolarsBuckarooWidget(
             ldf2,

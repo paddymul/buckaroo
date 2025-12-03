@@ -6,10 +6,10 @@ Tests for buckaroo.read_utils.read function.
 import polars as pl
 import pytest
 
-from buckaroo.read_utils import read
+from buckaroo.read_utils import read_df
 
 
-def test_read_csv(tmp_path):
+def test_read_df_csv(tmp_path):
     """Test reading CSV files."""
     csv_file = tmp_path / "test.csv"
     df = pl.DataFrame({
@@ -18,7 +18,7 @@ def test_read_csv(tmp_path):
     })
     df.write_csv(csv_file)
     
-    ldf = read(csv_file)
+    ldf = read_df(csv_file)
     assert isinstance(ldf, pl.LazyFrame)
     
     result = ldf.collect()
@@ -35,7 +35,7 @@ def test_read_parquet(tmp_path):
     })
     df.write_parquet(parquet_file)
     
-    ldf = read(parquet_file)
+    ldf = read_df(parquet_file)
     assert isinstance(ldf, pl.LazyFrame)
     
     result = ldf.collect()
@@ -52,7 +52,7 @@ def test_read_json(tmp_path):
         f.write('{"a": 2, "b": "y"}\n')
         f.write('{"a": 3, "b": "z"}\n')
     
-    ldf = read(json_file)
+    ldf = read_df(json_file)
     assert isinstance(ldf, pl.LazyFrame)
     
     result = ldf.collect()
@@ -64,7 +64,7 @@ def test_read_json(tmp_path):
 def test_read_nonexistent_file():
     """Test reading a non-existent file raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
-        read("nonexistent_file.csv")
+        read_df("nonexistent_file.csv")
 
 
 def test_read_with_string_path(tmp_path):
@@ -73,7 +73,7 @@ def test_read_with_string_path(tmp_path):
     df = pl.DataFrame({'a': [1, 2, 3]})
     df.write_csv(csv_file)
     
-    ldf = read(str(csv_file))
+    ldf = read_df(str(csv_file))
     assert isinstance(ldf, pl.LazyFrame)
     assert ldf.collect().height == 3
 
@@ -84,11 +84,11 @@ def test_read_extension_detection(tmp_path):
     csv_file = tmp_path / "data.CSV"  # uppercase
     df = pl.DataFrame({'a': [1, 2]})
     df.write_csv(csv_file)
-    ldf = read(csv_file)
+    ldf = read_df(csv_file)
     assert isinstance(ldf, pl.LazyFrame)
     
     # Test Parquet
     parquet_file = tmp_path / "data.PARQUET"  # uppercase
     df.write_parquet(parquet_file)
-    ldf = read(parquet_file)
+    ldf = read_df(parquet_file)
     assert isinstance(ldf, pl.LazyFrame)

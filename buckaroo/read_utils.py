@@ -6,12 +6,12 @@ Utility functions for reading files into Polars LazyFrames.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 import polars as pl
 
 
-def read(file_path: str | Path, **kwargs) -> pl.LazyFrame:
+def read_df(file_path: str | Path, **kwargs) -> pl.LazyFrame:
     """
     Read a file (CSV, Parquet, Avro, JSON) into a Polars LazyFrame.
     
@@ -90,3 +90,8 @@ def read(file_path: str | Path, **kwargs) -> pl.LazyFrame:
         f"Could not read file {file_path} with any supported format. "
         f"Extension: {extension}. Last error: {last_error}"
     ) from last_error
+
+def read(file_path: str | Path, **kwargs) -> Any:
+    from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
+    ldf = read_df(file_path)
+    return LazyInfinitePolarsBuckarooWidget(ldf, file_path=file_path)

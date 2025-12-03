@@ -6,15 +6,15 @@ Test that cache prevents recomputation on re-execution.
 import polars as pl
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
 from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
-from buckaroo.read_utils import read
+from buckaroo.read_utils import read_df
 from buckaroo.file_cache.base import Executor
-
+import os
+# Reset global instances to use temp directory
+import buckaroo.file_cache.cache_utils as cache_utils_module
+import time
 
 def test_cache_prevents_recomputation_on_second_execution(tmp_path):
     """Test that when a file is cached, second execution doesn't recompute stats."""
-    import os
-    # Reset global instances to use temp directory
-    import buckaroo.file_cache.cache_utils as cache_utils_module
     cache_utils_module._file_cache = None
     cache_utils_module._executor_log = None
     
@@ -50,7 +50,7 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
         try:
             # First execution - should compute
             clear_file_cache()
-            ldf1 = read(str(test_file))
+            ldf1 = read_df(str(test_file))
             w1 = LazyInfinitePolarsBuckarooWidget(
                 ldf1,
                 file_path=str(test_file),
@@ -58,7 +58,7 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
                 parallel_executor_class=Executor
             )
             
-            import time
+
             time.sleep(0.5)  # Give it time to compute
             
             first_run_calls = len(executor_run_calls)
@@ -82,7 +82,7 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
             executor_execute_calls.clear()
             
             # Second execution - should use cache, NOT recompute
-            ldf2 = read(str(test_file))
+            ldf2 = read_df(str(test_file))
             w2 = LazyInfinitePolarsBuckarooWidget(
                 ldf2,
                 file_path=str(test_file),
