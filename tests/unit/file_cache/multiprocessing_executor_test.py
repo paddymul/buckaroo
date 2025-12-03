@@ -1,4 +1,5 @@
 import polars as pl
+import time
 
 from buckaroo.file_cache.base import FileCache, ProgressNotification
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor
@@ -35,6 +36,7 @@ def test_multiprocessing_executor_with_default_planning_function_processes_colum
     - Executor should handle empty baseline batch and then process actual columns
     - All columns should eventually be processed
     - Listener should receive notifications for all columns
+    - Cache should be populated with summary stats
     """
     df = pl.DataFrame({'a1': [1,2,3], 'b2': [10,20,30], 'c3': [100,200,300]})
     ldf = df.lazy()
@@ -60,6 +62,15 @@ def test_multiprocessing_executor_with_default_planning_function_processes_colum
     # Expected: all 3 columns should be processed
     # Actual (with bug): 0 columns processed because baseline batch is skipped
     
+    # More generic check: After allowing time for processing, verify summary_stats_cache has entries
+    # This is a time-based assertion that should pass even if execution is async or delayed
+    time.sleep(3.0)
+    assert len(fc.summary_stats_cache.keys()) > 0, (
+        f"Expected summary_stats_cache to have at least 1 entry after 3 seconds, "
+        f"but got {len(fc.summary_stats_cache.keys())}. This indicates columns are not being "
+        f"processed and cached, likely because the executor is skipping the empty baseline batch."
+    )
+    
     # Verify we got notifications for all columns
     assert len(notes) >= len(df.columns), (
         f"Expected at least {len(df.columns)} notifications (one per column), "
@@ -74,10 +85,34 @@ def test_multiprocessing_executor_with_default_planning_function_processes_colum
         f"Total notes: {len(notes)}"
     )
     
-    # Verify cache is populated
+    # Verify cache is populated with expected number of entries
     assert len(fc.summary_stats_cache.keys()) >= len(df.columns), (
         f"Expected cache to have at least {len(df.columns)} entries, "
         f"but got {len(fc.summary_stats_cache.keys())}"
+    )
+    
+    # More generic check: After allowing time for processing, verify summary_stats_cache has entries
+    # This is a time-based assertion that should pass even if execution is async
+    time.sleep(3.0)
+    assert len(fc.summary_stats_cache.keys()) > 0, (
+        f"Expected summary_stats_cache to have at least 1 entry after 3 seconds, "
+        f"but got {len(fc.summary_stats_cache.keys())}. This indicates columns are not being "
+        f"processed and cached, likely because the executor is skipping the empty baseline batch."
+    )
+    
+    # More generic check: After a reasonable wait time, summary_stats should be populated
+    # This catches cases where execution might be delayed or async
+    start_time = time.time()
+    max_wait = 3.0
+    while time.time() - start_time < max_wait:
+        if len(fc.summary_stats_cache.keys()) > 0:
+            break
+        time.sleep(0.1)
+    
+    assert len(fc.summary_stats_cache.keys()) > 0, (
+        f"Expected summary_stats_cache to be populated after {max_wait} seconds, "
+        f"but got {len(fc.summary_stats_cache.keys())} entries. "
+        f"This indicates the executor is not processing columns or not caching results."
     )
 
 
