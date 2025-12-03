@@ -8,8 +8,9 @@ import polars as pl
 from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
 from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
 from buckaroo.read_utils import read_df
-from buckaroo.file_cache.base import Executor
+from buckaroo.file_cache.base import Executor, ProgressNotification
 import os
+import threading
 import time
 
 
@@ -65,38 +66,82 @@ def test_partial_cache_loads_immediately_and_continues_computing(tmp_path):
             # First run - compute all columns
             clear_file_cache()
             ldf1 = read_df(str(test_file))
-            w1 = LazyInfinitePolarsBuckarooWidget(
-                ldf1,
-                file_path=str(test_file),
-                sync_executor_class=Executor,
-                parallel_executor_class=Executor
-            )
             
-            time.sleep(1.0)  # Wait for computation
+            # Use a listener to wait for 3rd notification (simulating Jupyter Lab behavior)
+            # In Jupyter Lab, the widget updates as notifications arrive, so we wait for some progress
+            notification_count = [0]  # Use list to allow modification in nested function
+            notification_event = threading.Event()
             
-            # Verify all columns computed
-            assert len(w1._df.merged_sd) == 5, "All 5 columns should be computed"
-            assert set(w1._df.merged_sd.keys()) == {'a', 'b', 'c', 'd', 'e'}, "Should have all columns"
+            # Monkey-patch ColumnExecutorDataflow to inject our counting listener
+            from buckaroo.dataflow.column_executor_dataflow import ColumnExecutorDataflow
+            original_compute = ColumnExecutorDataflow.compute_summary_with_executor
             
-            # Clear computation tracking
-            computed_columns.clear()
+            def compute_with_listener(self, file_cache=None, progress_listener=None, file_path=None):
+                # Create a wrapper listener that counts successful notifications
+                def counting_listener(note: ProgressNotification):
+                    # Chain to original listener if provided
+                    if progress_listener:
+                        try:
+                            progress_listener(note)
+                        except Exception:
+                            pass
+                    # Count successful notifications
+                    if note.success:
+                        notification_count[0] += 1
+                        if notification_count[0] >= 3:
+                            notification_event.set()
+                return original_compute(self, file_cache, counting_listener, file_path)
             
-            # Second run - should load from cache immediately, no computation
-            ldf2 = read_df(str(test_file))
-            w2 = LazyInfinitePolarsBuckarooWidget(
-                ldf2,
-                file_path=str(test_file),
-                sync_executor_class=Executor,
-                parallel_executor_class=Executor
-            )
+            ColumnExecutorDataflow.compute_summary_with_executor = compute_with_listener
             
-            time.sleep(0.2)  # Small delay
+            try:
+                w1 = LazyInfinitePolarsBuckarooWidget(
+                    ldf1,
+                    file_path=str(test_file),
+                    sync_executor_class=Executor,
+                    parallel_executor_class=Executor
+                )
+                
+                # Wait for 3rd notification (simulating Jupyter Lab - widget updates as notifications arrive)
+                # This is more realistic than time.sleep() as it responds to actual progress
+                notification_event.wait(timeout=10.0)  # 10 second timeout for safety
             
-            # Should have all columns immediately from cache
-            assert len(w2._df.merged_sd) == 5, "All 5 columns should be loaded from cache"
-            # Executor should NOT be called (or called with 0 new columns)
-            # Since all are cached, computation should be skipped
-            assert len(computed_columns) == 0, f"Should not recompute cached columns, but computed: {computed_columns}"
+                # After 3rd notification, give a brief moment for remaining notifications to complete
+                # (In real Jupyter Lab, we'd continue immediately after seeing some progress)
+                import time
+                time.sleep(0.3)  # Brief wait for remaining notifications to complete
+                
+                # Verify all columns computed
+                assert len(w1._df.merged_sd) == 5, "All 5 columns should be computed"
+                assert set(w1._df.merged_sd.keys()) == {'a', 'b', 'c', 'd', 'e'}, "Should have all columns"
+                
+                # Clear computation tracking
+                computed_columns.clear()
+                
+                # Second run - should load from cache immediately, no computation
+                # Reset notification tracking for second run
+                notification_count[0] = 0
+                notification_event.clear()
+                
+                ldf2 = read_df(str(test_file))
+                w2 = LazyInfinitePolarsBuckarooWidget(
+                    ldf2,
+                    file_path=str(test_file),
+                    sync_executor_class=Executor,
+                    parallel_executor_class=Executor
+                )
+                
+                # For cached columns, should be immediate - no need to wait for notifications
+                time.sleep(0.1)  # Small delay for initialization
+                
+                # Should have all columns immediately from cache
+                assert len(w2._df.merged_sd) == 5, "All 5 columns should be loaded from cache"
+                # Executor should NOT be called (or called with 0 new columns)
+                # Since all are cached, computation should be skipped
+                assert len(computed_columns) == 0, f"Should not recompute cached columns, but computed: {computed_columns}"
+            finally:
+                # Restore original compute method
+                ColumnExecutorDataflow.compute_summary_with_executor = original_compute
             
         finally:
             Executor.run = original_run
