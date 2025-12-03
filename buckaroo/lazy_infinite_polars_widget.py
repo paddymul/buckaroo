@@ -5,9 +5,12 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Type
 from io import BytesIO
 from pathlib import Path
+import os
+import traceback
 
 import anywidget
 import polars as pl
+import pandas as pd
 import logging
 from traitlets import Dict as TDict, Unicode
 
@@ -84,8 +87,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
     ) -> None:
-        import os
-        import logging
         logger = logging.getLogger("buckaroo.lazy_widget")
         widget_id = id(self)
         widget_pid = os.getpid()
@@ -155,7 +156,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: Widget instance ready - widget_id={original_widget_id}, pid={original_widget_pid}")
         
         def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
-            import os
             current_pid = os.getpid()
             current_widget_id = id(self)
             log_msg = f"LazyInfinitePolarsBuckarooWidget._on_progress_update: widget_id={current_widget_id}, pid={current_pid}, original_widget_id={original_widget_id}, original_pid={original_widget_pid}, columns_in_update={len(aggregated_summary) if aggregated_summary else 0}"
@@ -354,7 +354,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
     # no schema-only column config helper needed for sync path
 
     def _summary_to_rows(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
-        import pandas as pd
         if not summary:
             return []
         df = pd.DataFrame(summary)
@@ -442,7 +441,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                     self.send({"type": "infinite_resp", 'key': second_pa, 'data': [], 'length': self.df_meta['total_rows']},
                               [self._to_parquet(slice2)])
         except Exception as e:
-            import traceback
             stack_trace = traceback.format_exc()
             self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'error_info': stack_trace, 'length': 0}, [])
             logger.exception("error handling payload args: %s", e)

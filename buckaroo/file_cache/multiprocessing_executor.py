@@ -3,13 +3,16 @@ from __future__ import annotations
 from datetime import datetime as dtdt
 from typing import Optional, Any
 from pathlib import Path
+import os
 import threading
+import logging
 
 import polars as pl
 
 from .base import (
     Executor as BaseExecutor,
     ColumnExecutor,
+    ExecutorArgs,
     FileCache,
     ProgressNotification,
     ProgressListener,
@@ -45,8 +48,6 @@ class MultiprocessingExecutor(BaseExecutor):
         self.async_mode = async_mode
 
     def run(self) -> None:
-        import os
-        import logging
         logger = logging.getLogger("buckaroo.multiprocessing_executor")
         executor_id = id(self)
         executor_pid = os.getpid()
@@ -55,8 +56,6 @@ class MultiprocessingExecutor(BaseExecutor):
         print(f"[buckaroo] {log_msg}")  # Print for visibility
         
         def _work():
-            import os
-            import threading
             worker_pid = os.getpid()
             worker_thread_id = threading.get_ident()
             log_msg = f"MultiprocessingExecutor._work() START - executor_id={executor_id}, original_pid={executor_pid}, worker_pid={worker_pid}, worker_thread_id={worker_thread_id}"
@@ -77,7 +76,6 @@ class MultiprocessingExecutor(BaseExecutor):
                 
                 # Check if already completed - check using original group columns to catch completed work
                 # Create a temporary ExecutorArgs with original group to check completion
-                from buckaroo.file_cache.base import ExecutorArgs
                 original_group_args = ExecutorArgs(
                     columns=list(group),
                     column_specific_expressions=ex_args.column_specific_expressions,

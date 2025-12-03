@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
+import time
 
 from .sqlite_file_cache import SQLiteFileCache
 from .sqlite_log import SQLiteExecutorLog
@@ -111,8 +112,6 @@ def clear_oldest_cache_entries(max_age_days: int = 30) -> int:
     Returns:
         Number of entries deleted
     """
-    import time
-    
     fc = get_global_file_cache()
     cutoff_time = time.time() - (max_age_days * 24 * 60 * 60)
     

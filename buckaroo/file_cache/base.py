@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import (
     Any, Optional, TypeAlias, Callable, Dict, Literal,
     Generic, TypeVar)
+import logging
 import polars as pl
 import itertools
 
@@ -500,7 +501,6 @@ class Executor:
         last_ex_args: ExecutorArgs | None = None
         
         # First pass: call get_execution_args for all column groups to check if all columns are cached
-        import logging
         logger = logging.getLogger("buckaroo.executor")
         
         logger.info(f"Executor.run() START - file_path={self.file_path}")
@@ -626,7 +626,6 @@ class Executor:
                     except Exception as cache_err:
                         # Log cache errors but don't fail the execution
                         # The stats are still valid even if caching fails
-                        import logging
                         logger = logging.getLogger("buckaroo.executor")
                         logger.warning(f"Failed to cache result for {col}: {cache_err}")
 

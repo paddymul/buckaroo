@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Type, Callable
 from pathlib import Path
+import os
+import logging
 
 import polars as pl
+import pandas as pd
 from traitlets import Dict as TDict, Any as TAny, Unicode, observe
 
 from .styling_core import merge_sds
@@ -16,7 +19,6 @@ from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressLi
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from .abc_dataflow import ABCDataflow
 from buckaroo.serialization_utils import pd_to_obj
-import pandas as pd
 
 
 class ColumnExecutorDataflow(ABCDataflow):
@@ -131,12 +133,10 @@ class ColumnExecutorDataflow(ABCDataflow):
         orig_to_rw = dict(old_col_new_col(empty_pl_df))
         
         # Check if we have cached merged_sd to pass to column executor
-        import logging
         logger = logging.getLogger("buckaroo.dataflow")
         
         cached_merged_sd_for_executor = None
         if file_path and fc:
-            from pathlib import Path
             file_path_obj = Path(file_path)
             if fc.check_file(file_path_obj):
                 md = fc.get_file_metadata(file_path_obj)
@@ -169,15 +169,12 @@ class ColumnExecutorDataflow(ABCDataflow):
                     aggregated_summary[rw_col] = cached_stats.copy()
 
         dataflow_id = id(self)
-        import os
         dataflow_pid = os.getpid()
         log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Dataflow created - dataflow_id={dataflow_id}, pid={dataflow_pid}"
         logger.info(log_msg)
         print(f"[buckaroo] {log_msg}")  # Print for visibility
         
         def _listener(note: ProgressNotification) -> None:
-            import os
-            import logging
             listener_logger = logging.getLogger("buckaroo.dataflow")
             current_pid = os.getpid()
             current_dataflow_id = id(self)
@@ -192,7 +189,6 @@ class ColumnExecutorDataflow(ABCDataflow):
                     pass
             if not note.success or note.result is None:
                 # Log failures so we can diagnose issues
-                import logging
                 logger = logging.getLogger("buckaroo.dataflow")
                 logger.warning(
                     f"Column group {note.col_group} failed: {note.failure_message}"
@@ -246,7 +242,6 @@ class ColumnExecutorDataflow(ABCDataflow):
             cached_merged_sd=cached_merged_sd_for_executor,
             orig_to_rw_map=orig_to_rw
         )
-        import os
         executor_id = id(ex)
         executor_pid = os.getpid()
         log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Executor created - executor_id={executor_id}, executor_class={self._executor_class.__name__}, pid={executor_pid}, dataflow_id={dataflow_id}, dataflow_pid={dataflow_pid}, listener_id={listener_id}"
@@ -265,10 +260,8 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Save merged_sd to cache if we have a file_path and aggregated_summary has content
         if file_path and fc and aggregated_summary and len(aggregated_summary) > 0:
             try:
-                from pathlib import Path
                 fc.upsert_file_metadata(Path(file_path), {'merged_sd': self.merged_sd})
             except Exception as e:
-                import logging
                 logger = logging.getLogger("buckaroo.dataflow")
                 logger.warning(f"Failed to save merged_sd to cache: {e}")
         
@@ -302,7 +295,6 @@ class ColumnExecutorDataflow(ABCDataflow):
             self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path)
         except Exception as e:
             #FIXME this is a place we want to send a progress notification about the failure or the different approach
-            import logging
             logger = logging.getLogger("buckaroo.dataflow")
             logger.warning(f"compute_summary_with_executor failed with {exec_class.__name__}: {e}", exc_info=True)
             

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from typing import Any, List, Type
+from collections import defaultdict
 import json
+import logging
 
 import polars as pl
 
@@ -9,6 +11,7 @@ from buckaroo.file_cache.base import ColumnExecutor, ColumnResults, ColumnResult
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import (
     PolarsAnalysis, polars_select_expressions, polars_series_stats_from_select_result,
 )
+from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
 
 
 class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
@@ -26,7 +29,6 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
     def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
         # Check if ALL columns in this group are cached - if so, set no_exec=True
         # Otherwise, filter to only columns that need execution and set no_exec=False
-        import logging
         logger = logging.getLogger("buckaroo.paf_column_executor")
         
         all_input_cols = list(existing_stats.keys())
@@ -121,9 +123,6 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
                     # result separately and merge them, then reconstruct a DataFrame
                     # This ensures we get all available values even when heights don't match
                     # split_to_dicts only reads the first row, so we can put all values in row 0
-                    from buckaroo.pluggable_analysis_framework.polars_utils import split_to_dicts
-                    from collections import defaultdict
-                    
                     merged_dict = defaultdict(dict)
                     for individual_result in individual_results:
                         result_dict = split_to_dicts(individual_result)
