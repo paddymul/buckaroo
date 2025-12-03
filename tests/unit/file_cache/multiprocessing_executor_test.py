@@ -2,6 +2,7 @@ import polars as pl
 
 from buckaroo.file_cache.base import FileCache, ProgressNotification
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor
+from buckaroo.file_cache.batch_planning import default_planning_function
 from .executor_test_utils import SimpleColumnExecutor, SlowColumnExecutor
 
 
@@ -20,6 +21,64 @@ def test_multiprocessing_executor_success():
     assert all(n.success for n in notes)
     # cache populated for each col (cannot assert exact keys)
     assert len(fc.summary_stats_cache.keys()) >= len(df.columns)
+
+
+def test_multiprocessing_executor_with_default_planning_function_processes_columns():
+    """
+    Test that MultiprocessingExecutor with default_planning_function actually processes columns.
+    
+    This test captures a bug where default_planning_function returns an empty batch
+    for baseline measurement, but the executor skips empty batches, causing it to
+    never process any actual columns.
+    
+    Expected behavior:
+    - Executor should handle empty baseline batch and then process actual columns
+    - All columns should eventually be processed
+    - Listener should receive notifications for all columns
+    """
+    df = pl.DataFrame({'a1': [1,2,3], 'b2': [10,20,30], 'c3': [100,200,300]})
+    ldf = df.lazy()
+    fc = FileCache()
+    notes: list[ProgressNotification] = []
+    
+    def listener(p: ProgressNotification):
+        notes.append(p)
+    
+    # Use default_planning_function (smart planner) which returns empty batch for baseline
+    exc = MultiprocessingExecutor(
+        ldf, 
+        SimpleColumnExecutor(), 
+        listener, 
+        fc, 
+        timeout_secs=5.0, 
+        async_mode=False,  # Use sync mode for test determinism
+        planning_function=default_planning_function  # This is the key - uses smart planner
+    )
+    exc.run()
+    
+    # The bug: executor skips empty baseline batch, so it never processes columns
+    # Expected: all 3 columns should be processed
+    # Actual (with bug): 0 columns processed because baseline batch is skipped
+    
+    # Verify we got notifications for all columns
+    assert len(notes) >= len(df.columns), (
+        f"Expected at least {len(df.columns)} notifications (one per column), "
+        f"but got {len(notes)}. This indicates the executor is not processing columns "
+        f"because it's skipping the empty baseline batch from default_planning_function."
+    )
+    
+    # Verify all notifications are successful
+    successful_notes = [n for n in notes if n.success and n.result]
+    assert len(successful_notes) == len(df.columns), (
+        f"Expected {len(df.columns)} successful notifications, but got {len(successful_notes)}. "
+        f"Total notes: {len(notes)}"
+    )
+    
+    # Verify cache is populated
+    assert len(fc.summary_stats_cache.keys()) >= len(df.columns), (
+        f"Expected cache to have at least {len(df.columns)} entries, "
+        f"but got {len(fc.summary_stats_cache.keys())}"
+    )
 
 
 def test_multiprocessing_executor_timeout():

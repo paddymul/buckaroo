@@ -9,6 +9,7 @@ from buckaroo.dataflow.styling_core import merge_sds
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.pluggable_analysis_framework.utils import json_postfix
+from buckaroo.file_cache.batch_planning import simple_one_column_planning
 from tests.unit.file_cache.executor_test_utils import (
     build_existing_cached,
     create_listener,
@@ -34,7 +35,7 @@ def test_paf_column_executor_basic():
         collected.append(p)
 
     exec_ = PAFColumnExecutor([SelectOnlyAnalysis])
-    ex = Executor(ldf, exec_, listener, fc)
+    ex = Executor(ldf, exec_, listener, fc, planning_function=simple_one_column_planning)
     ex.run()
 
     # Should have produced two notifications and cached per-series results
@@ -75,7 +76,7 @@ def test_paf_column_executor_runs_computed_summary():
         collected.append(p)
 
     exec_ = PAFColumnExecutor([ComputedOnlyAnalysis])
-    ex = Executor(ldf, exec_, listener, fc)
+    ex = Executor(ldf, exec_, listener, fc, planning_function=simple_one_column_planning)
     ex.run()
 
     # One notification per column, and each should contain ColumnResults
@@ -175,7 +176,7 @@ def test_paf_column_executor_with_different_analysis_sets(tmp_path):
         # STEP 1: Run with analyses a,b,c
         collected1 = []
         exec1 = PAFColumnExecutor([AnalysisA, AnalysisB, AnalysisC])
-        ex1 = Executor(ldf, exec1, create_listener(collected1), fc, file_path=test_file)
+        ex1 = Executor(ldf, exec1, create_listener(collected1), fc, file_path=test_file, planning_function=simple_one_column_planning)
         ex1.run()
         
         results_1 = extract_results(collected1)
@@ -238,7 +239,7 @@ def test_paf_column_executor_with_different_analysis_sets(tmp_path):
         assert not exec_args_2.no_exec, "no_exec should be False because analysis_d_stat needs to be computed"
         
         collected2 = []
-        ex2 = Executor(ldf, exec2, create_listener(collected2), fc, file_path=test_file)
+        ex2 = Executor(ldf, exec2, create_listener(collected2), fc, file_path=test_file, planning_function=simple_one_column_planning)
         ex2.run()
         
         # Verify that execution occurred (column was in columns_to_execute)
@@ -318,7 +319,7 @@ def test_paf_column_executor_with_different_analysis_sets(tmp_path):
         assert len(exec_args_3.columns) == 0, "Run 3 should have no columns to execute"
         
         collected3 = []
-        ex3 = Executor(ldf, exec3, create_listener(collected3), fc, file_path=test_file)
+        ex3 = Executor(ldf, exec3, create_listener(collected3), fc, file_path=test_file, planning_function=simple_one_column_planning)
         ex3.run()
         
         # Verify no execution occurred (all cached)
@@ -442,7 +443,7 @@ def test_no_exec_per_column_group(tmp_path):
         # STEP 1: Run with both columns to populate cache
         collected1 = []
         exec1 = PAFColumnExecutor([SimpleAnalysis])
-        ex1 = Executor(ldf, exec1, create_listener(collected1), fc, file_path=test_file)
+        ex1 = Executor(ldf, exec1, create_listener(collected1), fc, file_path=test_file, planning_function=simple_one_column_planning)
         ex1.run()
         
         # Verify both columns were executed
@@ -513,12 +514,13 @@ def test_no_exec_per_column_group(tmp_path):
         # STEP 4: Run executor and verify behavior
         collected2 = []
         ex2 = Executor(
-            ldf, 
-            exec2, 
-            create_listener(collected2), 
-            fc, 
+            ldf,
+            exec2,
+            create_listener(collected2),
+            fc,
             file_path=test_file,
-            cached_merged_sd=cached_merged_sd_partial
+            cached_merged_sd=cached_merged_sd_partial,
+            planning_function=simple_one_column_planning
         )
         ex2.run()
         

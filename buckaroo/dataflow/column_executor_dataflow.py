@@ -2,7 +2,7 @@
 # coding: utf-8
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Type, Callable
+from typing import Any, Dict, List, Optional, Type, Callable, TYPE_CHECKING
 from pathlib import Path
 import os
 import logging
@@ -19,6 +19,9 @@ from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressLi
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from .abc_dataflow import ABCDataflow
 from buckaroo.serialization_utils import pd_to_obj
+
+if TYPE_CHECKING:
+    from buckaroo.file_cache.batch_planning import PlanningFunction
 
 
 class ColumnExecutorDataflow(ABCDataflow):
@@ -119,6 +122,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
         file_path: Optional[str | Path] = None,
+        planning_function: Optional["PlanningFunction"] = None,
     ) -> None:
         """
         Execute the PAF column executor over the LazyFrame to compute summary stats.
@@ -175,18 +179,30 @@ class ColumnExecutorDataflow(ABCDataflow):
         print(f"[buckaroo] {log_msg}")  # Print for visibility
         
         def _listener(note: ProgressNotification) -> None:
+            import threading
             listener_logger = logging.getLogger("buckaroo.dataflow")
             current_pid = os.getpid()
             current_dataflow_id = id(self)
-            log_msg = f"ColumnExecutorDataflow._listener: dataflow_id={current_dataflow_id}, pid={current_pid}, original_dataflow_id={dataflow_id}, original_pid={dataflow_pid}, col_group={note.col_group}, success={note.success}"
+            current_thread_id = threading.get_ident()
+            log_msg = f"ColumnExecutorDataflow._listener: dataflow_id={current_dataflow_id}, pid={current_pid}, thread_id={current_thread_id}, original_dataflow_id={dataflow_id}, original_pid={dataflow_pid}, col_group={note.col_group}, success={note.success}, result_keys={list(note.result.keys()) if note.result else None}"
             listener_logger.info(log_msg)
             print(f"[buckaroo] {log_msg}")  # Print for visibility
             # Chain to upstream listener if provided
             if progress_listener:
                 try:
+                    log_msg2 = f"ColumnExecutorDataflow._listener: Calling upstream progress_listener - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
+                    listener_logger.info(log_msg2)
+                    print(f"[buckaroo] {log_msg2}")
                     progress_listener(note)
-                except Exception:
-                    pass
+                    log_msg3 = f"ColumnExecutorDataflow._listener: Upstream progress_listener returned - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
+                    listener_logger.info(log_msg3)
+                    print(f"[buckaroo] {log_msg3}")
+                except Exception as e:
+                    log_msg_err = f"ColumnExecutorDataflow._listener: Exception calling upstream listener - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}, error={e}"
+                    listener_logger.exception(log_msg_err)
+                    print(f"[buckaroo] ERROR: {log_msg_err}")
+                    import traceback
+                    traceback.print_exc()
             if not note.success or note.result is None:
                 # Log failures so we can diagnose issues
                 logger = logging.getLogger("buckaroo.dataflow")
@@ -210,10 +226,17 @@ class ColumnExecutorDataflow(ABCDataflow):
                     current_merged = self.merged_sd.copy() if self.merged_sd else {}
                     merged_summary = current_merged.copy()
                     merged_summary.update(aggregated_summary)
-                    log_msg2 = f"ColumnExecutorDataflow._listener: Calling progress_update_callback - dataflow_id={current_dataflow_id}, pid={current_pid}, columns_in_summary={len(merged_summary)}"
+                    log_msg2 = f"ColumnExecutorDataflow._listener: Calling progress_update_callback - dataflow_id={current_dataflow_id}, pid={current_pid}, thread_id={current_thread_id}, columns_in_summary={len(merged_summary)}, callback_id={id(self.progress_update_callback)}"
                     listener_logger.info(log_msg2)
                     print(f"[buckaroo] {log_msg2}")  # Print for visibility
                     self.progress_update_callback(merged_summary)
+                    log_msg3 = f"ColumnExecutorDataflow._listener: progress_update_callback returned - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
+                    listener_logger.info(log_msg3)
+                    print(f"[buckaroo] {log_msg3}")
+                else:
+                    log_msg_no_callback = f"ColumnExecutorDataflow._listener: No progress_update_callback set - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
+                    listener_logger.warning(log_msg_no_callback)
+                    print(f"[buckaroo] WARNING: {log_msg_no_callback}")
                 # keep local df_data_dict updated too
                 if isinstance(aggregated_summary, dict) and len(aggregated_summary) > 0:
                     # Merge with existing to preserve cached columns
@@ -240,7 +263,8 @@ class ColumnExecutorDataflow(ABCDataflow):
             executor_log=self.executor_log, 
             file_path=file_path,
             cached_merged_sd=cached_merged_sd_for_executor,
-            orig_to_rw_map=orig_to_rw
+            orig_to_rw_map=orig_to_rw,
+            planning_function=planning_function
         )
         executor_id = id(ex)
         executor_pid = os.getpid()
@@ -276,6 +300,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
         file_path: Optional[str | Path] = None,
+        planning_function: Optional["PlanningFunction"] = None,
     ) -> None:
         # Determine shape
         try:
@@ -292,7 +317,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Run
         self._executor_class = exec_class
         try:
-            self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path)
+            self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path, planning_function=planning_function)
         except Exception as e:
             #FIXME this is a place we want to send a progress notification about the failure or the different approach
             logger = logging.getLogger("buckaroo.dataflow")
@@ -302,7 +327,7 @@ class ColumnExecutorDataflow(ABCDataflow):
             if exec_class is sync_executor_class:
                 self._executor_class = parallel_executor_class
                 try:
-                    self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path)
+                    self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path, planning_function=planning_function)
                 except Exception as e2:
                     logger.error(f"compute_summary_with_executor also failed with parallel executor: {e2}", exc_info=True)
                     # Don't re-raise, let it fail silently and use defaults

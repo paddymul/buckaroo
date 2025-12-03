@@ -178,7 +178,7 @@ def test_batch_planning_integration():
                 for col in batch.columns:
                     if col in remaining_columns:
                         remaining_columns.remove(col)
-            except Exception as e:
+            except Exception:
                 # Timeout or other error - don't log end, so it's marked as incomplete/timed_out
                 # This is expected behavior for the algorithm (half batch might timeout)
                 executed_any = True  # We still attempted execution

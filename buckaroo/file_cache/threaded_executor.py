@@ -9,6 +9,7 @@ import polars as pl
 from .base import (
     Executor as BaseExecutor,
     ColumnExecutor,
+    ColumnGroup,
     FileCache,
     ProgressNotification,
     ProgressListener,

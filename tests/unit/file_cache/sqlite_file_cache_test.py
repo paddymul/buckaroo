@@ -8,6 +8,7 @@ import polars as pl
 
 from buckaroo.file_cache.sqlite_file_cache import SQLiteFileCache
 from buckaroo.file_cache.base import Executor, ProgressNotification
+from buckaroo.file_cache.batch_planning import simple_one_column_planning
 from tests.unit.file_cache.bisector_test import SimpleColumnExecutor
 
 IS_RUNNING_LOCAL = "Paddy" in socket.gethostname()
@@ -103,7 +104,7 @@ def test_sqlite_filecache_executor_integration():
     def listener(p:ProgressNotification) -> None:
         collected.append(p)
 
-    ex = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    ex = Executor(ldf, SimpleColumnExecutor(), listener, fc, planning_function=simple_one_column_planning)
     ex.run()
     # compute expected series hashes/results to cross-check what was stored
     exec_ = SimpleColumnExecutor()

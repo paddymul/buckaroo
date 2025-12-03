@@ -15,6 +15,7 @@ from buckaroo.file_cache.base import (
     Executor,
     ProgressNotification,
 )
+from buckaroo.file_cache.batch_planning import simple_one_column_planning
 import polars as pl
 import polars.selectors as cs
 IS_RUNNING_LOCAL = "Paddy" in socket.gethostname()
@@ -249,7 +250,7 @@ def test_simple_executor():
         call_count[0]+=1
 
 
-    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc, planning_function=simple_one_column_planning)
     exc.run()
     assert call_count[0] == 2
     #verify that series are saved to cache, and that we can retrieve them with expected result
@@ -262,7 +263,7 @@ def test_simple_executor_log():
         print("here58", progress.success, progress.result)
 
 
-    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc, planning_function=simple_one_column_planning)
     exc.run()
     evs = exc.executor_log.get_log_events() 
 
@@ -280,7 +281,7 @@ def test_simple_executor_on_fail():
         print("here58", progress.success, progress.result)
 
 
-    exc = Executor(ldf, FailOnSumExecutor(), listener, fc)
+    exc = Executor(ldf, FailOnSumExecutor(), listener, fc, planning_function=simple_one_column_planning)
     exc.run()
     evs = exc.executor_log.get_log_events() 
 
@@ -297,7 +298,7 @@ def test_simple_executor_listener_calls():
     def listener(progress:ProgressNotification) -> None:
         call_args.append(progress)
 
-    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc)
+    exc = Executor(ldf, SimpleColumnExecutor(), listener, fc, planning_function=simple_one_column_planning)
     exc.run()
 
     expected_notification_1 = ProgressNotification(
