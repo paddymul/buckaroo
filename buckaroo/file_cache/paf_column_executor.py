@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Type
+from typing import Any, List, Type, Set
 from collections import defaultdict
 import json
 import logging
@@ -25,6 +25,36 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         self.analyses = list(analyses)
         self.cached_merged_sd = cached_merged_sd or {}
         self.orig_to_rw_map = orig_to_rw_map or {}
+    
+    def _get_expected_stat_keys(self) -> Set[str]:
+        """
+        Extract the stat keys that are guaranteed to be produced by the requested analyses.
+        
+        Returns a set of stat key names from provides_defaults of all analyses.
+        
+        NOTE: This is a conservative approach. We only check provides_defaults, not
+        stat keys produced by select_clauses or column_ops. This means:
+        - If a column has results from select_clauses but is missing some provides_defaults
+          keys, we will re-execute the entire analysis class
+        - This is intentional for now - we treat the implementation of how analyses
+          produce their stats (select_clauses, column_ops, computed_summary) as a black box
+        - Future improvements could integrate stat key extraction into the
+          pluggable_analysis_framework itself
+        
+        This approach ensures correctness: if any expected stat key is missing,
+        we re-execute to ensure all stats are present.
+        """
+        stat_keys: Set[str] = set()
+        
+        for analysis_class in self.analyses:
+            # Only check provides_defaults - these are the guaranteed stat keys
+            # that the analysis will produce
+            if hasattr(analysis_class, 'provides_defaults'):
+                defaults = analysis_class.provides_defaults
+                if isinstance(defaults, dict):
+                    stat_keys.update(defaults.keys())
+        
+        return stat_keys
 
     def get_execution_args(self, existing_stats:dict[str,dict[str,object]]) -> ExecutorArgs:
         # Check if ALL columns in this group are cached - if so, set no_exec=True
@@ -40,20 +70,45 @@ class PAFColumnExecutor(ColumnExecutor[ExecutorArgs]):
         logger.debug(f"  cached_merged_sd keys: {list(self.cached_merged_sd.keys())}")
         logger.debug(f"  orig_to_rw_map: {self.orig_to_rw_map}")
         
+        # Get expected stat keys from the requested analyses
+        expected_stat_keys = self._get_expected_stat_keys()
+        logger.debug(f"  Expected stat keys from analyses: {expected_stat_keys}")
+        
         for orig_col in all_input_cols:
             rw_col = self.orig_to_rw_map.get(orig_col, orig_col)
             is_cached = False
             if rw_col in self.cached_merged_sd:
                 cached_entry = self.cached_merged_sd[rw_col]
                 if isinstance(cached_entry, dict):
-                    keys = set(cached_entry.keys())
+                    cached_keys = set(cached_entry.keys())
                     basic_keys = {'orig_col_name', 'rewritten_col_name'}
+                    cached_stat_keys = cached_keys - basic_keys
+                    
                     # Check if column has real stats (more than just basic keys)
-                    extra_keys = keys - basic_keys
-                    if len(extra_keys) > 0 and len(keys) > 2:
-                        # Column is complete in cache
-                        is_cached = True
-                        logger.debug(f"  Column {orig_col} (rw: {rw_col}) is CACHED - has {len(keys)} keys including {len(extra_keys)} extra")
+                    if len(cached_stat_keys) > 0:
+                        # Check if all expected stat keys are present in cache
+                        if expected_stat_keys:
+                            # We have expected keys from provides_defaults - check if all are present
+                            missing_keys = expected_stat_keys - cached_stat_keys
+                            if not missing_keys:
+                                # All expected stat keys are present
+                                is_cached = True
+                                logger.debug(f"  Column {orig_col} (rw: {rw_col}) is CACHED - has all expected stat keys: {expected_stat_keys}")
+                            else:
+                                # Some expected stat keys are missing - re-execute the entire analysis
+                                # NOTE: We treat the analysis implementation (select_clauses, column_ops, computed_summary)
+                                # as a black box. If provides_defaults indicates missing keys, we re-execute
+                                # the entire analysis class to ensure all stats (including those from select_clauses
+                                # and column_ops) are present. This is conservative but correct.
+                                logger.debug(f"  Column {orig_col} (rw: {rw_col}) needs EXECUTION - missing stat keys: {missing_keys}")
+                        else:
+                            # No provides_defaults keys to check - we can't verify completeness
+                            # Since we treat the analysis implementation (select_clauses, column_ops, etc.)
+                            # as a black box, we can't know if all stats are present.
+                            # Fall back to checking if column has any stats (backward compatibility)
+                            # This is not ideal but necessary when analyses don't declare provides_defaults
+                            is_cached = True
+                            logger.debug(f"  Column {orig_col} (rw: {rw_col}) is CACHED (fallback) - has {len(cached_stat_keys)} stat keys, but no provides_defaults to verify completeness")
             
             if not is_cached:
                 # Column needs execution

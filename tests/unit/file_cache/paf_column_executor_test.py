@@ -92,7 +92,7 @@ def test_paf_column_executor_runs_computed_summary():
 # Analysis classes that produce unique stat keys to track execution
 class AnalysisA(PolarsAnalysis):
     """Analysis A produces a unique stat key 'analysis_a_stat'"""
-    provides_defaults = {}
+    provides_defaults = {'analysis_a_stat': 0}
     select_clauses = [
         F.all().mean().name.map(json_postfix('analysis_a_stat')),
     ]
@@ -100,7 +100,7 @@ class AnalysisA(PolarsAnalysis):
 
 class AnalysisB(PolarsAnalysis):
     """Analysis B produces a unique stat key 'analysis_b_stat'"""
-    provides_defaults = {}
+    provides_defaults = {'analysis_b_stat': 0}
     select_clauses = [
         F.all().sum().name.map(json_postfix('analysis_b_stat')),
     ]
@@ -108,7 +108,7 @@ class AnalysisB(PolarsAnalysis):
 
 class AnalysisC(PolarsAnalysis):
     """Analysis C produces a unique stat key 'analysis_c_stat'"""
-    provides_defaults = {}
+    provides_defaults = {'analysis_c_stat': 0}
     select_clauses = [
         F.all().min().name.map(json_postfix('analysis_c_stat')),
     ]
@@ -116,7 +116,7 @@ class AnalysisC(PolarsAnalysis):
 
 class AnalysisD(PolarsAnalysis):
     """Analysis D produces a unique stat key 'analysis_d_stat'"""
-    provides_defaults = {}
+    provides_defaults = {'analysis_d_stat': 0}
     select_clauses = [
         F.all().max().name.map(json_postfix('analysis_d_stat')),
     ]
