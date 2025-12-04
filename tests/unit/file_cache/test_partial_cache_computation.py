@@ -9,6 +9,7 @@ from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidge
 from buckaroo.file_cache.cache_utils import get_global_file_cache, clear_file_cache
 from buckaroo.read_utils import read_df
 from buckaroo.file_cache.base import Executor, ProgressNotification
+from tests.unit.file_cache.executor_test_utils import wait_for_nested_executor_finish
 import os
 import threading
 import time
@@ -132,7 +133,8 @@ def test_partial_cache_loads_immediately_and_continues_computing(tmp_path):
                 )
                 
                 # For cached columns, should be immediate - no need to wait for notifications
-                time.sleep(0.1)  # Small delay for initialization
+                # Use wait utility to ensure initialization is complete
+                wait_for_nested_executor_finish(w2, timeout_secs=5.0)
                 
                 # Should have all columns immediately from cache
                 assert len(w2._df.merged_sd) == 5, "All 5 columns should be loaded from cache"
@@ -189,7 +191,7 @@ def test_partial_cache_shows_cached_immediately_computes_rest(tmp_path):
             parallel_executor_class=Executor
         )
         assert w1
-        time.sleep(1.0)  # Wait for some computation
+        wait_for_nested_executor_finish(w1, timeout_secs=5.0)
         
         # Manually remove some columns from cache to simulate partial cache
         fc = get_global_file_cache()
@@ -235,14 +237,15 @@ def test_partial_cache_shows_cached_immediately_computes_rest(tmp_path):
             )
             
             # Immediately after creation, should have at least the 3 cached columns
-            time.sleep(0.1)  # Small delay
+            # Note: cached columns should appear immediately, but we wait briefly for initialization
+            wait_for_nested_executor_finish(w2, timeout_secs=5.0)
             initial_cols = set(w2._df.merged_sd.keys())
             assert 'a' in initial_cols, "col1 (a) should be cached and shown immediately"
             assert 'b' in initial_cols, "col2 (b) should be cached and shown immediately"
             assert 'c' in initial_cols, "col3 (c) should be cached and shown immediately"
             
-            # Wait for computation to complete
-            time.sleep(1.0)
+            # Wait for computation to complete (remaining columns)
+            wait_for_nested_executor_finish(w2, timeout_secs=5.0)
             
             # Eventually should have all 5 columns
             final_cols = set(w2._df.merged_sd.keys())
@@ -295,7 +298,7 @@ def test_huge_dataframe_partial_cache_scenario(tmp_path):
             parallel_executor_class=Executor
         )
         assert w1
-        time.sleep(1.0)  # Wait for some computation
+        wait_for_nested_executor_finish(w1, timeout_secs=5.0)
         
         # Manually cache only first 5 columns
         fc = get_global_file_cache()
@@ -326,7 +329,7 @@ def test_huge_dataframe_partial_cache_scenario(tmp_path):
         assert len(initial_cols) >= 5, f"Should have at least 5 cached columns immediately, got: {initial_cols}"
         
         # Wait for remaining computation
-        time.sleep(1.0)
+        wait_for_nested_executor_finish(w2, timeout_secs=5.0)
         final_cols = set(w2._df.merged_sd.keys())
         
         # Eventually should have all 10 columns

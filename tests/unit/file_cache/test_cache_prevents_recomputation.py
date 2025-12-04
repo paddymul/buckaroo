@@ -11,7 +11,7 @@ from buckaroo.file_cache.base import Executor
 import os
 # Reset global instances to use temp directory
 import buckaroo.file_cache.cache_utils as cache_utils_module
-import time
+from tests.unit.file_cache.executor_test_utils import wait_for_nested_executor_finish
 
 def test_cache_prevents_recomputation_on_second_execution(tmp_path):
     """Test that when a file is cached, second execution doesn't recompute stats."""
@@ -58,8 +58,8 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
                 parallel_executor_class=Executor
             )
             
-
-            time.sleep(0.5)  # Give it time to compute
+            # Wait for computation to complete (sync executor is blocking)
+            wait_for_nested_executor_finish(w1, timeout_secs=5.0)
             
             first_run_calls = len(executor_run_calls)
             first_execute_calls = len(executor_execute_calls)
@@ -90,7 +90,8 @@ def test_cache_prevents_recomputation_on_second_execution(tmp_path):
                 parallel_executor_class=Executor
             )
             
-            time.sleep(0.1)  # Small delay to see if anything computes
+            # Wait for initialization (sync executor is blocking)
+            wait_for_nested_executor_finish(w2, timeout_secs=5.0)
             
             second_run_calls = len(executor_run_calls)
             second_execute_calls = len(executor_execute_calls)
