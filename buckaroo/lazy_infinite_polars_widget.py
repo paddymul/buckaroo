@@ -7,6 +7,7 @@ from io import BytesIO
 from pathlib import Path
 import os
 import traceback
+import re
 
 import anywidget
 import polars as pl
@@ -47,6 +48,46 @@ class SimpleAnalysis(PolarsAnalysis):
         F.col(pl.Utf8).str.count_matches("^$").sum().name.map(json_postfix('empty_count')),
         F.all().null_count().name.map(json_postfix('null_count'))]
     
+
+def _extract_file_path_from_lazyframe(ldf: pl.LazyFrame) -> Optional[str]:
+    """
+    Attempt to extract the file path from a Polars LazyFrame.
+    
+    This works by inspecting the optimized plan string, which contains
+    the file path for scan_parquet, scan_csv, etc. operations.
+    
+    Returns the file path if found, None otherwise.
+    """
+    try:
+        # Get the optimized plan as a string
+        plan_str = ldf.describe_optimized_plan()
+        
+        # Look for scan_parquet, scan_csv, scan_ipc, scan_ndjson patterns
+        # Pattern: scan_parquet("/path/to/file.parquet")
+        patterns = [
+            r'scan_parquet\("([^"]+)"\)',
+            r'scan_csv\("([^"]+)"\)',
+            r'scan_ipc\("([^"]+)"\)',
+            r'scan_ndjson\("([^"]+)"\)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, plan_str)
+            if match:
+                file_path = match.group(1)
+                # Verify the file exists
+                if os.path.exists(file_path):
+                    logger.info(f"Extracted file_path from LazyFrame: {file_path}")
+                    return file_path
+                else:
+                    logger.warning(f"Extracted file_path from LazyFrame but file doesn't exist: {file_path}")
+        
+        logger.debug(f"Could not extract file_path from LazyFrame plan: {plan_str[:200]}...")
+        return None
+    except Exception as e:
+        logger.debug(f"Failed to extract file_path from LazyFrame: {e}")
+        return None
+
 
 class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
     """
@@ -110,6 +151,15 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             file_cache = get_global_file_cache()
         if executor_log is None:
             executor_log = get_global_executor_log()
+
+        # If file_path is not provided, try to extract it from the LazyFrame
+        if file_path is None:
+            extracted_path = _extract_file_path_from_lazyframe(ldf)
+            if extracted_path:
+                file_path = extracted_path
+                logger.info(f"Auto-detected file_path from LazyFrame: {file_path}")
+            else:
+                logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
 
         # Build stable rewrites
         all_cols = self._ldf.collect_schema().names()
@@ -452,5 +502,3 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             stack_trace = traceback.format_exc()
             self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'error_info': stack_trace, 'length': 0}, [])
             logger.exception("error handling payload args: %s", e)
-
-
