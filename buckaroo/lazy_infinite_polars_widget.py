@@ -25,6 +25,7 @@ from buckaroo.file_cache.base import AbstractFileCache, Executor as _SyncExec, E
 #from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
 from buckaroo.file_cache.cache_utils import get_global_file_cache, get_global_executor_log
+from buckaroo.file_cache.batch_planning import default_planning_function, PlanningFunction
 
 from polars import functions as F
 
@@ -86,6 +87,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         sync_executor_class: Optional[type] = None,
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
+        planning_function: Optional["PlanningFunction"] = None,  # type: ignore
     ) -> None:
         logger = logging.getLogger("buckaroo.lazy_widget")
         widget_id = id(self)
@@ -258,12 +260,16 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # 1. Cached columns to appear immediately
         # 2. Missing columns to compute in background
         # 3. No need to wait for all columns before showing anything
+        # Use default_planning_function (smart batch planner) for optimal performance by default
+        # Tests can override with simple_one_column_planning for deterministic behavior
+        chosen_planning_function = planning_function or default_planning_function
         self._df.auto_compute_summary(
             chosen_sync_exec,
             chosen_par_exec,
             file_cache=file_cache,
             progress_listener=_listener,
             file_path=file_path,
+            planning_function=chosen_planning_function,
         )
         
         # Important: DFViewer renders pinned-top rows by extracting values from

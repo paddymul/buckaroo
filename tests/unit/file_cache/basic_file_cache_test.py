@@ -4,7 +4,6 @@ import time
 from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import cast
-from datetime import timedelta
 
 from buckaroo.file_cache.base import (
     ColumnExecutor,

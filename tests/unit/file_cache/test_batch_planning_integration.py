@@ -7,7 +7,6 @@ are included. The test verifies the entire planning and execution flow.
 Total test time should be < 7 seconds.
 """
 import time
-from datetime import timedelta
 import polars as pl
 
 from buckaroo.file_cache.batch_planning import (
