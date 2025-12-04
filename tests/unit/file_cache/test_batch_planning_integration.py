@@ -157,7 +157,6 @@ def test_batch_planning_integration():
             )
             
             executor_log.log_start_col_group(dfi, ex_args, "TestExecutor")
-            start = time.time()
             try:
                 timed_exec = mp_timeout(timeout_secs)(executor.execute)
                 timed_exec(ldf, ex_args)
