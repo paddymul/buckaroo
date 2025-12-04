@@ -320,6 +320,44 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
         logger.info(log_msg)
         print(f"[buckaroo] {log_msg}")
     
+    # Check if we've found the limit during binary search and should prevent oscillation
+    # The limit is found when: during binary search, we tried a size (e.g., 8), it succeeded,
+    # then we tried 2x (16) and it failed, then we tried 8 again and it failed
+    # In this case, we should stay at the backed-down size to prevent oscillation
+    # This prevents: 8 (fail) -> 4 -> 8 (fail) -> 4... instead of 8 (fail) -> 4 -> 4 -> 4...
+    # 
+    # We only prevent oscillation if:
+    # 1. We've backed down (max_successful was in failed_sizes), OR
+    # 2. We've tried 2x max_successful and it failed (found limit via binary search)
+    # But we exclude the half_batch_size failure from this check (that's a different phase)
+    if failed_sizes and max_successful not in [half_batch_size]:
+        max_failed = max(failed_sizes)
+        # Check if we've found the limit via binary search:
+        # - max_successful itself failed (we backed down), OR
+        # - we tried 2x max_successful and it failed
+        expected_next = max_successful * 2
+        found_limit = (max_successful in failed_sizes) or (max_failed >= expected_next and max_failed != half_batch_size)
+        
+        if found_limit:
+            # We've found the limit - stay at max_successful to prevent oscillation
+            optimal_batch_size = max_successful
+            
+            # Create batches for remaining columns using this size
+            batches = []
+            for i in range(0, len(remaining), optimal_batch_size):
+                batch_cols = remaining[i:i + optimal_batch_size]
+                batches.append(ColumnBatch(columns=batch_cols))
+            
+            log_msg = f"smart_planning_function: Found limit at {max_failed}, staying at {optimal_batch_size} to prevent oscillation"
+            logger.info(log_msg)
+            print(f"[buckaroo] {log_msg}")
+            
+            return PlanningResult(
+                batches=batches,
+                phase="optimized",
+                notes=f"Using batch size: {optimal_batch_size} columns (staying at this size after finding limit at {max_failed})"
+            )
+    
     # Start from the largest successful size, double it
     next_size = max_successful * 2
     
