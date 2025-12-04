@@ -88,6 +88,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
         planning_function: Optional["PlanningFunction"] = None,  # type: ignore
+        timeout_secs: float = 120.0,  # Timeout for multiprocessing executor (default 120s for large files)
     ) -> None:
         logger = logging.getLogger("buckaroo.lazy_widget")
         widget_id = id(self)
@@ -270,6 +271,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             progress_listener=_listener,
             file_path=file_path,
             planning_function=chosen_planning_function,
+            timeout_secs=timeout_secs,
         )
         
         # Important: DFViewer renders pinned-top rows by extracting values from

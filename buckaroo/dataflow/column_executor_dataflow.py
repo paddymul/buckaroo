@@ -123,6 +123,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         progress_listener: Optional[ProgressListener] = None,
         file_path: Optional[str | Path] = None,
         planning_function: Optional["PlanningFunction"] = None,
+        timeout_secs: Optional[float] = None,
     ) -> None:
         """
         Execute the PAF column executor over the LazyFrame to compute summary stats.
@@ -255,17 +256,34 @@ class ColumnExecutorDataflow(ABCDataflow):
                 pass
 
         listener_id = id(_listener)
-        ex = self._executor_class(
-            self.raw_ldf, 
-            column_executor, 
-            _listener, 
-            fc, 
-            executor_log=self.executor_log, 
-            file_path=file_path,
-            cached_merged_sd=cached_merged_sd_for_executor,
-            orig_to_rw_map=orig_to_rw,
-            planning_function=planning_function
-        )
+        # Pass timeout_secs to MultiprocessingExecutor if provided
+        # Only pass timeout_secs if it's MultiprocessingExecutor and timeout is provided
+        from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor
+        if timeout_secs is not None and issubclass(self._executor_class, MultiprocessingExecutor):
+            ex = self._executor_class(
+                self.raw_ldf, 
+                column_executor, 
+                _listener, 
+                fc, 
+                executor_log=self.executor_log, 
+                file_path=file_path,
+                timeout_secs=timeout_secs,
+                cached_merged_sd=cached_merged_sd_for_executor,
+                orig_to_rw_map=orig_to_rw,
+                planning_function=planning_function
+            )
+        else:
+            ex = self._executor_class(
+                self.raw_ldf, 
+                column_executor, 
+                _listener, 
+                fc, 
+                executor_log=self.executor_log, 
+                file_path=file_path,
+                cached_merged_sd=cached_merged_sd_for_executor,
+                orig_to_rw_map=orig_to_rw,
+                planning_function=planning_function
+            )
         executor_id = id(ex)
         executor_pid = os.getpid()
         log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Executor created - executor_id={executor_id}, executor_class={self._executor_class.__name__}, pid={executor_pid}, dataflow_id={dataflow_id}, dataflow_pid={dataflow_pid}, listener_id={listener_id}"
@@ -301,6 +319,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         progress_listener: Optional[ProgressListener] = None,
         file_path: Optional[str | Path] = None,
         planning_function: Optional["PlanningFunction"] = None,
+        timeout_secs: Optional[float] = None,
     ) -> None:
         # Determine shape
         try:
@@ -317,7 +336,13 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Run
         self._executor_class = exec_class
         try:
-            self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path, planning_function=planning_function)
+            self.compute_summary_with_executor(
+                file_cache=file_cache, 
+                progress_listener=progress_listener, 
+                file_path=file_path, 
+                planning_function=planning_function, 
+                timeout_secs=timeout_secs
+            )
         except Exception as e:
             #FIXME this is a place we want to send a progress notification about the failure or the different approach
             logger = logging.getLogger("buckaroo.dataflow")
@@ -327,7 +352,13 @@ class ColumnExecutorDataflow(ABCDataflow):
             if exec_class is sync_executor_class:
                 self._executor_class = parallel_executor_class
                 try:
-                    self.compute_summary_with_executor(file_cache=file_cache, progress_listener=progress_listener, file_path=file_path, planning_function=planning_function)
+                    self.compute_summary_with_executor(
+                        file_cache=file_cache, 
+                        progress_listener=progress_listener, 
+                        file_path=file_path, 
+                        planning_function=planning_function, 
+                        timeout_secs=timeout_secs
+                    )
                 except Exception as e2:
                     logger.error(f"compute_summary_with_executor also failed with parallel executor: {e2}", exc_info=True)
                     # Don't re-raise, let it fail silently and use defaults

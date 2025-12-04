@@ -102,7 +102,8 @@ class MultiprocessingExecutor(BaseExecutor):
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - previous failure detected"
                     logger.info(log_msg)
                     print(f"[buckaroo] {log_msg}")
-                    self._update_planning_state_after_execution(list(group))
+                    # DON'T remove columns from remaining - planner needs to retry with smaller batches
+                    # The planner will detect the timeout from executor log history and transition to smaller batches
                     continue
                 
                 # Check if already completed
@@ -144,6 +145,9 @@ class MultiprocessingExecutor(BaseExecutor):
                 logger.info(log_msg_exec)
                 print(f"[buckaroo] {log_msg_exec}")
                 
+                log_msg_dfi = f"MultiprocessingExecutor._work() LOGGING START - dfi={self.dfi}, columns={len(ex_args.columns)}"
+                logger.debug(log_msg_dfi)
+                print(f"[buckaroo] {log_msg_dfi}")
                 self.executor_log.log_start_col_group(self.dfi, ex_args, self.executor_class_name)
                 t1 = dtdt.now()
                 try:
@@ -188,8 +192,8 @@ class MultiprocessingExecutor(BaseExecutor):
                         execution_time=t2-t1,  # timedelta
                         failure_message=f"timeout after {self.timeout_secs}s",
                     ))
-                    # Update planning state to prevent infinite loop
-                    self._update_planning_state_after_execution(list(group))
+                    # DON'T remove columns from remaining on timeout - planner needs to retry with smaller batches
+                    # The planner will detect the timeout from executor log history and transition to smaller batches
                     continue
                 except ExecutionFailed:
                     t2 = dtdt.now()
@@ -204,7 +208,8 @@ class MultiprocessingExecutor(BaseExecutor):
                         execution_time=t2-t1,  # timedelta
                         failure_message="execution failed in worker",
                     ))
-                    # Update planning state to prevent infinite loop
+                    # DON'T remove columns from remaining on ExecutionFailed - planner may retry with smaller batches
+                    # For now, remove to prevent infinite loop, but this could be improved
                     self._update_planning_state_after_execution(list(group))
                     continue
                 except Exception as e:
