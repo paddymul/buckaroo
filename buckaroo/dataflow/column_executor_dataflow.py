@@ -146,9 +146,35 @@ class ColumnExecutorDataflow(ABCDataflow):
             if fc.check_file(file_path_obj):
                 md = fc.get_file_metadata(file_path_obj)
                 if md and 'merged_sd' in md:
-                    cached_merged_sd_for_executor = md.get('merged_sd', {})
-                    logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: loaded cached_merged_sd with {len(cached_merged_sd_for_executor)} columns from file_path={file_path}")
-                    logger.debug(f"  Cached columns: {list(cached_merged_sd_for_executor.keys())}")
+                    full_cached_merged_sd = md.get('merged_sd', {})
+                    logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: loaded cached_merged_sd with {len(full_cached_merged_sd)} columns from file_path={file_path}")
+                    logger.debug(f"  Full cached columns: {list(full_cached_merged_sd.keys())}")
+                    
+                    # Filter cached data to only include columns that exist in the current LazyFrame
+                    # The cache may contain columns from a different column subset
+                    # Cache entries are keyed by rewritten names from the full dataframe, but we need to
+                    # match by original column names since rewritten names change based on column order
+                    current_orig_cols = set(orig_to_rw.keys())
+                    cached_merged_sd_for_executor = {}
+                    
+                    for cached_rw_col, cached_stats in full_cached_merged_sd.items():
+                        if isinstance(cached_stats, dict):
+                            cached_orig_col = cached_stats.get('orig_col_name')
+                            if cached_orig_col and cached_orig_col in current_orig_cols:
+                                # This column exists in current LazyFrame - map it to its new rewritten name
+                                new_rw_col = orig_to_rw.get(cached_orig_col)
+                                if new_rw_col:
+                                    # Copy the stats and update the rewritten_col_name to match the new mapping
+                                    stats_copy = cached_stats.copy()
+                                    stats_copy['rewritten_col_name'] = new_rw_col
+                                    cached_merged_sd_for_executor[new_rw_col] = stats_copy
+                    
+                    if len(cached_merged_sd_for_executor) < len(full_cached_merged_sd):
+                        filtered_count = len(full_cached_merged_sd) - len(cached_merged_sd_for_executor)
+                        logger.info(f"  Filtered cached data: kept {len(cached_merged_sd_for_executor)}/{len(full_cached_merged_sd)} columns (removed {filtered_count} columns not in current LazyFrame)")
+                        logger.debug(f"  Filtered cached columns: {list(cached_merged_sd_for_executor.keys())}")
+                    else:
+                        logger.info(f"  Using all {len(cached_merged_sd_for_executor)} cached columns")
                 else:
                     logger.info(f"ColumnExecutorDataflow.compute_summary_with_executor: no merged_sd in cache for file_path={file_path}")
             else:
@@ -166,6 +192,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         )
 
         # Start with cached merged_sd if available (so skipped columns are included in aggregated_summary)
+        # Note: cached_merged_sd_for_executor is already filtered to only include columns in the current LazyFrame
         aggregated_summary: Dict[str, Dict[str, Any]] = {}
         if cached_merged_sd_for_executor:
             # Initialize with cached data so skipped columns are preserved

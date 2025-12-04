@@ -175,10 +175,36 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             if file_cache.check_file(file_path_obj):
                 md = file_cache.get_file_metadata(file_path_obj)
                 if md and 'merged_sd' in md:
-                    cached_merged_sd = md['merged_sd']
-                    logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: Using cached merged_sd for {file_path}")
-                    logger.info(f"  Cached columns count: {len(cached_merged_sd)}")
-                    logger.debug(f"  Cached column keys: {list(cached_merged_sd.keys())}")
+                    full_cached_merged_sd = md['merged_sd']
+                    logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: Loaded cached merged_sd for {file_path}")
+                    logger.info(f"  Full cached columns count: {len(full_cached_merged_sd)}")
+                    logger.debug(f"  Full cached column keys: {list(full_cached_merged_sd.keys())}")
+                    
+                    # Filter cached data to only include columns that exist in the current LazyFrame
+                    # The cache may contain columns from a different column subset, so we filter it
+                    # Cache entries are keyed by rewritten names from the full dataframe, but we need to
+                    # match by original column names since rewritten names change based on column order
+                    current_orig_cols = set(all_cols)
+                    cached_merged_sd = {}
+                    
+                    for cached_rw_col, cached_stats in full_cached_merged_sd.items():
+                        if isinstance(cached_stats, dict):
+                            cached_orig_col = cached_stats.get('orig_col_name')
+                            if cached_orig_col and cached_orig_col in current_orig_cols:
+                                # This column exists in current LazyFrame - map it to its new rewritten name
+                                new_rw_col = self._orig_to_rw.get(cached_orig_col)
+                                if new_rw_col:
+                                    # Copy the stats and update the rewritten_col_name to match the new mapping
+                                    stats_copy = cached_stats.copy()
+                                    stats_copy['rewritten_col_name'] = new_rw_col
+                                    cached_merged_sd[new_rw_col] = stats_copy
+                    
+                    if len(cached_merged_sd) < len(full_cached_merged_sd):
+                        filtered_count = len(full_cached_merged_sd) - len(cached_merged_sd)
+                        logger.info(f"  Filtered cached data: kept {len(cached_merged_sd)}/{len(full_cached_merged_sd)} columns (removed {filtered_count} columns not in current LazyFrame)")
+                        logger.debug(f"  Filtered column keys: {list(cached_merged_sd.keys())}")
+                    else:
+                        logger.info(f"  Using all {len(cached_merged_sd)} cached columns")
                 else:
                     logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: File in cache but no merged_sd for {file_path}")
             else:
@@ -281,11 +307,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         
         if cached_merged_sd is not None and len(cached_merged_sd) > 0:
             # Merge cached data into initial summary so all columns appear, with cached stats where available
+            # Note: cached_merged_sd is already filtered to only include columns in the current LazyFrame
             for col_name, cached_stats in cached_merged_sd.items():
                 if col_name in initial_summary_sd:
                     initial_summary_sd[col_name].update(cached_stats)
-                else:
-                    initial_summary_sd[col_name] = cached_stats.copy()
+                # Don't add columns that aren't in initial_summary_sd - they don't belong in this widget
             
             # Log cache status for debugging
             expected_cols = set(self._orig_to_rw.values())

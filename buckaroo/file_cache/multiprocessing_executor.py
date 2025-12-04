@@ -53,6 +53,8 @@ class MultiprocessingExecutor(BaseExecutor):
                         planning_function=planning_func)
         self.timeout_secs = timeout_secs
         self.async_mode = async_mode
+        # Track thread for async mode (for testing utilities)
+        self._work_thread: Optional[threading.Thread] = None
 
     def run(self) -> None:
         logger = logging.getLogger("buckaroo.multiprocessing_executor")
@@ -232,6 +234,7 @@ class MultiprocessingExecutor(BaseExecutor):
             logger.info(log_msg)
             print(f"[buckaroo] {log_msg}")  # Print for visibility
             t = threading.Thread(target=_work, daemon=True)
+            self._work_thread = t  # Store thread reference for testing utilities
             t.start()
             thread_id = t.ident
             log_msg = f"MultiprocessingExecutor.run() THREAD STARTED - executor_id={executor_id}, thread_id={thread_id}, listener_id={listener_id}, returning immediately (async_mode=True)"

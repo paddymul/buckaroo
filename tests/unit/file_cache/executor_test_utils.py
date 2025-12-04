@@ -2,7 +2,7 @@ import polars as pl
 import polars.selectors as cs
 import time
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Union, TYPE_CHECKING
 
 from buckaroo.file_cache.base import (
     ColumnExecutor,
@@ -11,7 +11,12 @@ from buckaroo.file_cache.base import (
     ColumnResult,
     FileCache,
     ProgressNotification,
+    Executor,
 )
+
+if TYPE_CHECKING:
+    from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
+    from buckaroo.dataflow.column_executor_dataflow import ColumnExecutorDataflow
 
 
 class SimpleColumnExecutor(ColumnExecutor[ExecutorArgs]):
@@ -120,4 +125,135 @@ def assert_stats_present(results: dict, column: str, expected: list, unexpected:
     if unexpected:
         for stat in unexpected:
             assert not has_stat(results, column, stat), f"{stat} should not be present for {column}"
+
+
+def wait_for_executor_finish(
+    executor: Executor,
+    timeout_secs: float = 30.0,
+    check_interval_secs: float = 0.1,
+) -> None:
+    """
+    Wait for an executor to finish running.
+    
+    Args:
+        executor: The executor instance to wait for
+        timeout_secs: Maximum time to wait in seconds (default: 30.0)
+        check_interval_secs: How often to check if executor is done (default: 0.1)
+    
+    Raises:
+        AssertionError: If run() has not been called on the executor
+        TimeoutError: If executor doesn't finish within timeout
+    """
+    if not executor.has_run_been_called:
+        raise AssertionError("Executor.run() has not been called yet - reconfigure your test")
+    
+    # For sync executors, run() blocks until complete, so if it's been called, we're done
+    # For async executors (MultiprocessingExecutor with async_mode=True), check thread status
+    from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor
+    
+    if isinstance(executor, MultiprocessingExecutor) and executor.async_mode:
+        if executor._work_thread is None:
+            raise AssertionError(
+                "MultiprocessingExecutor with async_mode=True has run() called but _work_thread is None. "
+                "This indicates the executor's run() method did not start the background thread as expected."
+            )
+        
+        # Wait for thread to complete
+        start_time = time.time()
+        while executor._work_thread.is_alive():
+            if time.time() - start_time > timeout_secs:
+                raise TimeoutError(
+                    f"Executor did not finish within {timeout_secs} seconds"
+                )
+            time.sleep(check_interval_secs)
+        return
+    
+    # For sync executors, if run() has been called, execution is complete
+    # (run() blocks until done)
+    return
+
+
+def wait_for_nested_executor_finish(
+    obj: Union["LazyInfinitePolarsBuckarooWidget", "ColumnExecutorDataflow", Executor],
+    timeout_secs: float = 30.0,
+    check_interval_secs: float = 0.1,
+) -> None:
+    """
+    Convenience function to wait for executor to finish from various object types.
+    
+    Args:
+        obj: Can be:
+            - LazyInfinitePolarsBuckarooWidget: waits for computation to appear complete
+            - ColumnExecutorDataflow: waits for computation to appear complete
+            - Executor: directly waits for executor to finish
+        timeout_secs: Maximum time to wait in seconds (default: 30.0)
+        check_interval_secs: How often to check if executor is done (default: 0.1)
+    
+    Note:
+        For widgets/dataflows, this checks if merged_sd has content as a proxy
+        for completion. For direct executor access, use wait_for_executor_finish.
+    """
+    # If it's an executor, use the direct function
+    if isinstance(obj, Executor):
+        return wait_for_executor_finish(obj, timeout_secs, check_interval_secs)
+    
+    # For widgets and dataflows, we can't access the executor directly
+    # So we wait for computation to appear complete by checking merged_sd
+    from buckaroo.lazy_infinite_polars_widget import LazyInfinitePolarsBuckarooWidget
+    from buckaroo.dataflow.column_executor_dataflow import ColumnExecutorDataflow
+    
+    if isinstance(obj, LazyInfinitePolarsBuckarooWidget):
+        # Wait for merged_sd to have expected number of columns
+        expected_cols = obj.df_meta.get('columns', 0)
+        start_time = time.time()
+        
+        while True:
+            merged_sd = getattr(obj._df, 'merged_sd', {}) or {}
+            if expected_cols == 0 or len(merged_sd) >= expected_cols:
+                # Check if we have at least some content (not just defaults)
+                if len(merged_sd) > 0:
+                    # Verify at least one column has real stats (not just basic keys)
+                    for col_stats in merged_sd.values():
+                        if isinstance(col_stats, dict):
+                            keys = set(col_stats.keys())
+                            basic_keys = {'orig_col_name', 'rewritten_col_name'}
+                            if keys > basic_keys:
+                                return  # Found real stats, computation likely complete
+            
+            if time.time() - start_time > timeout_secs:
+                raise TimeoutError(
+                    f"Widget computation did not appear complete within {timeout_secs} seconds. "
+                    f"Expected {expected_cols} columns, got {len(merged_sd)}"
+                )
+            time.sleep(check_interval_secs)
+    
+    elif isinstance(obj, ColumnExecutorDataflow):
+        # Similar logic for dataflow
+        expected_cols = obj.df_meta.get('columns', 0)
+        start_time = time.time()
+        
+        while True:
+            merged_sd = getattr(obj, 'merged_sd', {}) or {}
+            if expected_cols == 0 or len(merged_sd) >= expected_cols:
+                # Check if we have at least some content
+                if len(merged_sd) > 0:
+                    for col_stats in merged_sd.values():
+                        if isinstance(col_stats, dict):
+                            keys = set(col_stats.keys())
+                            basic_keys = {'orig_col_name', 'rewritten_col_name'}
+                            if keys > basic_keys:
+                                return
+            
+            if time.time() - start_time > timeout_secs:
+                raise TimeoutError(
+                    f"Dataflow computation did not appear complete within {timeout_secs} seconds. "
+                    f"Expected {expected_cols} columns, got {len(merged_sd)}"
+                )
+            time.sleep(check_interval_secs)
+    
+    else:
+        raise TypeError(
+            f"Object type {type(obj)} not supported. "
+            f"Expected LazyInfinitePolarsBuckarooWidget, ColumnExecutorDataflow, or Executor"
+        )
 

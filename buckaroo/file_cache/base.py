@@ -518,6 +518,9 @@ class Executor:
         # Batch planning
         self.planning_function = planning_function or simple_one_column_planning
         self._planning_state: Optional[dict[str, Any]] = None
+        
+        # Track if run() has been called (for testing utilities)
+        self.has_run_been_called = False
 
     def run(self) -> None:
         """Execute column analysis, skipping cached columns.
@@ -525,6 +528,7 @@ class Executor:
         Uses get_next_column_chunk() to get batches one at a time until all columns
         are processed or there's no way to proceed (e.g., single column timeout).
         """
+        self.has_run_been_called = True
         logger = logging.getLogger("buckaroo.executor")
         
         logger.info(f"Executor.run() START - file_path={self.file_path}")
