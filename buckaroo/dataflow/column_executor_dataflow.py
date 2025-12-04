@@ -15,7 +15,7 @@ from .styling_core import merge_sds
 from buckaroo.df_util import old_col_new_col
 from buckaroo.pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from buckaroo.customizations.polars_analysis import PL_Analysis_Klasses
-from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressListener, Executor, SimpleExecutorLog, ColumnExecutor as ColumnExecutorBase
+from buckaroo.file_cache.base import FileCache, ProgressNotification, ProgressListener, Executor, SimpleExecutorLog, ColumnExecutor as ColumnExecutorBase, MaybeFilepathLike
 from buckaroo.file_cache.paf_column_executor import PAFColumnExecutor
 from .abc_dataflow import ABCDataflow
 from buckaroo.serialization_utils import pd_to_obj
@@ -121,7 +121,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         self,
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
-        file_path: Optional[str | Path] = None,
+        file_path: MaybeFilepathLike = None,
         planning_function: Optional["PlanningFunction"] = None,
         timeout_secs: Optional[float] = None,
     ) -> None:
@@ -317,7 +317,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         num_cols_threshold: int = 50,
         file_cache: Optional[FileCache] = None,
         progress_listener: Optional[ProgressListener] = None,
-        file_path: Optional[str | Path] = None,
+        file_path: MaybeFilepathLike = None,
         planning_function: Optional["PlanningFunction"] = None,
         timeout_secs: Optional[float] = None,
     ) -> None:

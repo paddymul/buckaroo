@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Optional, Dict, Any
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import polars as pl
@@ -14,6 +13,7 @@ from .base import (
     ProgressNotification,
     ProgressListener,
     SimpleExecutorLog,
+    MaybeFilepathLike,
 )
 
 
@@ -29,7 +29,7 @@ class ThreadedExecutor(BaseExecutor):
         listener: ProgressListener,
         fc: FileCache,
         executor_log: Optional[SimpleExecutorLog] = None,
-        file_path: str | Path | None = None,
+        file_path: MaybeFilepathLike = None,
         max_workers: Optional[int] = None,
         cached_merged_sd: dict[str, dict[str, Any]] | None = None,
         orig_to_rw_map: dict[str, str] | None = None,

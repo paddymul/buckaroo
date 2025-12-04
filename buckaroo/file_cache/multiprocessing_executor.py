@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime as dtdt
 from typing import Optional, Any
-from pathlib import Path
 import os
 import threading
 import logging
@@ -17,6 +16,7 @@ from .base import (
     ProgressNotification,
     ProgressListener,
     SimpleExecutorLog,
+    MaybeFilepathLike,
 )
 from .mp_timeout_decorator import mp_timeout, TimeoutException, ExecutionFailed
 from .batch_planning import PlanningFunction, simple_one_column_planning
@@ -38,7 +38,7 @@ class MultiprocessingExecutor(BaseExecutor):
         listener: ProgressListener,
         fc: FileCache,
         executor_log: Optional[SimpleExecutorLog] = None,
-        file_path: str | Path | None = None,
+        file_path: MaybeFilepathLike = None,
         timeout_secs: float = 30.0,
         async_mode: bool = True,
         cached_merged_sd: dict[str, dict[str, Any]] | None = None,
