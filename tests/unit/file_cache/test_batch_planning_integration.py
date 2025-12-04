@@ -107,22 +107,11 @@ def test_batch_planning_integration():
     
     all_columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     remaining_columns = all_columns.copy()
-    baseline_overhead = timedelta(0)
     
-    # Phase 1: Measure baseline
-    baseline_args = ExecutorArgs(columns=[], column_specific_expressions=False, 
-                                 include_hash=True, expressions=[], 
-                                 row_start=None, row_end=None, extra=None, no_exec=False)
-    executor_log.log_start_col_group(dfi, baseline_args, "TestExecutor")
-    start = time.time()
-    try:
-        timed_exec = mp_timeout(timeout_secs)(executor.execute)
-        timed_exec(ldf, baseline_args)
-        executor_log.log_end_col_group(dfi, baseline_args)
-        baseline_overhead = timedelta(seconds=time.time() - start)
-    except Exception:
-        # Baseline failed - use default
-        baseline_overhead = timedelta(seconds=0.05)
+    # Baseline is now handled via calibration module, not in planning function
+    # Get baseline from calibration (or use a default for this test)
+    from buckaroo.file_cache.mp_calibration import get_calibrated_overhead
+    baseline_overhead = get_calibrated_overhead()
     
     # Phase 2-5: Execute planning loop
     max_iterations = 20  # Safety limit (increased for tuning phases)
@@ -153,7 +142,8 @@ def test_batch_planning_integration():
         executed_any = False
         for batch in plan_result.batches:
             if not batch.columns:
-                # Empty baseline batch - already handled
+                # Empty batches should not be returned by planning function anymore
+                # (baseline is handled via calibration)
                 continue
             
             ex_args = ExecutorArgs(

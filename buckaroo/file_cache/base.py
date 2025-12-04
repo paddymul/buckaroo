@@ -588,7 +588,7 @@ class Executor:
                 notification = ProgressNotification(
                     success=True,
                     col_group=col_group,
-                    execution_args=[], #FIXME
+                    execution_args=ex_args,
                     result=res,
                     execution_time=t2-t1,
                     failure_message=None)
@@ -620,7 +620,7 @@ class Executor:
                 notification = ProgressNotification(
                     success=False,
                     col_group=col_group,
-                    execution_args=[], #FIXME
+                    execution_args=ex_args,
                     result=None,
                     execution_time=t3-t1,
                     failure_message=str(e))
@@ -680,7 +680,8 @@ class Executor:
             }
         
         # Use iteration instead of recursion to avoid stack overflow
-        max_iterations = 100 + len(all_columns)
+        state = self._planning_state
+        max_iterations = 100 + len(state['all_columns'])
         iteration = 0
         
         while iteration < max_iterations:
@@ -715,10 +716,7 @@ class Executor:
                         state['consecutive_same_returns'] = 0
                     state['last_returned_group'] = group
                     return group
-                # Skip empty batch (baseline) - continue loop
-                log_msg_empty = f"Executor.get_next_column_chunk() SKIPPING empty batch - executor_id={id(self)}, batch_index={state['batch_index']-1}, continuing loop"
-                logger.info(log_msg_empty)
-                print(f"[buckaroo] {log_msg_empty}")
+                # Empty batch - skip it (shouldn't happen with calibration, but handle gracefully)
                 continue
             
             # Need to plan new batches
@@ -737,6 +735,11 @@ class Executor:
             
             # Get timeout (default 30s, can be overridden by subclasses)
             timeout_secs = getattr(self, 'timeout_secs', 30.0)
+            
+            # Get baseline overhead from calibration (if not already set)
+            if state['baseline_overhead'] == timedelta(0):
+                from .mp_calibration import get_calibrated_overhead
+                state['baseline_overhead'] = get_calibrated_overhead()
             
             # Create planning context
             context = PlanningContext(

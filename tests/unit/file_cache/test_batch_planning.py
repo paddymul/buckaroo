@@ -13,10 +13,15 @@ from buckaroo.file_cache.batch_planning import (
 
 
 def test_baseline_measurement():
-    """Test that planning starts with baseline measurement."""
+    """Test that baseline is handled via calibration module, not planning function.
+    
+    Since baseline measurement is now handled separately via mp_calibration module
+    (runs once per process), the planning function should skip baseline phase and
+    go directly to half_batch.
+    """
     context = PlanningContext(
         all_columns=['a', 'b', 'c', 'd'],
-        baseline_overhead=timedelta(seconds=0.1),
+        baseline_overhead=timedelta(seconds=0.1),  # Already calibrated
         timeout_secs=30.0,
         execution_history=[],
         remaining_columns=['a', 'b', 'c', 'd']
@@ -24,9 +29,10 @@ def test_baseline_measurement():
     
     result = default_planning_function(context)
     
-    assert result.phase == "baseline"
+    # Planning function should skip baseline (handled via calibration) and go to half_batch
+    assert result.phase == "half_batch"
     assert len(result.batches) == 1
-    assert result.batches[0].columns == []  # Empty batch for baseline
+    assert len(result.batches[0].columns) == 2  # Half of 4
 
 
 def test_half_batch_after_baseline():

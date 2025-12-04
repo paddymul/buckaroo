@@ -169,7 +169,7 @@ class MultiprocessingExecutor(BaseExecutor):
                     self.listener(ProgressNotification(
                         success=True,
                         col_group=group,
-                        execution_args=[],
+                        execution_args=ex_args,
                         result=res,
                         execution_time=t2-t1,  # timedelta
                         failure_message=None
@@ -183,7 +183,7 @@ class MultiprocessingExecutor(BaseExecutor):
                     self.listener(ProgressNotification(
                         success=False,
                         col_group=group,
-                        execution_args=[],
+                        execution_args=ex_args,
                         result=None,
                         execution_time=t2-t1,  # timedelta
                         failure_message=f"timeout after {self.timeout_secs}s",
@@ -199,7 +199,7 @@ class MultiprocessingExecutor(BaseExecutor):
                     self.listener(ProgressNotification(
                         success=False,
                         col_group=group,
-                        execution_args=[],
+                        execution_args=ex_args,
                         result=None,
                         execution_time=t2-t1,  # timedelta
                         failure_message="execution failed in worker",
@@ -212,7 +212,7 @@ class MultiprocessingExecutor(BaseExecutor):
                     self.listener(ProgressNotification(
                         success=False,
                         col_group=group,
-                        execution_args=[],
+                        execution_args=ex_args,
                         result=None,
                         execution_time=t2-t1,  # timedelta
                         failure_message=str(e),

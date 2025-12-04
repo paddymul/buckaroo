@@ -133,8 +133,8 @@ def default_planning_function(context: PlanningContext) -> PlanningResult:
     Default planning function implementing the tuning algorithm.
     
     Algorithm:
-    1. If no history, start with baseline measurement (no-op)
-    2. If baseline done but no batch history, try half the columns
+    1. Baseline overhead is measured via mp_calibration module (once per process)
+    2. If no batch history, try half the columns
     3. If half batch timed out, try single column
     4. If we have timing data, calculate optimal batch size for remaining columns
     
@@ -148,17 +148,14 @@ def default_planning_function(context: PlanningContext) -> PlanningResult:
     if not remaining:
         return PlanningResult(batches=[], phase="complete", notes="No columns remaining")
     
-    # Phase 1: Measure baseline overhead if not done
-    baseline_results = [r for r in history if not r.columns]  # No-op calls have empty columns
-    if not baseline_results:
-        return PlanningResult(
-            batches=[ColumnBatch(columns=[])],  # Empty batch for baseline
-            phase="baseline",
-            notes="Measuring mp_timeout baseline overhead"
-        )
+    # Phase 1: Baseline overhead is now handled via mp_calibration module (runs once per process)
+    # No need to return empty batch - baseline is calibrated separately
+    # The executor will update planning state with calibrated baseline before calling this function
     
     # Phase 2: Try half batch if not done
-    half_batch_results = [r for r in history if len(r.columns) == len(context.all_columns) // 2]
+    # Look for half batch results in history
+    half_batch_size = len(context.all_columns) // 2
+    half_batch_results = [r for r in history if len(r.columns) == half_batch_size]
     if not half_batch_results:
         half_size = max(1, len(remaining) // 2)
         return PlanningResult(
@@ -208,7 +205,12 @@ def default_planning_function(context: PlanningContext) -> PlanningResult:
     
     # We have: baseline_overhead, single_column_time, timeout
     # Calculate how many columns we can fit in remaining time
-    baseline = context.baseline_overhead
+    # Use calibrated baseline if context baseline is zero
+    from .mp_calibration import get_calibrated_overhead
+    if context.baseline_overhead == timedelta(0):
+        baseline = get_calibrated_overhead()
+    else:
+        baseline = context.baseline_overhead
     single_time = single_result.execution_time
     timeout = timedelta(seconds=timeout_secs)
     

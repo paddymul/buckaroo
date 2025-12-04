@@ -80,7 +80,7 @@ class ThreadedExecutor(BaseExecutor):
                     self.listener(ProgressNotification(
                         success=True,
                         col_group=group,
-                        execution_args=[],
+                        execution_args=ex_args,
                         result=res,
                         execution_time=0,
                         failure_message=None
@@ -90,7 +90,7 @@ class ThreadedExecutor(BaseExecutor):
                     self.listener(ProgressNotification(
                         success=False,
                         col_group=group,
-                        execution_args=[],
+                        execution_args=ex_args,
                         result=None,
                         execution_time=0,
                         failure_message=str(e)

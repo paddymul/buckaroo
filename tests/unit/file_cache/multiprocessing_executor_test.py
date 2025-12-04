@@ -71,18 +71,29 @@ def test_multiprocessing_executor_with_default_planning_function_processes_colum
         f"processed and cached, likely because the executor is skipping the empty baseline batch."
     )
     
-    # Verify we got notifications for all columns
-    assert len(notes) >= len(df.columns), (
-        f"Expected at least {len(df.columns)} notifications (one per column), "
-        f"but got {len(notes)}. This indicates the executor is not processing columns "
-        f"because it's skipping the empty baseline batch from default_planning_function."
+    # Verify we got notifications (may be fewer than columns due to batching)
+    assert len(notes) > 0, (
+        f"Expected at least 1 notification, but got {len(notes)}. This indicates the executor "
+        f"is not processing columns because it's skipping the empty baseline batch from "
+        f"default_planning_function."
     )
     
     # Verify all notifications are successful
     successful_notes = [n for n in notes if n.success and n.result]
-    assert len(successful_notes) == len(df.columns), (
-        f"Expected {len(df.columns)} successful notifications, but got {len(successful_notes)}. "
+    assert len(successful_notes) > 0, (
+        f"Expected at least 1 successful notification, but got {len(successful_notes)}. "
         f"Total notes: {len(notes)}"
+    )
+    
+    # Verify all columns were processed by checking result keys across all notifications
+    processed_columns = set()
+    for note in successful_notes:
+        if note.result:
+            processed_columns.update(note.result.keys())
+    
+    assert len(processed_columns) == len(df.columns), (
+        f"Expected all {len(df.columns)} columns to be processed, but only got "
+        f"{len(processed_columns)}: {processed_columns}. Expected: {set(df.columns)}"
     )
     
     # Verify cache is populated with expected number of entries
