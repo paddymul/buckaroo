@@ -129,7 +129,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
         planning_function: Optional["PlanningFunction"] = None,  # type: ignore
-        timeout_secs: float = 120.0,  # Timeout for multiprocessing executor (default 120s for large files)
+        timeout_secs: float = 10.0,  # Timeout for multiprocessing executor (default 120s for large files)
     ) -> None:
         logger = logging.getLogger("buckaroo.lazy_widget")
         widget_id = id(self)
@@ -151,6 +151,14 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             file_cache = get_global_file_cache()
         if executor_log is None:
             executor_log = get_global_executor_log()
+        
+        # Store parameters for add_analysis
+        self._file_path = file_path
+        self._file_cache = file_cache
+        self._sync_executor_class = sync_executor_class
+        self._parallel_executor_class = parallel_executor_class
+        self._planning_function = planning_function
+        self._timeout_secs = timeout_secs
 
         # If file_path is not provided, try to extract it from the LazyFrame
         if file_path is None:
@@ -253,6 +261,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 #     len(rows),
                 #     (rows[0] if rows else None),
                 # )
+                # Update merged_sd on dataflow so it's in sync
+                self._df.merged_sd = merged_for_display
+                # Update df_data_dict - create new dict to trigger traitlets change notification
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
                 # Save merged_sd to cache as stats come in (important for async executors)
                 if file_path and file_cache and merged_for_display and len(merged_for_display) > 0:
@@ -528,3 +539,103 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             stack_trace = traceback.format_exc()
             self.send({"type": "infinite_resp", 'key': new_payload_args, 'data': [], 'error_info': stack_trace, 'length': 0}, [])
             logger.exception("error handling payload args: %s", e)
+
+    def add_analysis(self, analysis_klass: Type[PolarsAnalysis], pinned_row_configs: Optional[List[Dict[str, Any]]] = None) -> None:
+        """
+        Add a new analysis class to the widget and trigger recomputation.
+        
+        Args:
+            analysis_klass: The PolarsAnalysis class to add
+            pinned_row_configs: Optional list of pinned row configs to add for this analysis.
+                              Each config should be a dict with 'primary_key_val' and 'displayer_args'.
+                              If None, no pinned rows are added for this analysis.
+        
+        After adding the analysis, the executor will recompute summary stats including
+        the new analysis. The pinned_rows will be updated to include the new pinned row configs.
+        """
+        logger.info(f"LazyInfinitePolarsBuckarooWidget.add_analysis: Adding {analysis_klass.__name__}")
+        
+        # Add analysis to dataflow
+        self._df.add_analysis(analysis_klass)
+        self._analyses.append(analysis_klass)
+        
+        # Update pinned_rows if provided
+        if pinned_row_configs:
+            # Get current config (make a deep copy to avoid mutating the original)
+            import copy
+            current_display_args = copy.deepcopy(dict(self.df_display_args))
+            current_config = current_display_args.get('main', {}).get('df_viewer_config', {})
+            current_pinned_rows = current_config.get('pinned_rows', []).copy() if current_config.get('pinned_rows') else []
+            
+            # Add new pinned rows (avoid duplicates by checking primary_key_val)
+            existing_keys = {pr.get('primary_key_val') for pr in current_pinned_rows if isinstance(pr, dict)}
+            for pr_config in pinned_row_configs:
+                pkey = pr_config.get('primary_key_val')
+                if pkey and pkey not in existing_keys:
+                    current_pinned_rows.append(pr_config)
+                    logger.info(f"  Added pinned_row for {pkey}")
+            
+            # Create new df_display_args dict with updated pinned_rows
+            # This ensures traitlets detects the change and syncs to frontend
+            if 'main' not in current_display_args:
+                current_display_args['main'] = {}
+            if 'df_viewer_config' not in current_display_args['main']:
+                current_display_args['main']['df_viewer_config'] = {}
+            current_display_args['main']['df_viewer_config']['pinned_rows'] = current_pinned_rows
+            
+            # Reassign entire dict to trigger traitlets change notification
+            self.df_display_args = current_display_args
+            logger.info(f"  Updated df_display_args with {len(current_pinned_rows)} pinned_rows")
+            
+            # Note: df_data_dict will be updated automatically when the executor
+            # finishes and calls _on_progress_update. The frontend's useMemo for
+            # extractPinnedRows depends on both summary_stats_data and pinned_rows,
+            # so it will re-extract when either changes.
+        
+        # Trigger recomputation via executor
+        # Use stored parameters from __init__
+        file_path = self._file_path
+        file_cache = self._file_cache
+        
+        # Get executor classes (use the same ones from __init__)
+        sync_executor_class = self._sync_executor_class or _SyncExec
+        parallel_executor_class = self._parallel_executor_class or _ParExec
+        
+        # Recompute summary stats with the new analysis
+        # Note: progress_update_callback is already set on self._df, so we don't need to pass progress_listener
+        # The progress_listener parameter is for ProgressNotification callbacks, while progress_update_callback
+        # is for aggregated summary dictionaries
+        # Pass current merged_sd as cached data, but remove the new analysis's stat keys so executor knows to compute them
+        logger.info(f"  Triggering recomputation with new analysis {analysis_klass.__name__}")
+        current_merged_sd = self._df.merged_sd.copy() if self._df.merged_sd else {}
+        
+        # Get the new analysis's expected stat keys from provides_defaults
+        new_analysis_keys = set()
+        if hasattr(analysis_klass, 'provides_defaults'):
+            defaults = analysis_klass.provides_defaults
+            if isinstance(defaults, dict):
+                new_analysis_keys = set(defaults.keys())
+        
+        # Remove the new analysis's stat keys from cached data so executor knows they need to be computed
+        if new_analysis_keys and current_merged_sd:
+            cached_for_executor = {}
+            for col_name, col_stats in current_merged_sd.items():
+                if isinstance(col_stats, dict):
+                    # Copy stats but remove keys from the new analysis
+                    filtered_stats = {k: v for k, v in col_stats.items() if k not in new_analysis_keys}
+                    cached_for_executor[col_name] = filtered_stats
+                else:
+                    cached_for_executor[col_name] = col_stats
+        else:
+            cached_for_executor = current_merged_sd
+        
+        self._df.auto_compute_summary(
+            sync_executor_class,
+            parallel_executor_class,
+            file_cache=file_cache,
+            progress_listener=None,  # progress_update_callback is already set and will be called automatically
+            file_path=file_path,
+            planning_function=self._planning_function,
+            timeout_secs=self._timeout_secs,
+            cached_merged_sd_override=cached_for_executor,  # Use filtered cached data so executor detects missing new stats
+        )

@@ -124,6 +124,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         file_path: MaybeFilepathLike = None,
         planning_function: Optional["PlanningFunction"] = None,
         timeout_secs: Optional[float] = None,
+        cached_merged_sd_override: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> None:
         """
         Execute the PAF column executor over the LazyFrame to compute summary stats.
@@ -140,8 +141,10 @@ class ColumnExecutorDataflow(ABCDataflow):
         # Check if we have cached merged_sd to pass to column executor
         logger = logging.getLogger("buckaroo.dataflow")
         
-        cached_merged_sd_for_executor = None
-        if file_path and fc:
+        # Use override if provided (e.g., when adding new analysis)
+        cached_merged_sd_for_executor = cached_merged_sd_override
+        
+        if cached_merged_sd_for_executor is None and file_path and fc:
             file_path_obj = Path(file_path)
             if fc.check_file(file_path_obj):
                 md = fc.get_file_metadata(file_path_obj)
@@ -347,6 +350,7 @@ class ColumnExecutorDataflow(ABCDataflow):
         file_path: MaybeFilepathLike = None,
         planning_function: Optional["PlanningFunction"] = None,
         timeout_secs: Optional[float] = None,
+        cached_merged_sd_override: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> None:
         # Determine shape
         try:
@@ -368,7 +372,8 @@ class ColumnExecutorDataflow(ABCDataflow):
                 progress_listener=progress_listener, 
                 file_path=file_path, 
                 planning_function=planning_function, 
-                timeout_secs=timeout_secs
+                timeout_secs=timeout_secs,
+                cached_merged_sd_override=cached_merged_sd_override,
             )
         except Exception as e:
             #FIXME this is a place we want to send a progress notification about the failure or the different approach
@@ -384,7 +389,8 @@ class ColumnExecutorDataflow(ABCDataflow):
                         progress_listener=progress_listener, 
                         file_path=file_path, 
                         planning_function=planning_function, 
-                        timeout_secs=timeout_secs
+                        timeout_secs=timeout_secs,
+                        cached_merged_sd_override=cached_merged_sd_override,
                     )
                 except Exception as e2:
                     logger.error(f"compute_summary_with_executor also failed with parallel executor: {e2}", exc_info=True)
