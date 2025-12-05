@@ -48,6 +48,10 @@ def read_df(file_path: str | Path, **kwargs) -> pl.LazyFrame:
         readers = [
             ('csv', lambda: pl.scan_csv(file_path, **kwargs)),
         ]
+    if extension == '.tsv':
+        readers = [
+            ('csv', lambda: pl.scan_csv(file_path, separator="\t", **kwargs)),
+        ]
     elif extension == '.parquet':
         readers = [
             ('parquet', lambda: pl.scan_parquet(file_path, **kwargs)),
