@@ -249,6 +249,9 @@ class ColumnExecutorDataflow(ABCDataflow):
                 if entry is None:
                     entry = {'orig_col_name': orig_col, 'rewritten_col_name': rw}
                     aggregated_summary[rw] = entry
+                # Log stats keys for debugging
+                if stats and 'sum' in stats:
+                    listener_logger.debug(f"  Adding 'sum' stat to column {orig_col} (rw: {rw}): {stats.get('sum')}")
                 entry.update(stats)
             # Stream partial updates via callback and local df_data_dict for consumers
             try:
@@ -326,7 +329,13 @@ class ColumnExecutorDataflow(ABCDataflow):
         # aggregated_summary now includes cached columns (initialized above) + newly computed ones
         if aggregated_summary and len(aggregated_summary) > 0:
             self.summary_sd = aggregated_summary
-            self.merged_sd = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
+            # Merge with existing merged_sd to preserve any updates from progress callback
+            # The callback may have already updated merged_sd with the latest results
+            existing_merged = self.merged_sd.copy() if self.merged_sd else {}
+            new_merged = merge_sds(self.cleaned_sd or {}, self.summary_sd or {}, self.processed_sd or {})
+            # Update existing with new, preserving any updates from callback
+            existing_merged.update(new_merged)
+            self.merged_sd = existing_merged
         # Otherwise, keep existing merged_sd (which may have cached data)
         
         # Save merged_sd to cache if we have a file_path and aggregated_summary has content
