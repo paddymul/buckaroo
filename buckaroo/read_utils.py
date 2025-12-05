@@ -48,7 +48,7 @@ def read_df(file_path: str | Path, **kwargs) -> pl.LazyFrame:
         readers = [
             ('csv', lambda: pl.scan_csv(file_path, **kwargs)),
         ]
-    if extension == '.tsv':
+    elif extension == '.tsv':
         readers = [
             ('csv', lambda: pl.scan_csv(file_path, separator="\t", **kwargs)),
         ]

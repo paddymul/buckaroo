@@ -233,6 +233,14 @@ class ColumnExecutorDataflow(ABCDataflow):
                 logger.warning(
                     f"Column group {note.col_group} failed: {note.failure_message}"
                 )
+                # Mark columns as error status
+                for col in note.col_group:
+                    rw = orig_to_rw.get(col, col)
+                    entry = aggregated_summary.get(rw)
+                    if entry is None:
+                        entry = {'orig_col_name': col, 'rewritten_col_name': rw}
+                        aggregated_summary[rw] = entry
+                    entry['__status__'] = 'error'
                 return
             # note.result is ColumnResults: Dict[str, ColumnResult] keyed by ORIGINAL column names
             for orig_col, col_res in note.result.items():
@@ -243,6 +251,8 @@ class ColumnExecutorDataflow(ABCDataflow):
                     entry = {'orig_col_name': orig_col, 'rewritten_col_name': rw}
                     aggregated_summary[rw] = entry
                 entry.update(stats)
+                # Remove pending status on successful computation
+                entry.pop('__status__', None)
             # Stream partial updates via callback and local df_data_dict for consumers
             try:
                 if self.progress_update_callback:

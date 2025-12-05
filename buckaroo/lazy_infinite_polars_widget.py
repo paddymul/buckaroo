@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 from __future__ import annotations
-
+import copy
+import datetime
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Type
 from io import BytesIO
 from pathlib import Path
 import os
 import traceback
 import re
+import sys
+
 
 import anywidget
 import polars as pl
@@ -104,6 +108,166 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
     _esm = Path(__file__).parent / "static" / "widget.js"
     _css = Path(__file__).parent / "static" / "compiled.css"
     render_func_name = Unicode("DFViewerInfinite").tag(sync=True)
+    
+    def _log_cache_info(self, cached_sd: Dict[str, Dict[str, Any]], show_message_box: bool) -> None:
+        """Calculate and log cache information."""
+        if not show_message_box or not cached_sd or len(cached_sd) == 0:
+            return
+        
+        # Calculate cache info
+        total_stats = 0
+        for col_stats in cached_sd.values():
+            if isinstance(col_stats, dict):
+                # Count non-metadata keys
+                basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
+                stat_keys = set(col_stats.keys()) - basic_keys
+                total_stats += len(stat_keys)
+        
+        # Estimate cache size (rough approximation)
+        cache_size_bytes = sys.getsizeof(str(cached_sd))
+        cache_size_kb = cache_size_bytes / 1024
+        
+        stats_per_column = total_stats // len(cached_sd) if cached_sd else 0
+        self._add_message('cache_info', 
+                    f'Cache info. {len(cached_sd)} columns in cache, {stats_per_column} stats per column, total cache size {cache_size_kb:.1f} kilobytes',
+                    show_message_box)
+    
+    def _add_message(self, msg_type: str, message: str, show_message_box: bool, **kwargs) -> None:
+        """Add a message to the message log if message box is enabled."""
+        # Check both the parameter and the trait value
+        msg_box_enabled = show_message_box or (self.show_message_box.get('enabled', False) if isinstance(self.show_message_box, dict) else False)
+        logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: called with show_message_box={show_message_box}, trait={self.show_message_box}, enabled={msg_box_enabled}, msg_type={msg_type}, message={message[:100]}")
+        if not msg_box_enabled:
+            logger.info("LazyInfinitePolarsBuckarooWidget._add_message: show_message_box is False, returning early")
+            return
+        # Get current messages - need to create a new list to trigger traitlets change
+        current_messages = list(self.message_log.get('messages', []))
+        msg_entry = {
+            'time': datetime.datetime.now().isoformat(),
+            'type': msg_type,
+            'message': message,
+            **kwargs
+        }
+        current_messages.append(msg_entry)
+        # Keep only last 1000 messages to avoid memory issues
+        if len(current_messages) > 1000:
+            current_messages = current_messages[-1000:]
+        # Create completely new dict with new list to ensure traitlets detects the change
+        new_message_log = {'messages': list(current_messages)}
+        logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: updating message_log with {len(current_messages)} messages")
+        # Set the trait - traitlets should detect the dict change
+        # Use notify_change to ensure the frontend is notified
+        self.message_log = new_message_log
+        # Force notification by accessing the trait
+        _ = self.message_log
+        # Verify it was set
+        actual_count = len(self.message_log.get('messages', []))
+        logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: message_log trait updated, message count: {actual_count}")
+        if actual_count != len(current_messages):
+            logger.warning(f"LazyInfinitePolarsBuckarooWidget._add_message: Mismatch! Expected {len(current_messages)} messages, got {actual_count}")
+    
+    def _load_and_filter_cached_data(
+        self,
+        file_path: Optional[str],
+        file_cache: Optional["AbstractFileCache"],
+        all_cols: List[str],
+        show_message_box: bool,
+    ) -> Optional[Dict[str, Dict[str, Any]]]:
+        """
+        Load cached data from file cache, filter to match current LazyFrame columns, and log messages.
+        
+        Returns:
+            Filtered cached merged_sd dict, or None if no cache available.
+        """
+        if not file_path or not file_cache:
+            logger.info("LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: No file_path or file_cache provided")
+            return None
+        
+        file_path_obj = Path(file_path)
+        # Check if file is in cache and hasn't been modified
+        if file_cache.check_file(file_path_obj):
+            self._add_message('cache', f'file found in cache with file name {file_path}', show_message_box)
+            md = file_cache.get_file_metadata(file_path_obj)
+            if md and 'merged_sd' in md:
+                full_cached_merged_sd = md['merged_sd']
+                logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: Loaded cached merged_sd for {file_path}")
+                logger.info(f"  Full cached columns count: {len(full_cached_merged_sd)}")
+                logger.debug(f"  Full cached column keys: {list(full_cached_merged_sd.keys())}")
+                
+                # Filter cached data to only include columns that exist in the current LazyFrame
+                # The cache may contain columns from a different column subset, so we filter it
+                # Cache entries are keyed by rewritten names from the full dataframe, but we need to
+                # match by original column names since rewritten names change based on column order
+                current_orig_cols = set(all_cols)
+                cached_merged_sd = {}
+                
+                for cached_rw_col, cached_stats in full_cached_merged_sd.items():
+                    if isinstance(cached_stats, dict):
+                        cached_orig_col = cached_stats.get('orig_col_name')
+                        if cached_orig_col and cached_orig_col in current_orig_cols:
+                            # This column exists in current LazyFrame - map it to its new rewritten name
+                            new_rw_col = self._orig_to_rw.get(cached_orig_col)
+                            if new_rw_col:
+                                # Copy the stats and update the rewritten_col_name to match the new mapping
+                                stats_copy = cached_stats.copy()
+                                stats_copy['rewritten_col_name'] = new_rw_col
+                                cached_merged_sd[new_rw_col] = stats_copy
+                
+                if len(cached_merged_sd) < len(full_cached_merged_sd):
+                    filtered_count = len(full_cached_merged_sd) - len(cached_merged_sd)
+                    logger.info(f"  Filtered cached data: kept {len(cached_merged_sd)}/{len(full_cached_merged_sd)} columns (removed {filtered_count} columns not in current LazyFrame)")
+                    logger.debug(f"  Filtered column keys: {list(cached_merged_sd.keys())}")
+                else:
+                    logger.info(f"  Using all {len(cached_merged_sd)} cached columns")
+                
+                # Log cache info if message box is enabled
+                self._log_cache_info(cached_merged_sd, show_message_box)
+                return cached_merged_sd
+            else:
+                logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: File in cache but no merged_sd for {file_path}")
+                return None
+        else:
+            self._add_message('cache', f'file not found in cache for file name {file_path}', show_message_box)
+            logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: File not in cache: {file_path}")
+            return None
+    
+    def _log_execution_update(self, progress_note, show_message_box: bool) -> None:
+        """Log execution update message to message box if enabled."""
+        # Check both the parameter and the trait value
+        msg_box_enabled = show_message_box or (self.show_message_box.get('enabled', False) if isinstance(self.show_message_box, dict) else False)
+        if not msg_box_enabled:
+            return
+        
+        status_str = "started" if progress_note.success and progress_note.result is None else ("finished" if progress_note.success else "error")
+        time_str = datetime.datetime.now().isoformat()
+        pid = os.getpid()
+        num_cols = len(progress_note.col_group) if progress_note.col_group else 0
+        num_expressions = len(progress_note.execution_args.expressions) if hasattr(progress_note.execution_args, 'expressions') and progress_note.execution_args.expressions else 0
+        explicit_cols = progress_note.col_group if progress_note.col_group else []
+        
+        exec_time_secs = None
+        if progress_note.success and hasattr(progress_note, 'execution_time') and progress_note.execution_time:
+            if isinstance(progress_note.execution_time, timedelta):
+                exec_time_secs = progress_note.execution_time.total_seconds()
+            else:
+                exec_time_secs = progress_note.execution_time
+        
+        msg_data = {
+            'time_start': time_str,
+            'pid': pid,
+            'status': status_str,
+            'num_columns': num_cols,
+            'num_expressions': num_expressions,
+            'explicit_column_list': explicit_cols,
+        }
+        if exec_time_secs is not None:
+            msg_data['execution_time_secs'] = exec_time_secs
+        
+        try:
+            logger.info(f"LazyInfinitePolarsBuckarooWidget._log_execution_update: calling _add_message for {status_str} with {num_cols} columns")
+            self._add_message('execution', f'Execution update: {status_str}', show_message_box, **msg_data)
+        except Exception as e:
+            logger.warning(f"Failed to add execution message: {e}", exc_info=True)
 
     # Traits consumed by DFViewerInfiniteDS
     df_meta = TDict({
@@ -118,6 +282,12 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
 
     # Progress from executor (plumbed via listener)
     executor_progress = TDict({}).tag(sync=True)
+    
+    # Message log for displaying execution updates, cache info, etc.
+    message_log = TDict({'messages': []}).tag(sync=True)
+    
+    # Option to show message box
+    show_message_box = TDict({'enabled': False}).tag(sync=True)
 
     def __init__(
         self,
@@ -134,6 +304,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         parallel_executor_class: Optional[type] = None,
         planning_function: Optional["PlanningFunction"] = None,  # type: ignore
         timeout_secs: float = 10.0,  # Timeout for multiprocessing executor (default 120s for large files)
+        show_message_box: bool = False,  # Enable message box for logging
     ) -> None:
         logger = logging.getLogger("buckaroo.lazy_widget")
         widget_id = id(self)
@@ -144,6 +315,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         super().__init__()
         self._debug = debug
         self._ldf = ldf
+        self.show_message_box = {'enabled': show_message_box}
+        logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: show_message_box={show_message_box}, setting trait to {self.show_message_box}")
         default_analyses = PL_Analysis_Klasses
         #default_analyses = [SimpleAnalysis]
 
@@ -173,55 +346,23 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
 
         # Build stable rewrites
-        all_cols = self._ldf.collect_schema().names()
+        # Try to get column names from schema, but handle errors gracefully
+        # (e.g., corrupted parquet files in tests)
+        try:
+            all_cols = self._ldf.collect_schema().names()
+        except Exception as e:
+            logger.warning(f"Failed to collect schema from LazyFrame: {e}. This may indicate a corrupted file or unsupported format.")
+            # If schema collection fails, we can't determine columns without reading the file
+            # This will cause issues later, but we allow initialization to proceed
+            # The widget will fail when trying to compute stats, but at least we've logged the error
+            all_cols = []
+        
         empty_pl_df = pl.DataFrame({c: [] for c in all_cols})
         self._orig_to_rw = dict(old_col_new_col(empty_pl_df))
         self._rw_to_orig = {v: k for k, v in self._orig_to_rw.items()}
 
         # Optional cache short-circuit
-        cached_merged_sd = None
-        if file_path and file_cache:
-            file_path_obj = Path(file_path)
-            # Check if file is in cache and hasn't been modified
-            if file_cache.check_file(file_path_obj):
-                md = file_cache.get_file_metadata(file_path_obj)
-                if md and 'merged_sd' in md:
-                    full_cached_merged_sd = md['merged_sd']
-                    logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: Loaded cached merged_sd for {file_path}")
-                    logger.info(f"  Full cached columns count: {len(full_cached_merged_sd)}")
-                    logger.debug(f"  Full cached column keys: {list(full_cached_merged_sd.keys())}")
-                    
-                    # Filter cached data to only include columns that exist in the current LazyFrame
-                    # The cache may contain columns from a different column subset, so we filter it
-                    # Cache entries are keyed by rewritten names from the full dataframe, but we need to
-                    # match by original column names since rewritten names change based on column order
-                    current_orig_cols = set(all_cols)
-                    cached_merged_sd = {}
-                    
-                    for cached_rw_col, cached_stats in full_cached_merged_sd.items():
-                        if isinstance(cached_stats, dict):
-                            cached_orig_col = cached_stats.get('orig_col_name')
-                            if cached_orig_col and cached_orig_col in current_orig_cols:
-                                # This column exists in current LazyFrame - map it to its new rewritten name
-                                new_rw_col = self._orig_to_rw.get(cached_orig_col)
-                                if new_rw_col:
-                                    # Copy the stats and update the rewritten_col_name to match the new mapping
-                                    stats_copy = cached_stats.copy()
-                                    stats_copy['rewritten_col_name'] = new_rw_col
-                                    cached_merged_sd[new_rw_col] = stats_copy
-                    
-                    if len(cached_merged_sd) < len(full_cached_merged_sd):
-                        filtered_count = len(full_cached_merged_sd) - len(cached_merged_sd)
-                        logger.info(f"  Filtered cached data: kept {len(cached_merged_sd)}/{len(full_cached_merged_sd)} columns (removed {filtered_count} columns not in current LazyFrame)")
-                        logger.debug(f"  Filtered column keys: {list(cached_merged_sd.keys())}")
-                    else:
-                        logger.info(f"  Using all {len(cached_merged_sd)} cached columns")
-                else:
-                    logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: File in cache but no merged_sd for {file_path}")
-            else:
-                logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: File not in cache: {file_path}")
-        else:
-            logger.info("LazyInfinitePolarsBuckarooWidget.__init__: No file_path or file_cache provided")
+        cached_merged_sd = self._load_and_filter_cached_data(file_path, file_cache, all_cols, show_message_box)
 
         # First-pass meta from polars directly (avoid constructing dataflow solely for meta)
         try:
@@ -250,7 +391,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             current_widget_id = id(self)
             log_msg = f"LazyInfinitePolarsBuckarooWidget._on_progress_update: widget_id={current_widget_id}, pid={current_pid}, original_widget_id={original_widget_id}, original_pid={original_widget_pid}, columns_in_update={len(aggregated_summary) if aggregated_summary else 0}"
             logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")  # Print for visibility
             try:
                 # Merge with existing merged_sd to preserve cached columns
                 # aggregated_summary may only contain newly computed columns
@@ -286,6 +426,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 entry: Dict[str, Any] = {
                     'orig_col_name': orig,
                     'rewritten_col_name': rw,
+                    '__status__': 'pending',  # 'pending', 'error', or default (computed)
                 }
                 for ak in self._analyses:
                     try:
@@ -295,6 +436,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                     except Exception:
                         continue
                 base[rw] = entry
+            logger.info(f"LazyInfinitePolarsBuckarooWidget._initial_summary_defaults: created {len(base)} entries, sample entry keys: {list(list(base.values())[0].keys()) if base else []}")
             return base
         _initial_sd = _initial_summary_defaults()
         # Compute summary stats and wire progress to a trait
@@ -310,6 +452,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 'col_group': note.col_group,
                 'message': note.failure_message or ''
             }
+            
+            self._log_execution_update(note, show_message_box)
 
         chosen_sync_exec = sync_executor_class or _SyncExec
         chosen_par_exec = parallel_executor_class or _ParExec
@@ -324,7 +468,17 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             # Note: cached_merged_sd is already filtered to only include columns in the current LazyFrame
             for col_name, cached_stats in cached_merged_sd.items():
                 if col_name in initial_summary_sd:
+                    # Preserve __status__ from initial if cached data doesn't have real stats
+                    # If cached data has real stats (more than just basic keys), remove __status__
+                    cached_keys = set(cached_stats.keys()) if isinstance(cached_stats, dict) else set()
+                    basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
+                    has_real_stats = len(cached_keys - basic_keys) > 0
+                    
                     initial_summary_sd[col_name].update(cached_stats)
+                    # If cached data has real stats, remove pending status (it's computed)
+                    if has_real_stats:
+                        initial_summary_sd[col_name].pop('__status__', None)
+                    # If no real stats, keep the pending status from initial
                 # Don't add columns that aren't in initial_summary_sd - they don't belong in this widget
             
             # Log cache status for debugging
@@ -372,8 +526,21 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # so all_stats has placeholders immediately and the pinned rows render even
         # before the background computation completes.
         # Use merged_sd if it has content, otherwise fall back to initial defaults
+        # Make sure __status__ is preserved for columns that haven't been computed yet
         if self._df.merged_sd and len(self._df.merged_sd) > 0:
-            summary_sd = self._df.merged_sd
+            summary_sd = self._df.merged_sd.copy()
+            # Ensure __status__ is present for columns that only have defaults
+            for col_name, col_stats in summary_sd.items():
+                if isinstance(col_stats, dict):
+                    # Check if column has real stats (more than just basic keys + defaults)
+                    keys = set(col_stats.keys())
+                    basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
+                    stat_keys = keys - basic_keys
+                    # If no real stats and no __status__, add pending status
+                    if len(stat_keys) == 0 and '__status__' not in col_stats:
+                        # Check if this looks like it only has defaults (no real computation)
+                        # If it has provides_defaults values but they're all the same/default, it's pending
+                        col_stats['__status__'] = 'pending'
             # Save merged_sd to cache for next time
             if file_path and file_cache:
                 try:
@@ -389,6 +556,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             len(summary_rows),
             (summary_rows[0] if summary_rows else None),
         )
+        # Check if __status__ is in the summary rows
+        status_row = next((row for row in summary_rows if row.get('index') == '__status__'), None)
+        logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: __status__ row present: {status_row is not None}, show_message_box trait: {self.show_message_box}, message_log messages count: {len(self.message_log.get('messages', []))}")
 
         # Build initial column_config: fall back to schema so raw data appears immediately.
         def _schema_column_config() -> list[dict[str, object]]:
@@ -407,6 +577,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             "pinned_rows": [
                 obj_('dtype'),
                 pinned_histogram(),
+                {'primary_key_val': '__status__',     'displayer_args': {'displayer': 'obj' } },
                 {'primary_key_val': 'unique_count',     'displayer_args': {'displayer': 'obj' } },
                 {'primary_key_val': 'null_count',     'displayer_args': {'displayer': 'obj' } },
                 {'primary_key_val': 'empty_count',     'displayer_args': {'displayer': 'obj' } },
@@ -455,7 +626,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         if not summary:
             return []
         df = pd.DataFrame(summary)
-        return pd_to_obj(df)
+        rows = pd_to_obj(df)
+        return rows
 
     # selection and retry now delegated to dataflow
     def _build_column_config(self, summary: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -564,8 +736,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         
         # Update pinned_rows if provided
         if pinned_row_configs:
-            # Get current config (make a deep copy to avoid mutating the original)
-            import copy
+            # Get current config (make a deep copy to avoid mutating the original)            
             current_display_args = copy.deepcopy(dict(self.df_display_args))
             current_config = current_display_args.get('main', {}).get('df_viewer_config', {})
             current_pinned_rows = current_config.get('pinned_rows', []).copy() if current_config.get('pinned_rows') else []
