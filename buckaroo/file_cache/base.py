@@ -691,7 +691,6 @@ class Executor:
             all_columns = list(self.ldf.collect_schema().names())
             log_msg_init = f"Executor.get_next_column_chunk() INITIALIZING planning state - executor_id={id(self)}, all_columns={all_columns}, count={len(all_columns)}"
             logger.info(log_msg_init)
-            print(f"[buckaroo] {log_msg_init}")
             self._planning_state = {
                 'all_columns': all_columns,
                 'remaining': all_columns.copy(),
@@ -722,14 +721,12 @@ class Executor:
                     group = batch.columns
                     log_msg_batch = f"Executor.get_next_column_chunk() RETURNING queued batch - executor_id={id(self)}, group={group}, batch_index={state['batch_index']-1}"
                     logger.info(log_msg_batch)
-                    print(f"[buckaroo] {log_msg_batch}")
                     # Check for infinite loop: same group returned consecutively
                     if group == state.get('last_returned_group'):
                         state['consecutive_same_returns'] = state.get('consecutive_same_returns', 0) + 1
                         if state['consecutive_same_returns'] > 3:
                             log_msg_loop = f"Executor.get_next_column_chunk() INFINITE LOOP DETECTED - executor_id={id(self)}, group={group}, removing from remaining"
                             logger.warning(log_msg_loop)
-                            print(f"[buckaroo] WARNING: {log_msg_loop}")
                             # Infinite loop detected - remove columns from remaining and return None
                             for col in group:
                                 if col in state['remaining']:
@@ -746,13 +743,11 @@ class Executor:
             if not state['remaining']:
                 log_msg_no_remaining = f"Executor.get_next_column_chunk() NO REMAINING COLUMNS - executor_id={id(self)}, returning None"
                 logger.info(log_msg_no_remaining)
-                print(f"[buckaroo] {log_msg_no_remaining}")
                 return None
             
             # Extract history from executor log
             log_msg_planning = f"Executor.get_next_column_chunk() CALLING PLANNING FUNCTION - executor_id={id(self)}, remaining={len(state['remaining'])}, planning_function={self.planning_function.__name__ if hasattr(self.planning_function, '__name__') else type(self.planning_function).__name__}"
             logger.info(log_msg_planning)
-            print(f"[buckaroo] {log_msg_planning}")
             
             history = extract_execution_history(self.executor_log, self.dfi)
             
@@ -778,19 +773,16 @@ class Executor:
             
             log_msg_plan_result = f"Executor.get_next_column_chunk() PLANNING RESULT - executor_id={id(self)}, phase={plan_result.phase}, batches={len(plan_result.batches)}, notes={plan_result.notes}"
             logger.info(log_msg_plan_result)
-            print(f"[buckaroo] {log_msg_plan_result}")
             
             if not plan_result.batches:
                 # No more batches - done or error
                 if plan_result.phase == "error":
                     log_msg_error = f"Executor.get_next_column_chunk() PLANNING ERROR - executor_id={id(self)}, returning None"
                     logger.warning(log_msg_error)
-                    print(f"[buckaroo] WARNING: {log_msg_error}")
                     # Single column timed out - should trigger bisector
                     return None
                 log_msg_no_batches = f"Executor.get_next_column_chunk() NO BATCHES - executor_id={id(self)}, returning None"
                 logger.info(log_msg_no_batches)
-                print(f"[buckaroo] {log_msg_no_batches}")
                 return None
             
             # Store batches and continue loop to return first
@@ -798,13 +790,11 @@ class Executor:
             state['batch_index'] = 0
             log_msg_batches_queued = f"Executor.get_next_column_chunk() BATCHES QUEUED - executor_id={id(self)}, count={len(plan_result.batches)}, continuing loop"
             logger.info(log_msg_batches_queued)
-            print(f"[buckaroo] {log_msg_batches_queued}")
             # Continue loop to process first batch
         
         # Max iterations reached - safety fallback
         log_msg_max_iter = f"Executor.get_next_column_chunk() MAX ITERATIONS REACHED - executor_id={id(self)}, returning None"
         logger.warning(log_msg_max_iter)
-        print(f"[buckaroo] WARNING: {log_msg_max_iter}")
         return None
     
     def _update_planning_state_after_execution(self, executed_columns: list[str]) -> None:

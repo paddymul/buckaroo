@@ -38,6 +38,10 @@ if not logger.handlers:
     logger.addHandler(_h)
 logger.setLevel(logging.INFO)
 
+# To quiet logs in notebooks, set the logging level to WARNING or ERROR:
+# import logging
+# logging.getLogger("buckaroo").setLevel(logging.WARNING)  # or logging.ERROR
+
 class SimpleAnalysis(PolarsAnalysis):
 
 
@@ -136,7 +140,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         widget_pid = os.getpid()
         log_msg = f"LazyInfinitePolarsBuckarooWidget.__init__ START - widget_id={widget_id}, pid={widget_pid}, file_path={file_path}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")  # Print for visibility
         
         super().__init__()
         self._debug = debug

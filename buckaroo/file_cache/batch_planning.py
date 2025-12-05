@@ -85,7 +85,6 @@ def extract_execution_history(executor_log: 'ExecutorLog', dfi: 'DFIdentifier') 
     
     log_msg = f"extract_execution_history: dfi={dfi}, total_events={len(events)}"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     results = []
     # dfi is (id(ldf), file_path_str)
@@ -114,7 +113,6 @@ def extract_execution_history(executor_log: 'ExecutorLog', dfi: 'DFIdentifier') 
         if matched_count <= 3:  # Log first few matches
             log_msg = f"extract_execution_history: event {i} MATCHED - dfi={event.dfi}, columns={len(event.args.columns) if hasattr(event, 'args') and event.args else 'N/A'}"
             logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")
         
         # Determine if timed out (started but not completed, and end_time is None)
         timed_out = not event.completed and event.end_time is None
@@ -137,18 +135,15 @@ def extract_execution_history(executor_log: 'ExecutorLog', dfi: 'DFIdentifier') 
         
         log_msg = f"extract_execution_history: event columns={len(result.columns)}, success={result.success}, timed_out={result.timed_out}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")
         
         results.append(result)
     
     log_msg = f"extract_execution_history: matched {matched_count} events, returning {len(results)} results"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     if matched_count > 0 and len(results) == 0:
         log_msg = f"extract_execution_history: WARNING - matched {matched_count} events but created 0 results. This should not happen!"
         logger.warning(log_msg)
-        print(f"[buckaroo] WARNING: {log_msg}")
     
     return results
 
@@ -195,12 +190,10 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
     
     log_msg = f"smart_planning_function: all_columns={len(context.all_columns)}, remaining={len(remaining)}, history_size={len(history)}"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     if history:
         log_msg = f"smart_planning_function: history details: {[(len(r.columns), r.success, r.timed_out) for r in history]}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")
     
     if not remaining:
         return PlanningResult(batches=[], phase="complete", notes="No columns remaining")
@@ -217,7 +210,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
     
     log_msg = f"smart_planning_function: half_batch_size={half_batch_size}, half_batch_results={len(half_batch_results)}"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     if not half_batch_results:
         # Haven't tried half batch yet - try it now
@@ -228,7 +220,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
             return PlanningResult(batches=[], phase="complete", notes="No columns remaining")
         log_msg = f"smart_planning_function: No half batch in history, trying {half_size} columns"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")
         return PlanningResult(
             batches=[ColumnBatch(columns=remaining[:half_size])],
             phase="half_batch",
@@ -238,7 +229,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
     half_result = half_batch_results[0]
     log_msg = f"smart_planning_function: Found half batch result: success={half_result.success}, timed_out={half_result.timed_out}, columns={len(half_result.columns)}"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     # Phase 3: If half batch succeeded, process other half
     if half_result.success and not half_result.timed_out:
@@ -258,7 +248,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
     # Phase 4: Half batch timed out - start with 1 column, then work up by 2x
     log_msg = "smart_planning_function: Half batch timed out or failed, transitioning to binary search"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     # Find all successful batch sizes in history (sorted by size)
     successful_batches = [r for r in history if r.success and not r.timed_out and len(r.columns) > 0]
@@ -270,7 +259,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
     
     log_msg = f"smart_planning_function: successful_sizes={successful_sizes}, failed_sizes={failed_sizes}"
     logger.info(log_msg)
-    print(f"[buckaroo] {log_msg}")
     
     # If we have no successful batches yet, start with 1 column
     if not successful_sizes:
@@ -302,14 +290,12 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
         # The "optimal" size is now failing - back down to next smaller size
         log_msg = f"smart_planning_function: Optimal size {max_successful} is now failing, backing down"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")
         # Remove failed sizes from successful_sizes
         successful_sizes = [s for s in successful_sizes if s not in failed_sizes]
         if not successful_sizes:
             # All sizes failed - start over with 1
             log_msg = "smart_planning_function: All sizes failed, restarting with 1 column"
             logger.warning(log_msg)
-            print(f"[buckaroo] WARNING: {log_msg}")
             return PlanningResult(
                 batches=[ColumnBatch(columns=[remaining[0]])],
                 phase="single_column",
@@ -318,7 +304,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
         max_successful = max(successful_sizes)
         log_msg = f"smart_planning_function: Backed down to size {max_successful}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")
     
     # Check if we've found the limit during binary search and should prevent oscillation
     # The limit is found when: during binary search, we tried a size (e.g., 8), it succeeded,
@@ -350,7 +335,6 @@ def smart_planning_function(context: PlanningContext) -> PlanningResult:
             
             log_msg = f"smart_planning_function: Found limit at {max_failed}, staying at {optimal_batch_size} to prevent oscillation"
             logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")
             
             return PlanningResult(
                 batches=batches,

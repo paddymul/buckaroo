@@ -62,14 +62,12 @@ class MultiprocessingExecutor(BaseExecutor):
         executor_pid = os.getpid()
         log_msg = f"MultiprocessingExecutor.run() START - executor_id={executor_id}, pid={executor_pid}, async_mode={self.async_mode}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")  # Print for visibility
         
         def _work():
             worker_pid = os.getpid()
             worker_thread_id = threading.get_ident()
             log_msg = f"MultiprocessingExecutor._work() START - executor_id={executor_id}, original_pid={executor_pid}, worker_pid={worker_pid}, worker_thread_id={worker_thread_id}"
             logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")  # Print for visibility
             
             iteration_count = 0
             # Use get_next_column_chunk() to get batches one at a time
@@ -77,33 +75,27 @@ class MultiprocessingExecutor(BaseExecutor):
                 iteration_count += 1
                 log_msg_iter = f"MultiprocessingExecutor._work() ITERATION {iteration_count} - executor_id={executor_id}, worker_thread_id={worker_thread_id}, calling get_next_column_chunk()"
                 logger.info(log_msg_iter)
-                print(f"[buckaroo] {log_msg_iter}")
                 
                 group = self.get_next_column_chunk()
                 log_msg_group = f"MultiprocessingExecutor._work() got group - executor_id={executor_id}, worker_thread_id={worker_thread_id}, group={group}, iteration={iteration_count}"
                 logger.info(log_msg_group)
-                print(f"[buckaroo] {log_msg_group}")
                 
                 if group is None:
                     log_msg_done = f"MultiprocessingExecutor._work() DONE - executor_id={executor_id}, worker_thread_id={worker_thread_id}, iterations={iteration_count}, no more groups"
                     logger.info(log_msg_done)
-                    print(f"[buckaroo] {log_msg_done}")
                     break
                 log_msg_args = f"MultiprocessingExecutor._work() getting executor args - executor_id={executor_id}, worker_thread_id={worker_thread_id}, group={group}"
                 logger.info(log_msg_args)
-                print(f"[buckaroo] {log_msg_args}")
                 
                 ex_args = self.get_executor_args(group)
                 
                 log_msg_args_result = f"MultiprocessingExecutor._work() got executor args - executor_id={executor_id}, worker_thread_id={worker_thread_id}, columns={ex_args.columns}, no_exec={ex_args.no_exec}, expressions_count={len(ex_args.expressions) if ex_args.expressions else 0}"
                 logger.info(log_msg_args_result)
-                print(f"[buckaroo] {log_msg_args_result}")
                 
                 # Check if already failed (don't retry)
                 if self.executor_log.check_log_for_previous_failure(self.dfi, ex_args):
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - previous failure detected"
                     logger.info(log_msg)
-                    print(f"[buckaroo] {log_msg}")
                     # DON'T remove columns from remaining - planner needs to retry with smaller batches
                     # The planner will detect the timeout from executor log history and transition to smaller batches
                     continue
@@ -123,7 +115,6 @@ class MultiprocessingExecutor(BaseExecutor):
                 if self.executor_log.check_log_for_completed(self.dfi, original_group_args):
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - already completed (found in executor log)"
                     logger.info(log_msg)
-                    print(f"[buckaroo] {log_msg}")
                     self._update_planning_state_after_execution(list(group))
                     continue
                 
@@ -131,7 +122,6 @@ class MultiprocessingExecutor(BaseExecutor):
                 if ex_args.no_exec:
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - no_exec=True (all columns cached)"
                     logger.info(log_msg)
-                    print(f"[buckaroo] {log_msg}")
                     self._update_planning_state_after_execution(list(group))
                     continue
                 
@@ -139,30 +129,25 @@ class MultiprocessingExecutor(BaseExecutor):
                 if not ex_args.columns:
                     log_msg = f"MultiprocessingExecutor._work() SKIPPING group {group} - no columns to execute"
                     logger.info(log_msg)
-                    print(f"[buckaroo] {log_msg}")
                     self._update_planning_state_after_execution(list(group))
                     continue
                 
                 log_msg_exec = f"MultiprocessingExecutor._work() EXECUTING group {group} - executor_id={executor_id}, worker_thread_id={worker_thread_id}, columns={ex_args.columns}"
                 logger.info(log_msg_exec)
-                print(f"[buckaroo] {log_msg_exec}")
                 
                 log_msg_dfi = f"MultiprocessingExecutor._work() LOGGING START - dfi={self.dfi}, columns={len(ex_args.columns)}"
                 logger.debug(log_msg_dfi)
-                print(f"[buckaroo] {log_msg_dfi}")
                 self.executor_log.log_start_col_group(self.dfi, ex_args, self.executor_class_name)
                 t1 = dtdt.now()
                 try:
                     timed_exec = mp_timeout(self.timeout_secs)(_execute_column)
                     log_msg_before_exec = f"MultiprocessingExecutor._work() calling timed_exec - executor_id={executor_id}, worker_thread_id={worker_thread_id}, columns={ex_args.columns}"
                     logger.info(log_msg_before_exec)
-                    print(f"[buckaroo] {log_msg_before_exec}")
                     
                     res = timed_exec(self.column_executor, self.ldf, ex_args)
                     
                     log_msg_after_exec = f"MultiprocessingExecutor._work() timed_exec returned - executor_id={executor_id}, worker_thread_id={worker_thread_id}, result_keys={list(res.keys()) if res else None}"
                     logger.info(log_msg_after_exec)
-                    print(f"[buckaroo] {log_msg_after_exec}")
                     # persist results
                     for _col, col_result in res.items():
                         self.fc.upsert_key(col_result.series_hash, col_result.result)
@@ -171,7 +156,6 @@ class MultiprocessingExecutor(BaseExecutor):
                     listener_id = id(self.listener)
                     log_msg = f"MultiprocessingExecutor._work() CALLING LISTENER - executor_id={executor_id}, worker_pid={worker_pid}, listener_id={listener_id}, col_group={group}, columns_computed={len(res)}"
                     logger.info(log_msg)
-                    print(f"[buckaroo] {log_msg}")  # Print for visibility
                     self.listener(ProgressNotification(
                         success=True,
                         col_group=group,
@@ -232,14 +216,12 @@ class MultiprocessingExecutor(BaseExecutor):
             listener_id = id(self.listener)
             log_msg = f"MultiprocessingExecutor.run() STARTING BACKGROUND THREAD - executor_id={executor_id}, pid={executor_pid}, listener_id={listener_id}, async_mode=True"
             logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")  # Print for visibility
             t = threading.Thread(target=_work, daemon=True)
             self._work_thread = t  # Store thread reference for testing utilities
             t.start()
             thread_id = t.ident
             log_msg = f"MultiprocessingExecutor.run() THREAD STARTED - executor_id={executor_id}, thread_id={thread_id}, listener_id={listener_id}, returning immediately (async_mode=True)"
             logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")  # Print for visibility
             return
         else:
             _work()

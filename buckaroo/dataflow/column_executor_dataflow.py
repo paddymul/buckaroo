@@ -207,7 +207,6 @@ class ColumnExecutorDataflow(ABCDataflow):
         dataflow_pid = os.getpid()
         log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Dataflow created - dataflow_id={dataflow_id}, pid={dataflow_pid}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")  # Print for visibility
         
         def _listener(note: ProgressNotification) -> None:
             import threading
@@ -217,23 +216,17 @@ class ColumnExecutorDataflow(ABCDataflow):
             current_thread_id = threading.get_ident()
             log_msg = f"ColumnExecutorDataflow._listener: dataflow_id={current_dataflow_id}, pid={current_pid}, thread_id={current_thread_id}, original_dataflow_id={dataflow_id}, original_pid={dataflow_pid}, col_group={note.col_group}, success={note.success}, result_keys={list(note.result.keys()) if note.result else None}"
             listener_logger.info(log_msg)
-            print(f"[buckaroo] {log_msg}")  # Print for visibility
             # Chain to upstream listener if provided
             if progress_listener:
                 try:
                     log_msg2 = f"ColumnExecutorDataflow._listener: Calling upstream progress_listener - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
                     listener_logger.info(log_msg2)
-                    print(f"[buckaroo] {log_msg2}")
                     progress_listener(note)
                     log_msg3 = f"ColumnExecutorDataflow._listener: Upstream progress_listener returned - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
                     listener_logger.info(log_msg3)
-                    print(f"[buckaroo] {log_msg3}")
                 except Exception as e:
                     log_msg_err = f"ColumnExecutorDataflow._listener: Exception calling upstream listener - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}, error={e}"
                     listener_logger.exception(log_msg_err)
-                    print(f"[buckaroo] ERROR: {log_msg_err}")
-                    import traceback
-                    traceback.print_exc()
             if not note.success or note.result is None:
                 # Log failures so we can diagnose issues
                 logger = logging.getLogger("buckaroo.dataflow")
@@ -259,15 +252,12 @@ class ColumnExecutorDataflow(ABCDataflow):
                     merged_summary.update(aggregated_summary)
                     log_msg2 = f"ColumnExecutorDataflow._listener: Calling progress_update_callback - dataflow_id={current_dataflow_id}, pid={current_pid}, thread_id={current_thread_id}, columns_in_summary={len(merged_summary)}, callback_id={id(self.progress_update_callback)}"
                     listener_logger.info(log_msg2)
-                    print(f"[buckaroo] {log_msg2}")  # Print for visibility
                     self.progress_update_callback(merged_summary)
                     log_msg3 = f"ColumnExecutorDataflow._listener: progress_update_callback returned - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
                     listener_logger.info(log_msg3)
-                    print(f"[buckaroo] {log_msg3}")
                 else:
                     log_msg_no_callback = f"ColumnExecutorDataflow._listener: No progress_update_callback set - dataflow_id={current_dataflow_id}, thread_id={current_thread_id}"
                     listener_logger.warning(log_msg_no_callback)
-                    print(f"[buckaroo] WARNING: {log_msg_no_callback}")
                 # keep local df_data_dict updated too
                 if isinstance(aggregated_summary, dict) and len(aggregated_summary) > 0:
                     # Merge with existing to preserve cached columns
@@ -318,7 +308,6 @@ class ColumnExecutorDataflow(ABCDataflow):
         executor_pid = os.getpid()
         log_msg = f"ColumnExecutorDataflow.compute_summary_with_executor: Executor created - executor_id={executor_id}, executor_class={self._executor_class.__name__}, pid={executor_pid}, dataflow_id={dataflow_id}, dataflow_pid={dataflow_pid}, listener_id={listener_id}"
         logger.info(log_msg)
-        print(f"[buckaroo] {log_msg}")  # Print for visibility
         ex.run()
 
         # Save and merge (no helper method; set properties directly)
