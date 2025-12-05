@@ -1,3 +1,4 @@
+import { default as React } from '../../node_modules/.pnpm/react@18.3.1/node_modules/react';
 import { OperationResult } from './DependentTabs';
 import { DFData } from './DFViewerParts/DFWhole';
 import { BuckarooState, BuckarooOptions, DFMeta } from './WidgetTypes';
@@ -22,10 +23,16 @@ export declare function BuckarooInfiniteWidget({ df_data_dict, df_display_args, 
     buckaroo_options: BuckarooOptions;
     src: KeyAwareSmartRowCache;
 }): import("react/jsx-runtime").JSX.Element;
-export declare function DFViewerInfiniteDS({ df_meta, df_data_dict, df_display_args, src, df_id }: {
+export declare function DFViewerInfiniteDS({ df_meta, df_data_dict, df_display_args, src, df_id, message_log, show_message_box }: {
     df_meta: DFMeta;
     df_data_dict: Record<string, DFData>;
     df_display_args: Record<string, IDisplayArgs>;
     src: KeyAwareSmartRowCache;
     df_id: string;
+    message_log?: {
+        messages?: Array<any>;
+    };
+    show_message_box?: {
+        enabled?: boolean;
+    };
 }): import("react/jsx-runtime").JSX.Element;
