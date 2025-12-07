@@ -22,7 +22,7 @@ export declare function DFViewerInfinite({ data_wrapper, df_viewer_config, summa
     error_info?: string;
     max_rows_in_configs?: number;
 }): import("react/jsx-runtime").JSX.Element;
-export declare function DFViewerInfiniteInner({ data_wrapper, df_viewer_config, summary_stats_data, activeCol, setActiveCol, outside_df_params, renderStartTime, hs }: {
+export declare function DFViewerInfiniteInner({ data_wrapper, df_viewer_config, summary_stats_data, activeCol, setActiveCol, outside_df_params, renderStartTime: _renderStartTime, hs }: {
     data_wrapper: DatasourceOrRaw;
     df_viewer_config: DFViewerConfig;
     summary_stats_data: DFData;
