@@ -168,8 +168,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
     
     def _load_and_filter_cached_data(
         self,
-        file_path: Optional[str],
-        file_cache: Optional["AbstractFileCache"],
         all_cols: List[str],
         show_message_box: bool,
     ) -> Optional[Dict[str, Dict[str, Any]]]:
@@ -179,18 +177,18 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         Returns:
             Filtered cached merged_sd dict, or None if no cache available.
         """
-        if not file_path or not file_cache:
+        if not self._file_path or not self._file_cache:
             logger.info("LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: No file_path or file_cache provided")
             return None
         
-        file_path_obj = Path(file_path)
+        file_path_obj = Path(self._file_path)
         # Check if file is in cache and hasn't been modified
-        if file_cache.check_file(file_path_obj):
-            self._add_message('cache', f'file found in cache with file name {file_path}', show_message_box)
-            md = file_cache.get_file_metadata(file_path_obj)
+        if self._file_cache.check_file(file_path_obj):
+            self._add_message('cache', f'file found in cache with file name {self._file_path}', show_message_box)
+            md = self._file_cache.get_file_metadata(file_path_obj)
             if md and 'merged_sd' in md:
                 full_cached_merged_sd = md['merged_sd']
-                logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: Loaded cached merged_sd for {file_path}")
+                logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: Loaded cached merged_sd for {self._file_path}")
                 logger.info(f"  Full cached columns count: {len(full_cached_merged_sd)}")
                 logger.debug(f"  Full cached column keys: {list(full_cached_merged_sd.keys())}")
                 
@@ -224,11 +222,11 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 self._log_cache_info(cached_merged_sd, show_message_box)
                 return cached_merged_sd
             else:
-                logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: File in cache but no merged_sd for {file_path}")
+                logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: File in cache but no merged_sd for {self._file_path}")
                 return None
         else:
-            self._add_message('cache', f'file not found in cache for file name {file_path}', show_message_box)
-            logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: File not in cache: {file_path}")
+            self._add_message('cache', f'file not found in cache for file name {self._file_path}', show_message_box)
+            logger.info(f"LazyInfinitePolarsBuckarooWidget._load_and_filter_cached_data: File not in cache: {self._file_path}")
             return None
     
     def _log_execution_update(self, progress_note, show_message_box: bool) -> None:
@@ -312,6 +310,16 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 logger.info(f"Auto-detected file_path from LazyFrame: {self._file_path}")
             else:
                 logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
+    
+    def ensure_file_cache(
+        self,
+        file_cache: Optional["AbstractFileCache"]
+    ) -> None:
+        # Set file_cache from parameter or use global cache
+        if file_cache is not None:
+            self._file_cache = file_cache
+        elif not hasattr(self, '_file_cache') or self._file_cache is None:
+            self._file_cache = get_global_file_cache()
     
     def ensure_df_meta(self, ldf: pl.LazyFrame, all_cols: List[str]) -> None:
         """
@@ -529,18 +537,18 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._analyses = list(analysis_klasses) if analysis_klasses is not None else default_analyses
 
         # Use global cache instances by default
-        if file_cache is None:
-            file_cache = get_global_file_cache()
         if executor_log is None:
             executor_log = get_global_executor_log()
         
         # Store parameters for add_analysis
-        self._file_cache = file_cache
         self._sync_executor_class = sync_executor_class
         self._parallel_executor_class = parallel_executor_class
         self._planning_function = planning_function
         self._timeout_secs = timeout_secs
 
+        # Ensure file_cache is set
+        self.ensure_file_cache(file_cache)
+        
         # Ensure file_path is set, attempting to extract from LazyFrame if needed
         self.ensure_file_path(file_path, ldf)
 
@@ -562,7 +570,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._rw_to_orig = {v: k for k, v in self._orig_to_rw.items()}
 
         # Optional cache short-circuit
-        cached_merged_sd = self._load_and_filter_cached_data(self._file_path, file_cache, all_cols, show_message_box)
+        cached_merged_sd = self._load_and_filter_cached_data(all_cols, show_message_box)
 
         # Ensure df_meta is set with column and row counts
         self.ensure_df_meta(ldf, all_cols)
@@ -597,9 +605,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 # Update df_data_dict - create new dict to trigger traitlets change notification
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
                 # Save merged_sd to cache as stats come in (important for async executors)
-                if self._file_path and file_cache and merged_for_display and len(merged_for_display) > 0:
+                if self._file_path and self._file_cache and merged_for_display and len(merged_for_display) > 0:
                     try:
-                        file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': merged_for_display})
+                        self._file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': merged_for_display})
                     except Exception as e:
                         logger.warning(f"Failed to save merged_sd to cache during progress update: {e}")
             except Exception:
@@ -647,7 +655,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._df.auto_compute_summary(
             chosen_sync_exec,
             chosen_par_exec,
-            file_cache=file_cache,
+            file_cache=self._file_cache,
             progress_listener=_listener,
             file_path=self._file_path,
             planning_function=chosen_planning_function,
@@ -678,9 +686,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                         # If it has provides_defaults values but they're all the same/default, it's pending
                         col_stats['__status__'] = 'pending'
             # Save merged_sd to cache for next time
-            if self._file_path and file_cache:
+            if self._file_path and self._file_cache:
                 try:
-                    file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': summary_sd})
+                    self._file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': summary_sd})
                 except Exception as e:
                     logger.warning(f"Failed to save merged_sd to cache: {e}")
         else:
