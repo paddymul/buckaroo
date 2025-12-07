@@ -297,14 +297,15 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         
         widget_logger.info(full_message)
     
-    def ensure_file_path(self, ldf: pl.LazyFrame) -> None:
-        """
-        Ensure that self._file_path is set, attempting to extract it from the LazyFrame if not already set.
-        
-        If self._file_path is None, this method will try to extract the file path from the LazyFrame's
-        optimized plan (for scan_parquet, scan_csv, etc. operations).
-        """
-        if self._file_path is None:
+    def ensure_file_path(
+        self,
+        file_path: Optional[str],
+        ldf: pl.LazyFrame
+    ) -> None:
+        # Set file_path from parameter or extract from LazyFrame
+        if file_path is not None:
+            self._file_path = file_path
+        elif self._file_path is None:
             extracted_path = _extract_file_path_from_lazyframe(ldf)
             if extracted_path:
                 self._file_path = extracted_path
@@ -534,7 +535,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             executor_log = get_global_executor_log()
         
         # Store parameters for add_analysis
-        self._file_path = file_path
         self._file_cache = file_cache
         self._sync_executor_class = sync_executor_class
         self._parallel_executor_class = parallel_executor_class
@@ -542,7 +542,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._timeout_secs = timeout_secs
 
         # Ensure file_path is set, attempting to extract from LazyFrame if needed
-        self.ensure_file_path(ldf)
+        self.ensure_file_path(file_path, ldf)
+
 
         # Build stable rewrites
         # Try to get column names from schema, but handle errors gracefully
@@ -590,12 +591,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 merged_for_display = current_merged.copy()
                 merged_for_display.update(aggregated_summary or {})
                 
-                rows = self._summary_to_rows(merged_for_display)
-                # logger.info(
-                #     "Progress rows update: all_stats len=%s sample=%s",
-                #     len(rows),
-                #     (rows[0] if rows else None),
-                # )
+                rows = self._summary_to_rows(merged_for_display)              
                 # Update merged_sd on dataflow so it's in sync
                 self._df.merged_sd = merged_for_display
                 # Update df_data_dict - create new dict to trigger traitlets change notification
