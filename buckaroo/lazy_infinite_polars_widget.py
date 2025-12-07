@@ -390,6 +390,61 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 logger.info(f"Loaded {cached_cols_count}/{len(expected_cols)} columns from cache, computing remaining columns in background")
         
         return initial_summary_sd
+    
+    def ensure_df_display_args(
+        self,
+        all_cols: List[str],
+        summary_sd: Dict[str, Dict[str, Any]],
+        summary_rows: List[Dict[str, Any]]
+    ) -> None:
+        """
+        Ensure that df_display_args and df_data_dict are set up for the widget.
+        
+        Builds the column configuration (from summary or schema fallback), creates the
+        df_viewer_config with pinned rows, and sets both df_data_dict and df_display_args.
+        
+        Args:
+            all_cols: List of all column names in the LazyFrame
+            summary_sd: Summary dictionary with column statistics
+            summary_rows: List of summary rows for display
+        """
+        # Build initial column_config: fall back to schema so raw data appears immediately.
+        def _schema_column_config() -> list[dict[str, object]]:
+            return [{
+                "col_name": self._orig_to_rw.get(c, c),
+                "header_name": c,
+                "displayer_args": {"displayer": "obj"},
+            } for c in all_cols]
+        initial_col_config = self._build_column_config(summary_sd) if summary_sd else _schema_column_config()
+
+        #fixme maybe the cache checking should be done by dataflow.
+        self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
+
+        #FIXME,  this isn't showing any pinned rows
+        df_viewer_config = {
+            "pinned_rows": [
+                obj_('dtype'),
+                pinned_histogram(),
+                {'primary_key_val': '__status__',     'displayer_args': {'displayer': 'obj' } },
+                {'primary_key_val': 'unique_count',     'displayer_args': {'displayer': 'obj' } },
+                {'primary_key_val': 'null_count',     'displayer_args': {'displayer': 'obj' } },
+                {'primary_key_val': 'empty_count',     'displayer_args': {'displayer': 'obj' } },
+            ],
+            "column_config": initial_col_config,
+            "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],}
+        
+        logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", self.df_meta['total_rows'], [c.get("header_name") for c in initial_col_config])
+        logger.info(
+            "Setting df_display_args with pinned_rows=%s",
+            [pr.get("primary_key_val") for pr in df_viewer_config.get("pinned_rows", [])],
+        )
+        self.df_display_args = {
+            'main': {
+                'data_key': 'main',
+                'df_viewer_config': df_viewer_config,
+                'summary_stats_key': 'all_stats'
+            }
+        }
 
     # Traits consumed by DFViewerInfiniteDS
     df_meta = TDict({
@@ -619,43 +674,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         status_row = next((row for row in summary_rows if row.get('index') == '__status__'), None)
         logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: __status__ row present: {status_row is not None}, show_message_box trait: {self.show_message_box}, message_log messages count: {len(self.message_log.get('messages', []))}")
 
-        # Build initial column_config: fall back to schema so raw data appears immediately.
-        def _schema_column_config() -> list[dict[str, object]]:
-            return [{
-                "col_name": self._orig_to_rw.get(c, c),
-                "header_name": c,
-                "displayer_args": {"displayer": "obj"},
-            } for c in all_cols]
-        initial_col_config = self._build_column_config(summary_sd) if summary_sd else _schema_column_config()
-
-        #fixme maybe the cache checking should be done by dataflow.
-        self.df_data_dict = {'main': [], 'all_stats': summary_rows, 'empty': []}
-
-        #FIXME,  this isn't showing any pinned rows
-        df_viewer_config = {
-            "pinned_rows": [
-                obj_('dtype'),
-                pinned_histogram(),
-                {'primary_key_val': '__status__',     'displayer_args': {'displayer': 'obj' } },
-                {'primary_key_val': 'unique_count',     'displayer_args': {'displayer': 'obj' } },
-                {'primary_key_val': 'null_count',     'displayer_args': {'displayer': 'obj' } },
-                {'primary_key_val': 'empty_count',     'displayer_args': {'displayer': 'obj' } },
-            ],
-            "column_config": initial_col_config,
-            "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],}
-        
-        logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", self.df_meta['total_rows'], [c.get("header_name") for c in initial_col_config])
-        logger.info(
-            "Setting df_display_args with pinned_rows=%s",
-            [pr.get("primary_key_val") for pr in df_viewer_config.get("pinned_rows", [])],
-        )
-        self.df_display_args = {
-            'main': {
-                'data_key': 'main',
-                'df_viewer_config': df_viewer_config,
-                'summary_stats_key': 'all_stats'
-            }
-        }
+        # Ensure df_display_args and df_data_dict are set up
+        self.ensure_df_display_args(all_cols, summary_sd, summary_rows)
 
         self.df_id = str(id(ldf))
 
