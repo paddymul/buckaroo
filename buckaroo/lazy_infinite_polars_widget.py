@@ -283,6 +283,53 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 logger.info(f"Auto-detected file_path from LazyFrame: {self._file_path}")
             else:
                 logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
+    
+    def ensure_df_meta(self, ldf: pl.LazyFrame, all_cols: List[str]) -> None:
+        """
+        Ensure that self.df_meta is set with column count and total row count.
+        
+        Calculates total_rows from the LazyFrame directly (avoiding constructing dataflow solely for meta)
+        and sets df_meta with columns, rows_shown, filtered_rows, and total_rows.
+        """
+        # First-pass meta from polars directly (avoiding constructing dataflow solely for meta)
+        try:
+            total_rows = int(ldf.select(pl.len().alias("__len")).collect().item())
+        except Exception:
+            total_rows = 0
+        num_cols = len(all_cols)
+        
+        self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
+    
+    def ensure_summary_defaults(self, all_cols: List[str]) -> Dict[str, Dict[str, Any]]:
+        """
+        Prepare initial defaults so pinned rows have placeholders immediately.
+        
+        Creates a dictionary mapping rewritten column names to summary entries with:
+        - orig_col_name and rewritten_col_name
+        - __status__ set to 'pending'
+        - Default values from all analysis classes' provides_defaults
+        
+        Returns:
+            Dictionary mapping rewritten column names to their initial summary entries.
+        """
+        base: Dict[str, Dict[str, Any]] = {}
+        for orig in all_cols:
+            rw = self._orig_to_rw.get(orig, orig)
+            entry: Dict[str, Any] = {
+                'orig_col_name': orig,
+                'rewritten_col_name': rw,
+                '__status__': 'pending',  # 'pending', 'error', or default (computed)
+            }
+            for ak in self._analyses:
+                try:
+                    defaults = getattr(ak, 'provides_defaults', {}) or {}
+                    if isinstance(defaults, dict):
+                        entry.update(defaults)
+                except Exception:
+                    continue
+            base[rw] = entry
+        logger.info(f"LazyInfinitePolarsBuckarooWidget.ensure_summary_defaults: created {len(base)} entries, sample entry keys: {list(list(base.values())[0].keys()) if base else []}")
+        return base
 
     # Traits consumed by DFViewerInfiniteDS
     df_meta = TDict({
@@ -373,12 +420,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         # Optional cache short-circuit
         cached_merged_sd = self._load_and_filter_cached_data(self._file_path, file_cache, all_cols, show_message_box)
 
-        # First-pass meta from polars directly (avoid constructing dataflow solely for meta)
-        try:
-            total_rows = int(ldf.select(pl.len().alias("__len")).collect().item())
-        except Exception:
-            total_rows = 0
-        num_cols = len(all_cols)
+        # Ensure df_meta is set with column and row counts
+        self.ensure_df_meta(ldf, all_cols)
 
         # Dataflow for summary stats with chosen executor
         self._df = ColumnExecutorDataflow(
@@ -386,7 +429,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             analysis_klasses=self._analyses,
             column_executor_class=column_executor_class,
             executor_log=executor_log)
-        self.df_meta = {'columns': num_cols, 'rows_shown': 0, 'filtered_rows': 0, 'total_rows': total_rows}
 
         # Stream progress updates into df_data_dict so the UI reflects new stats as they arrive.
         # Keep track of initial merged_sd to preserve cached columns
@@ -428,26 +470,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._df.progress_update_callback = _on_progress_update
 
         # Prepare initial defaults so pinned rows have placeholders immediately
-        def _initial_summary_defaults() -> Dict[str, Dict[str, Any]]:
-            base: Dict[str, Dict[str, Any]] = {}
-            for orig in all_cols:
-                rw = self._orig_to_rw.get(orig, orig)
-                entry: Dict[str, Any] = {
-                    'orig_col_name': orig,
-                    'rewritten_col_name': rw,
-                    '__status__': 'pending',  # 'pending', 'error', or default (computed)
-                }
-                for ak in self._analyses:
-                    try:
-                        defaults = getattr(ak, 'provides_defaults', {}) or {}
-                        if isinstance(defaults, dict):
-                            entry.update(defaults)
-                    except Exception:
-                        continue
-                base[rw] = entry
-            logger.info(f"LazyInfinitePolarsBuckarooWidget._initial_summary_defaults: created {len(base)} entries, sample entry keys: {list(list(base.values())[0].keys()) if base else []}")
-            return base
-        _initial_sd = _initial_summary_defaults()
+        _initial_sd = self.ensure_summary_defaults(all_cols)
         # Compute summary stats and wire progress to a trait
         def _listener(note):
             # Minimal progress surface; expand as needed
@@ -594,7 +617,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             "column_config": initial_col_config,
             "left_col_configs": [{"col_name": "index", "header_name": "index", "displayer_args": {"displayer": "obj"}}],}
         
-        logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", total_rows, [c.get("header_name") for c in initial_col_config])
+        logger.info("LazyInfinite init: total_rows=%s; initial columns=%s", self.df_meta['total_rows'], [c.get("header_name") for c in initial_col_config])
         logger.info(
             "Setting df_display_args with pinned_rows=%s",
             [pr.get("primary_key_val") for pr in df_viewer_config.get("pinned_rows", [])],
