@@ -268,6 +268,21 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             self._add_message('execution', f'Execution update: {status_str}', show_message_box, **msg_data)
         except Exception as e:
             logger.warning(f"Failed to add execution message: {e}", exc_info=True)
+    
+    def ensure_file_path(self, ldf: pl.LazyFrame) -> None:
+        """
+        Ensure that self._file_path is set, attempting to extract it from the LazyFrame if not already set.
+        
+        If self._file_path is None, this method will try to extract the file path from the LazyFrame's
+        optimized plan (for scan_parquet, scan_csv, etc. operations).
+        """
+        if self._file_path is None:
+            extracted_path = _extract_file_path_from_lazyframe(ldf)
+            if extracted_path:
+                self._file_path = extracted_path
+                logger.info(f"Auto-detected file_path from LazyFrame: {self._file_path}")
+            else:
+                logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
 
     # Traits consumed by DFViewerInfiniteDS
     df_meta = TDict({
@@ -336,14 +351,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._planning_function = planning_function
         self._timeout_secs = timeout_secs
 
-        # If file_path is not provided, try to extract it from the LazyFrame
-        if file_path is None:
-            extracted_path = _extract_file_path_from_lazyframe(ldf)
-            if extracted_path:
-                file_path = extracted_path
-                logger.info(f"Auto-detected file_path from LazyFrame: {file_path}")
-            else:
-                logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
+        # Ensure file_path is set, attempting to extract from LazyFrame if needed
+        self.ensure_file_path(ldf)
 
         # Build stable rewrites
         # Try to get column names from schema, but handle errors gracefully
@@ -362,7 +371,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         self._rw_to_orig = {v: k for k, v in self._orig_to_rw.items()}
 
         # Optional cache short-circuit
-        cached_merged_sd = self._load_and_filter_cached_data(file_path, file_cache, all_cols, show_message_box)
+        cached_merged_sd = self._load_and_filter_cached_data(self._file_path, file_cache, all_cols, show_message_box)
 
         # First-pass meta from polars directly (avoid constructing dataflow solely for meta)
         try:
@@ -409,9 +418,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 # Update df_data_dict - create new dict to trigger traitlets change notification
                 self.df_data_dict = {'main': [], 'all_stats': rows, 'empty': []}
                 # Save merged_sd to cache as stats come in (important for async executors)
-                if file_path and file_cache and merged_for_display and len(merged_for_display) > 0:
+                if self._file_path and file_cache and merged_for_display and len(merged_for_display) > 0:
                     try:
-                        file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': merged_for_display})
+                        file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': merged_for_display})
                     except Exception as e:
                         logger.warning(f"Failed to save merged_sd to cache during progress update: {e}")
             except Exception:
@@ -513,7 +522,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             chosen_par_exec,
             file_cache=file_cache,
             progress_listener=_listener,
-            file_path=file_path,
+            file_path=self._file_path,
             planning_function=chosen_planning_function,
             timeout_secs=timeout_secs,
         )
@@ -542,9 +551,9 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                         # If it has provides_defaults values but they're all the same/default, it's pending
                         col_stats['__status__'] = 'pending'
             # Save merged_sd to cache for next time
-            if file_path and file_cache:
+            if self._file_path and file_cache:
                 try:
-                    file_cache.upsert_file_metadata(Path(file_path), {'merged_sd': summary_sd})
+                    file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': summary_sd})
                 except Exception as e:
                     logger.warning(f"Failed to save merged_sd to cache: {e}")
         else:
