@@ -301,25 +301,28 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         ldf: pl.LazyFrame
     ) -> None:
         # Set file_path from parameter or extract from LazyFrame
-        if file_path is not None:
-            self._file_path = file_path
-        elif self._file_path is None:
+        if file_path is None:
             extracted_path = _extract_file_path_from_lazyframe(ldf)
             if extracted_path:
                 self._file_path = extracted_path
                 logger.info(f"Auto-detected file_path from LazyFrame: {self._file_path}")
             else:
+                self._file_path = None
                 logger.info("Could not auto-detect file_path from LazyFrame, cache may not be used")
+        else:
+            self._file_path = file_path
+
     
     def ensure_file_cache(
         self,
         file_cache: Optional["AbstractFileCache"]
     ) -> None:
         # Set file_cache from parameter or use global cache
-        if file_cache is not None:
-            self._file_cache = file_cache
-        elif not hasattr(self, '_file_cache') or self._file_cache is None:
+        if file_cache is None:
             self._file_cache = get_global_file_cache()
+        else:
+            self._file_cache = file_cache
+            
     
     def ensure_df_meta(self, ldf: pl.LazyFrame, all_cols: List[str]) -> None:
         """
@@ -427,6 +430,60 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
                 logger.info(f"Loaded {cached_cols_count}/{len(expected_cols)} columns from cache, computing remaining columns in background")
         
         return initial_summary_sd
+    
+    def ensure_initial_summary_for_display(
+        self,
+        initial_summary_sd: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Ensure summary data is ready for initial display with proper status markers and caching.
+        
+        Uses self._df.merged_sd if it has content (which may have been updated by auto_compute_summary
+        if computation completed synchronously, or may still be the initial summary if computation
+        is running asynchronously). Ensures __status__ markers are present for columns that only
+        have defaults, and saves the summary to cache if available.
+        
+        If self._df.merged_sd is empty, falls back to initial_summary_sd.
+        
+        Args:
+            initial_summary_sd: Initial summary dictionary with defaults and cached data
+        
+        Returns:
+            Summary dictionary ready for display (either from merged_sd or initial_summary_sd)
+        """
+        # Important: DFViewer renders pinned-top rows by extracting values from
+        # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
+        # "null_count"). If summary_stats_data is empty at first render (timeouts or
+        # background execution), AG‑Grid has nothing to pin and the pinned area will
+        # not appear. We seed summary_sd with _initial_sd (built from provides_defaults)
+        # so all_stats has placeholders immediately and the pinned rows render even
+        # before the background computation completes.
+        # Use merged_sd if it has content, otherwise fall back to initial defaults
+        # Make sure __status__ is preserved for columns that haven't been computed yet
+        if self._df.merged_sd and len(self._df.merged_sd) > 0:
+            summary_sd = self._df.merged_sd.copy()
+            # Ensure __status__ is present for columns that only have defaults
+            for col_name, col_stats in summary_sd.items():
+                if isinstance(col_stats, dict):
+                    # Check if column has real stats (more than just basic keys + defaults)
+                    keys = set(col_stats.keys())
+                    basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
+                    stat_keys = keys - basic_keys
+                    # If no real stats and no __status__, add pending status
+                    if len(stat_keys) == 0 and '__status__' not in col_stats:
+                        # Check if this looks like it only has defaults (no real computation)
+                        # If it has provides_defaults values but they're all the same/default, it's pending
+                        col_stats['__status__'] = 'pending'
+            # Save merged_sd to cache for next time
+            if self._file_path and self._file_cache:
+                try:
+                    self._file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': summary_sd})
+                except Exception as e:
+                    logger.warning(f"Failed to save merged_sd to cache: {e}")
+            return summary_sd
+        else:
+            # Fall back to initial summary which includes cached data if available
+            return initial_summary_sd
     
     def ensure_df_display_args(
         self,
@@ -662,38 +719,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             timeout_secs=timeout_secs,
         )
         
-        # Important: DFViewer renders pinned-top rows by extracting values from
-        # summary_stats_data using the configured pinned_rows (e.g., "unique_count",
-        # "null_count"). If summary_stats_data is empty at first render (timeouts or
-        # background execution), AG‑Grid has nothing to pin and the pinned area will
-        # not appear. We seed summary_sd with _initial_sd (built from provides_defaults)
-        # so all_stats has placeholders immediately and the pinned rows render even
-        # before the background computation completes.
-        # Use merged_sd if it has content, otherwise fall back to initial defaults
-        # Make sure __status__ is preserved for columns that haven't been computed yet
-        if self._df.merged_sd and len(self._df.merged_sd) > 0:
-            summary_sd = self._df.merged_sd.copy()
-            # Ensure __status__ is present for columns that only have defaults
-            for col_name, col_stats in summary_sd.items():
-                if isinstance(col_stats, dict):
-                    # Check if column has real stats (more than just basic keys + defaults)
-                    keys = set(col_stats.keys())
-                    basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
-                    stat_keys = keys - basic_keys
-                    # If no real stats and no __status__, add pending status
-                    if len(stat_keys) == 0 and '__status__' not in col_stats:
-                        # Check if this looks like it only has defaults (no real computation)
-                        # If it has provides_defaults values but they're all the same/default, it's pending
-                        col_stats['__status__'] = 'pending'
-            # Save merged_sd to cache for next time
-            if self._file_path and self._file_cache:
-                try:
-                    self._file_cache.upsert_file_metadata(Path(self._file_path), {'merged_sd': summary_sd})
-                except Exception as e:
-                    logger.warning(f"Failed to save merged_sd to cache: {e}")
-        else:
-            # Fall back to initial summary which includes cached data if available
-            summary_sd = initial_summary_sd
+        # Ensure summary is ready for initial display (checks if computation completed synchronously)
+        summary_sd = self.ensure_initial_summary_for_display(initial_summary_sd)
         summary_rows = self._summary_to_rows(summary_sd)
         logger.info(
             "Initial all_stats prepared: len=%s sample=%s",
