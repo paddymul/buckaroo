@@ -269,6 +269,34 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         except Exception as e:
             logger.warning(f"Failed to add execution message: {e}", exc_info=True)
     
+    def _log_with_widget_info(self, message: str, include_current: bool = False, **kwargs) -> None:
+        """
+        Log a message with widget ID and PID tracking information.
+        
+        Args:
+            message: The log message to format
+            include_current: If True, includes current widget_id and pid for comparison with original
+            **kwargs: Additional key-value pairs to include in the log message
+        """
+        widget_logger = logging.getLogger("buckaroo.lazy_widget")
+        
+        # Build base info with original widget tracking
+        base_info = f"widget_id={self._original_widget_id}, pid={self._original_widget_pid}"
+        
+        if include_current:
+            current_widget_id = id(self)
+            current_pid = os.getpid()
+            base_info += f", current_widget_id={current_widget_id}, current_pid={current_pid}"
+        
+        # Add any additional kwargs
+        if kwargs:
+            extra_info = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+            full_message = f"{message}: {base_info}, {extra_info}"
+        else:
+            full_message = f"{message}: {base_info}"
+        
+        widget_logger.info(full_message)
+    
     def ensure_file_path(self, ldf: pl.LazyFrame) -> None:
         """
         Ensure that self._file_path is set, attempting to extract it from the LazyFrame if not already set.
@@ -484,10 +512,10 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         show_message_box: bool = False,  # Enable message box for logging
     ) -> None:
         logger = logging.getLogger("buckaroo.lazy_widget")
-        widget_id = id(self)
-        widget_pid = os.getpid()
-        log_msg = f"LazyInfinitePolarsBuckarooWidget.__init__ START - widget_id={widget_id}, pid={widget_pid}, file_path={file_path}"
-        logger.info(log_msg)
+        # Store original widget ID and PID for logging and tracking
+        self._original_widget_id = id(self)
+        self._original_widget_pid = os.getpid()
+        self._log_with_widget_info("LazyInfinitePolarsBuckarooWidget.__init__ START", file_path=file_path)
         
         super().__init__()
         self._debug = debug
@@ -547,16 +575,14 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
 
         # Stream progress updates into df_data_dict so the UI reflects new stats as they arrive.
         # Keep track of initial merged_sd to preserve cached columns
-        # Capture widget_id and widget_pid from outer scope for logging
-        original_widget_id = widget_id
-        original_widget_pid = widget_pid
-        logger.info(f"LazyInfinitePolarsBuckarooWidget.__init__: Widget instance ready - widget_id={original_widget_id}, pid={original_widget_pid}")
+        self._log_with_widget_info("LazyInfinitePolarsBuckarooWidget.__init__: Widget instance ready")
         
         def _on_progress_update(aggregated_summary: Dict[str, Dict[str, Any]]) -> None:
-            current_pid = os.getpid()
-            current_widget_id = id(self)
-            log_msg = f"LazyInfinitePolarsBuckarooWidget._on_progress_update: widget_id={current_widget_id}, pid={current_pid}, original_widget_id={original_widget_id}, original_pid={original_widget_pid}, columns_in_update={len(aggregated_summary) if aggregated_summary else 0}"
-            logger.info(log_msg)
+            self._log_with_widget_info(
+                "LazyInfinitePolarsBuckarooWidget._on_progress_update",
+                include_current=True,
+                columns_in_update=len(aggregated_summary) if aggregated_summary else 0
+            )
             try:
                 # Merge with existing merged_sd to preserve cached columns
                 # aggregated_summary may only contain newly computed columns
