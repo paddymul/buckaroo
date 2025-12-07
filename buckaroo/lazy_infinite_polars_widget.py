@@ -330,6 +330,66 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             base[rw] = entry
         logger.info(f"LazyInfinitePolarsBuckarooWidget.ensure_summary_defaults: created {len(base)} entries, sample entry keys: {list(list(base.values())[0].keys()) if base else []}")
         return base
+    
+    def ensure_merged_initial_summary(
+        self,
+        initial_sd: Dict[str, Dict[str, Any]],
+        cached_merged_sd: Optional[Dict[str, Dict[str, Any]]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Merge cached summary data into initial summary defaults.
+        
+        This ensures ALL columns are visible immediately (cached columns with real stats,
+        uncached columns with defaults). The function:
+        1. Starts with a copy of initial_sd (defaults for all columns)
+        2. Merges in cached stats where available
+        3. Handles __status__ field appropriately (removes if cached data has real stats)
+        4. Logs cache status for debugging
+        
+        Args:
+            initial_sd: Initial summary defaults for all columns
+            cached_merged_sd: Optional cached summary data (already filtered to current LazyFrame columns)
+        
+        Returns:
+            Merged summary dictionary with cached stats where available, defaults otherwise.
+        """
+        # Start with initial defaults for all columns, then merge in cached data
+        # This ensures ALL columns are visible immediately (cached columns with real stats,
+        # uncached columns with defaults)
+        initial_summary_sd = initial_sd.copy()
+        
+        if cached_merged_sd is not None and len(cached_merged_sd) > 0:
+            # Merge cached data into initial summary so all columns appear, with cached stats where available
+            # Note: cached_merged_sd is already filtered to only include columns in the current LazyFrame
+            for col_name, cached_stats in cached_merged_sd.items():
+                if col_name in initial_summary_sd:
+                    # Preserve __status__ from initial if cached data doesn't have real stats
+                    # If cached data has real stats (more than just basic keys), remove __status__
+                    cached_keys = set(cached_stats.keys()) if isinstance(cached_stats, dict) else set()
+                    basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
+                    has_real_stats = len(cached_keys - basic_keys) > 0
+                    
+                    initial_summary_sd[col_name].update(cached_stats)
+                    # If cached data has real stats, remove pending status (it's computed)
+                    if has_real_stats:
+                        initial_summary_sd[col_name].pop('__status__', None)
+                    # If no real stats, keep the pending status from initial
+                # Don't add columns that aren't in initial_summary_sd - they don't belong in this widget
+            
+            # Log cache status for debugging
+            expected_cols = set(self._orig_to_rw.values())
+            cached_cols_count = 0
+            for rw_col, cached_entry in cached_merged_sd.items():
+                if isinstance(cached_entry, dict):
+                    keys = set(cached_entry.keys())
+                    basic_keys = {'orig_col_name', 'rewritten_col_name'}
+                    if keys > basic_keys and len(keys) > 2:
+                        cached_cols_count += 1
+            
+            if cached_cols_count > 0:
+                logger.info(f"Loaded {cached_cols_count}/{len(expected_cols)} columns from cache, computing remaining columns in background")
+        
+        return initial_summary_sd
 
     # Traits consumed by DFViewerInfiniteDS
     df_meta = TDict({
@@ -490,41 +550,8 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         chosen_sync_exec = sync_executor_class or _SyncExec
         chosen_par_exec = parallel_executor_class or _ParExec
         
-        # Start with initial defaults for all columns, then merge in cached data
-        # This ensures ALL columns are visible immediately (cached columns with real stats,
-        # uncached columns with defaults)
-        initial_summary_sd = _initial_sd.copy()
-        
-        if cached_merged_sd is not None and len(cached_merged_sd) > 0:
-            # Merge cached data into initial summary so all columns appear, with cached stats where available
-            # Note: cached_merged_sd is already filtered to only include columns in the current LazyFrame
-            for col_name, cached_stats in cached_merged_sd.items():
-                if col_name in initial_summary_sd:
-                    # Preserve __status__ from initial if cached data doesn't have real stats
-                    # If cached data has real stats (more than just basic keys), remove __status__
-                    cached_keys = set(cached_stats.keys()) if isinstance(cached_stats, dict) else set()
-                    basic_keys = {'orig_col_name', 'rewritten_col_name', '__status__'}
-                    has_real_stats = len(cached_keys - basic_keys) > 0
-                    
-                    initial_summary_sd[col_name].update(cached_stats)
-                    # If cached data has real stats, remove pending status (it's computed)
-                    if has_real_stats:
-                        initial_summary_sd[col_name].pop('__status__', None)
-                    # If no real stats, keep the pending status from initial
-                # Don't add columns that aren't in initial_summary_sd - they don't belong in this widget
-            
-            # Log cache status for debugging
-            expected_cols = set(self._orig_to_rw.values())
-            cached_cols_count = 0
-            for rw_col, cached_entry in cached_merged_sd.items():
-                if isinstance(cached_entry, dict):
-                    keys = set(cached_entry.keys())
-                    basic_keys = {'orig_col_name', 'rewritten_col_name'}
-                    if keys > basic_keys and len(keys) > 2:
-                        cached_cols_count += 1
-            
-            if cached_cols_count > 0:
-                logger.info(f"Loaded {cached_cols_count}/{len(expected_cols)} columns from cache, computing remaining columns in background")
+        # Merge cached data into initial summary so all columns appear with cached stats where available
+        initial_summary_sd = self.ensure_merged_initial_summary(_initial_sd, cached_merged_sd)
         
         # Initialize dataflow with merged initial + cached summary so widget can render all columns immediately
         # The executor will update this as it computes missing columns
