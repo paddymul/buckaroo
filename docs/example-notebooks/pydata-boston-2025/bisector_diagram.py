@@ -9,10 +9,15 @@ from matplotlib.patches import Rectangle, FancyArrowPatch, PathPatch
 from matplotlib.path import Path
 from typing import Optional
 
+# Global constants for consistent diagram sizing
+DIAGRAM_FIGSIZE = (16, 10)  # Standard figure size for most diagrams
+EXECUTION_STRATEGY_FIGSIZE = (20, 12)  # Larger figure for execution strategy diagram
+DIAGRAM_DPI = 150  # Standard DPI for all diagrams
+
 
 def draw_column_bisector_diagram(
     output_path: Optional[str] = None,
-    dpi: int = 150,
+    dpi: int = DIAGRAM_DPI,
     show: bool = False,
 ) -> None:
     """
@@ -24,7 +29,7 @@ def draw_column_bisector_diagram(
     - A bisection tree showing the divide-and-conquer process
     - The expression line: df.select([pl.all().sum(), pl.all().mean(), pl.all().buggy()])
     """
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(figsize=DIAGRAM_FIGSIZE)
     
     # Create a custom grid layout
     gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3,
@@ -160,7 +165,7 @@ def draw_column_bisector_diagram(
 
 def draw_expression_bisector_diagram(
     output_path: Optional[str] = None,
-    dpi: int = 150,
+    dpi: int = DIAGRAM_DPI,
     show: bool = False,
 ) -> None:
     """
@@ -170,7 +175,7 @@ def draw_expression_bisector_diagram(
     - A list of expressions
     - A bisection tree showing the divide-and-conquer process
     """
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(figsize=DIAGRAM_FIGSIZE)
     
     # Create a custom grid layout
     gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3,
@@ -296,13 +301,13 @@ def draw_expression_bisector_diagram(
 
 def draw_row_range_bisector_diagram(
     output_path: Optional[str] = None,
-    dpi: int = 150,
+    dpi: int = DIAGRAM_DPI,
     show: bool = False,
 ) -> None:
     """
     Draw a classic CS algorithm diagram showing the row range bisector algorithm.
     """
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(figsize=DIAGRAM_FIGSIZE)
     
     # Create a custom grid layout
     gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3,
@@ -325,41 +330,47 @@ def draw_row_range_bisector_diagram(
     
     # === Initial Rows Section ===
     ax_initial.set_xlim(0, 10)
-    ax_initial.set_ylim(0, 10)
+    ax_initial.set_ylim(-0.5, 9.5)
     ax_initial.set_aspect('equal')
     ax_initial.axis('off')
     ax_initial.set_title('Initial Rows', fontsize=14, fontweight='bold', pad=20)
     
     num_rows = 9  # Rows 0-8
-    row_height = 0.9 / num_rows
+    row_height = 0.8
+    row_spacing = 0.2
     error_rows = [2, 4, 7]  # 0-indexed: rows 2, 4, 7
     
+    # Column label "C" at top
+    ax_initial.text(5, 9.2, 'C', ha='center', va='bottom',
+                   fontsize=14, fontweight='bold')
+    
     for i in range(num_rows):
-        y_pos = 0.95 - (i + 0.5) * row_height
+        # Calculate y position from top (row 0 at top)
+        y_pos = (num_rows - 1 - i) * (row_height + row_spacing) + 0.5
         is_error = i in error_rows
+        
+        # Row rectangle - centered horizontally
+        rect_x = 5 - 2.5  # Center at x=5, width 5, so start at 2.5
+        rect_width = 5.0
         
         if is_error:
             # Error row - pink/red
-            rect = Rectangle((0.1, y_pos - row_height/2), 0.8, row_height,
+            rect = Rectangle((rect_x, y_pos - row_height/2), rect_width, row_height,
                            facecolor='#ffb6c1', edgecolor='#333333', linewidth=2)
         else:
             # Normal row
-            rect = Rectangle((0.1, y_pos - row_height/2), 0.8, row_height,
+            rect = Rectangle((rect_x, y_pos - row_height/2), rect_width, row_height,
                            facecolor='white', edgecolor='#e0e0e0', linewidth=1.2)
         ax_initial.add_patch(rect)
         
         # Row number label
-        ax_initial.text(0.15, y_pos, f'{i}', ha='left', va='center',
+        ax_initial.text(rect_x - 0.3, y_pos, f'{i}', ha='right', va='center',
                        fontsize=10, fontweight='bold')
         
         # Error mark
         if is_error:
-            ax_initial.text(0.85, y_pos, '✗', ha='right', va='center',
+            ax_initial.text(rect_x + rect_width + 0.3, y_pos, '✗', ha='left', va='center',
                           fontsize=12, color='red', fontweight='bold')
-    
-    # Column label "C"
-    ax_initial.text(0.5, 0.98, 'C', ha='center', va='bottom',
-                   fontsize=14, fontweight='bold')
     
     # === Bisection Tree Section ===
     ax_tree.set_xlim(0, 10)
@@ -443,13 +454,13 @@ def draw_row_range_bisector_diagram(
 
 def draw_sampling_row_bisector_diagram(
     output_path: Optional[str] = None,
-    dpi: int = 150,
+    dpi: int = DIAGRAM_DPI,
     show: bool = False,
 ) -> None:
     """
     Draw a classic CS algorithm diagram showing the sampling row bisector algorithm.
     """
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(figsize=DIAGRAM_FIGSIZE)
     
     # Create a custom grid layout
     gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3,
@@ -655,7 +666,7 @@ def _draw_s_curved_arrow(ax, x_start, y_start, x_end, y_end, dip_amount=0.4, hor
 
 def draw_execution_strategy_diagram(
     output_path: Optional[str] = None,
-    dpi: int = 150,
+    dpi: int = DIAGRAM_DPI,
     show: bool = False,
 ) -> None:
     """
@@ -664,7 +675,7 @@ def draw_execution_strategy_diagram(
     Shows the progression of column processing with working groups,
     backoff strategies, and summary stats accumulation.
     """
-    fig = plt.figure(figsize=(20, 12))
+    fig = plt.figure(figsize=EXECUTION_STRATEGY_FIGSIZE)
     
     ax = fig.add_subplot(111)
     ax.set_xlim(0, 11)
