@@ -397,14 +397,14 @@ def draw_row_range_bisector_diagram(
                 linewidth=2, alpha=0.6)
     
     # Left child: [0-4) - PASS
-    ax_tree.text(left1_x, left1_y, '[0-4)', ha='center', va='center',
+    ax_tree.text(left1_x, left1_y, '[0-2)', ha='center', va='center',
                 fontsize=11, fontweight='bold', family='monospace',
                 bbox=dict(boxstyle='round,pad=0.5', facecolor='#ccffcc', edgecolor='green', linewidth=2))
     ax_tree.text(left1_x, left1_y - 0.4, '✓ PASS', ha='center', va='top',
                 fontsize=10, color='green', fontweight='bold')
     
     # Right child: [4-9) - FAIL
-    ax_tree.text(right1_x, right1_y, '[4-9)', ha='center', va='center',
+    ax_tree.text(right1_x, right1_y, '[3-9)', ha='center', va='center',
                 fontsize=11, fontweight='bold', family='monospace',
                 bbox=dict(boxstyle='round,pad=0.5', facecolor='#ffcccc', edgecolor='red', linewidth=2))
     ax_tree.text(right1_x, right1_y - 0.4, '✗ FAIL', ha='center', va='top',
@@ -418,24 +418,26 @@ def draw_row_range_bisector_diagram(
     ax_tree.plot([right1_x, right2_x], [right1_y - 0.3, right2_y + 0.3], 'k-',
                 linewidth=2, alpha=0.6)
     
-    # [4-6) - PASS
-    ax_tree.text(left2_x, left2_y, '[4-6)', ha='center', va='center',
-                fontsize=11, fontweight='bold', family='monospace',
-                bbox=dict(boxstyle='round,pad=0.5', facecolor='#ccffcc', edgecolor='green', linewidth=2))
-    ax_tree.text(left2_x, left2_y - 0.4, '✓ PASS', ha='center', va='top',
-                fontsize=10, color='green', fontweight='bold')
     
     # [6-9) - FAIL
-    ax_tree.text(right2_x, right2_y, '[6-9)', ha='center', va='center',
+    ax_tree.text(left2_x, left2_y, '[3-8)', ha='center', va='center',
                 fontsize=11, fontweight='bold', family='monospace',
                 bbox=dict(boxstyle='round,pad=0.5', facecolor='#ffcccc', edgecolor='red', linewidth=2))
-    ax_tree.text(right2_x, right2_y - 0.4, '✗ FAIL', ha='center', va='top',
+    ax_tree.text(left2_x, left2_y - 0.4, '✗ FAIL', ha='center', va='top',
                 fontsize=10, color='red', fontweight='bold')
+
+    # [8-9) - PASS
+    ax_tree.text(right2_x, right2_y, '[8-9)', ha='center', va='center',
+                fontsize=11, fontweight='bold', family='monospace',
+                bbox=dict(boxstyle='round,pad=0.5', facecolor='#ccffcc', edgecolor='green', linewidth=2))
+    ax_tree.text(right2_x, right2_y - 0.4, '✓ PASS', ha='center', va='top',
+                fontsize=10, color='green', fontweight='bold')
+
     
     # Level 3: Combine [0-4) (PASS) + [4-6) (PASS) + [6-9) (FAIL) analysis
     # Need to find minimal failing range [2-8)
     final_x, final_y = 5, 1.5
-    ax_tree.text(final_x, final_y, 'Minimal Failing Range: [2-8)', ha='center', va='center',
+    ax_tree.text(final_x, final_y, 'Minimal Failing Range: [3-8)', ha='center', va='center',
                 fontsize=11, fontweight='bold', family='monospace',
                 bbox=dict(boxstyle='round,pad=0.8', facecolor='#ffffcc', edgecolor='orange', linewidth=2))
     
