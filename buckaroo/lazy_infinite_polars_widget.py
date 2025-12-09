@@ -26,7 +26,8 @@ from buckaroo.styling_helpers import obj_, pinned_histogram
 from .pluggable_analysis_framework.polars_analysis_management import PolarsAnalysis
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
-from buckaroo.file_cache.base import AbstractFileCache, Executor as _SyncExec, ExecutorLog  # type: ignore            
+from buckaroo.file_cache.base import AbstractFileCache, Executor as _SyncExec, ExecutorLog  # type: ignore
+
 #from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
 from buckaroo.file_cache.cache_utils import get_global_file_cache, get_global_executor_log
@@ -138,7 +139,6 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         msg_box_enabled = show_message_box or (self.show_message_box.get('enabled', False) if isinstance(self.show_message_box, dict) else False)
         logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: called with show_message_box={show_message_box}, trait={self.show_message_box}, enabled={msg_box_enabled}, msg_type={msg_type}, message={message[:100]}")
         if not msg_box_enabled:
-            logger.info("LazyInfinitePolarsBuckarooWidget._add_message: show_message_box is False, returning early")
             return
         # Get current messages - need to create a new list to trigger traitlets change
         current_messages = list(self.message_log.get('messages', []))
@@ -154,7 +154,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             current_messages = current_messages[-1000:]
         # Create completely new dict with new list to ensure traitlets detects the change
         new_message_log = {'messages': list(current_messages)}
-        logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: updating message_log with {len(current_messages)} messages")
+        #logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: updating message_log with {len(current_messages)} messages")
         # Set the trait - traitlets should detect the dict change
         # Use notify_change to ensure the frontend is notified
         self.message_log = new_message_log
@@ -162,7 +162,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         _ = self.message_log
         # Verify it was set
         actual_count = len(self.message_log.get('messages', []))
-        logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: message_log trait updated, message count: {actual_count}")
+        #logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: message_log trait updated, message count: {actual_count}")
         if actual_count != len(current_messages):
             logger.warning(f"LazyInfinitePolarsBuckarooWidget._add_message: Mismatch! Expected {len(current_messages)} messages, got {actual_count}")
     
