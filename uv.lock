@@ -183,7 +183,6 @@ dependencies = [
     { name = "fastparquet" },
     { name = "graphlib-backport" },
     { name = "pyarrow" },
-    { name = "pytest" },
 ]
 
 [package.optional-dependencies]
@@ -283,7 +282,6 @@ requires-dist = [
     { name = "pyarrow", marker = "extra == 'dev'" },
     { name = "pydantic", marker = "extra == 'dev'", specifier = ">=2.5.2" },
     { name = "pydantic", marker = "extra == 'test'", specifier = ">=2.5.2" },
-    { name = "pytest", specifier = ">=7.3.2" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=6" },
     { name = "pytest-check-links", marker = "extra == 'dev'" },
