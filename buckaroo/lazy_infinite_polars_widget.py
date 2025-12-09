@@ -39,7 +39,7 @@ if not logger.handlers:
     _h = logging.StreamHandler()
     _h.setFormatter(logging.Formatter("[buckaroo] %(message)s"))
     logger.addHandler(_h)
-logger.setLevel(logging.INFO)
+#logger.setLevel(logging.INFO)
 
 # To quiet logs in notebooks, set the logging level to WARNING or ERROR:
 # import logging
@@ -135,7 +135,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         """Add a message to the message log if message box is enabled."""
         # Check both the parameter and the trait value
         msg_box_enabled = show_message_box or (self.show_message_box.get('enabled', False) if isinstance(self.show_message_box, dict) else False)
-        logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: called with show_message_box={show_message_box}, trait={self.show_message_box}, enabled={msg_box_enabled}, msg_type={msg_type}, message={message[:100]}")
+        logger.debug(f"LazyInfinitePolarsBuckarooWidget._add_message: called with show_message_box={show_message_box}, trait={self.show_message_box}, enabled={msg_box_enabled}, msg_type={msg_type}, message={message[:100]}")
         if not msg_box_enabled:
             return
         # Get current messages - need to create a new list to trigger traitlets change
