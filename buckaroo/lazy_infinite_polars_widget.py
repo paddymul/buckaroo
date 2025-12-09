@@ -15,6 +15,7 @@ import sys
 
 import anywidget
 import polars as pl
+from polars import functions as F
 import pandas as pd
 import logging
 from traitlets import Dict as TDict, Unicode
@@ -27,13 +28,10 @@ from .pluggable_analysis_framework.polars_analysis_management import PolarsAnaly
 from .df_util import old_col_new_col
 from .serialization_utils import pd_to_obj
 from buckaroo.file_cache.base import AbstractFileCache, Executor as _SyncExec, ExecutorLog  # type: ignore
-
-#from buckaroo.file_cache.threaded_executor import ThreadedExecutor as _ParExec  # type: ignore
 from buckaroo.file_cache.multiprocessing_executor import MultiprocessingExecutor as _ParExec
 from buckaroo.file_cache.cache_utils import get_global_file_cache, get_global_executor_log
 from buckaroo.file_cache.batch_planning import default_planning_function, PlanningFunction
 
-from polars import functions as F
 
 
 logger = logging.getLogger("buckaroo.widget")
@@ -154,15 +152,14 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
             current_messages = current_messages[-1000:]
         # Create completely new dict with new list to ensure traitlets detects the change
         new_message_log = {'messages': list(current_messages)}
-        #logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: updating message_log with {len(current_messages)} messages")
-        # Set the trait - traitlets should detect the dict change
-        # Use notify_change to ensure the frontend is notified
+        logger.debug(f"LazyInfinitePolarsBuckarooWidget._add_message: updating message_log with {len(current_messages)} messages")
+        # Set the trait - traitlets should detect the dict change Use notify_change to ensure the frontend is notified
         self.message_log = new_message_log
         # Force notification by accessing the trait
         _ = self.message_log
         # Verify it was set
         actual_count = len(self.message_log.get('messages', []))
-        #logger.info(f"LazyInfinitePolarsBuckarooWidget._add_message: message_log trait updated, message count: {actual_count}")
+        logger.debug(f"LazyInfinitePolarsBuckarooWidget._add_message: message_log trait updated, message count: {actual_count}")
         if actual_count != len(current_messages):
             logger.warning(f"LazyInfinitePolarsBuckarooWidget._add_message: Mismatch! Expected {len(current_messages)} messages, got {actual_count}")
     
