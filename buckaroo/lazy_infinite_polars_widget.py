@@ -39,15 +39,8 @@ if not logger.handlers:
     _h = logging.StreamHandler()
     _h.setFormatter(logging.Formatter("[buckaroo] %(message)s"))
     logger.addHandler(_h)
-#logger.setLevel(logging.INFO)
-
-# To quiet logs in notebooks, set the logging level to WARNING or ERROR:
-# import logging
-# logging.getLogger("buckaroo").setLevel(logging.WARNING)  # or logging.ERROR
 
 class SimpleAnalysis(PolarsAnalysis):
-
-
     provides_defaults = {'length':2, 'null_count':3, 'unique_count':5, 'empty_count':8}
     select_clauses = [
         (NOT_STRUCTS.len() - NOT_STRUCTS.is_duplicated().sum()).name.map(json_postfix('unique_count')),
