@@ -6,7 +6,7 @@ import subprocess
 import os
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
-ROOT = pathlib.Path(__file__).parent / ".."
+ROOT = pathlib.Path(__file__).parent / ".." / ".."
 
 def list_dir(d):
     files = [f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))]
