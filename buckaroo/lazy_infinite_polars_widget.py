@@ -564,7 +564,7 @@ class LazyInfinitePolarsBuckarooWidget(anywidget.AnyWidget):
         #don't need parallel_executor_class  
         parallel_executor_class: Optional[type] = None,
         planning_function: Optional["PlanningFunction"] = None,  # type: ignore
-        timeout_secs: float = 6.0,  # Timeout for multiprocessing executor (default 120s for large files)
+        timeout_secs: float = 14.0,  # Timeout for multiprocessing executor
         show_message_box: bool = False,  # Enable message box for logging
     ) -> None:
         logger = logging.getLogger("buckaroo.lazy_widget")
