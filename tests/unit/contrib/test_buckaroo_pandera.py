@@ -1,11 +1,7 @@
-import marimo as mo
-import numpy as np
-import sys
 
 import pandas as pd
 import pandera.pandas as pa
 from pandera import Column, Check
-import buckaroo  # to get buckaroo as the default dataframe display
 from buckaroo.contrib.buckaroo_pandera import BuckarooPandera
 
 
