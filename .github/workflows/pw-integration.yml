@@ -1,0 +1,57 @@
+name: Playwright Integration Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: "*"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-test:
+    name: Playwright / Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          package_json_file: packages/package.json
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl lsof
+
+      - name: Run integration test
+        run: |
+          bash scripts/test_polars_widget_integration.sh
+        env:
+          UV_PYTHON: "3.11"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: |
+            packages/buckaroo-js-core/test-results/
+            packages/buckaroo-js-core/playwright-report/
+          retention-days: 7
+
