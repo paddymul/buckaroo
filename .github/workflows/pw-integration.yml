@@ -40,6 +40,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y curl lsof
 
+      - name: Pre-build JS packages
+        run: |
+          # Build buckaroo-js-core first (full_build.sh expects this)
+          cd packages/buckaroo-js-core
+          pnpm install
+          pnpm run build:tsc
+          pnpm run build:vite
+          cd ../..
+
       - name: Run integration test
         run: |
           mkdir -p buckaroo/static || true
