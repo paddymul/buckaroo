@@ -28,7 +28,7 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
       - name: Run ruff
-      - run: uv run ruff check
+        run: uv run ruff check
 
   # LintPythonMac: # just see if this builds and works on macos,  currently broken
   #   name: Python / Lint
