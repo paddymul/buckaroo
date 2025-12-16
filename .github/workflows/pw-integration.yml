@@ -42,6 +42,10 @@ jobs:
 
       - name: Run integration test
         run: |
+          mkdir -p buckaroo/static || true
+          touch buckaroo/static/compiled.css
+          touch buckaroo/static/widget.js
+          touch buckaroo/static/widget.css
           bash scripts/test_polars_widget_integration.sh
         env:
           UV_PYTHON: "3.11"
