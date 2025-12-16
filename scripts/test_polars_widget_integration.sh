@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# Make sure we're in the buckaroo directory
-cd "$(dirname "$0")"
+# Make sure we're in the buckaroo directory (scripts/ is one level down from root)
+cd "$(dirname "$0")/.."
 
 # Colors for output
 RED='\033[0;31m'
@@ -178,6 +178,10 @@ success "Test notebook created"
 
 # Start JupyterLab in background (using virtual environment Python)
 log_message "Starting JupyterLab..."
+# Kill any existing JupyterLab processes on port 8889
+lsof -ti:8889 | xargs kill -9 2>/dev/null || true
+sleep 1
+
 export JUPYTER_TOKEN="test-token-12345"
 PYTHON_EXECUTABLE="$VENV_DIR/bin/python"
 log_message "Using virtual environment Python: $PYTHON_EXECUTABLE"
