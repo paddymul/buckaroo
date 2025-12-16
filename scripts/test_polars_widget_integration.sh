@@ -31,13 +31,10 @@ echo "🧪 Starting PolarsBuckarooWidget Integration Test"
 
 # Create and activate a virtual environment for the test
 VENV_DIR="./test_venv"
-log_message "Creating virtual environment..."
-python3 -m venv "$VENV_DIR"
+log_message "Creating virtual environment with uv..."
+uv venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 log_message "Virtual environment activated: $VIRTUAL_ENV"
-
-# Upgrade pip in the virtual environment
-python -m pip install --upgrade pip
 
 cleanup() {
     log_message "Cleaning up..."
@@ -79,7 +76,7 @@ except ImportError:
     sys.exit(1)
 "; then
     warning "Missing required Python packages. Installing automatically..."
-    if ! pip install pandas polars jupyterlab; then
+    if ! uv pip install pandas polars jupyterlab; then
         error "Failed to install Python dependencies automatically."
         exit 1
     fi
@@ -104,7 +101,7 @@ if [ ! -f dist/*.whl ]; then
     exit 1
 fi
 
-if ! pip install --force-reinstall dist/*.whl; then
+if ! uv pip install --force-reinstall dist/*.whl; then
     error "Failed to install built buckaroo wheel"
     exit 1
 fi
