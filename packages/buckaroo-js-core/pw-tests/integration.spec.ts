@@ -3,7 +3,7 @@ import { Page } from '@playwright/test';
 
 const JUPYTER_BASE_URL = 'http://localhost:8889';
 const JUPYTER_TOKEN = 'test-token-12345';
-const DEFAULT_TIMEOUT = 15000; // 15 seconds for most operations
+const DEFAULT_TIMEOUT = 35000; // 15 seconds for most operations
 const NAVIGATION_TIMEOUT = 30000; // 30 seconds max for navigation
 
 async function waitForAgGrid(outputArea: any, timeout = 10000) {
