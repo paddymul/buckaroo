@@ -17,7 +17,8 @@
     "test:pw": "playwright test",
     "test:pw:headed": "playwright test --headed",
     "test:pw:ui": "playwright test --ui",
-    "test:pw:report": "playwright show-report"
+      "test:pw:report": "playwright show-report",
+      "test:integration": "playwright test --config playwright.config.integration.ts --reporter=line"
   },
   "files": [
     "/dist"
