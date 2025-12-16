@@ -93,6 +93,25 @@ jobs:
             ./dist
             ./js/*.tgz
 
+      - name: Run Polars Widget Integration Test
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          # Ensure uv environment is set up
+          uv sync --all-extras --group dev
+          
+          # Install the built buckaroo wheel
+          uv pip install --force-reinstall dist/*.whl
+          
+          # Install test dependencies (polars, jupyterlab)
+          uv pip install polars jupyterlab
+          
+
+          
+          # Run the integration test script
+          bash scripts/test_polars_widget_integration.sh --use-local-venv
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
+
 
 # ui-test:
 #   needs: [build]
