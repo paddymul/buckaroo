@@ -6,13 +6,13 @@ const JUPYTER_TOKEN = 'test-token-12345';
 const DEFAULT_TIMEOUT = 15000; // 15 seconds for most operations
 const NAVIGATION_TIMEOUT = 30000; // 30 seconds max for navigation
 
-async function waitForAgGrid(page: Page, timeout = 10000) {
-  // Wait for ag-grid to be present and rendered
-  await page.locator('.ag-root-wrapper').first().waitFor({ state: 'visible', timeout });
+async function waitForAgGrid(outputArea: any, timeout = 10000) {
+  // Wait for ag-grid to be present and rendered within the output area
+  await outputArea.locator('.ag-root-wrapper').first().waitFor({ state: 'visible', timeout });
   // Wait for cells to be present
-  await page.locator('.ag-cell').first().waitFor({ state: 'visible', timeout });
+  await outputArea.locator('.ag-cell').first().waitFor({ state: 'visible', timeout });
   // Wait for no loading overlays
-  await page.locator('.ag-overlay-loading-center').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
+  await outputArea.locator('.ag-overlay-loading-center').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
 }
 
 // Helper function to get cell content by row and column
@@ -98,55 +98,56 @@ test.describe('PolarsBuckarooWidget JupyterLab Integration', () => {
     // Wait for cell execution to complete
     console.log('⏳ Waiting for cell execution...');
     // Wait for output area to appear (may be hidden but should be attached)
-    await page.locator('.jp-OutputArea').first().waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
+    const outputArea = page.locator('.jp-OutputArea').first();
+    await outputArea.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
     // Wait a bit for execution to complete
     await page.waitForTimeout(2000);
     console.log('✅ Cell executed');
 
     // Check for any error messages in the output
-    const outputText = await page.locator('.jp-OutputArea-output').textContent();
+    const outputText = await outputArea.locator('.jp-OutputArea-output').textContent();
     console.log('📄 Cell output:', outputText);
 
     if (outputText?.includes('❌') || outputText?.includes('ImportError') || outputText?.includes('ModuleNotFoundError')) {
         throw new Error(`Cell execution failed with error: ${outputText}`);
     }
 
-    // Wait for the buckaroo widget to appear
+    // Wait for the buckaroo widget to appear within the output area
     console.log('⏳ Waiting for PolarsBuckarooWidget...');
     try {
-        await page.locator('.buckaroo-widget').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+        await outputArea.locator('.buckaroo-widget').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
         console.log('✅ PolarsBuckarooWidget appeared');
     } catch (error) {
-        // If widget doesn't appear, check if there are any buckaroo-related elements
-        const buckarooElements = await page.locator('[class*="buckaroo"]').count();
-        const anyWidgets = await page.locator('.widget-area').count();
-        console.log(`Found ${buckarooElements} buckaroo elements and ${anyWidgets} widget areas`);
+        // If widget doesn't appear, check if there are any buckaroo-related elements in output
+        const buckarooElements = await outputArea.locator('[class*="buckaroo"]').count();
+        const anyWidgets = await outputArea.locator('.widget-area').count();
+        console.log(`Found ${buckarooElements} buckaroo elements and ${anyWidgets} widget areas in output`);
 
         // Check for any error messages
-        const errorOutputs = await page.locator('.jp-OutputArea-error').count();
+        const errorOutputs = await outputArea.locator('.jp-OutputArea-error').count();
         if (errorOutputs > 0) {
-            const errorText = await page.locator('.jp-OutputArea-error').textContent();
+            const errorText = await outputArea.locator('.jp-OutputArea-error').textContent();
             throw new Error(`Widget failed to render. Error: ${errorText}`);
         }
 
         throw error;
     }
 
-    // Wait for ag-grid to render
-    console.log('⏳ Waiting for ag-grid to render...');
-    await waitForAgGrid(page);
+    // Wait for ag-grid to render within the output area
+    console.log('⏳ Waiting for ag-grid to render in notebook output...');
+    await waitForAgGrid(outputArea);
     console.log('✅ ag-grid rendered successfully');
 
-    // Verify the grid structure
-    const rows = page.locator('.ag-row');
+    // Verify the grid structure within the output area
+    const rows = outputArea.locator('.ag-row');
     const rowCount = await rows.count();
     expect(rowCount).toBeGreaterThan(0);
 
-    const headers = page.locator('.ag-header-cell-text');
+    const headers = outputArea.locator('.ag-header-cell-text');
     const headerCount = await headers.count();
     expect(headerCount).toBeGreaterThan(0);
 
-    const cells = page.locator('.ag-cell');
+    const cells = outputArea.locator('.ag-cell');
     const cellCount = await cells.count();
     expect(cellCount).toBeGreaterThan(0);
 
@@ -156,10 +157,10 @@ test.describe('PolarsBuckarooWidget JupyterLab Integration', () => {
     expect(headerTexts).toContain('age');
     expect(headerTexts).toContain('score');
 
-    // Verify data appears in cells
-    const nameCell = page.locator('.ag-cell').filter({ hasText: 'Alice' });
-    const ageCell = page.locator('.ag-cell').filter({ hasText: '25' });
-    const scoreCell = page.locator('.ag-cell').filter({ hasText: '85.5' });
+    // Verify data appears in cells within the output area
+    const nameCell = outputArea.locator('.ag-cell').filter({ hasText: 'Alice' });
+    const ageCell = outputArea.locator('.ag-cell').filter({ hasText: '25' });
+    const scoreCell = outputArea.locator('.ag-cell').filter({ hasText: '85.5' });
 
     await expect(nameCell).toBeVisible();
     await expect(ageCell).toBeVisible();
