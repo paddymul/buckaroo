@@ -1,4 +1,8 @@
 #!/bin/bash
+# Integration test script for PolarsBuckarooWidget
+# Usage:
+#   bash scripts/test_polars_widget_integration.sh              # Creates test venv and builds buckaroo
+#   bash scripts/test_polars_widget_integration.sh --use-local-venv  # Uses existing .venv (skips build)
 set -e
 
 # Make sure we're in the buckaroo directory (scripts/ is one level down from root)
@@ -27,14 +31,31 @@ warning() {
     echo -e "${YELLOW}⚠️  $1${NC}"
 }
 
+# Parse command line arguments
+USE_LOCAL_VENV=false
+if [[ "$1" == "--use-local-venv" ]] || [[ "$1" == "--local-dev" ]]; then
+    USE_LOCAL_VENV=true
+fi
+
 echo "🧪 Starting PolarsBuckarooWidget Integration Test"
 
 # Create and activate a virtual environment for the test
-VENV_DIR="./test_venv"
-log_message "Creating virtual environment with uv..."
-uv venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
-log_message "Virtual environment activated: $VIRTUAL_ENV"
+if [ "$USE_LOCAL_VENV" = true ]; then
+    VENV_DIR=".venv"
+    if [ ! -d "$VENV_DIR" ]; then
+        error "Local venv not found at $VENV_DIR. Please create it first or run without --use-local-venv"
+        exit 1
+    fi
+    log_message "Using local development venv: $VENV_DIR"
+    source "$VENV_DIR/bin/activate"
+    log_message "Virtual environment activated: $VIRTUAL_ENV"
+else
+    VENV_DIR="./test_venv"
+    log_message "Creating virtual environment with uv..."
+    uv venv "$VENV_DIR"
+    source "$VENV_DIR/bin/activate"
+    log_message "Virtual environment activated: $VIRTUAL_ENV"
+fi
 
 cleanup() {
     log_message "Cleaning up..."
@@ -45,8 +66,8 @@ cleanup() {
     fi
     # Remove test notebook if it exists
     rm -f test_polars_widget.ipynb
-    # Remove virtual environment
-    if [ -d "$VENV_DIR" ]; then
+    # Remove virtual environment only if it's a test venv (not local dev venv)
+    if [ "$USE_LOCAL_VENV" = false ] && [ -d "$VENV_DIR" ]; then
         log_message "Removing virtual environment..."
         rm -rf "$VENV_DIR"
     fi
@@ -65,9 +86,6 @@ except ImportError:
     print('polars: MISSING')
     sys.exit(1)
 
-# buckaroo will be built and installed later
-print('buckaroo: will be built')
-
 try:
     import jupyterlab
     print('jupyterlab: OK')
@@ -83,29 +101,40 @@ except ImportError:
     success "Python dependencies installed automatically"
 fi
 
-success "Required Python dependencies available (buckaroo will be built from source)"
-
-# Run full build
-log_message "Running full build..."
-if ! bash scripts/full_build.sh; then
-    error "Full build failed"
-    exit 1
+if [ "$USE_LOCAL_VENV" = true ]; then
+    # Using local venv - check if buckaroo is installed
+    log_message "Checking if buckaroo is installed in local venv..."
+    if ! python -c "import buckaroo" 2>/dev/null; then
+        error "buckaroo is not installed in local venv. Please install it first."
+        exit 1
+    fi
+    success "Using buckaroo from local development venv"
+else
+    # Build and install buckaroo from source
+    success "Required Python dependencies available (buckaroo will be built from source)"
+    
+    # Run full build
+    log_message "Running full build..."
+    if ! bash scripts/full_build.sh; then
+        error "Full build failed"
+        exit 1
+    fi
+    success "Build completed successfully"
+    
+    # Install the built wheel
+    log_message "Installing built buckaroo wheel..."
+    if [ ! -f dist/*.whl ]; then
+        error "No wheel file found in dist/ directory"
+        ls -la dist/ || true
+        exit 1
+    fi
+    
+    if ! uv pip install --force-reinstall dist/*.whl; then
+        error "Failed to install built buckaroo wheel"
+        exit 1
+    fi
+    success "Built buckaroo wheel installed"
 fi
-success "Build completed successfully"
-
-# Install the built wheel
-log_message "Installing built buckaroo wheel..."
-if [ ! -f dist/*.whl ]; then
-    error "No wheel file found in dist/ directory"
-    ls -la dist/ || true
-    exit 1
-fi
-
-if ! uv pip install --force-reinstall dist/*.whl; then
-    error "Failed to install built buckaroo wheel"
-    exit 1
-fi
-success "Built buckaroo wheel installed"
 
 # Verify buckaroo can be imported
 log_message "Verifying buckaroo installation..."
