@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - uses: pnpm/action-setup@v4
         with:
           node-version: "20.x"
@@ -46,7 +46,7 @@ jobs:
           touch buckaroo/static/compiled.css
           touch buckaroo/static/widget.js
           touch buckaroo/static/widget.css
-          uv sync  --all-extras --group dev
+          uv sync --locked --all-extras --dev
           echo "about to ls"
           ls -alhstr
           mkdir -p docs/build/html
