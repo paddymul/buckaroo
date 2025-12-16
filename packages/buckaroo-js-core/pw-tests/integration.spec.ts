@@ -105,7 +105,9 @@ test.describe('PolarsBuckarooWidget JupyterLab Integration', () => {
     console.log('✅ Cell executed');
 
     // Check for any error messages in the output
-    const outputText = await outputArea.locator('.jp-OutputArea-output').textContent();
+    // Target only stdout text output, not widget output (which also has .jp-OutputArea-output class)
+    const stdoutOutput = outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.stdout"]').first();
+    const outputText = await stdoutOutput.textContent().catch(() => '');
     console.log('📄 Cell output:', outputText);
 
     if (outputText?.includes('❌') || outputText?.includes('ImportError') || outputText?.includes('ModuleNotFoundError')) {
