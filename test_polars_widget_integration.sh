@@ -88,7 +88,7 @@ fi
 
 success "Required Python dependencies available (buckaroo will be built from source)"
 
-Run full build
+# Run full build
 log_message "Running full build..."
 if ! bash scripts/full_build.sh; then
     error "Full build failed"

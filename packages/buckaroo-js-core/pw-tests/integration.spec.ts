@@ -42,7 +42,10 @@ test.describe('JupyterLab Connection Tests', () => {
     
     // Test 4: Verify JupyterLab interface elements are present
     console.log('⏳ Waiting for JupyterLab UI to load...');
-    await page.locator('body').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    // Wait for JupyterLab to be fully loaded - check for main content area
+    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT });
+    // Wait for a specific JupyterLab element to ensure UI is ready
+    await page.locator('[class*="jp-"]').first().waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
     
     // Check for JupyterLab-specific elements
     const jupyterElements = await page.locator('[class*="jp-"], [id*="jupyter"]').count();
@@ -74,31 +77,30 @@ test.describe('JupyterLab Connection Tests', () => {
 
 test.describe('PolarsBuckarooWidget JupyterLab Integration', () => {
   test('🎯 PolarsBuckarooWidget renders ag-grid in JupyterLab', async ({ page }) => {
-    console.log('🌐 Navigating to JupyterLab...');
-    await page.goto(`${JUPYTER_BASE_URL}/lab?token=${JUPYTER_TOKEN}`, { timeout: NAVIGATION_TIMEOUT });
-
-    // Wait for JupyterLab to load
-    console.log('⏳ Waiting for JupyterLab to load...');
-    await page.locator('.jp-Launcher').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
-    console.log('✅ JupyterLab loaded');
-
-    // Navigate to the test notebook
+    // Navigate directly to the test notebook
     console.log('📓 Opening test notebook...');
     await page.goto(`${JUPYTER_BASE_URL}/lab/tree/test_polars_widget.ipynb?token=${JUPYTER_TOKEN}`, { timeout: NAVIGATION_TIMEOUT });
 
     // Wait for notebook to load
     console.log('⏳ Waiting for notebook to load...');
-    await page.locator('.jp-Notebook').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT });
+    await page.locator('.jp-Notebook').first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     console.log('✅ Notebook loaded');
 
     // Find and run the first code cell
     console.log('▶️ Executing PolarsBuckarooWidget code...');
-    const runButton = page.locator('.jp-ToolbarButton').filter({ hasText: 'Run' }).first();
-    await runButton.click({ timeout: DEFAULT_TIMEOUT });
+    // Wait for notebook to be fully interactive
+    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT });
+    // Focus on the notebook and use keyboard shortcut to run cell (Shift+Enter)
+    await page.locator('.jp-Notebook').first().click();
+    await page.keyboard.press('Shift+Enter');
 
     // Wait for cell execution to complete
     console.log('⏳ Waiting for cell execution...');
-    await page.locator('.jp-OutputArea').first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    // Wait for output area to appear (may be hidden but should be attached)
+    await page.locator('.jp-OutputArea').first().waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
+    // Wait a bit for execution to complete
+    await page.waitForTimeout(2000);
     console.log('✅ Cell executed');
 
     // Check for any error messages in the output

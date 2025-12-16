@@ -11,11 +11,13 @@ Before running the integration test, ensure you have:
    python3 -m pip install --user polars buckaroo jupyterlab
    ```
 
-2. **Node.js dependencies** (should already be installed):
+2. **Node.js dependencies** (must be installed):
    ```bash
    cd packages/buckaroo-js-core
    pnpm install
    ```
+   
+   **Important**: You must run `pnpm install` before running the integration test, as it installs Playwright and other required dependencies.
 
 ## Running the Integration Test
 
@@ -34,9 +36,21 @@ The integration test performs the following steps:
 To run the complete integration test:
 
 ```bash
-# From the buckaroo root directory
+# From the buckaroo root directory (recommended - handles everything)
 ./test_polars_widget_integration.sh
 ```
+
+**Alternative**: If JupyterLab is already running, you can run just the Playwright tests:
+
+```bash
+# From packages/buckaroo-js-core directory
+cd packages/buckaroo-js-core
+pnpm test:integration
+```
+
+**Note**: The `pnpm test:integration` command requires:
+- JupyterLab to be running on `http://localhost:8889` with token `test-token-12345`
+- The test notebook `test_polars_widget.ipynb` to exist in the JupyterLab working directory
 
 ## What the Test Verifies
 
