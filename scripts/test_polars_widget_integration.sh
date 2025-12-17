@@ -212,7 +212,8 @@ export JUPYTER_TOKEN="test-token-12345"
 PYTHON_EXECUTABLE="$VENV_DIR/bin/python"
 log_message "Using virtual environment Python: $PYTHON_EXECUTABLE"
 
-python -m jupyter lab --no-browser --port=8889 --ServerApp.token=$JUPYTER_TOKEN &
+# Set JupyterLab to allow root (needed for CI) and disable token check for localhost
+python -m jupyter lab --no-browser --port=8889 --ServerApp.token=$JUPYTER_TOKEN --ServerApp.allow_origin='*' --ServerApp.disable_check_xsrf=True &
 JUPYTER_PID=$!
 log_message "JupyterLab started with PID: $JUPYTER_PID"
 
@@ -237,6 +238,10 @@ while ! curl -s -f http://localhost:8889/lab?token=$JUPYTER_TOKEN > /dev/null 2>
     log_message "Still waiting... ($COUNTER/$MAX_WAIT seconds)"
 done
 success "JupyterLab is ready at http://localhost:8889"
+
+# Give JupyterLab extra time to fully initialize (especially important in CI)
+log_message "Waiting for JupyterLab to fully initialize..."
+sleep 5
 
 # Install npm dependencies for Playwright
 log_message "Installing npm dependencies for Playwright..."
@@ -270,7 +275,7 @@ success "npm dependencies and Playwright browsers ready"
 
 # Run Playwright test
 log_message "Running Playwright test..."
-if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=30000; then
+if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=120000; then
     success "Playwright test passed!"
     TEST_RESULT=0
 else

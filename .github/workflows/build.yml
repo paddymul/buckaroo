@@ -104,7 +104,7 @@ jobs:
           
           # Install test dependencies (polars, jupyterlab)
           uv pip install polars jupyterlab
-          
+          uv run python env_location.py
 
           
           # Run the integration test script

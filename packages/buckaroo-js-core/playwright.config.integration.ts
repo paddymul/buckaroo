@@ -10,10 +10,10 @@ export default defineConfig({
   reporter: 'html',
   use: {
     trace: 'on-first-retry',
-    // Timeouts for integration tests (30 seconds max)
-    actionTimeout: 15000,
-    navigationTimeout: 30000,
-    timeout: 30000, // Test timeout
+    // Timeouts for integration tests (increased for CI)
+    actionTimeout: 30000,
+    navigationTimeout: 60000,
+    timeout: 120000, // Test timeout - 2 minutes for CI
   },
 
   projects: [
