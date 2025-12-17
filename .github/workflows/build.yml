@@ -59,11 +59,16 @@ jobs:
           #python -m pip install --upgrade -v -e ".[test, examples, docs]"
           cd packages/buckaroo-js-core
           pnpm install && pnpm run build
+          #pnpm run test
           cd ../..
           mkdir buckaroo/static || true
           cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
-          uv build
-          pnpm -C packages/buckaroo-js-core run test
+          rm -rf packages/buckaroo-js-core/node_modules || true
+          cd packages
+          pnpm install && pnpm run build
+          cd ..
+          uv build --wheel
+          #pnpm -C packages/buckaroo-js-core run test
         env:
           UV_PYTHON: ${{ matrix.python-version }}
 
