@@ -96,8 +96,8 @@ cleanup() {
     fi
     # Remove test notebook if it exists
     rm -f test_polars_widget.ipynb
-    # Remove virtual environment only if it's a test venv (not local dev venv)
-    if [ "$USE_LOCAL_VENV" = false ] && [ -d "$VENV_DIR" ]; then
+    # Remove virtual environment only if it's a test venv (not existing venv)
+    if [ -z "$VENV_LOCATION" ] && [ "$USE_LOCAL_VENV" = false ] && [ -d "$VENV_DIR" ]; then
         log_message "Removing virtual environment..."
         rm -rf "$VENV_DIR"
     fi
@@ -105,9 +105,10 @@ cleanup() {
 
 trap cleanup EXIT
 
-# Check if required Python packages are installed
-log_message "Checking Python dependencies..."
-if ! python3 -c "
+# Check if required Python packages are installed (only when creating new venv)
+if [ -z "$VENV_LOCATION" ] && [ "$USE_LOCAL_VENV" = false ]; then
+    log_message "Checking Python dependencies..."
+    if ! python3 -c "
 import sys
 try:
     import polars
@@ -123,24 +124,27 @@ except ImportError:
     print('jupyterlab: MISSING')
     sys.exit(1)
 "; then
-    warning "Missing required Python packages. Installing automatically..."
-    if ! uv pip install pandas polars jupyterlab; then
-        error "Failed to install Python dependencies automatically."
-        exit 1
+        warning "Missing required Python packages. Installing automatically..."
+        if ! uv pip install pandas polars jupyterlab; then
+            error "Failed to install Python dependencies automatically."
+            exit 1
+        fi
+        success "Python dependencies installed automatically"
     fi
-    success "Python dependencies installed automatically"
+else
+    log_message "Using existing venv - skipping dependency installation"
 fi
 
-if [ "$USE_LOCAL_VENV" = true ]; then
-    # Using local venv - check if buckaroo is installed
-    log_message "Checking if buckaroo is installed in local venv..."
+if [ -n "$VENV_LOCATION" ] || [ "$USE_LOCAL_VENV" = true ]; then
+    # Using existing venv - check if buckaroo is installed
+    log_message "Checking if buckaroo is installed in venv..."
     if ! python -c "import buckaroo" 2>/dev/null; then
-        error "buckaroo is not installed in local venv. Please install it first."
+        error "buckaroo is not installed in venv. Please install it first."
         exit 1
     fi
-    success "Using buckaroo from local development venv"
+    success "Using buckaroo from existing venv"
 else
-    # Build and install buckaroo from source
+    # Build and install buckaroo from source (only when creating new test venv)
     success "Required Python dependencies available (buckaroo will be built from source)"
     
     # Run full build
