@@ -42,8 +42,9 @@ test.describe('JupyterLab Connection Tests', () => {
     
     // Test 4: Verify JupyterLab interface elements are present
     console.log('⏳ Waiting for JupyterLab UI to load...');
-    // Wait for JupyterLab to be fully loaded - check for main content area
-    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT });
+    // Wait for JupyterLab to be loaded - use domcontentloaded instead of networkidle
+    // networkidle can timeout if JupyterLab keeps making background requests
+    await page.waitForLoadState('domcontentloaded', { timeout: DEFAULT_TIMEOUT });
     // Wait for a specific JupyterLab element to ensure UI is ready
     await page.locator('[class*="jp-"]').first().waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
     
@@ -100,14 +101,14 @@ test.describe('PolarsBuckarooWidget JupyterLab Integration', () => {
 
     // Wait for notebook to load
     console.log('⏳ Waiting for notebook to load...');
-    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT });
+    await page.waitForLoadState('domcontentloaded', { timeout: DEFAULT_TIMEOUT });
     await page.locator('.jp-Notebook').first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     console.log('✅ Notebook loaded');
 
     // Find and run the first code cell
     console.log('▶️ Executing PolarsBuckarooWidget code...');
-    // Wait for notebook to be fully interactive
-    await page.waitForLoadState('networkidle', { timeout: DEFAULT_TIMEOUT });
+    // Wait for notebook to be fully interactive (use domcontentloaded instead of networkidle)
+    await page.waitForLoadState('domcontentloaded', { timeout: DEFAULT_TIMEOUT });
     // Focus on the notebook and use keyboard shortcut to run cell (Shift+Enter)
     await page.locator('.jp-Notebook').first().click();
     await page.keyboard.press('Shift+Enter');
