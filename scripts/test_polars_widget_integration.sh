@@ -1,8 +1,9 @@
 #!/bin/bash
 # Integration test script for PolarsBuckarooWidget
 # Usage:
-#   bash scripts/test_polars_widget_integration.sh              # Creates test venv and builds buckaroo
-#   bash scripts/test_polars_widget_integration.sh --use-local-venv  # Uses existing .venv (skips build)
+#   bash scripts/test_polars_widget_integration.sh                    # Creates test venv and builds buckaroo
+#   bash scripts/test_polars_widget_integration.sh --use-local-venv   # Uses existing .venv (skips build)
+#   bash scripts/test_polars_widget_integration.sh --venv-location=/path/to/venv  # Uses specified venv location
 set -e
 
 # Make sure we're in the buckaroo directory (scripts/ is one level down from root)
@@ -33,14 +34,43 @@ warning() {
 
 # Parse command line arguments
 USE_LOCAL_VENV=false
-if [[ "$1" == "--use-local-venv" ]] || [[ "$1" == "--local-dev" ]]; then
-    USE_LOCAL_VENV=true
-fi
+VENV_LOCATION=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --use-local-venv|--local-dev)
+            USE_LOCAL_VENV=true
+            shift
+            ;;
+        --venv-location=*)
+            VENV_LOCATION="${1#*=}"
+            shift
+            ;;
+        --venv-location)
+            VENV_LOCATION="$2"
+            shift 2
+            ;;
+        *)
+            # Unknown option, skip it (might be for future use)
+            shift
+            ;;
+    esac
+done
 
 echo "🧪 Starting PolarsBuckarooWidget Integration Test"
 
 # Create and activate a virtual environment for the test
-if [ "$USE_LOCAL_VENV" = true ]; then
+if [ -n "$VENV_LOCATION" ]; then
+    # Use explicitly provided venv location
+    VENV_DIR="$VENV_LOCATION"
+    if [ ! -d "$VENV_DIR" ]; then
+        error "Venv not found at $VENV_DIR. Please create it first or check the path."
+        exit 1
+    fi
+    log_message "Using specified venv location: $VENV_DIR"
+    source "$VENV_DIR/bin/activate"
+    log_message "Virtual environment activated: $VIRTUAL_ENV"
+elif [ "$USE_LOCAL_VENV" = true ]; then
     VENV_DIR=".venv"
     if [ ! -d "$VENV_DIR" ]; then
         error "Local venv not found at $VENV_DIR. Please create it first or run without --use-local-venv"

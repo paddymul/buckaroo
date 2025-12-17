@@ -104,11 +104,17 @@ jobs:
           
           # Install test dependencies (polars, jupyterlab)
           uv pip install polars jupyterlab
-          uv run python env_location.py
-
           
-          # Run the integration test script
-          bash scripts/test_polars_widget_integration.sh --use-local-venv
+          # Detect venv location (uv sync creates .venv by default, but check if it exists)
+          if [ -d ".venv" ]; then
+            VENV_LOCATION=".venv"
+          else
+            # Fallback: try to detect from uv's Python environment
+            VENV_LOCATION=$(uv run python -c "import sys; print(sys.prefix)" 2>/dev/null || echo ".venv")
+          fi
+          
+          # Run the integration test script with venv location
+          bash scripts/test_polars_widget_integration.sh --venv-location="$VENV_LOCATION"
         env:
           UV_PYTHON: ${{ matrix.python-version }}
 
