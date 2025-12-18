@@ -1,8 +1,8 @@
 {
 	"scripts": {
 		"dev": "npm run build -- --sourcemap=inline --watch",
-	    "build:old": "pwd && ls packages/buckaroo-js-core && ls packages/buckaroo-js-core/node_modules/ && esbuild js/widget.tsx --format=esm --bundle --outdir=buckaroo/static/",
-		"build": "pwd && ls buckaroo-js-core && esbuild js/widget.tsx --format=esm --bundle --outdir=../buckaroo/static/",
+		"build:old": "pwd && ls packages/buckaroo-js-core && ls packages/buckaroo-js-core/node_modules/ && esbuild js/widget.tsx --format=esm --bundle --outdir=buckaroo/static/",
+		"build": "pwd && ls buckaroo-js-core && bash .build_wrapper.sh",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -12,7 +12,7 @@
 		"@ag-grid-community/react": "^32.3.2",
 		"@ag-grid-community/styles": "^32.3.2",
 		"@anywidget/react": "^0.0.8",
-		"buckaroo-js-core": "./packages/buckaroo-js-core",
+		"buckaroo-js-core": "./buckaroo-js-core",
 		"lodash": "^4.17.21",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
