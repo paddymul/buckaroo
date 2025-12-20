@@ -14,6 +14,11 @@ export default defineConfig({
     actionTimeout: 30000,
     navigationTimeout: 60000,
     timeout: 120000, // Test timeout - 2 minutes for CI
+    // Force completely fresh browser context with no storage
+    storageState: undefined,
+    launchOptions: {
+      args: ['--incognito'],
+    },
   },
 
   projects: [
