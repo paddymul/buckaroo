@@ -75,6 +75,10 @@ NOTEBOOKS=(
     "test_polars_widget.ipynb"
     "test_polars_infinite_widget.ipynb"
     "test_lazy_infinite_polars_widget.ipynb"
+    "test_dfviewer.ipynb"
+    "test_dfviewer_infinite.ipynb"
+    "test_polars_dfviewer.ipynb"
+    "test_polars_dfviewer_infinite.ipynb"
 )
 
 # If a specific notebook is provided, test only that one
