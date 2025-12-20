@@ -253,15 +253,15 @@ export default async () => {
 	},
 	render({ model, el, experimental }) {
 	    const render_func_name = model.get("render_func_name");
-	    // if (render_func_name === "DFViewer") {
-		// renderDFV({ el, model, experimental });
-	    // } else if (render_func_name === "BuckarooWidget") {
-		// renderBuckarooWidget({ el, model, experimental });
-	    // } else if (render_func_name === "BuckarooInfiniteWidget") {
-		// extraState['renderBuckarooInfinite']({ el, model, experimental });
-	    // } else if (render_func_name === "DFViewerInfinite") {
-		// extraState['renderDFViewerInfinite']({ el, model, experimental });
-	    // }
+	    if (render_func_name === "DFViewer") {
+		renderDFV({ el, model, experimental });
+	    } else if (render_func_name === "BuckarooWidget") {
+		renderBuckarooWidget({ el, model, experimental });
+	    } else if (render_func_name === "BuckarooInfiniteWidget") {
+		extraState['renderBuckarooInfinite']({ el, model, experimental });
+	    } else if (render_func_name === "DFViewerInfinite") {
+		extraState['renderDFViewerInfinite']({ el, model, experimental });
+	    }
 	}
     }
 }
