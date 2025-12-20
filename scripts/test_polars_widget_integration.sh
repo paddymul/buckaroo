@@ -71,9 +71,14 @@ done
 # Define all notebooks to test
 NOTEBOOKS=(
     "test_buckaroo_widget.ipynb"
+    "test_buckaroo_infinite_widget.ipynb"
     "test_polars_widget.ipynb"
+    "test_polars_infinite_widget.ipynb"
+    "test_lazy_infinite_polars_widget.ipynb"
     "test_dfviewer.ipynb"
+    "test_dfviewer_infinite.ipynb"
     "test_polars_dfviewer.ipynb"
+    "test_polars_dfviewer_infinite.ipynb"
 )
 
 # If specific notebook(s) provided, test only those (comma-separated)
