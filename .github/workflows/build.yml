@@ -54,22 +54,12 @@ jobs:
           uv run pytest --check-links docs/example-notebooks/*.ipynb
           uv run sphinx-build -T -b html docs/source  docs/build
 
-      - name: Test the extension
+      - name: Test the JS extension
         run: |
-          #python -m pip install --upgrade -v -e ".[test, examples, docs]"
           ./scripts/full_build.sh
-          # cd packages/buckaroo-js-core
-          # pnpm install && pnpm run build
-          # #pnpm run test
-          # cd ../..
-          # mkdir buckaroo/static || true
-          # cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
-          # rm -rf packages/buckaroo-js-core/node_modules || true
-          # cd packages
-          # pnpm install && pnpm run build
-          # cd ..
-          # uv build --wheel
-          #pnpm -C packages/buckaroo-js-core run test
+          cd packages/buckaroo-js-core
+          pnpm install && pnpm run build
+          pnpm run test
         env:
           UV_PYTHON: ${{ matrix.python-version }}
 
@@ -84,12 +74,7 @@ jobs:
 
       - name: Package
         run: |
-          cd packages/buckaroo-js-core
-          pnpm install && pnpm run build
-          cd ../..
-          mkdir buckaroo/static || true
-          cp packages/buckaroo-js-core/dist/style.css buckaroo/static/compiled.css
-          uv build
+          ./scripts/full_build.sh
 
       - name: Upload builds
         uses: actions/upload-artifact@v4
