@@ -186,55 +186,15 @@ except ImportError as e:
     exit 1
 }
 
-# Create test notebook
-log_message "Creating test notebook..."
-cat > test_polars_widget.ipynb << 'EOF'
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Test buckaroo import\n",
-    "try:\n",
-    "    import buckaroo\n",
-    "    print(f\"✅ buckaroo imported successfully: {buckaroo.__version__}\")\n",
-    "except ImportError as e:\n",
-    "    print(f\"❌ Failed to import buckaroo: {e}\")\n",
-    "    raise\n",
-    "\n",
-    "import polars as pl\n",
-    "from buckaroo.polars_buckaroo import PolarsBuckarooWidget\n",
-    "\n",
-    "# Create test data\n",
-    "df = pl.DataFrame({\n",
-    "    'name': ['Alice', 'Bob', 'Charlie'],\n",
-    "    'age': [25, 30, 35],\n",
-    "    'score': [85.5, 92.0, 78.3]\n",
-    "})\n",
-    "print(f\"✅ Created DataFrame with shape: {df.shape}\")\n",
-    "\n",
-    "# Display the widget\n",
-    "widget = PolarsBuckarooWidget(df)\n",
-    "print(\"✅ PolarsBuckarooWidget created successfully\")\n",
-    "widget"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3",
-   "language": "python",
-   "name": "python3"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 4
-}
-EOF
-success "Test notebook created"
+# Copy test notebook to current directory
+log_message "Copying test notebook..."
+NOTEBOOK_SOURCE="tests/integration_notebooks/test_polars_widget.ipynb"
+if [ ! -f "$NOTEBOOK_SOURCE" ]; then
+    error "Test notebook not found at $NOTEBOOK_SOURCE"
+    exit 1
+fi
+cp "$NOTEBOOK_SOURCE" test_polars_widget.ipynb
+success "Test notebook copied"
 
 # Start JupyterLab in background (using virtual environment Python)
 log_message "Starting JupyterLab..."
