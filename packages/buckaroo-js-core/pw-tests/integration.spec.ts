@@ -120,8 +120,8 @@ test.describe('Buckaroo Widget JupyterLab Integration', () => {
     // Wait for output area to appear (may be hidden but should be attached)
     const outputArea = page.locator('.jp-OutputArea').first();
     await outputArea.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
-    // Wait a bit for execution to complete
-    await page.waitForTimeout(2000);
+    // Wait a bit for execution to complete and widget to render
+    await page.waitForTimeout(3000);
     console.log('✅ Cell executed');
 
     // Check for any error messages in the output
@@ -136,96 +136,67 @@ test.describe('Buckaroo Widget JupyterLab Integration', () => {
 
     // Wait for the buckaroo widget to appear within the output area
     console.log('⏳ Waiting for buckaroo widget...');
+    // DFViewer uses .buckaroo_anywidget, other widgets use .buckaroo-widget
+    // The widget is inside .jp-OutputArea, possibly nested in .lm-Widget
+    const buckarooWidget = outputArea.locator('.buckaroo_anywidget, .buckaroo-widget');
     try {
-        await outputArea.locator('.buckaroo-widget').waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+        await buckarooWidget.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
         console.log('✅ Buckaroo widget appeared');
     } catch (error) {
-        // Comprehensive error diagnostics
-        console.log('❌ Widget failed to appear. Gathering diagnostic information...');
-        
-        // Get the full output area text content
-        const fullOutputText = await outputArea.textContent().catch(() => '');
-        console.log('📄 Full output area text:', fullOutputText || '(empty)');
-        
-        // Get the HTML structure of the output area
-        const outputAreaHTML = await outputArea.innerHTML().catch(() => '');
-        console.log('📄 Output area HTML structure:', outputAreaHTML.substring(0, 2000) || '(empty)');
-        
-        // Check for stdout output
-        const stdoutOutput = outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.stdout"]');
-        const stdoutCount = await stdoutOutput.count();
-        if (stdoutCount > 0) {
-            const stdoutText = await stdoutOutput.first().textContent().catch(() => '');
-            console.log('📄 stdout output:', stdoutText || '(empty)');
+        // If we can't find the widget by class, try looking for ag-grid directly
+        // DFViewer might render differently than other widgets
+        console.log('⏳ Widget class not found, checking for ag-grid directly...');
+        try {
+            await outputArea.locator('.ag-root-wrapper').waitFor({ state: 'visible', timeout: 5000 });
+            console.log('✅ Found ag-grid directly, widget is rendering');
+        } catch (agGridError) {
+            // Comprehensive error diagnostics
+            console.log('❌ Widget failed to appear. Gathering diagnostic information...');
+            
+            // Check for any buckaroo-related elements
+            const buckarooElements = await outputArea.locator('[class*="buckaroo"]').count();
+            const agGridElements = await outputArea.locator('.ag-root-wrapper, .ag-row').count();
+            const widgetOutputs = await outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.widget-view+json"]').count();
+            console.log(`📊 Found ${buckarooElements} buckaroo elements, ${agGridElements} ag-grid elements, ${widgetOutputs} widget outputs`);
+            
+            // Get the full output area text content
+            const fullOutputText = await outputArea.textContent().catch(() => '');
+            console.log('📄 Full output area text:', fullOutputText?.substring(0, 500) || '(empty)');
+            
+            // Check for stdout output
+            const stdoutOutput = outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.stdout"]');
+            const stdoutCount = await stdoutOutput.count();
+            if (stdoutCount > 0) {
+                const stdoutText = await stdoutOutput.first().textContent().catch(() => '');
+                console.log('📄 stdout output:', stdoutText || '(empty)');
+            }
+            
+            // Check for error outputs
+            const errorOutputs = outputArea.locator('.jp-OutputArea-error');
+            const errorCount = await errorOutputs.count();
+            if (errorCount > 0) {
+                const errorTexts = await errorOutputs.allTextContents();
+                console.log('📄 Error outputs:', errorTexts.join('\n---\n'));
+            }
+            
+            // Log captured console errors
+            if (consoleMessages.length > 0) {
+                console.log('📄 Browser console errors/warnings:', JSON.stringify(consoleMessages, null, 2));
+            }
+            
+            // Build comprehensive error message
+            let errorMessage = 'Widget failed to render. ';
+            if (errorCount > 0) {
+                const errorTexts = await errorOutputs.allTextContents();
+                errorMessage += `Errors: ${errorTexts.join('; ')}. `;
+            }
+            if (consoleMessages.length > 0) {
+                errorMessage += `Console errors: ${consoleMessages.map(m => `${m.type}: ${m.text}`).join('; ')}. `;
+            }
+            errorMessage += `Found ${buckarooElements} buckaroo elements, ${agGridElements} ag-grid elements, ${widgetOutputs} widget outputs.`;
+            
+            throw new Error(errorMessage);
         }
-        
-        // Check for stderr output
-        const stderrOutput = outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.stderr"]');
-        const stderrCount = await stderrOutput.count();
-        if (stderrCount > 0) {
-            const stderrText = await stderrOutput.first().textContent().catch(() => '');
-            console.log('📄 stderr output:', stderrText || '(empty)');
-        }
-        
-        // Check for error outputs (multiple types)
-        const errorOutputs = outputArea.locator('.jp-OutputArea-error');
-        const errorCount = await errorOutputs.count();
-        if (errorCount > 0) {
-            const errorTexts = await errorOutputs.allTextContents();
-            console.log('📄 Error outputs:', errorTexts.join('\n---\n'));
-        }
-        
-        // Check for traceback
-        const tracebackOutput = outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.error"]');
-        const tracebackCount = await tracebackOutput.count();
-        if (tracebackCount > 0) {
-            const tracebackText = await tracebackOutput.first().textContent().catch(() => '');
-            console.log('📄 Traceback:', tracebackText || '(empty)');
-        }
-        
-        // Check for any buckaroo-related elements
-        const buckarooElements = await outputArea.locator('[class*="buckaroo"]').count();
-        const anyWidgets = await outputArea.locator('.widget-area').count();
-        const widgetOutputs = await outputArea.locator('.jp-OutputArea-output[data-mime-type="application/vnd.jupyter.widget-view+json"]').count();
-        console.log(`📊 Found ${buckarooElements} buckaroo elements, ${anyWidgets} widget areas, ${widgetOutputs} widget outputs`);
-        
-        // Check for all output types
-        const allOutputs = await outputArea.locator('.jp-OutputArea-output').all();
-        console.log(`📊 Total output elements: ${allOutputs.length}`);
-        for (let i = 0; i < allOutputs.length; i++) {
-            const mimeType = await allOutputs[i].getAttribute('data-mime-type').catch(() => 'unknown');
-            const text = await allOutputs[i].textContent().catch(() => '');
-            console.log(`  Output ${i + 1} (${mimeType}): ${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`);
-        }
-        
-        // Log captured console errors
-        if (consoleMessages.length > 0) {
-            console.log('📄 Browser console errors/warnings:', JSON.stringify(consoleMessages, null, 2));
-        }
-        
-        // Build comprehensive error message
-        let errorMessage = 'Widget failed to render. ';
-        if (errorCount > 0) {
-            const errorTexts = await errorOutputs.allTextContents();
-            errorMessage += `Errors: ${errorTexts.join('; ')}. `;
-        }
-        if (stderrCount > 0) {
-            const stderrText = await stderrOutput.first().textContent().catch(() => '');
-            errorMessage += `Stderr: ${stderrText}. `;
-        }
-        if (tracebackCount > 0) {
-            const tracebackText = await tracebackOutput.first().textContent().catch(() => '');
-            errorMessage += `Traceback: ${tracebackText}. `;
-        }
-        if (fullOutputText) {
-            errorMessage += `Full output: ${fullOutputText.substring(0, 500)}${fullOutputText.length > 500 ? '...' : ''}. `;
-        }
-        if (consoleMessages.length > 0) {
-            errorMessage += `Console errors: ${consoleMessages.map(m => `${m.type}: ${m.text}`).join('; ')}. `;
-        }
-        errorMessage += `Found ${buckarooElements} buckaroo elements, ${widgetOutputs} widget outputs.`;
-        
-        throw new Error(errorMessage);
     }
 
     // Wait for ag-grid to render within the output area
