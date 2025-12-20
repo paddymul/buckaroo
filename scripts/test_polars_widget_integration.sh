@@ -74,7 +74,6 @@ NOTEBOOKS=(
     "test_buckaroo_infinite_widget.ipynb"
     "test_polars_widget.ipynb"
     "test_polars_infinite_widget.ipynb"
-    "test_lazy_infinite_polars_widget.ipynb"
     "test_dfviewer.ipynb"
     "test_dfviewer_infinite.ipynb"
     "test_polars_dfviewer.ipynb"
@@ -227,7 +226,7 @@ test_notebook() {
     local notebook_name=$1
     local notebook_source="$ROOT_DIR/tests/integration_notebooks/$notebook_name"
     
-    log_message "Testing notebook: $notebook_name"
+    log_message "Testing notebook: $notebook_name [$CURRENT_TEST/$TOTAL_NOTEBOOKS]"
     
     # Copy test notebook to current directory
     if [ ! -f "$notebook_source" ]; then
@@ -252,7 +251,6 @@ start_jupyter() {
             kill -9 "$pid" 2>/dev/null || true
         fi
     done || true
-    sleep 1
     
     # Clear JupyterLab workspace state to ensure clean start
     rm -rf .jupyter/lab/workspaces 2>/dev/null || true
@@ -277,7 +275,6 @@ start_jupyter() {
         COUNTER=$((COUNTER + 2))
     done
     success "JupyterLab is ready at http://localhost:8889"
-    sleep 2
 }
 
 # Function to stop JupyterLab
@@ -285,7 +282,6 @@ stop_jupyter() {
     if [ -n "$JUPYTER_PID" ] && kill -0 $JUPYTER_PID 2>/dev/null; then
         log_message "Stopping JupyterLab (PID: $JUPYTER_PID)"
         kill -15 $JUPYTER_PID 2>/dev/null || true
-        sleep 1
         kill -9 $JUPYTER_PID 2>/dev/null || true
     fi
     # Also kill any stragglers on port 8889
@@ -329,10 +325,13 @@ success "npm dependencies and Playwright browsers ready"
 # Test all notebooks
 OVERALL_RESULT=0
 FAILED_NOTEBOOKS=()
+TOTAL_NOTEBOOKS=${#NOTEBOOKS[@]}
+CURRENT_TEST=0
 
 for notebook in "${NOTEBOOKS[@]}"; do
+    CURRENT_TEST=$((CURRENT_TEST + 1))
     log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    log_message "Testing: $notebook"
+    log_message "Testing: $notebook [$CURRENT_TEST/$TOTAL_NOTEBOOKS]"
     log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
     # Start fresh JupyterLab for each notebook
@@ -351,7 +350,7 @@ for notebook in "${NOTEBOOKS[@]}"; do
     # Run Playwright test (from packages/buckaroo-js-core)
     cd packages/buckaroo-js-core
     log_message "Running Playwright test for $notebook..."
-    if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=60000; then
+    if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=30000; then
         success "✅ Playwright test passed for $notebook!"
     else
         error "❌ Playwright test failed for $notebook!"

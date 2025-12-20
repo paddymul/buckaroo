@@ -3,17 +3,13 @@ import { Page } from '@playwright/test';
 
 const JUPYTER_BASE_URL = 'http://localhost:8889';
 const JUPYTER_TOKEN = 'test-token-12345';
-const DEFAULT_TIMEOUT = 15000; // 15 seconds for most operations
-const NAVIGATION_TIMEOUT = 20000; // 20 seconds max for navigation
+const DEFAULT_TIMEOUT = 8000; // 8 seconds for most operations
+const NAVIGATION_TIMEOUT = 10000; // 10 seconds max for navigation
 
-async function waitForAgGrid(outputArea: any, timeout = 10000) {
-  // Wait for ag-grid to be present and rendered within the output area
-  // Use 'attached' instead of 'visible' as widgets may have complex visibility states
+async function waitForAgGrid(outputArea: any, timeout = 5000) {
+  // Wait for ag-grid to be present and rendered
   await outputArea.locator('.ag-root-wrapper').first().waitFor({ state: 'attached', timeout });
-  // Wait for cells to be present
   await outputArea.locator('.ag-cell').first().waitFor({ state: 'attached', timeout });
-  // Wait for no loading overlays
-  await outputArea.locator('.ag-overlay-loading-center').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
 }
 
 // Helper function to get cell content by row and column
@@ -116,16 +112,15 @@ test.describe('Buckaroo Widget JupyterLab Integration', () => {
     // Focus on the notebook and use keyboard shortcut to run cell (Shift+Enter)
     // Use dispatchEvent to trigger click without visibility requirement
     await page.locator('.jp-Notebook').first().dispatchEvent('click');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(200);
     await page.keyboard.press('Shift+Enter');
 
     // Wait for cell execution to complete
     console.log('⏳ Waiting for cell execution...');
-    // Wait for output area to appear
     const outputArea = page.locator('.jp-OutputArea').first();
     await outputArea.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
     // Wait for widget to render
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(800);
     console.log('✅ Cell executed');
 
     // Check for any error messages in the output
@@ -142,7 +137,7 @@ test.describe('Buckaroo Widget JupyterLab Integration', () => {
     console.log('⏳ Waiting for buckaroo widget...');
     
     // Wait a moment for widget to render
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
     
     // Check for any buckaroo-related elements and ag-grid on the WHOLE PAGE
     // (widget might be in a different output area than expected)
