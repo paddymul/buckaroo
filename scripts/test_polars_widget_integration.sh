@@ -245,8 +245,13 @@ test_notebook() {
 
 # Start JupyterLab in background (using virtual environment Python)
 log_message "Starting JupyterLab..."
-# Kill any existing JupyterLab processes on port 8889
-lsof -ti:8889 | xargs kill -9 2>/dev/null || true
+# Kill any existing JupyterLab processes on port 8889 (but not browsers)
+# Only kill processes that are actually jupyter/lab processes
+lsof -ti:8889 | while read pid; do
+    if ps -p "$pid" -o comm= 2>/dev/null | grep -qE 'jupyter|python'; then
+        kill -9 "$pid" 2>/dev/null || true
+    fi
+done || true
 sleep 1
 
 export JUPYTER_TOKEN="test-token-12345"
