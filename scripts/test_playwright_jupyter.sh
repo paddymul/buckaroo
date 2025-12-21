@@ -293,6 +293,31 @@ stop_jupyter() {
     done || true
 }
 
+# Function to reset JupyterLab state between tests (without restarting)
+reset_jupyter_state() {
+    # Shutdown all kernels via API
+    curl -s -X DELETE "http://localhost:8889/api/kernels?token=$JUPYTER_TOKEN" 2>/dev/null || true
+    
+    # Get all running kernels and shut them down individually
+    KERNELS=$(curl -s "http://localhost:8889/api/kernels?token=$JUPYTER_TOKEN" 2>/dev/null || echo "[]")
+    if [ "$KERNELS" != "[]" ] && [ -n "$KERNELS" ]; then
+        echo "$KERNELS" | grep -o '"id":"[^"]*"' | sed 's/"id":"//;s/"$//' | while read kernel_id; do
+            curl -s -X DELETE "http://localhost:8889/api/kernels/$kernel_id?token=$JUPYTER_TOKEN" 2>/dev/null || true
+        done
+    fi
+    
+    # Get all sessions and close them
+    SESSIONS=$(curl -s "http://localhost:8889/api/sessions?token=$JUPYTER_TOKEN" 2>/dev/null || echo "[]")
+    if [ "$SESSIONS" != "[]" ] && [ -n "$SESSIONS" ]; then
+        echo "$SESSIONS" | grep -o '"id":"[^"]*"' | sed 's/"id":"//;s/"$//' | while read session_id; do
+            curl -s -X DELETE "http://localhost:8889/api/sessions/$session_id?token=$JUPYTER_TOKEN" 2>/dev/null || true
+        done
+    fi
+    
+    # Brief pause to let JupyterLab settle
+    sleep 0.5
+}
+
 # Install npm dependencies for Playwright
 log_message "Installing npm dependencies for Playwright..."
 cd packages/buckaroo-js-core
@@ -329,22 +354,28 @@ FAILED_NOTEBOOKS=()
 TOTAL_NOTEBOOKS=${#NOTEBOOKS[@]}
 CURRENT_TEST=0
 
+# Start JupyterLab once for all tests
+cd "$ROOT_DIR"
+start_jupyter
+
 for notebook in "${NOTEBOOKS[@]}"; do
     CURRENT_TEST=$((CURRENT_TEST + 1))
     log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     log_message "Testing: $notebook [$CURRENT_TEST/$TOTAL_NOTEBOOKS]"
     log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    # Start fresh JupyterLab for each notebook
     cd "$ROOT_DIR"
-    start_jupyter
+    
+    # Reset JupyterLab state between tests (shutdown kernels, close sessions)
+    if [ $CURRENT_TEST -gt 1 ]; then
+        reset_jupyter_state
+    fi
     
     # Copy notebook to root directory (where JupyterLab serves from)
     if ! test_notebook "$notebook"; then
         error "Failed to prepare notebook: $notebook"
         OVERALL_RESULT=1
         FAILED_NOTEBOOKS+=("$notebook (preparation failed)")
-        stop_jupyter
         continue
     fi
     
@@ -372,10 +403,10 @@ for notebook in "${NOTEBOOKS[@]}"; do
     # Clean up notebook file (from root directory)
     cd "$ROOT_DIR"
     rm -f "$notebook"
-    
-    # Stop JupyterLab to ensure clean state for next test
-    stop_jupyter
 done
+
+# Stop JupyterLab after all tests
+stop_jupyter
 
 cd "$ROOT_DIR"
 
