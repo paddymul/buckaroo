@@ -169,5 +169,125 @@ test.describe("PinnedRowsTranscriptReplayer", () => {
     await expect(col1Header).toBeVisible({ timeout: 5000 });
     await expect(col2Header).toBeVisible({ timeout: 5000 });
   });
+
+  test("should replay infinite scroll transcript with data", async ({ page }) => {
+    // Simulate a transcript with column config + data rows
+    // The story uses the row data directly via createRawDataWrapper
+    await page.addInitScript(() => {
+      const ts = Date.now();
+
+      (window as any)._buckarooTranscript = [
+        // First: column config - must match the row field names
+        {
+          ts: ts,
+          event: "dfi_cols_fields",
+          fields: ["index", "a", "b"],  // Match baseConfig columns
+        },
+        // Second: data rows
+        {
+          ts: ts + 200,
+          event: "infinite_resp_parsed",
+          key: null,
+          rows_len: 5,
+          total_len: 5,
+          rows: [
+            { index: 0, a: 100, b: "row_zero" },
+            { index: 1, a: 200, b: "row_one" },
+            { index: 2, a: 300, b: "row_two" },
+            { index: 3, a: 400, b: "row_three" },
+            { index: 4, a: 500, b: "row_four" },
+          ],
+        },
+      ];
+    });
+
+    await page.goto(
+      "http://localhost:6006/iframe.html?args=&id=buckaroo-dfviewer-pinnedrowstranscriptreplayer--primary&viewMode=story"
+    );
+    await waitForCells(page);
+
+    // Click Start Replay
+    const startButton = page.getByRole("button", { name: "Start Replay" });
+    await startButton.click();
+
+    // Wait for events to replay
+    await page.waitForTimeout(1000);
+
+    // Verify data appears in grid - look for our values
+    const cell100 = page.locator('.ag-cell:has-text("100")');
+    const cellRowZero = page.locator('.ag-cell:has-text("row_zero")');
+    
+    await expect(cell100).toBeVisible({ timeout: 5000 });
+    await expect(cellRowZero).toBeVisible({ timeout: 5000 });
+
+    // Verify multiple rows of data
+    const cell200 = page.locator('.ag-cell:has-text("200")');
+    const cellRowOne = page.locator('.ag-cell:has-text("row_one")');
+    
+    await expect(cell200).toBeVisible({ timeout: 5000 });
+    await expect(cellRowOne).toBeVisible({ timeout: 5000 });
+    
+    console.log('✅ Infinite scroll transcript replay verified!');
+  });
+
+  test("should replay multiple data fetches sequentially", async ({ page }) => {
+    // Test that the second infinite_resp_parsed event updates the grid
+    await page.addInitScript(() => {
+      const ts = Date.now();
+      
+      (window as any)._buckarooTranscript = [
+        {
+          ts: ts,
+          event: "dfi_cols_fields",
+          fields: ["index", "a", "b"],
+        },
+        // First batch
+        {
+          ts: ts + 100,
+          event: "infinite_resp_parsed",
+          key: null,
+          rows_len: 2,
+          total_len: 4,
+          rows: [
+            { index: 0, a: 10, b: "first" },
+            { index: 1, a: 20, b: "second" },
+          ],
+        },
+        // Second batch (replaces the data)
+        {
+          ts: ts + 500,
+          event: "infinite_resp_parsed",
+          key: null,
+          rows_len: 2,
+          total_len: 4,
+          rows: [
+            { index: 2, a: 30, b: "third" },
+            { index: 3, a: 40, b: "fourth" },
+          ],
+        },
+      ];
+    });
+
+    await page.goto(
+      "http://localhost:6006/iframe.html?args=&id=buckaroo-dfviewer-pinnedrowstranscriptreplayer--primary&viewMode=story"
+    );
+    await waitForCells(page);
+
+    const startButton = page.getByRole("button", { name: "Start Replay" });
+    await startButton.click();
+
+    // Wait for all events to replay (with 120ms MIN_STEP_MS between each)
+    await page.waitForTimeout(1500);
+
+    // After the second fetch, we should see the second batch data
+    // (the current implementation replaces rawRows with the latest batch)
+    const thirdCell = page.locator('.ag-cell:has-text("third")');
+    const fourthCell = page.locator('.ag-cell:has-text("fourth")');
+    
+    await expect(thirdCell).toBeVisible({ timeout: 5000 });
+    await expect(fourthCell).toBeVisible({ timeout: 5000 });
+    
+    console.log('✅ Multiple data fetch replay verified!');
+  });
 });
 
