@@ -355,20 +355,45 @@ const srcClosureRBI = (src) => {
 					buffers_len: buffers?.length || 0,
 				});
 				// Parse infinite_resp parquet buffers
-				if (msg && msg.type === "infinite_resp" && buffers && buffers.length > 0 && buffers[0] instanceof ArrayBuffer) {
+				// Check buffer type - might be DataView, Uint8Array, or ArrayBuffer
+				const hasBuffer = buffers && buffers.length > 0;
+				const bufferType = hasBuffer ? (buffers[0]?.constructor?.name || typeof buffers[0]) : 'none';
+				console.info("[WidgetTSX][InfiniteWidget] Buffer check:", { hasBuffer, bufferType, bufLen: buffers?.length });
+				
+				// Get the raw ArrayBuffer from various wrapper types
+				let rawBuffer: ArrayBuffer | null = null;
+				if (hasBuffer) {
+					const buf = buffers[0];
+					if (buf instanceof ArrayBuffer) {
+						rawBuffer = buf;
+					} else if (buf instanceof DataView) {
+						rawBuffer = buf.buffer;
+					} else if (buf instanceof Uint8Array || (buf && buf.buffer instanceof ArrayBuffer)) {
+						rawBuffer = (buf as any).buffer;
+					}
+				}
+				
+				if (msg && msg.type === "infinite_resp" && rawBuffer) {
+					console.info("[WidgetTSX][InfiniteWidget] Attempting to parse parquet buffer, size:", rawBuffer.byteLength);
 					(async () => {
 						try {
-							// @ts-ignore dynamic import
-							const mod = await import("hyparquet");
-							const parquetMetadata = (mod as any).parquetMetadata;
-							const parquetRead = (mod as any).parquetRead;
-							const buf = buffers[0] as ArrayBuffer;
-							const metadata = parquetMetadata(buf);
-							parquetRead({
+							// Use parquetRead/parquetMetadata from srt (buckaroo-js-core)
+							const parquetMetadataFn = (srt as any).parquetMetadata;
+							const parquetReadFn = (srt as any).parquetRead;
+							if (!parquetMetadataFn || !parquetReadFn) {
+								console.warn("[WidgetTSX][InfiniteWidget] parquet functions not found in srt:", { parquetMetadata: !!parquetMetadataFn, parquetRead: !!parquetReadFn });
+								return;
+							}
+							const buf = rawBuffer!;
+							console.info("[WidgetTSX][InfiniteWidget] Reading parquet metadata...");
+							const metadata = parquetMetadataFn(buf);
+							console.info("[WidgetTSX][InfiniteWidget] Metadata:", metadata?.num_rows);
+							parquetReadFn({
 								file: buf,
 								metadata,
 								rowFormat: "object",
 								onComplete: (rows: any[]) => {
+									console.info("[WidgetTSX][InfiniteWidget] Parquet parsed, rows:", rows?.length);
 									const toJsonSafe = (val: any): any => {
 										if (typeof val === "bigint") return val.toString();
 										if (Array.isArray(val)) return val.map(toJsonSafe);
@@ -390,10 +415,19 @@ const srcClosureRBI = (src) => {
 										total_len: (msg as any).length ?? null,
 										rows: toJsonSafe(rows || []),
 									});
+									console.info("[WidgetTSX][InfiniteWidget] infinite_resp_parsed event pushed to transcript");
 								},
 							});
 						} catch (e) {
 							console.warn("[WidgetTSX][InfiniteWidget] failed to parse parquet buffer", e);
+							// @ts-ignore
+							window._buckarooTranscript = window._buckarooTranscript || [];
+							// @ts-ignore
+							window._buckarooTranscript.push({
+								ts: Date.now(),
+								event: "infinite_resp_parse_error",
+								error: String(e),
+							});
 						}
 					})();
 				}

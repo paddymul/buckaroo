@@ -13,6 +13,15 @@ async function waitForAgGrid(page: Page, timeout = 5000) {
 
 test.describe('Infinite Scroll Transcript Recording', () => {
   test('should record transcript events when scrolling triggers data fetch', async ({ page }) => {
+    // Capture console messages to debug hyparquet parsing
+    const consoleMessages: string[] = [];
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (text.includes('WidgetTSX') || text.includes('hyparquet') || text.includes('parquet')) {
+        consoleMessages.push(`[${msg.type()}] ${text}`);
+      }
+    });
+
     // Navigate to the test notebook
     const notebookName = 'test_infinite_scroll_transcript.ipynb';
     console.log(`📓 Opening test notebook: ${notebookName}...`);
@@ -271,6 +280,15 @@ test.describe('Infinite Scroll Transcript Recording', () => {
       console.log('✅ Data in transcript matches expected predictable pattern!');
     } else {
       console.log('⚠️ No data fetch events captured');
+    }
+
+    // Log browser console messages related to hyparquet/parquet parsing
+    console.log(`📋 Browser console messages (hyparquet/parquet related): ${consoleMessages.length}`);
+    for (const msg of consoleMessages.slice(0, 20)) {
+      console.log(`   ${msg}`);
+    }
+    if (consoleMessages.length > 20) {
+      console.log(`   ... and ${consoleMessages.length - 20} more`);
     }
 
     // Save transcript for potential storybook replay testing
