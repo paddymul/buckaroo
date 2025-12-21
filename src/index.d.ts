@@ -2,6 +2,7 @@ import { ColumnsEditor } from './components/ColumnsEditor';
 import { DFViewer, DFViewerInfinite } from './components/DFViewerParts/DFViewerInfinite';
 import { WidgetDCFCell } from './components/DCFCell';
 import { BuckarooInfiniteWidget, DFViewerInfiniteDS } from './components/BuckarooWidgetInfinite';
+import { parquetRead, parquetMetadata } from 'hyparquet';
 import { DependentTabs } from './components/DependentTabs';
 import { StatusBar } from './components/StatusBar';
 import * as CommandUtils from "./components/CommandUtils";
@@ -41,5 +42,7 @@ declare const _default: {
     }) => import("react/jsx-runtime").JSX.Element;
     HeaderNoArgs: () => import("react/jsx-runtime").JSX.Element;
     Counter: () => import("react/jsx-runtime").JSX.Element;
+    parquetRead: typeof parquetRead;
+    parquetMetadata: typeof parquetMetadata;
 };
 export default _default;
