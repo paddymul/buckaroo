@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './pw-tests',
-  testMatch: 'integration.spec.ts',
+  // Match integration and infinite scroll tests (JupyterLab-based tests)
+  testMatch: ['integration.spec.ts', 'infinite-scroll-transcript.spec.ts'],
   fullyParallel: false, // Integration tests should run serially
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

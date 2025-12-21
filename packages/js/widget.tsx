@@ -134,6 +134,8 @@ const renderBuckarooWidget = createRender(() => {
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
 	// Diagnostics: log all_stats shape and pinned_rows config when they change
 	// Also persist to window._buckarooTranscript for replay in Storybook
+	// FIXME: Feature-flag the transcript recording via a Python trait (e.g. enable_transcript_recording)
+	// so it only records when explicitly enabled, not all the time
 	React.useEffect(() => {
 		try {
 			const allStats = (df_data_dict && df_data_dict['all_stats']) || [];
@@ -335,6 +337,76 @@ const srcClosureRBI = (src) => {
 	const [command_config, _set_cc] = useModelState("command_config");
 	const [buckaroo_state, on_buckaroo_state] = useModelState("buckaroo_state");
 	const [buckaroo_options, _set_boptions] = useModelState("buckaroo_options");
+
+	// FIXME: Feature-flag the transcript recording via a Python trait
+	// Capture custom messages (infinite_resp) into transcript for debugging/replay
+	React.useEffect(() => {
+		const handler = (msg: any, buffers?: ArrayBuffer[]) => {
+			try {
+				// eslint-disable-next-line no-console
+				console.info("[WidgetTSX][InfiniteWidget][CustomMsg]", msg?.type, msg);
+				// @ts-ignore
+				window._buckarooTranscript = window._buckarooTranscript || [];
+				// @ts-ignore
+				window._buckarooTranscript.push({
+					ts: Date.now(),
+					event: "custom_msg",
+					msg,
+					buffers_len: buffers?.length || 0,
+				});
+				// Parse infinite_resp parquet buffers
+				if (msg && msg.type === "infinite_resp" && buffers && buffers.length > 0 && buffers[0] instanceof ArrayBuffer) {
+					(async () => {
+						try {
+							// @ts-ignore dynamic import
+							const mod = await import("hyparquet");
+							const parquetMetadata = (mod as any).parquetMetadata;
+							const parquetRead = (mod as any).parquetRead;
+							const buf = buffers[0] as ArrayBuffer;
+							const metadata = parquetMetadata(buf);
+							parquetRead({
+								file: buf,
+								metadata,
+								rowFormat: "object",
+								onComplete: (rows: any[]) => {
+									const toJsonSafe = (val: any): any => {
+										if (typeof val === "bigint") return val.toString();
+										if (Array.isArray(val)) return val.map(toJsonSafe);
+										if (val && typeof val === "object") {
+											const out: any = {};
+											for (const k in val) {
+												try { out[k] = toJsonSafe(val[k]); } catch { out[k] = null; }
+											}
+											return out;
+										}
+										return val;
+									};
+									// @ts-ignore
+									window._buckarooTranscript.push({
+										ts: Date.now(),
+										event: "infinite_resp_parsed",
+										key: (msg as any).key || null,
+										rows_len: Array.isArray(rows) ? rows.length : 0,
+										total_len: (msg as any).length ?? null,
+										rows: toJsonSafe(rows || []),
+									});
+								},
+							});
+						} catch (e) {
+							console.warn("[WidgetTSX][InfiniteWidget] failed to parse parquet buffer", e);
+						}
+					})();
+				}
+			} catch {}
+		};
+		// @ts-ignore backbone event from anywidget
+		model.on("msg:custom", handler);
+		return () => {
+			// @ts-ignore
+			model.off("msg:custom", handler);
+		};
+	}, [model]);
+
 	return (
 	    <div className="buckaroo_anywidget">
 	    <srt.BuckarooInfiniteWidget

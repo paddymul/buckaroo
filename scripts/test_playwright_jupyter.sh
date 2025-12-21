@@ -78,6 +78,7 @@ NOTEBOOKS=(
     "test_dfviewer_infinite.ipynb"
     "test_polars_dfviewer.ipynb"
     "test_polars_dfviewer_infinite.ipynb"
+    "test_infinite_scroll_transcript.ipynb"
 )
 
 # If specific notebook(s) provided, test only those (comma-separated)
@@ -350,12 +351,30 @@ for notebook in "${NOTEBOOKS[@]}"; do
     # Run Playwright test (from packages/buckaroo-js-core)
     cd packages/buckaroo-js-core
     log_message "Running Playwright test for $notebook..."
-    if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=30000; then
-        success "✅ Playwright test passed for $notebook!"
+    
+    # Use special test file for transcript testing
+    if [[ "$notebook" == "test_infinite_scroll_transcript.ipynb" ]]; then
+        PW_TEST_FILE="pw-tests/infinite-scroll-transcript.spec.ts"
     else
-        error "❌ Playwright test failed for $notebook!"
-        OVERALL_RESULT=1
-        FAILED_NOTEBOOKS+=("$notebook")
+        PW_TEST_FILE=""
+    fi
+    
+    if [ -n "$PW_TEST_FILE" ]; then
+        if npx playwright test "$PW_TEST_FILE" --config playwright.config.integration.ts --reporter=line --timeout=45000; then
+            success "✅ Playwright test passed for $notebook!"
+        else
+            error "❌ Playwright test failed for $notebook!"
+            OVERALL_RESULT=1
+            FAILED_NOTEBOOKS+=("$notebook")
+        fi
+    else
+        if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=30000; then
+            success "✅ Playwright test passed for $notebook!"
+        else
+            error "❌ Playwright test failed for $notebook!"
+            OVERALL_RESULT=1
+            FAILED_NOTEBOOKS+=("$notebook")
+        fi
     fi
     
     # Clean up notebook file (from root directory)
