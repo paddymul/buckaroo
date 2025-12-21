@@ -352,58 +352,85 @@ success "npm dependencies and Playwright browsers ready"
 OVERALL_RESULT=0
 FAILED_NOTEBOOKS=()
 TOTAL_NOTEBOOKS=${#NOTEBOOKS[@]}
-CURRENT_TEST=0
 
 # Start JupyterLab once for all tests
 cd "$ROOT_DIR"
 start_jupyter
 
+# Separate infinite scroll transcript test from regular tests
+REGULAR_NOTEBOOKS=()
+TRANSCRIPT_NOTEBOOK=""
 for notebook in "${NOTEBOOKS[@]}"; do
-    CURRENT_TEST=$((CURRENT_TEST + 1))
-    log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    log_message "Testing: $notebook [$CURRENT_TEST/$TOTAL_NOTEBOOKS]"
-    log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
-    cd "$ROOT_DIR"
-    
-    # Reset JupyterLab state between tests (shutdown kernels, close sessions)
-    if [ $CURRENT_TEST -gt 1 ]; then
-        reset_jupyter_state
+    if [[ "$notebook" == "test_infinite_scroll_transcript.ipynb" ]]; then
+        TRANSCRIPT_NOTEBOOK="$notebook"
+    else
+        REGULAR_NOTEBOOKS+=("$notebook")
     fi
-    
-    # Copy notebook to root directory (where JupyterLab serves from)
+done
+
+# Copy ALL regular notebooks first
+log_message "Copying ${#REGULAR_NOTEBOOKS[@]} notebooks for batch testing..."
+for notebook in "${REGULAR_NOTEBOOKS[@]}"; do
     if ! test_notebook "$notebook"; then
         error "Failed to prepare notebook: $notebook"
         OVERALL_RESULT=1
         FAILED_NOTEBOOKS+=("$notebook (preparation failed)")
-        continue
     fi
+done
+
+# Run batch test for regular notebooks (single browser session)
+if [ ${#REGULAR_NOTEBOOKS[@]} -gt 0 ]; then
+    log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_message "Running batch test for ${#REGULAR_NOTEBOOKS[@]} notebooks (single browser)"
+    log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    # Run Playwright test (from packages/buckaroo-js-core)
     cd packages/buckaroo-js-core
-    log_message "Running Playwright test for $notebook..."
     
-    # Use special test file for transcript testing, otherwise use integration.spec.ts only
-    if [[ "$notebook" == "test_infinite_scroll_transcript.ipynb" ]]; then
-        PW_TEST_FILE="pw-tests/infinite-scroll-transcript.spec.ts"
-        PW_TIMEOUT=45000
-    else
-        PW_TEST_FILE="pw-tests/integration.spec.ts"
-        PW_TIMEOUT=30000
-    fi
+    # Join notebooks with comma for env var
+    NOTEBOOKS_CSV=$(IFS=','; echo "${REGULAR_NOTEBOOKS[*]}")
     
-    if npx playwright test "$PW_TEST_FILE" --config playwright.config.integration.ts --reporter=line --timeout=$PW_TIMEOUT; then
-        success "✅ Playwright test passed for $notebook!"
+    if TEST_NOTEBOOKS="$NOTEBOOKS_CSV" npx playwright test pw-tests/integration-batch.spec.ts --config playwright.config.integration.ts --reporter=line --timeout=30000; then
+        success "✅ Batch test passed for all ${#REGULAR_NOTEBOOKS[@]} notebooks!"
     else
-        error "❌ Playwright test failed for $notebook!"
+        error "❌ Batch test failed!"
         OVERALL_RESULT=1
-        FAILED_NOTEBOOKS+=("$notebook")
+        FAILED_NOTEBOOKS+=("batch test")
     fi
     
-    # Clean up notebook file (from root directory)
     cd "$ROOT_DIR"
+fi
+
+# Clean up regular notebooks
+for notebook in "${REGULAR_NOTEBOOKS[@]}"; do
     rm -f "$notebook"
 done
+
+# Run transcript test separately (needs special handling)
+if [ -n "$TRANSCRIPT_NOTEBOOK" ]; then
+    log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_message "Testing: $TRANSCRIPT_NOTEBOOK (transcript test)"
+    log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    # Reset state before transcript test
+    reset_jupyter_state
+    
+    if test_notebook "$TRANSCRIPT_NOTEBOOK"; then
+        cd packages/buckaroo-js-core
+        if npx playwright test pw-tests/infinite-scroll-transcript.spec.ts --config playwright.config.integration.ts --reporter=line --timeout=45000; then
+            success "✅ Transcript test passed!"
+        else
+            error "❌ Transcript test failed!"
+            OVERALL_RESULT=1
+            FAILED_NOTEBOOKS+=("$TRANSCRIPT_NOTEBOOK")
+        fi
+        cd "$ROOT_DIR"
+        rm -f "$TRANSCRIPT_NOTEBOOK"
+    else
+        error "Failed to prepare notebook: $TRANSCRIPT_NOTEBOOK"
+        OVERALL_RESULT=1
+        FAILED_NOTEBOOKS+=("$TRANSCRIPT_NOTEBOOK (preparation failed)")
+    fi
+fi
 
 # Stop JupyterLab after all tests
 stop_jupyter
