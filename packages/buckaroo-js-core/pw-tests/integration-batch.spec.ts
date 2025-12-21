@@ -2,8 +2,10 @@ import { test, expect, Page, BrowserContext } from '@playwright/test';
 
 const JUPYTER_BASE_URL = 'http://localhost:8889';
 const JUPYTER_TOKEN = 'test-token-12345';
-const DEFAULT_TIMEOUT = 8000;
-const NAVIGATION_TIMEOUT = 10000;
+// Increased timeouts for CI (slower environment)
+const DEFAULT_TIMEOUT = 15000;
+const NAVIGATION_TIMEOUT = 20000;
+const WIDGET_RENDER_TIMEOUT = 8000; // Max time to wait for widget to render
 
 // Get notebooks from environment variable or use defaults
 const NOTEBOOKS = (process.env.TEST_NOTEBOOKS || '').split(',').filter(Boolean);
@@ -86,15 +88,26 @@ if (NOTEBOOKS.length > 0) {
         await page.keyboard.press('Shift+Enter');
         
         // Wait for output - fresh output for this notebook
-        await page.waitForTimeout(1000);
         const outputArea = page.locator('.jp-OutputArea').first();
         await outputArea.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
         console.log('✅ Cell executed');
         
-        // Check for widget elements - wait longer for widget to render
-        await page.waitForTimeout(800);
-        const buckarooElements = await page.locator('[class*="buckaroo"]').count();
-        const agGridElements = await page.locator('.ag-root-wrapper, .ag-row').count();
+        // Wait for widget elements with retry logic (CI can be slow)
+        let buckarooElements = 0;
+        let agGridElements = 0;
+        const maxRetries = 16; // 16 * 500ms = 8 seconds max
+        for (let retry = 0; retry < maxRetries; retry++) {
+          await page.waitForTimeout(500);
+          buckarooElements = await page.locator('[class*="buckaroo"]').count();
+          agGridElements = await page.locator('.ag-root-wrapper, .ag-row').count();
+          if (buckarooElements > 0 || agGridElements > 0) {
+            console.log(`✅ Widget appeared after ${(retry + 1) * 500}ms`);
+            break;
+          }
+          if (retry >= 5 && retry % 3 === 0) {
+            console.log(`⏳ Still waiting for widget... (attempt ${retry + 1}/${maxRetries})`);
+          }
+        }
         
         if (buckarooElements === 0 && agGridElements === 0) {
           throw new Error(`Widget failed to render for ${notebook}`);
