@@ -1,10 +1,10 @@
 #!/bin/bash
-# Integration test script for Buckaroo widgets
+# Playwright tests against JupyterLab for Buckaroo widgets
 # Usage:
-#   bash scripts/test_polars_widget_integration.sh                    # Tests all widgets (creates test venv and builds buckaroo)
-#   bash scripts/test_polars_widget_integration.sh --use-local-venv   # Tests all widgets (uses existing .venv, skips build)
-#   bash scripts/test_polars_widget_integration.sh --notebook=test_polars_widget.ipynb  # Test specific notebook
-#   bash scripts/test_polars_widget_integration.sh --venv-location=/path/to/venv  # Uses specified venv location
+#   bash scripts/test_playwright_jupyter.sh                          # Tests all widgets (creates test venv and builds buckaroo)
+#   bash scripts/test_playwright_jupyter.sh --use-local-venv         # Tests all widgets (uses existing .venv, skips build)
+#   bash scripts/test_playwright_jupyter.sh --notebook=test_polars_widget.ipynb  # Test specific notebook
+#   bash scripts/test_playwright_jupyter.sh --venv-location=/path/to/venv  # Uses specified venv location
 set -e
 
 # Make sure we're in the buckaroo directory (scripts/ is one level down from root)
@@ -366,15 +366,15 @@ for notebook in "${NOTEBOOKS[@]}"; do
     stop_jupyter
 done
 
-cd ../..
+cd "$ROOT_DIR"
 
 # Final summary
 log_message "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ $OVERALL_RESULT -eq 0 ]; then
-    success "🎉 ALL INTEGRATION TESTS PASSED!"
+    success "🎉 ALL JUPYTER PLAYWRIGHT TESTS PASSED!"
     log_message "All widgets work correctly in JupyterLab"
 else
-    error "💥 SOME INTEGRATION TESTS FAILED"
+    error "💥 SOME JUPYTER TESTS FAILED"
     log_message "Failed notebooks:"
     for failed in "${FAILED_NOTEBOOKS[@]}"; do
         error "  - $failed"
