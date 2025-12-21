@@ -5,7 +5,133 @@ import srt from "buckaroo-js-core";
 import "./widget.css";
 import "../buckaroo-js-core/dist/style.css";
 
+// ============================================================================
+// Transcript Recording (Plain JS - no React needed)
+// FIXME: Feature-flag this via a Python trait (e.g. enable_transcript_recording)
+// ============================================================================
 
+/**
+ * Helper to convert values to JSON-safe format (handles BigInt, etc.)
+ */
+function toJsonSafe(val: any): any {
+	if (typeof val === "bigint") return val.toString();
+	if (Array.isArray(val)) return val.map(toJsonSafe);
+	if (val && typeof val === "object") {
+		const out: Record<string, any> = {};
+		for (const k in val) {
+			try { out[k] = toJsonSafe(val[k]); } catch { out[k] = null; }
+		}
+		return out;
+	}
+	return val;
+}
+
+/**
+ * Extract ArrayBuffer from various buffer wrapper types (DataView, Uint8Array, etc.)
+ */
+function extractArrayBuffer(buffer: any): ArrayBuffer | null {
+	if (buffer instanceof ArrayBuffer) return buffer;
+	if (buffer instanceof DataView) return buffer.buffer;
+	if (buffer instanceof Uint8Array || (buffer && buffer.buffer instanceof ArrayBuffer)) {
+		return buffer.buffer;
+	}
+	return null;
+}
+
+/**
+ * Set up transcript recording on a model. Listens to backbone events and records
+ * to window._buckarooTranscript for debugging/replay in Storybook.
+ * 
+ * This is pure JS - no React hooks needed.
+ */
+function setupTranscriptRecording(model: any) {
+	// @ts-ignore
+	window._buckarooTranscript = window._buckarooTranscript || [];
+	
+	// Listen for custom messages (infinite_resp with parquet data)
+	const customMsgHandler = (msg: any, buffers?: ArrayBuffer[]) => {
+		try {
+			console.info("[Transcript] custom_msg:", msg?.type);
+			// @ts-ignore
+			window._buckarooTranscript.push({
+				ts: Date.now(),
+				event: "custom_msg",
+				msg,
+				buffers_len: buffers?.length || 0,
+			});
+			
+			// Parse parquet buffers from infinite_resp messages
+			if (msg && msg.type === "infinite_resp" && buffers && buffers.length > 0) {
+				const rawBuffer = extractArrayBuffer(buffers[0]);
+				if (rawBuffer) {
+					console.info("[Transcript] Parsing parquet buffer, size:", rawBuffer.byteLength);
+					
+					// Use parquetRead/parquetMetadata from srt (buckaroo-js-core)
+					const parquetMetadataFn = (srt as any).parquetMetadata;
+					const parquetReadFn = (srt as any).parquetRead;
+					
+					if (parquetMetadataFn && parquetReadFn) {
+						try {
+							const metadata = parquetMetadataFn(rawBuffer);
+							parquetReadFn({
+								file: rawBuffer,
+								metadata,
+								rowFormat: "object",
+								onComplete: (rows: any[]) => {
+									console.info("[Transcript] Parquet parsed, rows:", rows?.length);
+									// @ts-ignore
+									window._buckarooTranscript.push({
+										ts: Date.now(),
+										event: "infinite_resp_parsed",
+										key: msg.key || null,
+										rows_len: Array.isArray(rows) ? rows.length : 0,
+										total_len: msg.length ?? null,
+										rows: toJsonSafe(rows || []),
+									});
+								},
+							});
+						} catch (e) {
+							console.warn("[Transcript] Failed to parse parquet:", e);
+							// @ts-ignore
+							window._buckarooTranscript.push({
+								ts: Date.now(),
+								event: "infinite_resp_parse_error",
+								error: String(e),
+							});
+						}
+					}
+				}
+			}
+		} catch (e) {
+			console.warn("[Transcript] Error in customMsgHandler:", e);
+		}
+	};
+	
+	// Listen for model state changes (for non-infinite widgets)
+	const stateChangeHandler = (key: string) => (value: any) => {
+		try {
+			if (key === "df_data_dict") {
+				const allStats = (value && value['all_stats']) || [];
+				// @ts-ignore
+				window._buckarooTranscript.push({
+					ts: Date.now(),
+					event: "all_stats_update",
+					len: allStats.length,
+					sample: allStats[0] || null,
+					all_stats: toJsonSafe(allStats),
+				});
+			}
+		} catch {}
+	};
+	
+	// Register handlers
+	model.on("msg:custom", customMsgHandler);
+	model.on("change:df_data_dict", stateChangeHandler("df_data_dict"));
+	
+	console.info("[Transcript] Recording enabled for model");
+}
+
+// ============================================================================
 
 /**
  * @template {Record<string, any>} T
@@ -128,178 +254,10 @@ const renderDFV = createRender(() => {
 });
 
 const renderBuckarooWidget = createRender(() => {
-	const model = useModel();
+	// Note: Transcript recording is now handled in initialize() via setupTranscriptRecording()
 	const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
 	const [df_display_args, _set_dda] = useModelState("df_display_args");
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
-	// Diagnostics: log all_stats shape and pinned_rows config when they change
-	// Also persist to window._buckarooTranscript for replay in Storybook
-	// FIXME: Feature-flag the transcript recording via a Python trait (e.g. enable_transcript_recording)
-	// so it only records when explicitly enabled, not all the time
-	React.useEffect(() => {
-		try {
-			const allStats = (df_data_dict && df_data_dict['all_stats']) || [];
-			// eslint-disable-next-line no-console
-			console.info(
-				"[WidgetTSX][Model] df_data_dict all_stats len",
-				allStats.length,
-				"sample",
-				allStats[0] || null,
-			);
-			// Persist transcript for replay
-			// @ts-ignore
-			window._buckarooTranscript = window._buckarooTranscript || [];
-			// @ts-ignore
-			window._buckarooTranscript.push({
-				ts: Date.now(),
-				event: "all_stats_update",
-				len: allStats.length,
-				sample: allStats[0] || null,
-				all_stats: allStats,
-			});
-		} catch {}
-	}, [df_data_dict]);
-	React.useEffect(() => {
-		try {
-			const pr = df_display_args?.main?.df_viewer_config?.pinned_rows || [];
-			// eslint-disable-next-line no-console
-			console.info(
-				"[WidgetTSX][Model] pinned_rows",
-				pr.map((x:any)=>x?.primary_key_val),
-			);
-			// @ts-ignore
-			window._buckarooTranscript = window._buckarooTranscript || [];
-			// @ts-ignore
-			window._buckarooTranscript.push({
-				ts: Date.now(),
-				event: "pinned_rows_config",
-				pinned_keys: pr.map((x:any)=>x?.primary_key_val),
-				cfg: df_display_args?.main?.df_viewer_config || {},
-			});
-			// Derive DFViewerInfinite-like transcript (columns and pinned extraction) from model state
-			const cfg = df_display_args?.main?.df_viewer_config;
-			if (cfg) {
-				const left = Array.isArray(cfg.left_col_configs) ? cfg.left_col_configs : [];
-				const cols = Array.isArray(cfg.column_config) ? cfg.column_config : [];
-				const fieldOf = (c: any) =>
-					(typeof c?.field === "string" && c.field) || (typeof c?.col_name === "string" ? c.col_name : undefined);
-				const leftFields = left.map(fieldOf).filter(Boolean);
-				const dataFields = cols.map(fieldOf).filter(Boolean);
-				const allFields = ([] as any[]).concat(leftFields, dataFields);
-				// eslint-disable-next-line no-console
-				console.info("[WidgetTSX][DFI] fields", allFields);
-				// @ts-ignore
-				window._buckarooTranscript.push({
-					ts: Date.now(),
-					event: "dfi_cols_fields",
-					fields: allFields,
-				});
-				const allStats = ((df_data_dict && (df_data_dict as any)['all_stats']) || []) as any[];
-				const pinnedKeys = pr.map((p: any) => p?.primary_key_val).filter(Boolean);
-				const findRow = (k: any) =>
-					allStats.find((r) => r && (r.index === k || r.level_0 === k)) || null;
-				const topRows = pinnedKeys.map(findRow).filter(Boolean);
-				// eslint-disable-next-line no-console
-				console.info("[WidgetTSX][DFI] pinned extracted", {
-					keys: pinnedKeys,
-					summaryLen: allStats.length,
-					topLen: topRows.length,
-				});
-				// @ts-ignore
-				window._buckarooTranscript.push({
-					ts: Date.now(),
-					event: "dfi_pinned_extracted",
-					pinned_keys: pinnedKeys,
-					summary_len: allStats.length,
-					top_len: topRows.length,
-				});
-				if (topRows.length > 0) {
-					// eslint-disable-next-line no-console
-					console.debug("[WidgetTSX][DFI] pinned sample", topRows[0]);
-					// @ts-ignore
-					window._buckarooTranscript.push({
-						ts: Date.now(),
-						event: "dfi_pinned_sample",
-						sample: topRows[0],
-					});
-				}
-			}
-		} catch {}
-	}, [df_display_args, df_data_dict]);
-	// Capture custom messages from Python (e.g., infinite_resp) into transcript
-	React.useEffect(() => {
-		const handler = (msg: any, buffers?: ArrayBuffer[]) => {
-			try {
-				// eslint-disable-next-line no-console
-				console.info("[WidgetTSX][CustomMsg]", msg?.type, msg);
-				// @ts-ignore
-				window._buckarooTranscript = window._buckarooTranscript || [];
-				// @ts-ignore
-				window._buckarooTranscript.push({
-					ts: Date.now(),
-					event: "custom_msg",
-					msg,
-					buffers_len: buffers?.length || 0,
-				});
-				// If this is an infinite_resp with a parquet buffer, try to parse it
-				if (msg && msg.type === "infinite_resp" && buffers && buffers.length > 0 && buffers[0] instanceof ArrayBuffer) {
-					(async () => {
-						try {
-							// @ts-ignore dynamic import
-							const mod = await import("hyparquet");
-							const parquetMetadata = (mod as any).parquetMetadata;
-							const parquetRead = (mod as any).parquetRead;
-							const buf = buffers[0] as ArrayBuffer;
-							const metadata = parquetMetadata(buf);
-							parquetRead({
-								file: buf,
-								metadata,
-								rowFormat: "object",
-								onComplete: (rows: any[]) => {
-									const toJsonSafe = (val: any): any => {
-										if (typeof val === "bigint") return val.toString();
-										if (Array.isArray(val)) return val.map(toJsonSafe);
-										if (val && typeof val === "object") {
-											const out: any = {};
-											for (const k in val) {
-												try { out[k] = toJsonSafe(val[k]); } catch { out[k] = null; }
-											}
-											return out;
-										}
-										return val;
-									};
-									// @ts-ignore
-									window._buckarooTranscript.push({
-										ts: Date.now(),
-										event: "infinite_resp_parsed",
-										key: (msg as any).key || null,
-										rows_len: Array.isArray(rows) ? rows.length : 0,
-										total_len: (msg as any).length ?? null,
-										rows: toJsonSafe(rows || []),
-									});
-								},
-							});
-						} catch (e) {
-							console.warn("[WidgetTSX][CustomMsg] failed to parse parquet buffer", e);
-							// @ts-ignore
-							window._buckarooTranscript.push({
-								ts: Date.now(),
-								event: "infinite_resp_buf",
-								key: (msg as any).key || null,
-								buffers_len: buffers?.length || 0,
-							});
-						}
-					})();
-				}
-			} catch {}
-		};
-		// @ts-ignore backbone event from anywidget
-		model.on("msg:custom", handler);
-		return () => {
-			// @ts-ignore
-			model.off("msg:custom", handler);
-		};
-	}, [model]);
 
 	const [operations, on_operations] = useModelState("operations");
 	const [operation_results, _set_opr] = useModelState("operation_results");
@@ -326,8 +284,8 @@ const renderBuckarooWidget = createRender(() => {
 });
 
 const srcClosureRBI = (src) => {
+    // Note: Transcript recording is now handled in initialize() via setupTranscriptRecording()
     const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
-	const model = useModel()
 	const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
 	const [df_display_args, _set_dda] = useModelState("df_display_args");
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
@@ -338,113 +296,9 @@ const srcClosureRBI = (src) => {
 	const [buckaroo_state, on_buckaroo_state] = useModelState("buckaroo_state");
 	const [buckaroo_options, _set_boptions] = useModelState("buckaroo_options");
 
-	// FIXME: Feature-flag the transcript recording via a Python trait
-	// Capture custom messages (infinite_resp) into transcript for debugging/replay
-	React.useEffect(() => {
-		const handler = (msg: any, buffers?: ArrayBuffer[]) => {
-			try {
-				// eslint-disable-next-line no-console
-				console.info("[WidgetTSX][InfiniteWidget][CustomMsg]", msg?.type, msg);
-				// @ts-ignore
-				window._buckarooTranscript = window._buckarooTranscript || [];
-				// @ts-ignore
-				window._buckarooTranscript.push({
-					ts: Date.now(),
-					event: "custom_msg",
-					msg,
-					buffers_len: buffers?.length || 0,
-				});
-				// Parse infinite_resp parquet buffers
-				// Check buffer type - might be DataView, Uint8Array, or ArrayBuffer
-				const hasBuffer = buffers && buffers.length > 0;
-				const bufferType = hasBuffer ? (buffers[0]?.constructor?.name || typeof buffers[0]) : 'none';
-				console.info("[WidgetTSX][InfiniteWidget] Buffer check:", { hasBuffer, bufferType, bufLen: buffers?.length });
-				
-				// Get the raw ArrayBuffer from various wrapper types
-				let rawBuffer: ArrayBuffer | null = null;
-				if (hasBuffer) {
-					const buf = buffers[0];
-					if (buf instanceof ArrayBuffer) {
-						rawBuffer = buf;
-					} else if (buf instanceof DataView) {
-						rawBuffer = buf.buffer;
-					} else if (buf instanceof Uint8Array || (buf && buf.buffer instanceof ArrayBuffer)) {
-						rawBuffer = (buf as any).buffer;
-					}
-				}
-				
-				if (msg && msg.type === "infinite_resp" && rawBuffer) {
-					console.info("[WidgetTSX][InfiniteWidget] Attempting to parse parquet buffer, size:", rawBuffer.byteLength);
-					(async () => {
-						try {
-							// Use parquetRead/parquetMetadata from srt (buckaroo-js-core)
-							const parquetMetadataFn = (srt as any).parquetMetadata;
-							const parquetReadFn = (srt as any).parquetRead;
-							if (!parquetMetadataFn || !parquetReadFn) {
-								console.warn("[WidgetTSX][InfiniteWidget] parquet functions not found in srt:", { parquetMetadata: !!parquetMetadataFn, parquetRead: !!parquetReadFn });
-								return;
-							}
-							const buf = rawBuffer!;
-							console.info("[WidgetTSX][InfiniteWidget] Reading parquet metadata...");
-							const metadata = parquetMetadataFn(buf);
-							console.info("[WidgetTSX][InfiniteWidget] Metadata:", metadata?.num_rows);
-							parquetReadFn({
-								file: buf,
-								metadata,
-								rowFormat: "object",
-								onComplete: (rows: any[]) => {
-									console.info("[WidgetTSX][InfiniteWidget] Parquet parsed, rows:", rows?.length);
-									const toJsonSafe = (val: any): any => {
-										if (typeof val === "bigint") return val.toString();
-										if (Array.isArray(val)) return val.map(toJsonSafe);
-										if (val && typeof val === "object") {
-											const out: any = {};
-											for (const k in val) {
-												try { out[k] = toJsonSafe(val[k]); } catch { out[k] = null; }
-											}
-											return out;
-										}
-										return val;
-									};
-									// @ts-ignore
-									window._buckarooTranscript.push({
-										ts: Date.now(),
-										event: "infinite_resp_parsed",
-										key: (msg as any).key || null,
-										rows_len: Array.isArray(rows) ? rows.length : 0,
-										total_len: (msg as any).length ?? null,
-										rows: toJsonSafe(rows || []),
-									});
-									console.info("[WidgetTSX][InfiniteWidget] infinite_resp_parsed event pushed to transcript");
-								},
-							});
-						} catch (e) {
-							console.warn("[WidgetTSX][InfiniteWidget] failed to parse parquet buffer", e);
-							// @ts-ignore
-							window._buckarooTranscript = window._buckarooTranscript || [];
-							// @ts-ignore
-							window._buckarooTranscript.push({
-								ts: Date.now(),
-								event: "infinite_resp_parse_error",
-								error: String(e),
-							});
-						}
-					})();
-				}
-			} catch {}
-		};
-		// @ts-ignore backbone event from anywidget
-		model.on("msg:custom", handler);
-		return () => {
-			// @ts-ignore
-			model.off("msg:custom", handler);
-		};
-	}, [model]);
-
 	return (
 	    <div className="buckaroo_anywidget">
 	    <srt.BuckarooInfiniteWidget
-	    
 	    df_data_dict={df_data_dict}
 	    df_display_args={df_display_args}
 	    df_meta={df_meta}
@@ -462,7 +316,6 @@ const srcClosureRBI = (src) => {
     });
 
     const renderDFViewerInfiniteWidget = createRender((a,b,c) => {
-	const model = useModel()
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
 	  const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
       // df_data_dict ready
@@ -492,6 +345,9 @@ export default async () => {
     let extraState = {};
     return {
 	initialize({ model }) {
+	    // Set up transcript recording (plain JS, no React)
+	    setupTranscriptRecording(model);
+	    
 	    // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
 	    // so having it live between relaods is key
 	    //const [respError, setRespError] = useState<string | undefined>(undefined);

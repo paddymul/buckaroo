@@ -352,29 +352,21 @@ for notebook in "${NOTEBOOKS[@]}"; do
     cd packages/buckaroo-js-core
     log_message "Running Playwright test for $notebook..."
     
-    # Use special test file for transcript testing
+    # Use special test file for transcript testing, otherwise use integration.spec.ts only
     if [[ "$notebook" == "test_infinite_scroll_transcript.ipynb" ]]; then
         PW_TEST_FILE="pw-tests/infinite-scroll-transcript.spec.ts"
+        PW_TIMEOUT=45000
     else
-        PW_TEST_FILE=""
+        PW_TEST_FILE="pw-tests/integration.spec.ts"
+        PW_TIMEOUT=30000
     fi
     
-    if [ -n "$PW_TEST_FILE" ]; then
-        if npx playwright test "$PW_TEST_FILE" --config playwright.config.integration.ts --reporter=line --timeout=45000; then
-            success "✅ Playwright test passed for $notebook!"
-        else
-            error "❌ Playwright test failed for $notebook!"
-            OVERALL_RESULT=1
-            FAILED_NOTEBOOKS+=("$notebook")
-        fi
+    if npx playwright test "$PW_TEST_FILE" --config playwright.config.integration.ts --reporter=line --timeout=$PW_TIMEOUT; then
+        success "✅ Playwright test passed for $notebook!"
     else
-        if npx playwright test --config playwright.config.integration.ts --reporter=line --timeout=30000; then
-            success "✅ Playwright test passed for $notebook!"
-        else
-            error "❌ Playwright test failed for $notebook!"
-            OVERALL_RESULT=1
-            FAILED_NOTEBOOKS+=("$notebook")
-        fi
+        error "❌ Playwright test failed for $notebook!"
+        OVERALL_RESULT=1
+        FAILED_NOTEBOOKS+=("$notebook")
     fi
     
     # Clean up notebook file (from root directory)
