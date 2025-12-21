@@ -128,10 +128,12 @@ const renderDFV = createRender(() => {
 });
 
 const renderBuckarooWidget = createRender(() => {
+	const model = useModel();
 	const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
 	const [df_display_args, _set_dda] = useModelState("df_display_args");
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
 	// Diagnostics: log all_stats shape and pinned_rows config when they change
+	// Also persist to window._buckarooTranscript for replay in Storybook
 	React.useEffect(() => {
 		try {
 			const allStats = (df_data_dict && df_data_dict['all_stats']) || [];
@@ -142,6 +144,17 @@ const renderBuckarooWidget = createRender(() => {
 				"sample",
 				allStats[0] || null,
 			);
+			// Persist transcript for replay
+			// @ts-ignore
+			window._buckarooTranscript = window._buckarooTranscript || [];
+			// @ts-ignore
+			window._buckarooTranscript.push({
+				ts: Date.now(),
+				event: "all_stats_update",
+				len: allStats.length,
+				sample: allStats[0] || null,
+				all_stats: allStats,
+			});
 		} catch {}
 	}, [df_data_dict]);
 	React.useEffect(() => {
@@ -152,8 +165,139 @@ const renderBuckarooWidget = createRender(() => {
 				"[WidgetTSX][Model] pinned_rows",
 				pr.map((x:any)=>x?.primary_key_val),
 			);
+			// @ts-ignore
+			window._buckarooTranscript = window._buckarooTranscript || [];
+			// @ts-ignore
+			window._buckarooTranscript.push({
+				ts: Date.now(),
+				event: "pinned_rows_config",
+				pinned_keys: pr.map((x:any)=>x?.primary_key_val),
+				cfg: df_display_args?.main?.df_viewer_config || {},
+			});
+			// Derive DFViewerInfinite-like transcript (columns and pinned extraction) from model state
+			const cfg = df_display_args?.main?.df_viewer_config;
+			if (cfg) {
+				const left = Array.isArray(cfg.left_col_configs) ? cfg.left_col_configs : [];
+				const cols = Array.isArray(cfg.column_config) ? cfg.column_config : [];
+				const fieldOf = (c: any) =>
+					(typeof c?.field === "string" && c.field) || (typeof c?.col_name === "string" ? c.col_name : undefined);
+				const leftFields = left.map(fieldOf).filter(Boolean);
+				const dataFields = cols.map(fieldOf).filter(Boolean);
+				const allFields = ([] as any[]).concat(leftFields, dataFields);
+				// eslint-disable-next-line no-console
+				console.info("[WidgetTSX][DFI] fields", allFields);
+				// @ts-ignore
+				window._buckarooTranscript.push({
+					ts: Date.now(),
+					event: "dfi_cols_fields",
+					fields: allFields,
+				});
+				const allStats = ((df_data_dict && (df_data_dict as any)['all_stats']) || []) as any[];
+				const pinnedKeys = pr.map((p: any) => p?.primary_key_val).filter(Boolean);
+				const findRow = (k: any) =>
+					allStats.find((r) => r && (r.index === k || r.level_0 === k)) || null;
+				const topRows = pinnedKeys.map(findRow).filter(Boolean);
+				// eslint-disable-next-line no-console
+				console.info("[WidgetTSX][DFI] pinned extracted", {
+					keys: pinnedKeys,
+					summaryLen: allStats.length,
+					topLen: topRows.length,
+				});
+				// @ts-ignore
+				window._buckarooTranscript.push({
+					ts: Date.now(),
+					event: "dfi_pinned_extracted",
+					pinned_keys: pinnedKeys,
+					summary_len: allStats.length,
+					top_len: topRows.length,
+				});
+				if (topRows.length > 0) {
+					// eslint-disable-next-line no-console
+					console.debug("[WidgetTSX][DFI] pinned sample", topRows[0]);
+					// @ts-ignore
+					window._buckarooTranscript.push({
+						ts: Date.now(),
+						event: "dfi_pinned_sample",
+						sample: topRows[0],
+					});
+				}
+			}
 		} catch {}
-	}, [df_display_args]);
+	}, [df_display_args, df_data_dict]);
+	// Capture custom messages from Python (e.g., infinite_resp) into transcript
+	React.useEffect(() => {
+		const handler = (msg: any, buffers?: ArrayBuffer[]) => {
+			try {
+				// eslint-disable-next-line no-console
+				console.info("[WidgetTSX][CustomMsg]", msg?.type, msg);
+				// @ts-ignore
+				window._buckarooTranscript = window._buckarooTranscript || [];
+				// @ts-ignore
+				window._buckarooTranscript.push({
+					ts: Date.now(),
+					event: "custom_msg",
+					msg,
+					buffers_len: buffers?.length || 0,
+				});
+				// If this is an infinite_resp with a parquet buffer, try to parse it
+				if (msg && msg.type === "infinite_resp" && buffers && buffers.length > 0 && buffers[0] instanceof ArrayBuffer) {
+					(async () => {
+						try {
+							// @ts-ignore dynamic import
+							const mod = await import("hyparquet");
+							const parquetMetadata = (mod as any).parquetMetadata;
+							const parquetRead = (mod as any).parquetRead;
+							const buf = buffers[0] as ArrayBuffer;
+							const metadata = parquetMetadata(buf);
+							parquetRead({
+								file: buf,
+								metadata,
+								rowFormat: "object",
+								onComplete: (rows: any[]) => {
+									const toJsonSafe = (val: any): any => {
+										if (typeof val === "bigint") return val.toString();
+										if (Array.isArray(val)) return val.map(toJsonSafe);
+										if (val && typeof val === "object") {
+											const out: any = {};
+											for (const k in val) {
+												try { out[k] = toJsonSafe(val[k]); } catch { out[k] = null; }
+											}
+											return out;
+										}
+										return val;
+									};
+									// @ts-ignore
+									window._buckarooTranscript.push({
+										ts: Date.now(),
+										event: "infinite_resp_parsed",
+										key: (msg as any).key || null,
+										rows_len: Array.isArray(rows) ? rows.length : 0,
+										total_len: (msg as any).length ?? null,
+										rows: toJsonSafe(rows || []),
+									});
+								},
+							});
+						} catch (e) {
+							console.warn("[WidgetTSX][CustomMsg] failed to parse parquet buffer", e);
+							// @ts-ignore
+							window._buckarooTranscript.push({
+								ts: Date.now(),
+								event: "infinite_resp_buf",
+								key: (msg as any).key || null,
+								buffers_len: buffers?.length || 0,
+							});
+						}
+					})();
+				}
+			} catch {}
+		};
+		// @ts-ignore backbone event from anywidget
+		model.on("msg:custom", handler);
+		return () => {
+			// @ts-ignore
+			model.off("msg:custom", handler);
+		};
+	}, [model]);
 
 	const [operations, on_operations] = useModelState("operations");
 	const [operation_results, _set_opr] = useModelState("operation_results");
