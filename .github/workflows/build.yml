@@ -30,10 +30,11 @@ jobs:
         run: uv sync --locked --all-extras --dev
       - uses: pnpm/action-setup@v4
         with:
-          node-version: "20.x"
-          cache: pnpm
-          package_json_file: packages/package.json
+          version: 9.10.0
           run_install: false
+      - name: Install pnpm workspace dependencies
+        working-directory: packages
+        run: pnpm install
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: pandoc graphviz
@@ -41,7 +42,6 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install -g codecov
-          pnpm -C packages/buckaroo-js-core install
 
       - name: Check docs can be build + links
         if: ${{ matrix.os == 'ubuntu-latest' }}
