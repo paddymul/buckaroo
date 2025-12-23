@@ -341,16 +341,38 @@ const srcClosureRBI = (src) => {
 
 export default async () => {
     let extraState = {};
+    
+    const setupTranscriptIfNeeded = (model: any) => {
+	// Check if already set up for this model
+	// @ts-ignore
+	if (model._transcriptSetupDone) return; // Only set up once per model
+	
+	const recordTranscript = model.get('record_transcript');
+	console.log('[Transcript] Checking record_transcript:', recordTranscript, typeof recordTranscript);
+	
+	// Handle both boolean (BuckarooWidget) and dict (LazyInfinitePolarsBuckarooWidget) formats
+	const shouldRecord = recordTranscript === true || 
+			     (recordTranscript && typeof recordTranscript === 'object' && recordTranscript.enabled === true);
+	console.log('[Transcript] shouldRecord:', shouldRecord);
+	
+	if (shouldRecord) {
+	    console.log('[Transcript] Setting up transcript recording...');
+	    setupTranscriptRecording(model);
+	    // @ts-ignore
+	    model._transcriptSetupDone = true;
+	}
+    };
+    
     return {
 	initialize({ model }) {
 	    // Set up transcript recording only if record_transcript is enabled
-	    const recordTranscript = model.get('record_transcript');
-	    // Handle both boolean (BuckarooWidget) and dict (LazyInfinitePolarsBuckarooWidget) formats
-	    const shouldRecord = recordTranscript === true || 
-	                         (recordTranscript && typeof recordTranscript === 'object' && recordTranscript.enabled === true);
-	    if (shouldRecord) {
-		setupTranscriptRecording(model);
-	    }
+	    // Check immediately
+	    setupTranscriptIfNeeded(model);
+	    
+	    // Also observe changes to record_transcript in case it's set after initialize
+	    model.on('change:record_transcript', () => {
+		setupTranscriptIfNeeded(model);
+	    });
 	    
 	    // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
 	    // so having it live between relaods is key
@@ -362,6 +384,9 @@ export default async () => {
 	    extraState['renderDFViewerInfinite'] = renderDFViewerInfinite;
 	},
 	render({ model, el, experimental }) {
+	    // Check again in render in case trait wasn't synced during initialize
+	    setupTranscriptIfNeeded(model);
+	    
 	    const render_func_name = model.get("render_func_name");
 	    if (render_func_name === "DFViewer") {
 		renderDFV({ el, model, experimental });

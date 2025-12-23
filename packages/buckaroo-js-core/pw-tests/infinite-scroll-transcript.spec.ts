@@ -13,11 +13,12 @@ async function waitForAgGrid(page: Page, timeout = 5000) {
 
 test.describe('Infinite Scroll Transcript Recording', () => {
   test('should record transcript events when scrolling triggers data fetch', async ({ page }) => {
-    // Capture console messages to debug hyparquet parsing
+    // Capture console messages to debug hyparquet parsing and transcript recording
     const consoleMessages: string[] = [];
     page.on('console', (msg) => {
       const text = msg.text();
-      if (text.includes('WidgetTSX') || text.includes('hyparquet') || text.includes('parquet')) {
+      if (text.includes('WidgetTSX') || text.includes('hyparquet') || text.includes('parquet') || 
+          text.includes('Transcript') || text.includes('record_transcript')) {
         consoleMessages.push(`[${msg.type()}] ${text}`);
       }
     });
@@ -68,6 +69,13 @@ test.describe('Infinite Scroll Transcript Recording', () => {
     await waitForAgGrid(page);
 
     // Check what events were captured during initial load (before scrolling)
+    // Log console messages about transcript
+    const transcriptMessages = consoleMessages.filter(msg => msg.includes('Transcript') || msg.includes('record_transcript'));
+    if (transcriptMessages.length > 0) {
+      console.log('📋 Console messages about transcript:');
+      transcriptMessages.forEach(msg => console.log(`   ${msg}`));
+    }
+    
     const initialTranscript = await page.evaluate(() => {
       return (window as any)._buckarooTranscript || [];
     });
