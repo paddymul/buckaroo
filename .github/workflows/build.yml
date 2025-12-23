@@ -21,13 +21,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-      - name: Install the project
-        run: uv sync --locked --all-extras --dev
       - uses: pnpm/action-setup@v4
         with:
           version: 9.10.0
@@ -35,6 +28,13 @@ jobs:
       - name: Install pnpm workspace dependencies
         working-directory: packages
         run: pnpm install
+      - uses: actions/setup-node@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: pandoc graphviz
