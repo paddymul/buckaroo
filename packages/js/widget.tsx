@@ -254,7 +254,6 @@ const renderDFV = createRender(() => {
 });
 
 const renderBuckarooWidget = createRender(() => {
-	// Note: Transcript recording is now handled in initialize() via setupTranscriptRecording()
 	const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
 	const [df_display_args, _set_dda] = useModelState("df_display_args");
 	const [df_meta, _set_df_meta] = useModelState("df_meta");
@@ -284,7 +283,6 @@ const renderBuckarooWidget = createRender(() => {
 });
 
 const srcClosureRBI = (src) => {
-    // Note: Transcript recording is now handled in initialize() via setupTranscriptRecording()
     const renderBuckarooInfiniteWidget = createRender((a,b,c) => {
 	const [df_data_dict, _set_df_data_dict] = useModelState("df_data_dict");
 	const [df_display_args, _set_dda] = useModelState("df_display_args");
@@ -345,8 +343,14 @@ export default async () => {
     let extraState = {};
     return {
 	initialize({ model }) {
-	    // Set up transcript recording (plain JS, no React)
-	    setupTranscriptRecording(model);
+	    // Set up transcript recording only if record_transcript is enabled
+	    const recordTranscript = model.get('record_transcript');
+	    // Handle both boolean (BuckarooWidget) and dict (LazyInfinitePolarsBuckarooWidget) formats
+	    const shouldRecord = recordTranscript === true || 
+	                         (recordTranscript && typeof recordTranscript === 'object' && recordTranscript.enabled === true);
+	    if (shouldRecord) {
+		setupTranscriptRecording(model);
+	    }
 	    
 	    // we only want to create KeyAwareSmartRowCache once, it caches sourceName too
 	    // so having it live between relaods is key
