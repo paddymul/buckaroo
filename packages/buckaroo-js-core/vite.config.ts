@@ -6,6 +6,12 @@ import { peerDependencies } from "./package.json";
 
 
 export default defineConfig({
+    resolve: {
+        alias: {
+            // Use lodash-es for better tree-shaking
+            'lodash': 'lodash-es'
+        }
+    },
     build: {
         lib: {
             entry: "./src/index.ts", // Specifies the entry point for building the library.
@@ -15,6 +21,10 @@ export default defineConfig({
         },
         rollupOptions: {
             external: ["react", "react-dom", 'react/jsx-runtime'],
+            output: {
+                // Enable tree-shaking
+                manualChunks: undefined,
+            },
         },
         sourcemap: true, // Generates source maps for debugging.
         emptyOutDir: true, // Clears the output directory before building.
