@@ -7,7 +7,6 @@ Buckaroo is a modern data table for Jupyter that expedites the most common explo
 # Note buckaroo has moved to
 https://github.com/buckaroo-data/buckaroo
 
-
 ## Try it now with Marimo in your browser
 Play with Buckaroo without any installation.
 [Full Tour](https://marimo.io/p/@paddy-mullen/buckaroo-full-tour)
