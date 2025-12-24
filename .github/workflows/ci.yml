@@ -62,13 +62,19 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - name: Run tests
+
+      - name: UV SYNC tests
         run: |
           mkdir buckaroo/static || true
           touch buckaroo/static/compiled.css
           touch buckaroo/static/widget.js
           touch buckaroo/static/widget.css
           uv sync --locked --all-extras
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
+
+      - name: Run tests
+        run: |
           uv run --with pytest-cov pytest ./tests/unit --color=yes --cov anywidget --cov-report xml
         env:
           UV_PYTHON: ${{ matrix.python-version }}
